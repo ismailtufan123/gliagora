@@ -31,3 +31,6 @@ next-env.d.ts
 /deploy/admin-auth.caddy
 /deploy/backup/backup.env
 /deploy/backup/restic-password
+# Deploy key pair, if someone creates it in the repository folder by mistake
+gliagora-deploy
+gliagora-deploy.pub

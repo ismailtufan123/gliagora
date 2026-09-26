@@ -33,16 +33,18 @@ On the server, everything lives in `/opt/gliagora`:
 
 ## How deploys work
 
-Deploys run from GitHub: **Actions → Deploy → Run workflow**, with an image tag (`main` or `sha-<commit>`) (`.github/workflows/deploy.yml`, D27).
+Deploys run from GitHub: **Actions → Deploy → Run workflow** on `main`, with an image tag: `main`, or `sha-` plus the first 7 characters of a commit, as shown on the GHCR package page (`.github/workflows/deploy.yml`, D27).
 
 1. The workflow connects over SSH with its own key. On the server, that key's line in `authorized_keys` starts with `restrict,command="/opt/gliagora/deploy-remote.sh"`: it can run nothing else, get no shell and forward nothing.
 2. It sends the job's own `GITHUB_TOKEN` (valid only while the job runs) on stdin. `deploy-remote.sh` logs in to GHCR with it in a temporary Docker config, pulls the images and deletes that config. **No registry login is stored on the server.**
-3. It records the new image in `.env` (the old file stays as `.env.previous`) and runs `update.sh --no-pull`:
-   - a `pre-update` backup, skipped only on the very first start, when there is no database yet;
+3. It pins the image to the commit it was built from (`main` becomes `sha-<commit>`), records it in `.env` (the old file stays as `.env.previous`) and runs `update.sh --no-pull`:
+   - a `pre-update` backup (the database is started first if it was stopped), skipped only on the very first start, when there is no database volume yet;
    - a restart;
    - a wait until every service is healthy. The app applies database migrations when it starts.
 
-Without the four `DEPLOY_*` secrets the workflow stops with a notice ("Deploy skipped") and changes nothing, so it is safe to leave in place before the server exists.
+   If this fails before the app was restarted (for example, the backup fails), `.env` goes back to the previous image.
+
+Until the repository variable `DEPLOY_ENABLED` is `true`, the workflow stops with a notice ("Deploy skipped") and changes nothing, so it is safe to leave in place before the server exists. It also refuses to run from any branch other than `main`.
 
 ## Before you start
 
@@ -51,10 +53,10 @@ Without the four `DEPLOY_*` secrets the workflow stops with a notice ("Deploy sk
 3. **Deploy key:** on your computer, create a key pair used only by the Deploy workflow:
 
    ```sh
-   ssh-keygen -t ed25519 -N '' -C gliagora-deploy -f gliagora-deploy
+   ssh-keygen -t ed25519 -N '' -C gliagora-deploy -f ~/.ssh/gliagora-deploy
    ```
 
-   `gliagora-deploy.pub` goes to the server (step 1). `gliagora-deploy` (the private key) goes only into a GitHub secret (step 4); delete your local copy afterwards.
+   `~/.ssh/gliagora-deploy.pub` goes to the server (step 1). `~/.ssh/gliagora-deploy` (the private key) goes only into a GitHub secret (step 4); delete your local copy afterwards. Never create it inside the repository folder.
 
 ## 1. Harden the server (once)
 
@@ -62,7 +64,7 @@ From your computer:
 
 ```sh
 scp deploy/setup-server.sh root@<server-ip>:/root/
-ssh -t root@<server-ip> "ADMIN_USER=gliagora DEPLOY_PUBLIC_KEY='$(cat gliagora-deploy.pub)' bash /root/setup-server.sh"
+ssh -t root@<server-ip> "ADMIN_USER=gliagora DEPLOY_PUBLIC_KEY='$(cat ~/.ssh/gliagora-deploy.pub)' bash /root/setup-server.sh"
 ```
 
 The script:
@@ -135,16 +137,26 @@ To read that copy, install restic and run `restic -r ~/gliagora-backups/restic s
 
 ## 4. Connect GitHub (once)
 
-In GitHub: repository **Settings → Secrets and variables → Actions → New repository secret**:
+The deploy key must be usable only by the Deploy workflow on `main`, and each deploy should need your approval. GitHub provides this with an **environment**.
 
-| Secret | Value |
-| --- | --- |
-| `DEPLOY_HOST` | The server's IP address (or `gliagora.com` once DNS works) |
-| `DEPLOY_USER` | `gliagora` |
-| `DEPLOY_SSH_KEY` | The whole content of the private key file `gliagora-deploy` |
-| `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan -t ed25519 <server-ip>` run on your computer |
+**Check first (decided during S, D23):** environments with branch rules and required reviewers depend on the repository's visibility and your GitHub plan. On GitHub Free a private repository has no environments. Look up GitHub's current rules ("Managing environments for deployment"), then choose: make the repository public (it contains no secrets), move to a paid plan, or accept repository secrets without the gate. With plain repository secrets, any workflow on any branch could read the deploy key.
 
-Check `DEPLOY_KNOWN_HOSTS` before saving it: on the server, `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` shows the fingerprint. `ssh-keygen -lf <(ssh-keyscan -t ed25519 <server-ip>)` on your computer must show the same one. The workflow refuses any other host key.
+With environments available:
+
+1. **Settings → Environments → New environment** `production`:
+   - *Deployment branches and tags*: selected branches, `main` only;
+   - *Required reviewers*: yourself, so every deploy waits for your approval.
+2. In that environment, add four **environment secrets**:
+
+   | Secret | Value |
+   | --- | --- |
+   | `DEPLOY_HOST` | The server's IP address (deploys then keep working even if DNS breaks) |
+   | `DEPLOY_USER` | `gliagora` |
+   | `DEPLOY_SSH_KEY` | The whole content of the private key file `~/.ssh/gliagora-deploy` |
+   | `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan -t ed25519 <server-ip>` run on your computer, with the same IP as `DEPLOY_HOST` |
+
+   Check `DEPLOY_KNOWN_HOSTS` before saving it: on the server, `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` shows the fingerprint, and `ssh-keygen -lf <(ssh-keyscan -t ed25519 <server-ip>)` on your computer must show the same one. The workflow refuses any other host key. If the IP changes, redo both secrets.
+3. **Settings → Secrets and variables → Actions → Variables → New repository variable** `DEPLOY_ENABLED` = `true`. This switches the workflow on. Set it to anything else to switch deploys off again.
 
 ## 5. First deploy (once)
 
@@ -163,9 +175,9 @@ Check `DEPLOY_KNOWN_HOSTS` before saving it: on the server, `ssh-keygen -lf /etc
 
 ## 6. Update and roll back
 
-CI pushes a new image for every merge to `main` (tags `main` and `sha-<commit>`). To update, run the Deploy workflow with `main`, or with the `sha-<commit>` of a specific merge.
+CI pushes a new image for every merge to `main`, tagged `main` and `sha-` plus the first 7 characters of the commit. To update, run the Deploy workflow with `main`, or with the `sha-` tag of a specific merge. `.env` then names the exact `sha-` tag that is running.
 
-To roll back, run the Deploy workflow with the previous `sha-<commit>` tag. On the server, without GitHub, `cp .env.previous .env && sudo ./update.sh --no-pull` goes back to the image that ran before the last deploy; it is still on the server. Migrations are not undone automatically. If one damaged data, restore the `pre-update` snapshot (below).
+To roll back, run the Deploy workflow with the previous `sha-` tag. On the server, without GitHub, `cd /opt/gliagora && cp .env.previous .env && sudo ./update.sh --no-pull` goes back to the image that ran before the last deploy; it is still on the server. Migrations are not undone automatically. If one damaged data, restore the `pre-update` snapshot (below).
 
 ## 7. Restore
 
@@ -181,11 +193,12 @@ sudo ./restore.sh config latest /root/restored  # get the backed-up .env and set
 
 **New server after losing the old one:**
 
-1. Run steps 1 and 2 (with a new deploy key if the old one is lost; update the GitHub secrets).
-2. Copy the repository back to `/var/backups/gliagora/restic` (from your computer's copy or the second VDS). In `/opt/gliagora/backup`, create `backup.env` from `backup.env.example` and put the password in `restic-password` (both mode 600).
-3. Recover `.env` and `admin-auth.caddy` with `sudo ./restore.sh config latest /root/restored`.
-4. Run the Deploy workflow with the last good `sha-<commit>` tag: it starts the stack with an empty database.
-5. Restore the data with `sudo ./restore.sh database latest`, then switch on the timers (step 5).
+1. Run steps 1 and 2 (with a new deploy key if the old one is lost). Then redo step 4 for the new server: `DEPLOY_HOST` and `DEPLOY_KNOWN_HOSTS` always change (new IP, new host key), and `DEPLOY_SSH_KEY` if you made a new key.
+2. Install the timer units as in step 3, without `backup.sh init`: `sudo cp systemd/gliagora-*.service systemd/gliagora-*.timer /etc/systemd/system/ && sudo systemctl daemon-reload`.
+3. Copy the repository back to `/var/backups/gliagora/restic` (from your computer's copy or the second VDS). In `/opt/gliagora/backup`, create `backup.env` from `backup.env.example` and put the password in `restic-password` (both mode 600).
+4. Recover `.env` and `admin-auth.caddy` with `sudo ./restore.sh config latest /root/restored` and copy them to `/opt/gliagora` (mode 600).
+5. Run the Deploy workflow with the last good `sha-` tag: it starts the stack with an empty database.
+6. Restore the data with `sudo ./restore.sh database latest`, then switch on the timers (step 5).
 
 ## Useful commands
 
@@ -203,5 +216,6 @@ sudo fail2ban-client status sshd                    # blocked SSH addresses
 - Automatic rollback when an update fails its health checks. Until then, `update.sh` stops and explains how to roll back by hand.
 - Rate limits in Caddy, which need a plugin and a custom Caddy build. Until then, the admin is protected by the second password and Payload's lockout (5 attempts, 15 minutes).
 - Backup alerts (success and failure emails).
+- Protection of the deploy secrets: a GitHub environment limited to `main` with a required reviewer (needs a public repository or a paid GitHub plan; see step 4).
 
 listmonk (M2) and Umami each get their own database and user in the same PostgreSQL later.

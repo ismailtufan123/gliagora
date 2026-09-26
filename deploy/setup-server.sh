@@ -222,6 +222,9 @@ visudo -cf "$sudoers.tmp" >/dev/null || fail "Invalid sudoers rule; nothing was 
 mv "$sudoers.tmp" "$sudoers"
 
 if [[ -n "$DEPLOY_PUBLIC_KEY" ]]; then
+  # Exactly one ed25519 key, on one line, without options (so the restriction below covers it all).
+  [[ "$DEPLOY_PUBLIC_KEY" == ssh-ed25519\ * && "$DEPLOY_PUBLIC_KEY" != *$'\n'* ]] \
+    || fail "DEPLOY_PUBLIC_KEY must be one ssh-ed25519 public key on a single line, without options."
   ssh-keygen -l -f /dev/stdin <<<"$DEPLOY_PUBLIC_KEY" >/dev/null 2>&1 \
     || fail "DEPLOY_PUBLIC_KEY is not a valid SSH public key."
   # The key may run nothing but deploy-remote.sh: no shell, no forwarding.
@@ -238,5 +241,6 @@ Next steps (see deploy/README.md):
      and that sudo works:                             sudo -v
      Only then close this root session.
   2. Log out and in again as $ADMIN_USER so the docker group applies.
-  3. Continue with "Start the stack" in deploy/README.md.
+  3. Continue with "2. Prepare the stack (once)" in deploy/README.md (do not start the stack by
+     hand: the first deploy starts it).
 EOF

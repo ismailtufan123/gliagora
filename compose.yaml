@@ -1,6 +1,7 @@
-# Local development only: PostgreSQL for the app.
+# Local development only: PostgreSQL for the app. The project is "gliagora-dev" so it can never
+# clash with the production stack (deploy/compose.prod.yml, project "gliagora") on the same machine.
 # Start with `docker compose up -d db`. Values come from .env (see .env.example).
-name: gliagora
+name: gliagora-dev
 
 services:
   db:
