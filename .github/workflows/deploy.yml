@@ -1,0 +1,98 @@
+# Deploys an image from GHCR to the production server (PLAN §11.5, D27).
+#
+# Manual only: Actions → Deploy → Run workflow on `main`, with an image tag (`main` or `sha-` plus
+# the first 7 characters of a commit). Inactive until the server exists (D23): unless the
+# repository variable DEPLOY_ENABLED is `true`, it stops with a notice and changes nothing.
+# Setup: deploy/README.md, "How deploys work" and "4. Connect GitHub (once)".
+#
+# No long-lived registry credentials: the job's own GITHUB_TOKEN (valid only while the job runs)
+# is sent over SSH to deploy/deploy-remote.sh, which pulls with it and discards it.
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Image tag to deploy (main or sha-<first 7 characters of the commit>)
+        required: true
+        default: main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check that deploys are enabled
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          TAG: ${{ inputs.tag }}
+          DEPLOY_ENABLED: ${{ vars.DEPLOY_ENABLED }}
+          REF: ${{ github.ref }}
+        run: |
+          if [[ ! "$TAG" =~ ^(main|sha-[0-9a-f]{7})$ ]]; then
+            echo "::error title=Invalid tag::Use main or sha- plus the first 7 characters of a commit."
+            exit 1
+          fi
+          if [[ "$DEPLOY_ENABLED" != true ]]; then
+            echo "::notice title=Deploy skipped::Deploys are not enabled yet (repository variable DEPLOY_ENABLED is not true). Nothing was deployed."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ "$REF" != refs/heads/main ]]; then
+            echo "::error title=Wrong branch::Run the Deploy workflow from main."
+            exit 1
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy ${{ inputs.tag }}
+    needs: check
+    if: needs.check.outputs.ready == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    # The DEPLOY_* secrets live in this environment, which only `main` may use and which can require
+    # an approval (deploy/README.md, step 4).
+    environment: production
+    permissions:
+      packages: read
+    steps:
+      - name: Deploy over SSH
+        env:
+          TAG: ${{ inputs.tag }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          missing=()
+          for name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS; do
+            [[ -n "${!name}" ]] || missing+=("$name")
+          done
+          if (( ${#missing[@]} )); then
+            echo "::error title=Deploy misconfigured::Missing secrets in the production environment: ${missing[*]}. Nothing was deployed."
+            exit 1
+          fi
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # The server's host key, checked strictly: no trust on first use.
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n%s\n' "$GITHUB_ACTOR" "$REGISTRY_TOKEN" \
+            | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes \
+                -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+                "$DEPLOY_USER@$DEPLOY_HOST" "deploy $TAG"
+
+      - name: Remove the SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

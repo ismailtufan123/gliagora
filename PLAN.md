@@ -1005,9 +1005,16 @@ Practical rules for Option T:
 | Staging | `staging.gliagora.com` | Generated fake data; email only to an allowlist | Basic auth, `noindex`; reachable from a phone for review |
 | Production | `gliagora.com` | Real | Public; admin with two factors |
 
-- Push to `main` → CI (lint, type check, unit tests, Playwright + axe, Lighthouse budgets) → image build → automatic deploy to staging.
-- Production is one command: `pnpm release` (tags the commit; GitHub Actions deploys that image). A database backup runs before migrations; failed health checks roll back to the previous image automatically.
-- Infrastructure is described in the repo (`deploy/compose.*.yml`, `deploy/Caddyfile`, server setup script), so a new server can be rebuilt from scratch.
+- Push to `main` → CI (lint, type check, unit tests, Playwright + axe, Lighthouse budgets) → image build and smoke test → image pushed to GHCR (tags `main` and `sha-<commit>`).
+- Deploys run from the manual **Deploy** workflow (Actions → Deploy → Run workflow, with an image tag) (D27):
+  - it runs only on `main` and only when the repository variable `DEPLOY_ENABLED` is `true`; its secrets live in a GitHub environment `production`, limited to `main` and with a required reviewer where the GitHub plan allows it (decided during S);
+  - it connects over SSH with a key that can only run `deploy/deploy-remote.sh`;
+  - it logs in to GHCR with the job's own short-lived `GITHUB_TOKEN`, so no long-lived registry token is kept on the server;
+  - it pulls the image, pins it to its commit (`sha-` tag) and takes a database backup before migrations;
+  - it restarts the stack and waits for the health checks.
+  Rolling back means deploying the previous `sha-` tag. The workflow is inactive (it skips with a notice) until `DEPLOY_ENABLED` is set.
+- Decided during the server setup (S, D23): staging; whether deploys become automatic after merges; automatic rollback when health checks fail; how the deploy secrets are protected (GitHub environment rules need a public repository or a paid plan).
+- Infrastructure is described in the repo (`deploy/compose.prod.yml`, `deploy/Caddyfile`, server setup, deploy and backup scripts; runbook in `deploy/README.md`), so a new server can be rebuilt from scratch.
 
 ### 11.6 Domain, DNS and email records
 
@@ -1360,7 +1367,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 | M0 | Foundations | Repository with `PLAN.md` and `CLAUDE.md`; Next.js + Payload + PostgreSQL in Docker Compose; CI that builds the images and pushes them to GHCR; server files prepared but not run (`deploy/`: setup script, Compose with Caddy, backups, manual deploy workflow) | "Coming soon" page with contact and legal notice, merged to `main` | 1–2 weeks |
 | M1 | Design system and shell | Tokens, fonts, header and mega-menu, footer, skip link, dark mode, `/en/` routing, i18n scaffolding, 404/410, legal pages (EN + TR), About with the name story | Shell site with legal pages | 1–2 weeks |
 | M3 | Taxonomy and institutions | Taxonomy seed with synonyms; ROR import job; country sets; institution pages; hub skeletons | Admin-complete data layer; hubs `noindex` | 1 week |
-| S | Server setup (one-time, just before M4) | Turkish VDS (4 GB, §11.7.1) hardened with `deploy/setup-server.sh`; DNS; production stack with Caddy; backups and restore test switched on; deploy workflow secrets. Decided during S: staging, automatic rollback on failed health checks, Caddy rate limits, backup alerts | Production server running; first deploy through the deploy workflow (what goes public is decided then) | 0.5–1 week |
+| S | Server setup (one-time, just before M4) | Turkish VDS (4 GB, §11.7.1) hardened with `deploy/setup-server.sh`; DNS; production stack with Caddy; backups and restore test switched on; deploy workflow secrets. Decided during S: staging, automatic rollback on failed health checks, Caddy rate limits, backup alerts, protection of the deploy secrets | Production server running; first deploy through the deploy workflow (what goes public is decided then) | 0.5–1 week |
 | M2 | Newsletter | Turkish mailbox and SMTP relay; SPF/DKIM/DMARC; listmonk; double opt-in pages; consent log; KVKK texts; unsubscribe headers; archive template; MX moves from Cloudflare Email Routing to the Turkish mail host before signups open | Signups open before content exists | 1–2 weeks |
 | M4 | Jobs | Job collection; review queue v1; "Suggest a listing"; list, filters, chips, URL state; detail; closing soon; auto-expiry; sitemaps; basic search | Jobs window live (soft launch) | 2–3 weeks |
 | M4b | Accounts and self-service privacy | Member sign-in (Google, ORCID, email link); saved items; digest settings and subfield preferences; export and delete; inactivity clean-up; automatic acknowledgements for requests | Accounts ready on staging, released with M6 | 1.5–2 weeks |
@@ -1474,6 +1481,7 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 | D24 | Favicon: a simpler 16 px design (bold G and a dot, `public/brand/favicon.svg`); the small mark stays for 24–32 px | §7 |
 | D25 | Success green darkened to `#1E754A` so it passes AA on every surface; ₺ and ə in body text come from the system fallback font (accepted) | §7.2, §7.3 |
 | D26 | ESLint stays on version 9 until `eslint-config-next` supports ESLint 10 | — |
+| D27 | Deploys: a manual GitHub Actions workflow (on `main`, switched on by the variable `DEPLOY_ENABLED`) connects over SSH with a key restricted to `deploy-remote.sh` and logs in to GHCR with the job's own short-lived `GITHUB_TOKEN`; no long-lived token on the server. Written now, inactive until the server exists | §11.5, `deploy/README.md` |
 
 ---
 
