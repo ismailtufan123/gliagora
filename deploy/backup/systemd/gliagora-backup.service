@@ -1,0 +1,11 @@
+[Unit]
+Description=Gliagora encrypted backup (databases and settings)
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/gliagora/backup/backup.sh nightly
+Nice=10
+IOSchedulingClass=idle

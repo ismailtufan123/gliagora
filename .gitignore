@@ -29,3 +29,5 @@ next-env.d.ts
 
 # Server-only files (see deploy/README.md)
 /deploy/admin-auth.caddy
+/deploy/backup/backup.env
+/deploy/backup/restic-password

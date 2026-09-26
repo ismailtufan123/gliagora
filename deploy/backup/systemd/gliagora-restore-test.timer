@@ -1,0 +1,9 @@
+[Unit]
+Description=Monthly Gliagora restore test on the 1st at 02:00 UTC (PLAN §18.2)
+
+[Timer]
+OnCalendar=*-*-01 02:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

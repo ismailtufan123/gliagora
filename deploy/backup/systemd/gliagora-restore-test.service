@@ -1,0 +1,10 @@
+[Unit]
+Description=Gliagora monthly restore test (latest backup into a temporary container)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/gliagora/backup/restore.sh test latest
+Nice=10
+IOSchedulingClass=idle
