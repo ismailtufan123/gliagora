@@ -35,19 +35,12 @@ describe.each(Object.entries(modes))('%s mode tokens', (_name, mode) => {
     expect(Object.keys(modes.dark).sort()).toEqual(Object.keys(modes.light).sort())
   })
 
-  it.each(['text', 'text-muted', 'accent', 'link', 'danger', 'warning'])(
+  it.each(['text', 'text-muted', 'accent', 'link', 'danger', 'success', 'warning'])(
     '--%s is readable text on every surface',
     (fg) => {
       for (const bg of surfaces) expect(ratio(mode, fg, bg)).toBeGreaterThanOrEqual(TEXT)
     },
   )
-
-  // Light --success is 4.26:1 on --surface-sunken, so it must not be used as text there.
-  it('--success is readable text on page, surface and raised surface', () => {
-    for (const bg of ['bg', 'surface', 'surface-raised']) {
-      expect(ratio(mode, 'success', bg)).toBeGreaterThanOrEqual(TEXT)
-    }
-  })
 
   it.each(['dapi', 'line-strong'])(
     '--%s is visible as a non-text element on every surface',

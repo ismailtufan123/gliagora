@@ -11,7 +11,9 @@ Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, even
 
 ## Current milestone
 
-**M0 Foundations** (PLAN §20). The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM) is being provisioned. Until it is ready, work locally only: nothing may depend on a live server.
+**M1 Design system and shell** (PLAN §20). Milestone order: M0 → M1 → M3 → S (one-time server setup) → M2 → M4 → … (D23).
+
+The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM) is bought but not set up. Server setup is postponed until just before M4: do not work on the server until the operator says so. Work locally only; nothing may depend on a live server. The server files in `deploy/` are prepared but have never been run.
 
 ## Stack (PLAN §11)
 
@@ -45,7 +47,7 @@ Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, even
 
 - Colour tokens: ink `#1E2152`, magenta `#B8286E`, link blue `#146992`, paper `#EEF0F4`, night `#161942`; dark-mode tints `#F06AAE` and `#5CC8EC`. Keep WCAG AA contrast.
 - Type: Commissioner (display) and Atkinson Hyperlegible Next (body and UI), both self-hosted.
-- Logo: concept 6b "Calcium wave with astrocyte" (D12), with simplified marks for 32/24 px and a 16 px favicon. Use a neutral placeholder until the final SVG files are in `public/brand/`.
+- Logo: concept 6b "Calcium wave with astrocyte" (D12). Files in `public/brand/`: `gliagora-mark.svg` (light backgrounds), `gliagora-mark-dark.svg` (dark), `gliagora-mark-mono.svg`, `gliagora-mark-small.svg` (24–32 px) and `favicon.svg` (16 px, D24). Use them as given; do not redraw them.
 - Accessibility: semantic HTML, full keyboard use, visible focus, `prefers-reduced-motion` respected; target 0 critical axe issues.
 - Performance: Core Web Vitals "good", no layout shift, JavaScript only where it is needed.
 
