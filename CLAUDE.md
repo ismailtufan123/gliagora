@@ -51,10 +51,14 @@ Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, even
 
 ## How to work
 
-- Small, reviewable steps. After each step, summarise what changed, how to run it and what to check.
-- Stop and wait for approval before changes to infrastructure, the data model or legal pages.
-- Explain any destructive command before running it. Never run commands against the production server unless asked in that session.
-- Test data logic (listing expiry, deduplication, taxonomy) and keep `pnpm lint`, `pnpm typecheck` and `pnpm test` passing.
+- Small, reviewable steps: one branch from the latest `main` and one pull request per step. The PR description summarises what changed, how to run it and what to check.
+- Proceed through approved milestone steps without waiting for review. Merge each step's PR yourself once `pnpm lint`, `pnpm typecheck`, `pnpm test` and the build pass (and CI is green), then continue from the updated `main`.
+- Stop and ask only before:
+  - (a) anything that touches the production server (running commands on it or deploying to it);
+  - (b) using real personal data;
+  - (c) publishing legal texts (placeholders that say the texts are in preparation are fine).
+- Explain any destructive command before running it.
+- Test data logic (listing expiry, deduplication, taxonomy).
 - Commit messages: short and imperative, e.g. "Add coming-soon page".
 - If an implementation choice changes the plan, propose the `PLAN.md` edit in the same change.
 
@@ -71,6 +75,6 @@ Fill these in as the project grows.
 ## Target repository layout
 
 - `src/` — Next.js and Payload app
-- `infra/` — production Docker Compose file, Caddyfile, server setup and backup scripts
+- `deploy/` — production Docker Compose file, Caddyfile, server setup and backup scripts (PLAN §11.5)
 - `.github/workflows/` — CI
 - `PLAN.md`, `CLAUDE.md` — project documents
