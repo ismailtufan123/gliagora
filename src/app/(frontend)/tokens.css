@@ -29,8 +29,9 @@
   /* Type. After the self-hosted font and its size-adjusted Arial fallback (next/font), the
      browser takes glyphs the font lacks, such as ₺ and ə in Atkinson Hyperlegible Next, from
      the first system sans-serif that has them: Windows, Apple, Android, then Linux (PLAN §7.3). */
-  --font-fallback: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Noto Sans',
-    'DejaVu Sans', system-ui, sans-serif;
+  --font-fallback:
+    'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Noto Sans', 'DejaVu Sans', system-ui,
+    sans-serif;
   --font-display-stack: var(--font-display), var(--font-fallback);
   --font-body-stack: var(--font-body), var(--font-fallback);
   --step--1: 0.875rem;
