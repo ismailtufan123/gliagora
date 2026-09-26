@@ -1005,9 +1005,15 @@ Practical rules for Option T:
 | Staging | `staging.gliagora.com` | Generated fake data; email only to an allowlist | Basic auth, `noindex`; reachable from a phone for review |
 | Production | `gliagora.com` | Real | Public; admin with two factors |
 
-- Push to `main` → CI (lint, type check, unit tests, Playwright + axe, Lighthouse budgets) → image build → automatic deploy to staging.
-- Production is one command: `pnpm release` (tags the commit; GitHub Actions deploys that image). A database backup runs before migrations; failed health checks roll back to the previous image automatically.
-- Infrastructure is described in the repo (`deploy/compose.*.yml`, `deploy/Caddyfile`, server setup script), so a new server can be rebuilt from scratch.
+- Push to `main` → CI (lint, type check, unit tests, Playwright + axe, Lighthouse budgets) → image build and smoke test → image pushed to GHCR (tags `main` and `sha-<commit>`).
+- Deploys run from the manual **Deploy** workflow (Actions → Deploy → Run workflow, with an image tag) (D27):
+  - it connects over SSH with a key that can only run `deploy/deploy-remote.sh`;
+  - it logs in to GHCR with the job's own short-lived `GITHUB_TOKEN`, so no long-lived registry token is kept on the server;
+  - it pulls the image and takes a database backup before migrations;
+  - it restarts the stack and waits for the health checks.
+  Rolling back means deploying the previous `sha-<commit>` tag. The workflow is inactive (it skips with a notice) until the server secrets exist.
+- Decided during the server setup (S, D23): staging; whether deploys become automatic after merges; automatic rollback when health checks fail.
+- Infrastructure is described in the repo (`deploy/compose.prod.yml`, `deploy/Caddyfile`, server setup, deploy and backup scripts; runbook in `deploy/README.md`), so a new server can be rebuilt from scratch.
 
 ### 11.6 Domain, DNS and email records
 
@@ -1474,6 +1480,7 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 | D24 | Favicon: a simpler 16 px design (bold G and a dot, `public/brand/favicon.svg`); the small mark stays for 24–32 px | §7 |
 | D25 | Success green darkened to `#1E754A` so it passes AA on every surface; ₺ and ə in body text come from the system fallback font (accepted) | §7.2, §7.3 |
 | D26 | ESLint stays on version 9 until `eslint-config-next` supports ESLint 10 | — |
+| D27 | Deploys: a manual GitHub Actions workflow connects over SSH with a key restricted to `deploy-remote.sh` and logs in to GHCR with the job's own short-lived `GITHUB_TOKEN`; no long-lived token on the server. Written now, inactive until the server exists | §11.5, `deploy/README.md` |
 
 ---
 

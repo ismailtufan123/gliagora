@@ -2,6 +2,8 @@
 
 Everything the production server runs is described in this folder (PLAN §11.5), so a new server can be rebuilt from scratch. The server only pulls and runs images built by CI; it never builds.
 
+**Status:** prepared, never run. The one-time server setup (S) happens just before M4 (PLAN §20, D23); until the operator starts it, nobody works on the server.
+
 | File | What it is |
 | --- | --- |
 | `setup-server.sh` | One-time hardening of a fresh Ubuntu 24.04 server |
@@ -10,7 +12,8 @@ Everything the production server runs is described in this folder (PLAN §11.5),
 | `admin-auth.caddy.example` | Template for the second password in front of `/admin` |
 | `postgres/init/10-app-database.sh` | Creates the app's own database user on first start |
 | `.env.example` | Template for the server's `.env` (domain, image, secrets) |
-| `update.sh` | Backup, then pull the new image and restart |
+| `update.sh` | Backup, then restart with the new image and wait until healthy |
+| `deploy-remote.sh` | Server side of the GitHub Deploy workflow (the only command its SSH key may run) |
 | `backup/backup.sh` | Encrypted backup of the databases and settings (restic) |
 | `backup/restore.sh` | Restore, list snapshots, or test a restore without touching production |
 | `backup/systemd/` | Timers: nightly backup, monthly restore test |
@@ -19,7 +22,8 @@ On the server, everything lives in `/opt/gliagora`:
 
 | Path | Contents |
 | --- | --- |
-| `/opt/gliagora/.env` | Secrets (mode 600, never committed) |
+| `/opt/gliagora/.env` | Secrets and the deployed image `APP_IMAGE` (mode 600, never committed) |
+| `/opt/gliagora/.env.previous` | `.env` before the last deploy, for a quick rollback |
 | `/opt/gliagora/admin-auth.caddy` | `/admin` password hash (mode 600, never committed) |
 | Docker volume `gliagora_db-data` | The database |
 | Docker volume `gliagora_caddy-data` | TLS certificates |
@@ -27,11 +31,30 @@ On the server, everything lives in `/opt/gliagora`:
 | `/opt/gliagora/backup/` | Backup scripts, `backup.env` and `restic-password` (mode 600) |
 | `/var/backups/gliagora/restic` | Encrypted backup repository |
 
+## How deploys work
+
+Deploys run from GitHub: **Actions → Deploy → Run workflow**, with an image tag (`main` or `sha-<commit>`) (`.github/workflows/deploy.yml`, D27).
+
+1. The workflow connects over SSH with its own key. On the server, that key's line in `authorized_keys` starts with `restrict,command="/opt/gliagora/deploy-remote.sh"`: it can run nothing else, get no shell and forward nothing.
+2. It sends the job's own `GITHUB_TOKEN` (valid only while the job runs) on stdin. `deploy-remote.sh` logs in to GHCR with it in a temporary Docker config, pulls the images and deletes that config. **No registry login is stored on the server.**
+3. It records the new image in `.env` (the old file stays as `.env.previous`) and runs `update.sh --no-pull`:
+   - a `pre-update` backup, skipped only on the very first start, when there is no database yet;
+   - a restart;
+   - a wait until every service is healthy. The app applies database migrations when it starts.
+
+Without the four `DEPLOY_*` secrets the workflow stops with a notice ("Deploy skipped") and changes nothing, so it is safe to leave in place before the server exists.
+
 ## Before you start
 
 1. **Server:** Ubuntu 24.04 with your SSH public key installed for root (most providers ask for it when ordering).
 2. **DNS (Cloudflare, D1):** `A` records for `gliagora.com` and `www` pointing to the server's IPv4 address (plus `AAAA` for IPv6 if the server has one), all **DNS only** (grey cloud). Add `CAA 0 issue "letsencrypt.org"`. Caddy needs these to get certificates.
-3. **Image access:** the image `ghcr.io/ismailtufan123/gliagora` is private unless the package is made public on GitHub. Either make it public (GitHub → your profile → Packages → gliagora → Package settings → Change visibility), or create a GitHub token with only the `read:packages` scope and log in once on the server: `docker login ghcr.io -u <github-username>`.
+3. **Deploy key:** on your computer, create a key pair used only by the Deploy workflow:
+
+   ```sh
+   ssh-keygen -t ed25519 -N '' -C gliagora-deploy -f gliagora-deploy
+   ```
+
+   `gliagora-deploy.pub` goes to the server (step 1). `gliagora-deploy` (the private key) goes only into a GitHub secret (step 4); delete your local copy afterwards.
 
 ## 1. Harden the server (once)
 
@@ -39,18 +62,26 @@ From your computer:
 
 ```sh
 scp deploy/setup-server.sh root@<server-ip>:/root/
-ssh -t root@<server-ip> 'ADMIN_USER=gliagora bash /root/setup-server.sh'
+ssh -t root@<server-ip> "ADMIN_USER=gliagora DEPLOY_PUBLIC_KEY='$(cat gliagora-deploy.pub)' bash /root/setup-server.sh"
 ```
 
-The script copies root's SSH key to the new user `gliagora`, asks for a sudo password (store it in the password manager), then turns off root and password logins. **Before closing that session**, open a second terminal and check `ssh gliagora@<server-ip>` and `sudo -v`.
+The script:
 
-## 2. Start the stack (once)
+- copies root's SSH key to the new user `gliagora` and asks for a sudo password (store it in the password manager);
+- turns off root and password logins;
+- installs the deploy key, restricted to `deploy-remote.sh`;
+- lets `gliagora` run `update.sh --no-pull` as root without a password, which the deploy needs for the backup.
+
+**Before closing that session**, open a second terminal and check `ssh gliagora@<server-ip>` and `sudo -v`.
+
+## 2. Prepare the stack (once)
 
 From your computer:
 
 ```sh
 scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/postgres deploy/.env.example \
-  deploy/admin-auth.caddy.example deploy/update.sh deploy/backup gliagora@<server-ip>:/opt/gliagora/
+  deploy/admin-auth.caddy.example deploy/update.sh deploy/deploy-remote.sh deploy/backup \
+  gliagora@<server-ip>:/opt/gliagora/
 ```
 
 On the server, in `/opt/gliagora`:
@@ -63,13 +94,11 @@ nano .env
 docker run --rm -it caddy:2.11.4-alpine caddy hash-password    # choose the /admin password
 cp admin-auth.caddy.example admin-auth.caddy && chmod 600 admin-auth.caddy
 nano admin-auth.caddy         # paste the hash; keep or change the user name
-
-docker compose -f compose.prod.yml up -d --wait
 ```
 
-Then check https://gliagora.com/ (redirects to `/en/`) and https://gliagora.com/health/ (`{"status":"ok"}`). Open https://gliagora.com/admin/, enter the `/admin` password, and create the first editor account.
+Do not start the stack by hand: the first deploy (step 5) pulls the images and starts it.
 
-## 3. Turn on backups (once)
+## 3. Prepare backups (once)
 
 Backups are encrypted with restic (PLAN §11.7.1, §18.2). Each night at 00:30 UTC (03:30 in Istanbul):
 
@@ -86,14 +115,11 @@ cp backup.env.example backup.env && chmod 600 backup.env
 openssl rand -base64 33 > restic-password && chmod 600 restic-password
 cat restic-password           # store this in the password manager NOW: without it the backups are unreadable
 sudo ./backup.sh init         # create the repository
-sudo ./backup.sh              # first backup
-sudo ./restore.sh test        # check that it restores
-
 sudo cp systemd/gliagora-*.service systemd/gliagora-*.timer /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now gliagora-backup.timer gliagora-restore-test.timer
-systemctl list-timers 'gliagora-*'
 ```
+
+The timers are switched on after the first deploy (step 5).
 
 **Weekly copy to the operator's computer** (until the second VDS exists at M2). The repository is encrypted, so copying its files is safe. On your computer:
 
@@ -105,21 +131,43 @@ To read that copy, install restic and run `restic -r ~/gliagora-backups/restic s
 
 **Second repository (from M2).** Set `COPY_REPOSITORY` and `COPY_PASSWORD_FILE` in `backup.env`. Each nightly run then also copies the snapshots there and applies the same retention.
 
-**Checking backups:** `cat /var/backups/gliagora/last-success` shows the time of the last good backup; `journalctl -u gliagora-backup` shows the logs. Email alerts come with the mailbox at M2.
+**Checking backups:** `cat /var/backups/gliagora/last-success` shows the time of the last good backup; `journalctl -u gliagora-backup` shows the logs. Alerts are decided during S (D23).
 
-## 4. Update to a new version
+## 4. Connect GitHub (once)
 
-CI pushes a new image for every merge to `main` (tags `main` and `sha-<commit>`). On the server:
+In GitHub: repository **Settings → Secrets and variables → Actions → New repository secret**:
 
-```sh
-sudo /opt/gliagora/update.sh
-```
+| Secret | Value |
+| --- | --- |
+| `DEPLOY_HOST` | The server's IP address (or `gliagora.com` once DNS works) |
+| `DEPLOY_USER` | `gliagora` |
+| `DEPLOY_SSH_KEY` | The whole content of the private key file `gliagora-deploy` |
+| `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan -t ed25519 <server-ip>` run on your computer |
 
-It takes a backup (tag `pre-update`), pulls the new image, restarts, and waits until everything is healthy. The app applies database migrations when it starts.
+Check `DEPLOY_KNOWN_HOSTS` before saving it: on the server, `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` shows the fingerprint. `ssh-keygen -lf <(ssh-keyscan -t ed25519 <server-ip>)` on your computer must show the same one. The workflow refuses any other host key.
 
-To roll back the app, set `APP_IMAGE=ghcr.io/ismailtufan123/gliagora:sha-<previous commit>` in `.env` and run `sudo ./update.sh` again. Migrations are not undone automatically. If one damaged data, restore the `pre-update` snapshot (below).
+## 5. First deploy (once)
 
-## 5. Restore
+1. GitHub: **Actions → Deploy → Run workflow**, tag `main`. The log ends with "Deployed ghcr.io/…:main".
+2. Check https://gliagora.com/ (redirects to `/en/`) and https://gliagora.com/health/ (`{"status":"ok"}`).
+3. Open https://gliagora.com/admin/, enter the `/admin` password, and create the first editor account.
+4. On the server, take the first backup, test it and switch on the timers:
+
+   ```sh
+   cd /opt/gliagora/backup
+   sudo ./backup.sh
+   sudo ./restore.sh test
+   sudo systemctl enable --now gliagora-backup.timer gliagora-restore-test.timer
+   systemctl list-timers 'gliagora-*'
+   ```
+
+## 6. Update and roll back
+
+CI pushes a new image for every merge to `main` (tags `main` and `sha-<commit>`). To update, run the Deploy workflow with `main`, or with the `sha-<commit>` of a specific merge.
+
+To roll back, run the Deploy workflow with the previous `sha-<commit>` tag. On the server, without GitHub, `cp .env.previous .env && sudo ./update.sh --no-pull` goes back to the image that ran before the last deploy; it is still on the server. Migrations are not undone automatically. If one damaged data, restore the `pre-update` snapshot (below).
+
+## 7. Restore
 
 ```sh
 cd /opt/gliagora/backup
@@ -133,11 +181,11 @@ sudo ./restore.sh config latest /root/restored  # get the backed-up .env and set
 
 **New server after losing the old one:**
 
-1. Run steps 1 and 2 up to copying the files.
+1. Run steps 1 and 2 (with a new deploy key if the old one is lost; update the GitHub secrets).
 2. Copy the repository back to `/var/backups/gliagora/restic` (from your computer's copy or the second VDS). In `/opt/gliagora/backup`, create `backup.env` from `backup.env.example` and put the password in `restic-password` (both mode 600).
 3. Recover `.env` and `admin-auth.caddy` with `sudo ./restore.sh config latest /root/restored`.
-4. Start the stack: an empty database is created.
-5. Restore the data with `sudo ./restore.sh database latest`.
+4. Run the Deploy workflow with the last good `sha-<commit>` tag: it starts the stack with an empty database.
+5. Restore the data with `sudo ./restore.sh database latest`, then switch on the timers (step 5).
 
 ## Useful commands
 
@@ -149,9 +197,11 @@ sudo ufw status verbose                             # firewall
 sudo fail2ban-client status sshd                    # blocked SSH addresses
 ```
 
-## Not included yet
+## Decided during the server setup (S, D23)
 
-- `staging.gliagora.com` (PLAN §11.5): the same images with their own database, basic auth and `noindex`.
-- listmonk (M2) and Umami: each gets its own database and user in the same PostgreSQL.
-- Automatic rollback when an update fails its health checks (PLAN §11.5): `update.sh` stops and explains how to roll back by hand.
-- Rate limits in Caddy need a plugin and a custom Caddy build. Until then, the admin is protected by the second password and Payload's lockout (5 attempts, 15 minutes).
+- Staging (`staging.gliagora.com`): the same images with their own database, basic auth and `noindex`, or none.
+- Automatic rollback when an update fails its health checks. Until then, `update.sh` stops and explains how to roll back by hand.
+- Rate limits in Caddy, which need a plugin and a custom Caddy build. Until then, the admin is protected by the second password and Payload's lockout (5 attempts, 15 minutes).
+- Backup alerts (success and failure emails).
+
+listmonk (M2) and Umami each get their own database and user in the same PostgreSQL later.

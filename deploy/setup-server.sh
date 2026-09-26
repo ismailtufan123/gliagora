@@ -11,10 +11,13 @@
 #   6. Installs Docker Engine and the Compose plugin from Docker's own apt repository.
 #   7. Adds a 2 GB swap file (if the server has no swap) and creates /opt/gliagora for the stack.
 #   8. Installs restic for the encrypted backups (set up afterwards; see deploy/README.md).
+#   9. Prepares deploys from GitHub Actions: lets the admin user run update.sh --no-pull as root
+#      without a password, and installs the deploy key if DEPLOY_PUBLIC_KEY is set.
 #
 # Usage, logged in as root on the new server:
 #   ADMIN_USER=gliagora SSH_PUBLIC_KEY="ssh-ed25519 AAAA... name@laptop" bash setup-server.sh
 # Without SSH_PUBLIC_KEY, the keys already in /root/.ssh/authorized_keys are copied.
+# Optionally add DEPLOY_PUBLIC_KEY="ssh-ed25519 AAAA... gliagora-deploy" (the GitHub Actions key).
 #
 # IMPORTANT: keep this root session open until you have logged in as the new user from a second
 # terminal (ssh ADMIN_USER@server) and `sudo -v` works. Otherwise a mistake can lock you out.
@@ -24,6 +27,7 @@ set -euo pipefail
 
 ADMIN_USER="${ADMIN_USER:-gliagora}"
 SSH_PUBLIC_KEY="${SSH_PUBLIC_KEY:-}"
+DEPLOY_PUBLIC_KEY="${DEPLOY_PUBLIC_KEY:-}"
 APP_DIR=/opt/gliagora
 # Docker's apt signing key (https://docs.docker.com/engine/install/ubuntu/).
 DOCKER_GPG_FINGERPRINT=9DC858229FC7DD38854AE2D88D81803C0EBFCD88
@@ -205,6 +209,25 @@ sysctl --quiet --system
 
 log "Creating $APP_DIR"
 install -d -m 750 -o "$ADMIN_USER" -g "$ADMIN_USER" "$APP_DIR"
+
+# --- 8. Deploys from GitHub Actions -----------------------------------------------------------------
+
+log "Preparing deploys from GitHub Actions"
+# deploy-remote.sh runs update.sh as root for the backup. This adds no new power: members of the
+# docker group can already act as root.
+sudoers=/etc/sudoers.d/gliagora-deploy
+printf '%s ALL=(root) NOPASSWD: %s/update.sh --no-pull\n' "$ADMIN_USER" "$APP_DIR" > "$sudoers.tmp"
+chmod 440 "$sudoers.tmp"
+visudo -cf "$sudoers.tmp" >/dev/null || fail "Invalid sudoers rule; nothing was changed."
+mv "$sudoers.tmp" "$sudoers"
+
+if [[ -n "$DEPLOY_PUBLIC_KEY" ]]; then
+  ssh-keygen -l -f /dev/stdin <<<"$DEPLOY_PUBLIC_KEY" >/dev/null 2>&1 \
+    || fail "DEPLOY_PUBLIC_KEY is not a valid SSH public key."
+  # The key may run nothing but deploy-remote.sh: no shell, no forwarding.
+  deploy_line="restrict,command=\"$APP_DIR/deploy-remote.sh\" $DEPLOY_PUBLIC_KEY"
+  grep -qxF "$deploy_line" "$keys_file" || printf '%s\n' "$deploy_line" >> "$keys_file"
+fi
 
 # --- Done -----------------------------------------------------------------------------------------
 
