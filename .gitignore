@@ -23,3 +23,6 @@ next-env.d.ts
 *.log
 .DS_Store
 *.pem
+
+# Local Python environment for tools/fonts
+/.venv-fonts/
