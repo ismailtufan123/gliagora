@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 // Placeholder until the full legal notice is written and reviewed (PLAN §15.4).
 export default function ContactPage() {
   return (
-    <main id="main" className="page">
+    <main id="main" className="page-frame flex-1 py-12">
       <Lockup size="small" href="/en/" />
-      <div className="prose">
+      <div className="prose mt-12">
         <h1>Contact and legal notice</h1>
         <p>
           Gliagora | Neuroscience is in preparation. The full legal notice will be published on this

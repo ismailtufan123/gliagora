@@ -1,190 +1,160 @@
+@import 'tailwindcss';
 @import './tokens.css';
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+/*
+ * Tailwind utilities come only from the design tokens (PLAN §7, §11.3): the default colours,
+ * type scale, radii, shadows and breakpoints are removed, so `bg-red-500` or `text-xl` do not exist.
+ * Spacing keeps Tailwind's 4px step (`p-4` = 16px), which matches the 4px base in §7.4.
+ */
+@theme inline {
+  --color-*: initial;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-raised: var(--surface-raised);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-link: var(--link);
+  --color-dapi: var(--dapi);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-badge-bg: var(--badge-bg);
+  --color-badge-text: var(--badge-text);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --font-*: initial;
+  --font-display: var(--font-display-stack);
+  --font-body: var(--font-body-stack);
+
+  --text-*: initial;
+  --text-caption: var(--step--1);
+  --text-body: var(--step-0);
+  --text-card: var(--step-1);
+  --text-h3: var(--step-2);
+  --text-h2: var(--step-3);
+  --text-h1: var(--step-4);
+  --text-hero: var(--step-5);
+
+  --radius-*: initial;
+  --radius-control: var(--corner-control);
+  --radius-overlay: var(--corner-overlay);
+  --radius-pill: var(--corner-pill);
+
+  --shadow-*: initial;
+  --shadow-overlay: var(--elevation-overlay);
+
+  --ease-*: initial;
+  --ease-standard: var(--ease);
+
+  --breakpoint-*: initial;
+  --breakpoint-sm: 30rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+
+  --container-page: var(--container);
+  --container-measure: var(--measure);
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body-stack);
-  font-size: var(--step-0);
-  line-height: 1.6;
-}
-
-h1,
-h2,
-h3 {
-  font-family: var(--font-display-stack);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  margin: 0;
-}
-
-p {
-  margin: 0;
-}
-
-img,
-svg {
-  display: block;
-  max-width: 100%;
-}
-
-a {
-  color: var(--link);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.18em;
-}
-
-a:hover {
-  text-decoration-thickness: 2px;
-}
-
-:focus-visible {
-  outline: 2px solid var(--dapi);
-  outline-offset: 2px;
-}
-
-.skip-link {
-  position: absolute;
-  left: var(--space-4);
-  top: var(--space-4);
-  z-index: 100;
-  padding: var(--space-2) var(--space-4);
-  background: var(--surface);
-  border-radius: var(--radius-control);
-  transform: translateY(-200%);
-}
-
-.skip-link:focus {
-  transform: none;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-/* Page frame */
-
-.page {
-  flex: 1;
+/* Page frame: full width up to 1280px, with the §7.4 gutters (16 / 24 / 32px). */
+@utility page-frame {
   width: 100%;
   max-width: var(--container);
   margin-inline: auto;
-  padding: var(--space-12) var(--gutter);
+  padding-inline: var(--gutter);
 }
 
-.site-footer {
-  border-top: 1px solid var(--line);
-  font-size: var(--step--1);
-  color: var(--text-muted);
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body-stack);
+    font-size: var(--step-0);
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display-stack);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  a {
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--dapi);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
-.site-footer__inner {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding: var(--space-6) var(--gutter);
-}
+@layer components {
+  .skip-link {
+    position: absolute;
+    left: var(--space-4);
+    top: var(--space-4);
+    z-index: 100;
+    padding: var(--space-2) var(--space-4);
+    background: var(--surface);
+    border-radius: var(--corner-control);
+    transform: translateY(-200%);
+  }
 
-/* Logo lockup: mark + "Gliagora" + vertical rule + "Neuroscience" (PLAN §1) */
+  .skip-link:focus {
+    transform: none;
+  }
 
-.lockup {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-family: var(--font-display-stack);
-  font-weight: 700;
-  color: var(--text);
-  text-decoration: none;
-}
+  /* Long-form text: legal pages, About. */
+  .prose {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--measure);
+  }
 
-.lockup__rule {
-  align-self: stretch;
-  width: 2px;
-  margin-block: 0.2em;
-  background: var(--line-strong);
-}
+  .prose h1 {
+    font-size: var(--step-4);
+  }
 
-.lockup__descriptor {
-  font-weight: 600;
-}
-
-.lockup--large {
-  font-size: var(--step-2);
-}
-
-.lockup--small {
-  font-size: var(--step-1);
-}
-
-/* Coming-soon page */
-
-.coming-soon {
-  display: grid;
-  align-content: center;
-  gap: var(--space-8);
-}
-
-.coming-soon__tagline {
-  max-width: 14ch;
-  font-family: var(--font-display-stack);
-  font-size: var(--step-5);
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.01em;
-}
-
-.coming-soon__text {
-  display: grid;
-  gap: var(--space-4);
-  max-width: var(--measure);
-  font-size: var(--step-1);
-}
-
-/* Text pages */
-
-.prose {
-  display: grid;
-  gap: var(--space-4);
-  max-width: var(--measure);
-  margin-top: var(--space-12);
-}
-
-.prose h1 {
-  font-size: var(--step-4);
-}
-
-.prose h2 {
-  margin-top: var(--space-6);
-  font-size: var(--step-2);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  .prose h2 {
+    margin-top: var(--space-6);
+    font-size: var(--step-2);
   }
 }
