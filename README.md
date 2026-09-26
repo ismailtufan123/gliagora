@@ -24,6 +24,7 @@ One TypeScript app: Next.js (App Router) with Payload CMS 3 inside it, on Postgr
 | `compose.yaml`            | Local PostgreSQL for development                                |
 | `Dockerfile`              | Production image (built in CI, pulled by the server)            |
 | `.github/workflows/ci.yml` | CI: checks, image build, smoke test, push to GHCR              |
+| `deploy/`                 | Production server: setup script, Compose, Caddy ([runbook](deploy/README.md)) |
 
 ## Local development
 

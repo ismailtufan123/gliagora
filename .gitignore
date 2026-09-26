@@ -26,3 +26,6 @@ next-env.d.ts
 
 # Local Python environment for tools/fonts
 /.venv-fonts/
+
+# Server-only files (see deploy/README.md)
+/deploy/admin-auth.caddy

@@ -1,0 +1,7 @@
+# Second password in front of /admin (PLAN §18.2), until the admin has a second factor.
+# Copy to /opt/gliagora/admin-auth.caddy and replace the hash. Create a hash with:
+#   docker run --rm -it caddy:2.11.4-alpine caddy hash-password
+# (it asks for the password, so it does not end up in the shell history).
+basic_auth {
+	editor $2a$14$replace.with.the.output.of.caddy.hash-password
+}
