@@ -1,0 +1,103 @@
+/*
+ * Design tokens (PLAN §7.2–7.4). Colours, type, spacing and motion come only from here.
+ * Contrast pairs are checked by tokens.test.ts next to this file.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Colour: light */
+  --bg: #eef0f4;
+  --surface: #ffffff;
+  --surface-sunken: #e3e6ee;
+  --surface-raised: #ffffff;
+  --text: #1e2152;
+  --text-muted: #4a4f72;
+  --accent: #b8286e;
+  --on-accent: #ffffff;
+  --link: #146992;
+  --dapi: #1777a6;
+  --line: #d3d6e0;
+  --line-strong: #7c809e;
+  --badge-bg: #f8e4ee;
+  --badge-text: #9c1f5b;
+  --danger: #b3261e;
+  --success: #1f7a4d;
+  --warning: #8a5300;
+  --shadow-overlay: 0 8px 24px rgb(22 25 66 / 0.18);
+
+  /* Type */
+  --font-display-stack: var(--font-display), system-ui, sans-serif;
+  --font-body-stack: var(--font-body), system-ui, sans-serif;
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-2: 1.5625rem;
+  --step-3: clamp(1.75rem, 1.3rem + 1.6vw, 2.44rem);
+  --step-4: clamp(2.2rem, 1.5rem + 3vw, 3.5rem);
+  --step-5: clamp(2.6rem, 1.6rem + 5vw, 5.2rem);
+  --measure: 66ch;
+
+  /* Space (4px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* Shape */
+  --radius-control: 4px;
+  --radius-overlay: 10px;
+  --radius-pill: 999px;
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Layout */
+  --container: 1280px;
+  --gutter: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --gutter: var(--space-8);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Colour: dark (night) */
+    --bg: #161942;
+    --surface: #1e2152;
+    --surface-sunken: #11143a;
+    --surface-raised: #272b63;
+    --text: #e9ebf4;
+    --text-muted: #aeb3d2;
+    --accent: #f06aae;
+    --on-accent: #161942;
+    --link: #5cc8ec;
+    --dapi: #5cc8ec;
+    --line: #2f346b;
+    --line-strong: #7479ad;
+    --badge-bg: #3a1f4f;
+    --badge-text: #f59bc6;
+    --danger: #ff8a80;
+    --success: #6fd39c;
+    --warning: #f2b660;
+    --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
+  }
+}
