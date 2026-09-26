@@ -10,6 +10,7 @@
 #   5. fail2ban: blocks addresses that keep failing to log in over SSH.
 #   6. Installs Docker Engine and the Compose plugin from Docker's own apt repository.
 #   7. Adds a 2 GB swap file (if the server has no swap) and creates /opt/gliagora for the stack.
+#   8. Installs restic for the encrypted backups (set up afterwards; see deploy/README.md).
 #
 # Usage, logged in as root on the new server:
 #   ADMIN_USER=gliagora SSH_PUBLIC_KEY="ssh-ed25519 AAAA... name@laptop" bash setup-server.sh
@@ -48,7 +49,7 @@ log "Installing updates"
 apt-get update
 apt-get -y upgrade
 apt-get -y install ca-certificates curl gnupg ufw fail2ban python3-systemd \
-  unattended-upgrades apt-listchanges
+  unattended-upgrades apt-listchanges restic
 
 log "Turning on automatic security updates"
 cat > /etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
