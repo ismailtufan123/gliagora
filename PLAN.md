@@ -452,7 +452,7 @@ Original page reachable; employer-origin; position still open; deadline confirme
 
 ### 7.2 Colour tokens (final)
 
-Contrast ratios computed with the WCAG 2.1 formula (script kept in `tools/contrast.py` and run in CI).
+Contrast ratios computed with the WCAG 2.1 formula. The test `src/app/(frontend)/tokens.test.ts` reads the tokens from `tokens.css` and checks every pair below in CI.
 
 | Token | Light | Dark | Use | Minimum contrast on its surfaces |
 |---|---|---|---|---|
@@ -470,11 +470,12 @@ Contrast ratios computed with the WCAG 2.1 formula (script kept in `tools/contra
 | `--line-strong` | `#7C809E` | `#7479AD` | input and control borders | 3.09 / 3.15 (≥3:1 required) |
 | `--badge-bg` / `--badge-text` | `#F8E4EE` / `#9C1F5B` | `#3A1F4F` / `#F59BC6` | "Closing soon" | 6.3 / 7.0 |
 | `--danger` | `#B3261E` | `#FF8A80` | errors | 5.7 / 6.6 |
-| `--success` | `#1F7A4D` | `#6FD39C` | confirmations | 4.7 / 9.2 |
+| `--success` | `#1E754A` | `#6FD39C` | confirmations | 4.55 / 7.1 (lowest on any surface) |
 | `--warning` | `#8A5300` | `#F2B660` | warnings | 5.6 / 9.3 |
 
 Findings from the check:
 
+- `--success` was `#1F7A4D`, which is only 4.26:1 on `--surface-sunken`; it was darkened to `#1E754A` (same hue), which reaches at least 4.5:1 on every surface, including the badge background (D25).
 - DAPI blue `#1777A6` on cool paper is **4.36:1**, below AA for normal text. It stays for non-text uses (focus rings, pins), and links use the darker `#146992` (≥4.85:1 on every light surface).
 - Indigo, magenta and both dark-mode tints pass AA as provided.
 - Magenta and DAPI blue have almost the same luminance (1.18:1), so the map and badges never distinguish them by colour alone (shape + text always).
@@ -489,6 +490,7 @@ Findings from the check:
 | Email | System stack (`Georgia, 'Times New Roman', serif` for headings; `Arial, Helvetica, sans-serif` for body) | web fonts are unreliable in email clients |
 
 - Self-hosted WOFF2 through `next/font/local`, subset to Latin + Latin Extended (Turkish ğ ş ı İ, German, Spanish, French), with metric-adjusted fallbacks to avoid layout shift. No Google Fonts CDN. `[U]` Check axis tags and glyph coverage in the downloaded builds.
+- Fallback stack after each self-hosted font and its metric-adjusted Arial fallback: `'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Noto Sans', 'DejaVu Sans', system-ui, sans-serif` (`--font-fallback` in `tokens.css`). Every font in it has ₺ and ə, which Atkinson Hyperlegible Next lacks; browsers draw those two glyphs from the first installed one (Windows, Apple, Android, then Linux). Accepted (D25).
 - No monospace UI labels; DOIs and IDs use the body face.
 
 | Step | Size | Use |
@@ -1272,7 +1274,7 @@ Before **any** money arrives (sponsorship, ads, donations, paid events): see an 
 | Static checks | `eslint-plugin-jsx-a11y`; lint rule against hard-coded strings and raw colour values | Every commit |
 | Automated a11y | Playwright + axe-core on ~12 templates × light/dark × desktop/mobile; 0 serious or critical issues allowed | Every pull request |
 | Keyboard paths | Playwright scripts: skip link, mega-menu, search dialog, filters, bottom sheet, map panel, newsletter form (focus order and focus return) | Every pull request |
-| Contrast | `tools/contrast.py` validates all token pairs in §7.2 | Every pull request |
+| Contrast | `src/app/(frontend)/tokens.test.ts` validates all token pairs in §7.2 | Every pull request |
 | Performance lab | Lighthouse CI with budgets (§17.3) | Every pull request |
 | Manual a11y | Keyboard-only walkthrough; screen readers: Orca (Linux), VoiceOver (iOS/macOS) or TalkBack (Android); zoom and forced-colours checks | End of each milestone |
 | Real device | Mid-range Android phone on a throttled 4G connection | End of each milestone |
@@ -1349,14 +1351,17 @@ Server Components by default (lists and filters render on the server; only contr
 
 ## 20. Build roadmap
 
-Each milestone ends with a deployed site: automatically on staging, then on production with `pnpm release`.
+Milestones run in this order: M0 → M1 → M3 → **S (one-time server setup)** → M2 → M4 → M4b → M5 → M6 → M7 … M14 (D23). The server setup moved to just before M4 so that nothing depends on a live server earlier; M2 (newsletter) follows it because it needs the mailbox, listmonk and the server.
+
+Until S, each milestone ends merged to `main` with CI green and its image in GHCR. From S on, each milestone ends deployed to production (and to staging, if S decides to run one).
 
 | # | Milestone | Scope | Deployable outcome | Estimate |
 |---|---|---|---|---|
-| M0 | Foundations | Repository with `PLAN.md` and `CLAUDE.md`; Next.js + Payload + PostgreSQL in Docker Compose; CI that builds the images; Turkish VDS (4 GB, §11.7.1); Caddy; staging and production; DNS; backups; server hardening | "Coming soon" page with contact and legal notice | 1–2 weeks |
+| M0 | Foundations | Repository with `PLAN.md` and `CLAUDE.md`; Next.js + Payload + PostgreSQL in Docker Compose; CI that builds the images and pushes them to GHCR; server files prepared but not run (`deploy/`: setup script, Compose with Caddy, backups, manual deploy workflow) | "Coming soon" page with contact and legal notice, merged to `main` | 1–2 weeks |
 | M1 | Design system and shell | Tokens, fonts, header and mega-menu, footer, skip link, dark mode, `/en/` routing, i18n scaffolding, 404/410, legal pages (EN + TR), About with the name story | Shell site with legal pages | 1–2 weeks |
-| M2 | Newsletter | Turkish mailbox and SMTP relay; SPF/DKIM/DMARC; listmonk; double opt-in pages; consent log; KVKK texts; unsubscribe headers; archive template; MX moves from Cloudflare Email Routing to the Turkish mail host before signups open | Signups open before content exists | 1–2 weeks |
 | M3 | Taxonomy and institutions | Taxonomy seed with synonyms; ROR import job; country sets; institution pages; hub skeletons | Admin-complete data layer; hubs `noindex` | 1 week |
+| S | Server setup (one-time, just before M4) | Turkish VDS (4 GB, §11.7.1) hardened with `deploy/setup-server.sh`; DNS; production stack with Caddy; backups and restore test switched on; deploy workflow secrets. Decided during S: staging, automatic rollback on failed health checks, Caddy rate limits, backup alerts | Production server running; first deploy through the deploy workflow (what goes public is decided then) | 0.5–1 week |
+| M2 | Newsletter | Turkish mailbox and SMTP relay; SPF/DKIM/DMARC; listmonk; double opt-in pages; consent log; KVKK texts; unsubscribe headers; archive template; MX moves from Cloudflare Email Routing to the Turkish mail host before signups open | Signups open before content exists | 1–2 weeks |
 | M4 | Jobs | Job collection; review queue v1; "Suggest a listing"; list, filters, chips, URL state; detail; closing soon; auto-expiry; sitemaps; basic search | Jobs window live (soft launch) | 2–3 weeks |
 | M4b | Accounts and self-service privacy | Member sign-in (Google, ORCID, email link); saved items; digest settings and subfield preferences; export and delete; inactivity clean-up; automatic acknowledgements for requests | Accounts ready on staging, released with M6 | 1.5–2 weeks |
 | M5 | Map | Basemap extract and assets; `/en/map/`; jobs split view; clustering; institution panel; list sync | Map live | 1–2 weeks |
@@ -1370,7 +1375,7 @@ Each milestone ends with a deployed site: automatically on staging, then on prod
 | M13 | Signature hero | Needs final logo SVG; §10 in full | 3D hero live | 2 weeks |
 | M14 | Hardening | Accessibility audit, performance tuning, security review, restore drill, documentation | Phase 1 complete | 1 week |
 
-Phase 1 total: about 22–31 weeks. If M0 starts in early October 2026, the public launch (M6) lands around the turn of the year (late December to early January), still inside the PhD application season.
+Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 2026, the public launch (M6) lands around the turn of the year (late December to early January), still inside the PhD application season.
 
 **Conventions to be written into `CLAUDE.md` at M0 (preview)**
 
@@ -1465,6 +1470,10 @@ Phase 1 total: about 22–31 weeks. If M0 starts in early October 2026, the publ
 | D20 | Newsletter name: "Glia Notes" (subtitle "the monthly Gliagora newsletter") | §1, §9, §13 |
 | D21 | Phase 4 live talk series name: "Glia Talks" (shown as "Glia Talks by Gliagora") | §3 |
 | D22 | Hosting stays in Türkiye (Option T) on the lowest-cost setup in §11.7.1: one 4 GB VDS, images built in CI, one shared PostgreSQL, no separate SMTP relay or paid backup service at the start. Everything stays portable in Docker Compose; if the data controller moves abroad, hosting moves to the controller's region. Provider: Hosting Türkiye, Micro Paket, bought 2026-09-26 | §11.4, §11.7.1, §20 |
+| D23 | Roadmap: the one-time server setup (S) moves to just before M4, followed by M2 (newsletter). Staging, automatic rollback, Caddy rate limits and backup alerts are decided during S. No work on the server until the operator starts S (decided 2026-09-26) | §20, CLAUDE.md |
+| D24 | Favicon: a simpler 16 px design (bold G and a dot, `public/brand/favicon.svg`); the small mark stays for 24–32 px | §7 |
+| D25 | Success green darkened to `#1E754A` so it passes AA on every surface; ₺ and ə in body text come from the system fallback font (accepted) | §7.2, §7.3 |
+| D26 | ESLint stays on version 9 until `eslint-config-next` supports ESLint 10 | — |
 
 ---
 
