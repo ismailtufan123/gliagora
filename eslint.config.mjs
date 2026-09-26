@@ -14,6 +14,20 @@ export default defineConfig([
       ],
     },
   },
+  {
+    // PLAN §12: user-visible text comes from messages/{locale}.json, never from JSX literals.
+    files: [
+      'src/app/(frontend)/**/*.tsx',
+      'src/app/global-not-found.tsx',
+      'src/components/**/*.tsx',
+    ],
+    rules: {
+      'react/jsx-no-literals': [
+        'error',
+        { noStrings: true, ignoreProps: true, allowedStrings: ['|', '–', '·', ':', ',', '.'] },
+      ],
+    },
+  },
   globalIgnores([
     '.next/**',
     'out/**',

@@ -1,5 +1,6 @@
 import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
+import createNextIntlPlugin from 'next-intl/plugin'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -19,9 +20,16 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(dirname),
   },
+  experimental: {
+    // One 404 page for URLs outside every locale (src/app/global-not-found.tsx): the site and the
+    // Payload admin have separate root layouts, so there is no shared layout to render it in.
+    globalNotFound: true,
+  },
 }
 
-const config = withPayload(nextConfig, { devBundleServerPackages: false })
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
+
+const config = withPayload(withNextIntl(nextConfig), { devBundleServerPackages: false })
 
 // Payload asks every URL for the colour-scheme client hint so its admin can pick a theme.
 // On public pages `Critical-CH` makes Chrome send the first request twice, so keep it to /admin.

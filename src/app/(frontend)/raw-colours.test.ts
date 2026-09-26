@@ -47,7 +47,7 @@ describe('raw colour values', () => {
   })
 
   it('uses the --bg tokens as the browser theme colour', () => {
-    const layout = readFileSync(path.join(here, 'layout.tsx'), 'utf8')
+    const layout = readFileSync(path.join(src, 'components', 'LocaleRoot.tsx'), 'utf8')
     const themeColours = [...layout.matchAll(/color: '(#[0-9a-f]{6})'/gi)].map((m) =>
       m[1]!.toLowerCase(),
     )

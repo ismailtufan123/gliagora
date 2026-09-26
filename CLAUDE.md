@@ -64,6 +64,13 @@ The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RA
 - Commit messages: short and imperative, e.g. "Add coming-soon page".
 - If an implementation choice changes the plan, propose the `PLAN.md` edit in the same change.
 
+## Code conventions
+
+- User-visible text lives only in `messages/{locale}.json` (next-intl, PLAN §12). The lint rule `react/jsx-no-literals` rejects text written directly in JSX; both locales must have the same keys (a test checks this).
+- Colours, type sizes, radii and shadows come only from the design tokens (`src/app/(frontend)/tokens.css`, exposed as Tailwind utilities). A test rejects raw colour values anywhere else.
+- Each locale is a static folder: `src/app/(frontend)/en/…` and `src/app/(frontend)/tr/…`. URLs always end with a slash. Pages that exist only in English link there from other locales (`paths` in `src/lib/site.ts`).
+- Do not call `notFound()` inside a page: in Next.js 16.3 its 404 content renders only with JavaScript. Unknown URLs already get the server-rendered global 404 (`src/app/global-not-found.tsx`). Detail pages (M4) need a decision on how to answer 404 and 410 on the server.
+
 ## Commands
 
 Fill these in as the project grows.

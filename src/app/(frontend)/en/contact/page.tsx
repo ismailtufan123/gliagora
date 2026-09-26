@@ -1,27 +1,27 @@
 import type { Metadata } from 'next'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
-import { Lockup } from '@/components/Lockup'
+import { ContactPlaceholder } from '@/components/ContactPlaceholder'
+import { SITE_ORIGIN } from '@/lib/site'
 
-export const metadata: Metadata = {
-  title: 'Contact and legal notice',
+// Contact and legal notice in English (PLAN §2.2, §15.4); the other locale has its own URL.
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations({ locale: 'en' })
+  return {
+    title: t('contact.title'),
+    alternates: {
+      canonical: '/en/contact/',
+      languages: {
+        en: `${SITE_ORIGIN}/en/contact/`,
+        tr: `${SITE_ORIGIN}/tr/iletisim/`,
+        'x-default': `${SITE_ORIGIN}/en/contact/`,
+      },
+    },
+  }
 }
 
-// Placeholder until the full legal notice is written and reviewed (PLAN §15.4).
-export default function ContactPage() {
-  return (
-    <main id="main" className="page-frame flex-1 py-12">
-      <Lockup size="small" href="/en/" />
-      <div className="prose mt-12">
-        <h1>Contact and legal notice</h1>
-        <p>
-          Gliagora | Neuroscience is in preparation. The full legal notice will be published on this
-          page before the site opens.
-        </p>
-        <h2>Contact</h2>
-        <p>
-          Email: <a href="mailto:hello@gliagora.com">hello@gliagora.com</a>
-        </p>
-      </div>
-    </main>
-  )
+export default async function Page() {
+  setRequestLocale('en')
+  return <ContactPlaceholder locale="en" />
 }
