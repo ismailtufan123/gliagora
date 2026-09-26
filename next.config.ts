@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url'
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const nextConfig: NextConfig = {
+  // Self-contained server in .next/standalone for the Docker image.
+  output: 'standalone',
   poweredByHeader: false,
   // PLAN §2.1: every URL ends with a slash, and `/` goes to the English home page.
   trailingSlash: true,

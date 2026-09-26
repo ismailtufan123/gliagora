@@ -22,6 +22,8 @@ One TypeScript app: Next.js (App Router) with Payload CMS 3 inside it, on Postgr
 | `src/payload.config.ts`   | Payload configuration                                           |
 | `src/payload-types.ts`    | TypeScript types generated from the collections                 |
 | `compose.yaml`            | Local PostgreSQL for development                                |
+| `Dockerfile`              | Production image (built in CI, pulled by the server)            |
+| `.github/workflows/ci.yml` | CI: checks, image build, smoke test, push to GHCR              |
 
 ## Local development
 
@@ -50,6 +52,23 @@ pnpm lint        # ESLint and Prettier (fix formatting with `pnpm format`)
 pnpm typecheck   # TypeScript
 pnpm test        # Vitest unit tests
 ```
+
+## CI and the Docker image
+
+Every pull request and every push to `main` runs `.github/workflows/ci.yml`:
+
+1. `pnpm lint`, `pnpm typecheck` and `pnpm test`.
+2. Builds the Docker image and starts it against an empty PostgreSQL 18 (smoke test): migrations
+   must apply, `/health/` must answer `ok` and the pages must render.
+3. On `main` only: pushes the image to `ghcr.io/ismailtufan123/gliagora` with the tags `main` and
+   `sha-<commit>`.
+
+The image applies pending migrations when it starts (`src/lib/startup.ts`). If the database is
+unreachable or a migration fails, it exits and Docker restarts it. `/health/` returns 200 when the
+database is reachable.
+
+To build and run the image locally: `docker build -t gliagora .`, then run it with `DATABASE_URL`
+and `PAYLOAD_SECRET` set.
 
 ## Changing the data model
 
