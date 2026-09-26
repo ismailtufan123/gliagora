@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img"><title>Gliagora</title>
+<g fill="none" stroke="#1E2152" stroke-linecap="round" stroke-linejoin="round">
+<path stroke-width="14" d="M120.6 75.5 A32 32 0 1 0 120.6 124.5"/>
+<path stroke-width="18" d="M150.6 57.6 A66 66 0 1 0 165.4 109.2 L134 109.2"/>
+</g>
+<path fill="none" stroke="#B8286E" stroke-width="8" stroke-linecap="round" d="M97.9 88.2 L95.8 76.4 M88.7 104.1 L77.4 108.2 M88.7 95.9 L77.4 91.8 M97.9 111.8 L95.8 123.6"/>
+<circle cx="100" cy="100" r="13" fill="#B8286E"/>
+<circle cx="100" cy="100" r="5" fill="#1777A6"/>
+</svg>
