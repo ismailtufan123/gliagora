@@ -1,0 +1,47 @@
+{
+  "name": "gliagora",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gliagora | Neuroscience – Where neuroscience meets",
+  "type": "module",
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": "^24"
+  },
+  "scripts": {
+    "dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev",
+    "build": "cross-env NEXT_TELEMETRY_DISABLED=1 next build",
+    "start": "cross-env NEXT_TELEMETRY_DISABLED=1 next start",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "typecheck": "cross-env NEXT_TELEMETRY_DISABLED=1 next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "payload": "payload",
+    "migrate": "payload migrate",
+    "migrate:create": "payload migrate:create",
+    "migrate:status": "payload migrate:status",
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "3.90.2",
+    "@payloadcms/next": "3.90.2",
+    "@payloadcms/ui": "3.90.2",
+    "graphql": "16.14.2",
+    "next": "16.3.6",
+    "payload": "3.90.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "cross-env": "10.1.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.6",
+    "prettier": "3.9.9",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}

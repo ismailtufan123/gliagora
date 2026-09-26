@@ -62,9 +62,11 @@ Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, even
 
 Fill these in as the project grows.
 
-- `docker compose up -d db` — start local PostgreSQL
-- `pnpm dev` — run the app locally
-- `pnpm lint`, `pnpm typecheck`, `pnpm test` — checks
+- `docker compose up -d db` — start local PostgreSQL (values from `.env`; copy `.env.example`)
+- `pnpm migrate` — apply database migrations
+- `pnpm dev` — run the app locally (site on `/`, admin on `/admin`)
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` — checks (`pnpm format` fixes formatting)
+- `pnpm migrate:create <name>`, then `pnpm generate:types` — after changing a collection; commit the migration and types with it
 
 ## Target repository layout
 

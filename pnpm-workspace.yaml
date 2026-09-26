@@ -1,0 +1,13 @@
+# Single-package repository; this file only holds pnpm settings.
+
+# pnpm 10 blocks install scripts by default. Allow only the packages that need them.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - unrs-resolver
+
+peerDependencyRules:
+  allowedVersions:
+    # Vite (used only by Vitest) lists esbuild as an optional peer and does not use it
+    # for our tests. The older esbuild in the tree comes from Payload's drizzle-kit.
+    vite>esbuild: '0.25'
