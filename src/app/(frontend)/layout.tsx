@@ -31,8 +31,8 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
           Skip to main content
         </a>
         {children}
-        <footer className="site-footer">
-          <div className="site-footer__inner">
+        <footer className="border-t border-line text-caption text-text-muted">
+          <div className="page-frame py-6">
             <a href="/en/contact/">Contact and legal notice</a>
           </div>
         </footer>

@@ -8,7 +8,7 @@ export const displayFont = localFont({
   weight: '600 700',
   style: 'normal',
   display: 'swap',
-  variable: '--font-display',
+  variable: '--font-commissioner',
 })
 
 export const bodyFont = localFont({
@@ -16,5 +16,5 @@ export const bodyFont = localFont({
   weight: '400 700',
   style: 'normal',
   display: 'swap',
-  variable: '--font-body',
+  variable: '--font-atkinson',
 })

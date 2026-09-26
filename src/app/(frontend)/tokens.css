@@ -24,7 +24,7 @@
   --danger: #b3261e;
   --success: #1e754a;
   --warning: #8a5300;
-  --shadow-overlay: 0 8px 24px rgb(22 25 66 / 0.18);
+  --elevation-overlay: 0 8px 24px rgb(22 25 66 / 0.18);
 
   /* Type. After the self-hosted font and its size-adjusted Arial fallback (next/font), the
      browser takes glyphs the font lacks, such as ₺ and ə in Atkinson Hyperlegible Next, from
@@ -32,8 +32,8 @@
   --font-fallback:
     'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Noto Sans', 'DejaVu Sans', system-ui,
     sans-serif;
-  --font-display-stack: var(--font-display), var(--font-fallback);
-  --font-body-stack: var(--font-body), var(--font-fallback);
+  --font-display-stack: var(--font-commissioner), var(--font-fallback);
+  --font-body-stack: var(--font-atkinson), var(--font-fallback);
   --step--1: 0.875rem;
   --step-0: 1.0625rem;
   --step-1: 1.25rem;
@@ -56,9 +56,9 @@
   --space-32: 8rem;
 
   /* Shape */
-  --radius-control: 4px;
-  --radius-overlay: 10px;
-  --radius-pill: 999px;
+  --corner-control: 4px;
+  --corner-overlay: 10px;
+  --corner-pill: 999px;
 
   /* Motion */
   --duration-fast: 120ms;
@@ -103,6 +103,6 @@
     --danger: #ff8a80;
     --success: #6fd39c;
     --warning: #f2b660;
-    --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
+    --elevation-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
   }
 }

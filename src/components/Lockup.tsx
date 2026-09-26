@@ -5,6 +5,7 @@ type LockupProps = {
 }
 
 const markSize = { large: 64, small: 40 }
+const textSize = { large: 'text-h3', small: 'text-card' }
 
 // Logo 6b (D12): the light mark by default, the dark mark when the system uses dark mode.
 function Mark({ size }: { size: number }) {
@@ -21,14 +22,14 @@ function Content({ size }: { size: LockupProps['size'] }) {
     <>
       <Mark size={markSize[size]} />
       <span>Gliagora</span>
-      <span className="lockup__rule" aria-hidden="true" />
-      <span className="lockup__descriptor">Neuroscience</span>
+      <span className="my-[0.2em] w-0.5 self-stretch bg-line-strong" aria-hidden="true" />
+      <span className="font-semibold">Neuroscience</span>
     </>
   )
 }
 
 export function Lockup({ size, href }: LockupProps) {
-  const className = `lockup lockup--${size}`
+  const className = `flex items-center gap-3 font-display font-bold text-text no-underline ${textSize[size]}`
   if (href) {
     return (
       <a className={className} href={href}>
