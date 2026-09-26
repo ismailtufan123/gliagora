@@ -1066,7 +1066,7 @@ Order checklist: data centre in Türkiye; renewal price after any campaign perio
 | Topic | Plan |
 |---|---|
 | Launch | English UI and content. Turkish legal texts (aydınlatma metni, açık rıza metni, contact page) live at launch. |
-| Routing | `/{locale}/` prefix for every public page; locale switcher keeps the path and query string; no automatic redirects. Each locale is a static route folder (`src/app/(frontend)/en`, `tr`), so every unknown URL gets the server-rendered global 404 page (English). |
+| Routing | `/{locale}/` prefix for every public page; locale switcher keeps the path and query string; no automatic redirects. Each locale is a static route folder (`src/app/(frontend)/en`, `tr`), so every unknown public URL gets the server-rendered global 404 page (English); `/admin` and `/api` answer their own 404s. |
 | UI strings | All strings in `messages/{locale}.json` (ICU format: plurals, selects, dates); lint rule blocks hard-coded strings in components. |
 | Content | Payload localized fields for evergreen content (About, legal, Learn, guides, taxonomy labels). Aggregated items keep original title and language with an English summary; they are never machine-translated. |
 | `hreflang` | Only between pages with a real, reviewed translation; `x-default` → English; one sitemap per locale. |

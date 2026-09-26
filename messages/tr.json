@@ -2,7 +2,7 @@
   "meta": {
     "homeTitle": "Gliagora | Neuroscience – Sinirbilimin buluştuğu yer",
     "titleTemplate": "{title} – Gliagora | Neuroscience",
-    "description": "Sinirbilim alanındaki pozisyonlar, etkinlikler, fonlar, makaleler, haberler ve kaynaklar için seçilmiş, İngilizce öncelikli bir merkez."
+    "description": "Sinirbilim alanındaki pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları özenle seçip bir araya getiren, İngilizce öncelikli bir merkez."
   },
   "brand": {
     "name": "Gliagora",
@@ -16,8 +16,8 @@
     "contact": "İletişim ve yasal bilgiler"
   },
   "home": {
-    "comingSoon": "Yakında: sinirbilim alanındaki pozisyonlar, etkinlikler, fonlar, makaleler, haberler ve kaynaklar için seçilmiş, İngilizce öncelikli bir merkez.",
-    "writeToUs": "Bize <email>hello@gliagora.com</email> adresinden yazabilirsiniz."
+    "comingSoon": "Yakında: sinirbilim alanındaki pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları özenle seçip bir araya getiren, İngilizce öncelikli bir merkez.",
+    "writeToUs": "Bize <email>hello@gliagora.com</email> adresinden ulaşabilirsiniz."
   },
   "contact": {
     "title": "İletişim ve yasal bilgiler",
@@ -27,7 +27,7 @@
   },
   "notFound": {
     "title": "Sayfa bulunamadı",
-    "text": "Bu sayfa yok ya da taşındı. Gliagora'nın ana bölümleri şunlardır:",
+    "text": "Aradığınız sayfa mevcut değil ya da taşınmış olabilir. Gliagora'nın ana bölümleri şunlardır:",
     "home": "Ana sayfaya git"
   },
   "windows": {

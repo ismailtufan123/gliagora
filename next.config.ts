@@ -21,8 +21,9 @@ const nextConfig: NextConfig = {
     root: path.resolve(dirname),
   },
   experimental: {
-    // One 404 page for URLs outside every locale (src/app/global-not-found.tsx): the site and the
-    // Payload admin have separate root layouts, so there is no shared layout to render it in.
+    // One 404 page for every URL that matches no route, including unknown paths under /en/ and
+    // /tr/ (src/app/global-not-found.tsx): the site and the Payload admin have separate root
+    // layouts, so there is no shared layout to render it in.
     globalNotFound: true,
   },
 }

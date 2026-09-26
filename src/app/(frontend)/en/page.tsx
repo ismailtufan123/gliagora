@@ -1,9 +1,12 @@
+import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { Lockup } from '@/components/Lockup'
 import { CONTACT_EMAIL } from '@/lib/site'
 
 // Coming-soon page (M0), until the home page of M6. English only (PLAN §12). Static HTML and CSS.
+export const metadata: Metadata = { alternates: { canonical: '/en/' } }
+
 export default async function ComingSoonPage() {
   setRequestLocale('en')
   const t = await getTranslations({ locale: 'en' })

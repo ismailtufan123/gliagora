@@ -66,10 +66,10 @@ The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RA
 
 ## Code conventions
 
-- User-visible text lives only in `messages/{locale}.json` (next-intl, PLAN §12). The lint rule `react/jsx-no-literals` rejects text written directly in JSX; both locales must have the same keys (a test checks this).
-- Colours, type sizes, radii and shadows come only from the design tokens (`src/app/(frontend)/tokens.css`, exposed as Tailwind utilities). A test rejects raw colour values anywhere else.
+- User-visible text lives only in `messages/{locale}.json` (next-intl, PLAN §12). Lint rejects literal text in JSX: element text, conditionals and attributes people read or hear (`alt`, `title`, `aria-label`, `placeholder`, …). It cannot see text passed to your own components' props (e.g. `Lockup name=…`) or built in metadata, so take those from `t()` too. Both locales must have the same keys, placeholders and tags (a test checks this).
+- Colours, type sizes, radii and shadows come only from the design tokens (`src/app/(frontend)/tokens.css`, exposed as Tailwind utilities). A test rejects raw colour values anywhere else; the only exception is the browser theme colour in `src/lib/metadata.ts`, which the test checks against the `--bg` tokens.
 - Each locale is a static folder: `src/app/(frontend)/en/…` and `src/app/(frontend)/tr/…`. URLs always end with a slash. Pages that exist only in English link there from other locales (`paths` in `src/lib/site.ts`).
-- Do not call `notFound()` inside a page: in Next.js 16.3 its 404 content renders only with JavaScript. Unknown URLs already get the server-rendered global 404 (`src/app/global-not-found.tsx`). Detail pages (M4) need a decision on how to answer 404 and 410 on the server.
+- Do not call `notFound()` inside a page: in Next.js 16.3 its 404 content renders only with JavaScript. Unknown public URLs, including unknown paths under `/en/` and `/tr/`, already get the server-rendered global 404 (`src/app/global-not-found.tsx`); `/admin` and `/api` answer their own 404s (Payload). Detail pages (M4) need a decision on how to answer 404 and 410 on the server.
 
 ## Commands
 

@@ -2,6 +2,11 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import nextVitals from 'eslint-config-next/core-web-vitals'
 import nextTs from 'eslint-config-next/typescript'
 
+// Attributes whose value people read or hear (alt="" stays allowed for decorative images).
+const VISIBLE_ATTRIBUTES =
+  '/^(alt|title|placeholder|label|aria-label|aria-description|aria-roledescription|aria-valuetext)$/'
+const TEXT_IN_MESSAGES = 'User-visible text belongs in messages/{locale}.json (PLAN §12).'
+
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -15,16 +20,30 @@ export default defineConfig([
     },
   },
   {
-    // PLAN §12: user-visible text comes from messages/{locale}.json, never from JSX literals.
-    files: [
-      'src/app/(frontend)/**/*.tsx',
-      'src/app/global-not-found.tsx',
-      'src/components/**/*.tsx',
-    ],
+    // PLAN §12: user-visible text comes from messages/{locale}.json, never from literals in JSX:
+    // not as element text, not in attributes that people read or hear, not in conditionals.
+    files: ['src/app/**/*.tsx', 'src/components/**/*.tsx'],
+    ignores: ['src/app/(payload)/**'],
     rules: {
       'react/jsx-no-literals': [
         'error',
         { noStrings: true, ignoreProps: true, allowedStrings: ['|', '–', '·', ':', ',', '.'] },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: `JSXAttribute[name.name=${VISIBLE_ATTRIBUTES}] > Literal[value=/\\S/]`,
+          message: TEXT_IN_MESSAGES,
+        },
+        {
+          selector: `JSXAttribute[name.name=${VISIBLE_ATTRIBUTES}] > JSXExpressionContainer > :matches(Literal[value=/\\S/], TemplateLiteral)`,
+          message: TEXT_IN_MESSAGES,
+        },
+        {
+          selector:
+            'JSXExpressionContainer > :matches(ConditionalExpression, LogicalExpression) > Literal[value=/[A-Za-z]/]',
+          message: TEXT_IN_MESSAGES,
+        },
       ],
     },
   },

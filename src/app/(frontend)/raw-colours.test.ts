@@ -7,6 +7,11 @@ import { describe, expect, it } from 'vitest'
 const here = path.dirname(fileURLToPath(import.meta.url))
 const src = path.resolve(here, '../..')
 const tokensFile = path.join(here, 'tokens.css')
+// The browser theme colour must be a literal in the page metadata; the last test below checks it
+// equals the --bg tokens. It is the only allowed exception, in this one file.
+const metadataFile = path.join(src, 'lib', 'metadata.ts')
+const THEME_COLOUR =
+  /^\s*\{ media: '\(prefers-color-scheme: (light|dark)\)', color: '#[0-9a-f]{6}' \},$/i
 
 const RAW_COLOUR = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\(/i
 const SKIP = [
@@ -40,14 +45,15 @@ describe('raw colour values', () => {
       readFileSync(file, 'utf8')
         .split('\n')
         .map((line, i) => ({ line, at: `${path.relative(src, file)}:${i + 1}` }))
-        .filter(({ line }) => RAW_COLOUR.test(line) && !line.includes("color: '#"))
+        .filter(({ line }) => RAW_COLOUR.test(line))
+        .filter(({ line }) => !(file === metadataFile && THEME_COLOUR.test(line)))
         .map(({ at, line }) => `${at}: ${line.trim()}`),
     )
     expect(offenders).toEqual([])
   })
 
   it('uses the --bg tokens as the browser theme colour', () => {
-    const layout = readFileSync(path.join(src, 'components', 'LocaleRoot.tsx'), 'utf8')
+    const layout = readFileSync(metadataFile, 'utf8')
     const themeColours = [...layout.matchAll(/color: '(#[0-9a-f]{6})'/gi)].map((m) =>
       m[1]!.toLowerCase(),
     )

@@ -11,7 +11,7 @@ export async function NotFoundContent({ locale }: { locale: Locale }) {
       <div className="prose">
         <h1>{t('notFound.title')}</h1>
         <p>{t('notFound.text')}</p>
-        <ul className="flex flex-wrap gap-x-6 gap-y-2">
+        <ul role="list" className="flex flex-wrap gap-x-6 gap-y-2">
           {WINDOWS.map((key) => (
             <li key={key}>
               <a href={paths.window(key)}>{t(`windows.${key}`)}</a>

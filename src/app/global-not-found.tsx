@@ -2,27 +2,30 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
 import { NotFoundContent } from '@/components/NotFoundContent'
-import { SiteShell } from '@/components/SiteShell'
+import { RootDocument } from '@/components/RootDocument'
 import { defaultLocale } from '@/i18n/routing'
+import { localeMetadata, localeViewport } from '@/lib/metadata'
 
-import { bodyFont, displayFont } from './(frontend)/fonts'
-import './(frontend)/global.css'
+import { fontVariables } from './(frontend)/fonts'
 
-// 404 for URLs outside every locale, e.g. /xyz/ (PLAN §2.5). Rendered without any layout, so it
-// brings its own <html>, fonts and styles; it is always in English.
+// 404 for every URL that matches no route (PLAN §2.5): /xyz/, and unknown paths under /en/ and /tr/.
+// /admin and /api answer their own 404s (Payload). Rendered without any layout, so it
+// brings its own <html>, fonts, styles, favicon and theme colour; it is always in English.
+// Next.js adds noindex to it.
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations({ locale: defaultLocale })
-  return { title: `${t('notFound.title')} – Gliagora | Neuroscience`, robots: { index: false } }
+  return {
+    ...(await localeMetadata(defaultLocale)),
+    title: t('meta.titleTemplate', { title: t('notFound.title') }),
+  }
 }
+
+export const viewport = localeViewport
 
 export default function GlobalNotFound() {
   return (
-    <html lang={defaultLocale} className={`${displayFont.variable} ${bodyFont.variable}`}>
-      <body>
-        <SiteShell locale={defaultLocale}>
-          <NotFoundContent locale={defaultLocale} />
-        </SiteShell>
-      </body>
-    </html>
+    <RootDocument locale={defaultLocale} fontVariables={fontVariables}>
+      <NotFoundContent locale={defaultLocale} />
+    </RootDocument>
   )
 }

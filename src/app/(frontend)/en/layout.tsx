@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
-import { LocaleRoot, localeMetadata, localeViewport } from '@/components/LocaleRoot'
+import { LocaleRoot } from '@/components/LocaleRoot'
+import { localeMetadata, localeViewport } from '@/lib/metadata'
 
 export const generateMetadata = () => localeMetadata('en')
 export const viewport = localeViewport
