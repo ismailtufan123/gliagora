@@ -1,0 +1,58 @@
+# Caddy: HTTPS certificates, security headers, compression and privacy-friendly access logs
+# (PLAN §11.2, §18.2). Certificates come from Let's Encrypt automatically; no email is sent.
+
+(security_headers) {
+	header {
+		# HSTS without preload for now; add preload after 3 stable months (PLAN §18.2).
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		# Baseline policy: nothing from other domains. The strict nonce-based policy comes with M1.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		-Server
+		-X-Powered-By
+	}
+}
+
+# Access logs: IP addresses masked (IPv4 to /24, IPv6 to /48), no cookies or credentials,
+# one file per day, deleted after 14 days (PLAN §18.1).
+(access_log) {
+	log {
+		output file /var/log/caddy/access.log {
+			roll_interval 24h
+			roll_keep_for 336h
+		}
+		format filter {
+			request>remote_ip ip_mask 24 48
+			request>client_ip ip_mask 24 48
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+			request>headers>X-Forwarded-For delete
+			resp_headers>Set-Cookie delete
+		}
+	}
+}
+
+{$SITE_DOMAIN} {
+	import security_headers
+	import access_log
+	encode zstd gzip
+
+	# The admin panel is behind a second password (admin-auth.caddy) until it has two factors.
+	@admin path /admin /admin/*
+	handle @admin {
+		import /etc/caddy/admin-auth.caddy
+		reverse_proxy app:3000
+	}
+
+	handle {
+		reverse_proxy app:3000
+	}
+}
+
+www.{$SITE_DOMAIN} {
+	import security_headers
+	redir https://{$SITE_DOMAIN}{uri} 308
+}
