@@ -14,3 +14,7 @@ playwright-report
 tools
 deploy
 *.md
+
+# End-to-end tests are not part of the image
+tests
+playwright.config.ts

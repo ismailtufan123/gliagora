@@ -39,7 +39,7 @@ jobs:
       - run: pnpm test
 
   image:
-    name: Build, smoke-test and push image
+    name: Build, test and push image
     needs: checks
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -84,6 +84,20 @@ jobs:
           test "$(docker exec app id -u)" != 0
           docker exec db psql -U gliagora -d gliagora -tAc 'select name from payload_migrations'
           echo "Smoke test passed"
+
+      # PLAN §17.2: axe, keyboard paths and HTTP behaviour against the image that was just built.
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Chromium for Playwright
+        run: pnpm exec playwright install --with-deps chromium
+      - name: End-to-end tests (Playwright + axe)
+        run: pnpm test:e2e
+        env:
+          BASE_URL: http://localhost:3000
 
       - name: Show container logs
         if: failure()

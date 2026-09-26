@@ -55,7 +55,15 @@ To stop the database: `docker compose stop db`. To delete it with all local data
 pnpm lint        # ESLint and Prettier (fix formatting with `pnpm format`)
 pnpm typecheck   # TypeScript
 pnpm test        # Vitest unit tests
+pnpm test:e2e    # Playwright + axe end-to-end tests (needs the app running, see below)
 ```
+
+The end-to-end tests (`tests/e2e/`) open every public template in light and dark mode, on desktop
+and mobile. They fail on any serious or critical axe issue or any request to another domain. They
+also check keyboard paths and HTTP behaviour. Run them against a production build:
+`pnpm build && pnpm start` with the database up, then `pnpm test:e2e` in a second terminal. The first
+time, install the browser with `pnpm exec playwright install chromium`. List every new page template
+in `tests/e2e/pages.ts`.
 
 ## CI and the Docker image
 
@@ -63,7 +71,8 @@ Every pull request and every push to `main` runs `.github/workflows/ci.yml`:
 
 1. `pnpm lint`, `pnpm typecheck` and `pnpm test`.
 2. Builds the Docker image and starts it against an empty PostgreSQL 18 (smoke test): migrations
-   must apply, `/health/` must answer `ok` and the pages must render.
+   must apply, `/health/` must answer `ok` and the pages must render. Then the end-to-end tests
+   (`pnpm test:e2e`) run against that container.
 3. On `main` only: pushes the image to `ghcr.io/ismailtufan123/gliagora` with the tags `main` and
    `sha-<commit>`.
 
