@@ -48,6 +48,20 @@ test.describe('desktop navigation', () => {
     await expect(nav.getByRole('link', { name: 'All events' })).toBeHidden()
   })
 
+  test('using the header while scrolled does not move the page', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 500 })
+    await page.goto('/en/contact/')
+    await page.evaluate(() => window.scrollTo(0, 300))
+    const nav = header(page).getByRole('navigation', { name: 'Main' })
+    await nav.getByLabel('Jobs menu').click()
+    await page.keyboard.press('Tab')
+    await page.keyboard.press('Escape')
+    expect(await page.evaluate(() => window.scrollY)).toBe(300)
+    await page.locator('main a').first().focus()
+    await page.keyboard.press('Shift+Tab')
+    expect(await page.evaluate(() => window.scrollY)).toBe(300)
+  })
+
   test('the current page is marked in the navigation', async ({ page }) => {
     await page.goto('/en/jobs/')
     const nav = header(page).getByRole('navigation', { name: 'Main' })
@@ -209,6 +223,18 @@ for (const width of [320, 1280]) {
   }
 }
 
+test('the header lockup fits at 320px, divider included', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the width is set explicitly')
+  await page.setViewportSize({ width: 320, height: 640 })
+  for (const path of ['/en/', '/tr/iletisim/']) {
+    await page.goto(path)
+    const lockup = header(page).locator('a').first()
+    const fits = await lockup.evaluate((a) => a.scrollWidth <= a.clientWidth)
+    expect(fits, path).toBe(true)
+    await expect(lockup.locator('[aria-hidden="true"]')).toHaveCSS('width', '2px')
+  }
+})
+
 test('in forced-colours mode the header keeps a visible edge', async ({ page }) => {
   await page.emulateMedia({ forcedColors: 'active' })
   await page.goto('/en/')
@@ -223,7 +249,8 @@ test('every link in the header and footer leads to a page', async ({ page, reque
   const internal = [...new Set(hrefs.filter((href) => href.startsWith('/')))]
   expect(internal.length).toBeGreaterThan(10)
   for (const href of internal) {
-    const response = await request.get(href)
+    // No redirect either: every link already ends with a slash (PLAN §2.1).
+    const response = await request.get(href, { maxRedirects: 0 })
     expect(response.status(), href).toBe(200)
   }
 })

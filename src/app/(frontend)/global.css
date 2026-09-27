@@ -75,8 +75,16 @@
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    /* Keep targets of in-page links and focused elements clear of the sticky header. */
-    scroll-padding-top: calc(var(--header-height) + var(--space-4));
+    /* The scrollbar keeps its space when the mobile menu stops the page from scrolling. */
+    scrollbar-gutter: stable;
+  }
+
+  /*
+   * Keep link targets and focused elements in the content clear of the sticky header. Not on
+   * <html> (scroll-padding), which would make focusing a header control scroll the page up.
+   */
+  :where(main, footer) * {
+    scroll-margin-top: calc(var(--header-height) + var(--space-4));
   }
 
   /*

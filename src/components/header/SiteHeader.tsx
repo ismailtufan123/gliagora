@@ -48,7 +48,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
 
   return (
     <header className="site-header">
-      <div className="page-frame flex h-full items-center gap-4">
+      <div className="page-frame flex h-full items-center gap-2 sm:gap-4">
         <Lockup
           size="header"
           href={paths.home()}

@@ -19,7 +19,7 @@
     "learn": "Öğrenin",
     "learnBasics": "Sinirbilimin temelleri",
     "about": "Hakkında",
-    "follow": "Gliagora başka yerlerde",
+    "follow": "Gliagora sosyal medyada",
     "social": {
       "instagram": "Instagram",
       "linkedin": "LinkedIn"
@@ -75,7 +75,7 @@
       "postdoc": "Doktora sonrası",
       "researchStaff": "Araştırma personeli",
       "facultyPi": "Öğretim üyesi ve grup lideri",
-      "industry": "Sanayi",
+      "industry": "Özel sektör",
       "closingSoon": "Son başvurusu yaklaşanlar",
       "map": "Haritayı keşfedin",
       "suggest": "İlan önerin"
@@ -83,7 +83,7 @@
     "events": {
       "all": "Tüm etkinlikler",
       "conferences": "Kongreler",
-      "schools": "Okullar ve kurslar",
+      "schools": "Yaz ve kış okulları, kurslar",
       "seminars": "Çevrim içi seminerler",
       "month": "Aylık görünüm"
     },

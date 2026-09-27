@@ -124,7 +124,7 @@
 
 **Mobile:** logo lockup, search icon, menu button. The menu is a full-height disclosure panel: six windows (expandable), Map, Learn, About, then the CTA. Filters live in a bottom sheet (§7).
 
-**Breakpoints and behaviour (built in M1):** the desktop header shows from 1280px, because the six windows, language menu and CTA need about 1,200px in Turkish; below that, the menu button opens the mobile panel, and below 768px the language list moves into the panel as well. Below 480px the menu button shows only its icon, as in §9.2, and keeps the name "Menu". Menus are native disclosure elements (`<details>`), so they open without JavaScript; a small script adds Esc (closes and returns focus), close on outside click or focus, one open menu at a time, and the inert background of the mobile panel.
+**Breakpoints and behaviour (built in M1):** the desktop header shows from 1280px, because the six windows, language menu and CTA need about 1,200px in Turkish; below that, the menu button opens the mobile panel, and below 768px the language list moves into the panel as well. Below 480px the menu button shows only its icon, as in §9.2, and keeps the name "Menu"; below 768px the digest button also moves from the header into the panel. The header has a fixed 64px height, so it is compact from the start and does not change on scroll. Menus are native disclosure elements (`<details>`), so they open without JavaScript; a small script adds Esc (closes and returns focus), close on outside click or focus, one open menu at a time, and the inert background of the mobile panel.
 
 **Footer (sitemap footer):** Windows | Learn | About (About, Sources and editorial policy, Contact) | Legal (Privacy, KVKK texts, Cookies, Terms, Takedown, Data requests, Accessibility). The **Contact and legal notice** link appears on every page, including home (Law 5651, §15).
 
@@ -135,11 +135,11 @@ One `FilterState` type drives lists, the map, subfield hubs and (Phase 2) saved 
 | Parameter | Values | Used by |
 |---|---|---|
 | `subfield`, `method`, `model` | comma-separated taxonomy slugs | all windows |
-| `type` | position type slugs | jobs |
+| `type` | comma-separated position type slugs (jobs, §4.5) or resource type slugs (resources, §4.7) | jobs, resources |
 | `stage` | career stage slugs | jobs, events, funding |
 | `country`, `region` | ISO 3166-1 alpha-2 / M49 region slug | jobs, events, map |
 | `deadline` | `7d`, `14d` (the "Closing soon" menu entry, same threshold as the badge), `30d`, `90d`, `this-month`, `YYYY-MM-DD..YYYY-MM-DD` | jobs, events, funding |
-| `etype`, `format`, `dtype` | event type, format, deadline type | events |
+| `etype`, `format`, `dtype` | event type, format, deadline type (each comma-separated) | events |
 | `institution` | ROR ID | jobs, events, map |
 | `q` | free text | all |
 | `sort` | `deadline` (default), `newest` | lists |
@@ -520,7 +520,7 @@ Rules: sentence case everywhere; no all-caps labels; no single word styled diffe
 | Grid | 12 columns desktop, 4 mobile; gutters 16/24/32 |
 | Z-index | header 100, dropdown 200, sheet 300, dialog 400 |
 
-Icons: Lucide (ISC licence), 20/24px, always paired with text except close and search buttons, which have accessible names. Imagery: CC0 / CC BY / CC BY-SA micrographs and photos only, with creator, source, licence and changes stored in the Media collection and shown as a caption; no institution logos, no stock photos of people, no AI images presented as real micrographs.
+Icons: Lucide (ISC licence), 20/24px, always paired with text except close and search buttons, which have accessible names. Compact header controls (built in M1) use 16–18px icons: the chevron buttons that open the mega-menus (named, e.g., "Jobs menu"), the language button (globe and code, named "Language: English (EN)") and, below 480px, the menu button (named "Menu"). Imagery: CC0 / CC BY / CC BY-SA micrographs and photos only, with creator, source, licence and changes stored in the Media collection and shown as a caption; no institution logos, no stock photos of people, no AI images presented as real micrographs.
 
 ### 7.5 Component inventory
 
@@ -672,7 +672,7 @@ Numbers, names and dates below are placeholders.
 │ Deadlines coming up (4)     │
 │ Where is your next lab?     │
 │ Newsletter block            │
-│ Footer (accordion sections) │
+│ Footer (stacked link lists) │
 └─────────────────────────────┘
 ```
 

@@ -24,7 +24,8 @@ const summaryOf = (menu: Element) => menu.querySelector<HTMLElement>(':scope > s
 
 function close(menu: HTMLDetailsElement, returnFocus: boolean) {
   menu.open = false
-  if (returnFocus) summaryOf(menu)?.focus()
+  // The button is always in view (the header is sticky), so the page must not scroll.
+  if (returnFocus) summaryOf(menu)?.focus({ preventScroll: true })
 }
 
 function setModal(menu: HTMLDetailsElement, on: boolean) {
@@ -109,14 +110,23 @@ export function DisclosureEnhancer({ desktopQuery }: { desktopQuery: string }) {
 
     document.addEventListener('toggle', onToggle, true)
     document.addEventListener('keydown', onKeyDown)
-    document.addEventListener('click', onOutside)
+    // pointerdown rather than click: iOS Safari sends no click for taps on plain content.
+    document.addEventListener('pointerdown', onOutside)
     document.addEventListener('focusin', onOutside)
     document.addEventListener('focusin', onFocusIn)
     desktop.addEventListener('change', onBreakpoint)
+
+    // A menu opened before the page became interactive: keep only the last one open and apply
+    // the mobile menu's settings.
+    const alreadyOpen = openMenus().filter((menu) => !menu.parentElement?.closest(MODAL))
+    for (const menu of alreadyOpen.slice(0, -1)) close(menu, false)
+    const open = alreadyOpen.at(-1)
+    if (open?.matches(MODAL)) setModal(open, true)
+
     return () => {
       document.removeEventListener('toggle', onToggle, true)
       document.removeEventListener('keydown', onKeyDown)
-      document.removeEventListener('click', onOutside)
+      document.removeEventListener('pointerdown', onOutside)
       document.removeEventListener('focusin', onOutside)
       document.removeEventListener('focusin', onFocusIn)
       desktop.removeEventListener('change', onBreakpoint)

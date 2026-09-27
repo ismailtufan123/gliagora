@@ -37,7 +37,7 @@ export async function MobileMenu({
   const t = await getTranslations({ locale })
   return (
     <details className="disclosure xl:hidden" data-disclosure data-modal>
-      <summary className="button button-secondary px-3">
+      <summary className="button button-secondary px-2.5 sm:px-3">
         <Menu aria-hidden="true" size={20} />
         <span className="sr-only sm:not-sr-only">{t('header.menu')}</span>
       </summary>

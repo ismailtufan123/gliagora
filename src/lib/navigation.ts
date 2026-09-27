@@ -3,7 +3,7 @@ import { paths } from '@/lib/site'
 
 // Mega-menu entries of the windows that have sub-sections (PLAN §2.3). Filters use the shared
 // filter model (PLAN §2.4). Labels are in messages/{locale}.json under `menus.{window}.{key}`.
-// Still to come: "Subscribe to the calendar" (Events) with the iCal feed (M7).
+// Still to come: "Subscribe to the calendar" (Events) with the iCal feed (M8).
 
 const jobs = paths.window('jobs')
 const events = paths.window('events')
