@@ -19,7 +19,7 @@ Gliagora is for students and early-career neuroscientists looking for their next
 
 ## Sources and editorial policy
 
-We list positions published by the employers themselves, such as universities, institutes and companies, and not advertisements from recruitment agencies. Job boards help us find positions, but we always link to the employer's own page. Papers of the month are openly licensed (CC BY, CC BY-SA or CC0). AI tools help draft some summaries; a person checks every item against its source and approves it before it is published. There are no paid placements. The full sources and editorial policy will be published before the site opens.
+We list positions published by the employers themselves, such as universities, institutes and companies, and not advertisements from recruitment agencies. Job boards help us find positions, but we always link to the employer's own page. Papers of the month are openly licensed (CC BY, CC BY-SA or CC0). If AI tools are later used to help draft summaries, a person will still check every item against its source and approve it before it is published. There are no paid placements. The full sources and editorial policy will be published before the site opens.
 
 ## Who runs Gliagora
 
