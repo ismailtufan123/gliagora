@@ -10,8 +10,6 @@ Sorularınız ve talepleriniz için bize e-posta ile yazabilirsiniz:
 
 Bize Türkçe ya da İngilizce yazabilirsiniz.
 
-[KARAR VERİLECEK: C1 – yasal metinlerin yayımlanma zamanı (M2); o zamana kadar hello@gliagora.com adresine gelen e-postalar Cloudflare Email Routing üzerinden yurt dışından geçer ve privacy@gliagora.com henüz Türkiye'deki posta kutusunda değildir]
-
 Şu anda posta adresi yayımlamıyoruz. Nedenini aşağıda, "İçerik sağlayıcı bilgileri" başlığı altında bulabilirsiniz.
 
 ## Gliagora nedir?

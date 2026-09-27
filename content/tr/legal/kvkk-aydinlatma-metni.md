@@ -59,7 +59,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Saklama:**
   - abonelikten çıkana kadar; abonelikten çıktığınızda adresiniz hemen silinir;
   - onaylanmayan adresler 7 gün sonra silinir;
-  - kalıcı olarak teslim edilemeyen adresler hemen, geçici olarak teslim edilemeyen adresler ise üç başarısız gönderimden sonra listeden çıkarılır. [KARAR VERİLECEK: C3 – listeden çıkarılan adreslerin ve teslim hatası kayıtlarının saklama süresi]
+  - kalıcı olarak teslim edilemeyen adresler hemen, geçici olarak teslim edilemeyen adresler ise üç başarısız gönderimden sonra listeden çıkarılır. Teslim hatası kayıtları, adresle birlikte silinir.
 - **Yaş:** Bülten için en az 16 yaşında olmanız gerekir. [KARAR VERİLECEK: B7 – 16 yaş sınırı ve 16–17 yaşındakilerin veli izni olmadan açık rızası (TMK m.16)]
 
 ### Bülten açık rıza kayıtları
@@ -78,7 +78,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - ORCID ile giriş yaptıysanız ORCID iD'niz;
   - giriş sağlayıcısındaki hesap kimliğiniz (sağlayıcının verdiği teknik bir numara);
   - kaydettiğiniz ilanlar, etkinlikler ve programlar;
-  - tercihleriniz: bültenin açık veya kapalı olması ve tercih ettiğiniz alt alanlar [KARAR VERİLECEK: C4 – tercih edilen alt alanların açılıştaki işlevi];
+  - tercihleriniz: bültenin açık veya kapalı olması ve tercih ettiğiniz alt alanlar. Tercih ettiğiniz alt alanların tek işlevi, oturumunuz açıkken iş ilanları listesindeki varsayılan alt alan filtresini belirlemektir. Bu tercih Glia Notes'u etkilemez; bülten tüm aboneler için aynıdır. Bu tercihten hakkınızda bir profil oluşturmayız;
   - hesabın oluşturulma tarihi, hesabı son kullandığınız tarih ve uzun süre kullanılmama uyarısının gönderildiği tarih;
   - oturum kayıtları ve tek kullanımlık e-posta giriş bağlantıları.
 - **Nereden ve nasıl:** Sizden ve seçtiğiniz giriş yönteminden:
@@ -118,7 +118,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Hukuki sebep:**
   - Önerinin değerlendirilmesi: meşru menfaatimiz (m.5/2 (f)), yani siteyi doğru ve güncel tutmak.
   - E-posta adresiniz: [KARAR VERİLECEK: B8 – açık rıza (m.5/1) mı, meşru menfaat (m.5/2 (f)) mi]
-- **Saklama:** E-posta adresiniz, öneri hakkında karar verildikten 90 gün sonra silinir. [KARAR VERİLECEK: C3 – URL ve notun karardan sonraki saklama süresi]
+- **Saklama:** E-posta adresiniz, önerdiğiniz sayfanın adresi ve notunuz, öneri hakkında karar verildikten 90 gün sonra silinir.
 - **Yaş:** E-posta adresinizi verebilmek için en az 16 yaşında olmanız gerekir. [KARAR VERİLECEK: B7 – yaş sınırı]
 - Lütfen notunuza kişisel veri yazmayın.
 
@@ -158,8 +158,8 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Nereden ve nasıl:** Sizden, hello@gliagora.com adresine yazdığınızda.
 - **Amaç:** Sorunuza veya isteğinize yanıt vermek.
 - **Hukuki sebep:** Meşru menfaatimiz (m.5/2 (f)), yani size yanıt verebilmek. İletiniz bir KVKK başvurusu veya kaldırma talebiyse, yukarıdaki ilgili bölüm geçerlidir.
-- **Saklama:** [KARAR VERİLECEK: C3 – olağan yazışmaların saklama süresi]
-- Türkiye'deki posta kutumuz kullanıma girene kadar e-postaların hangi hizmetlerden geçtiğini "Yurt dışına aktarım" bölümünde anlatıyoruz.
+- **Saklama:** Yazışmadaki son iletiden 2 yıl sonra silinir.
+- **Nerede:** E-posta sağlayıcımızın Türkiye'de barındırılan posta kutusunda (bkz. "Kişisel verileri kimlere ve hangi amaçla aktarıyoruz").
 
 ### Form ve giriş güvenliği
 
@@ -170,7 +170,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - Giriş bağlantısı isteklerini ve diğer formları da sınırlarız. [KARAR VERİLECEK: S ve M4b – bu sınırlamada hangi bilginin kullanılacağı; karma IP değeri yalnızca ilan önerme formu için kararlaştırılmıştır]
   - Spam koruması (ALTCHA) kendi sunucumuzda çalışır; başka bir hizmete veri gitmez.
 - **Hukuki sebep:** Meşru menfaatimiz (m.5/2 (f)), yani siteyi ve kullanıcılarını kötüye kullanıma karşı korumak.
-- **Saklama:** [KARAR VERİLECEK: C3 – karma IP değerinin nerede ve ne kadar süre tutulacağı]
+- **Saklama:** Karma değer yalnızca kendi sunucumuzdaki site veritabanında tutulur ve 24 saat sonra silinir.
 
 ### Sunucu erişim kayıtları
 
@@ -193,7 +193,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Nereden ve nasıl:** Sistem tarafından otomatik olarak.
 - **Amaç:** Hataları bulmak ve gidermek.
 - **Hukuki sebep:** Meşru menfaatimiz (m.5/2 (f)).
-- **Saklama:** [KARAR VERİLECEK: C3 – uygulama kayıtlarının saklama süresi]
+- **Saklama:** Sunucu erişim kayıtlarında olduğu gibi 14 gün sonra silinir.
 
 ### Ziyaret istatistikleri
 
@@ -202,13 +202,13 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Amaç:** Hangi sayfaların kullanıldığını ve sitenin ne kadar hızlı çalıştığını gösteren toplu istatistikler üretmek. Bültende yalnızca Gliagora'nın kendi sayfalarına giden bağlantılara kampanya etiketi (UTM) ekleriz.
 - **Hukuki sebep:** Veriler kişisel veri sayılırsa, meşru menfaatimiz (m.5/2 (f)), yani hizmeti iyileştirmek.
 - **Saklama:** Tek tek ziyaret kayıtları 12 ay saklanır, sonra silinir. Toplu istatistikler süresiz saklanır.
-- İstatistik paneline yalnızca biz erişebiliriz.
+- İstatistik paneline yalnızca biz ve teknik yöneticimiz erişebiliriz.
 
 ### Yedekler
 
 - **Veriler:** Yukarıda anlatılan veritabanlarının kopyaları.
 - **Nereden ve nasıl:** Yukarıdaki veritabanlarından, her gece otomatik olarak.
-- **Nerede:** Yedekler şifrelidir ve iki yerde tutulur: ana sunucumuzda ve farklı bir Türk şirketinin Türkiye'deki ikinci bir sunucusunda. [KARAR VERİLECEK: C1 – ikinci sunucu M2'de eklenir; metin daha önce yayımlanırsa M2 öncesi yedekleme düzeni anlatılmalıdır]
+- **Nerede:** Yedekler şifrelidir ve iki yerde tutulur: ana sunucumuzda ve farklı bir Türk şirketinin Türkiye'deki ikinci bir sunucusunda.
 - **Amaç:** Veri kaybında hizmeti geri yükleyebilmek.
 - **Hukuki sebep:** Yedeklenen verinin kendi hukuki sebebi. Ayrıca meşru menfaatimiz (m.5/2 (f)), yani verilerin güvenliğini sağlamak.
 - **Saklama:**
@@ -231,12 +231,12 @@ Bu bölüm, sitemizi kullanmayan ama yayımladığımız bilgilerin kaynakların
 - **Hukuki sebep:** Meşru menfaatimiz (m.5/2 (f)), yani sinirbilim alanındaki fırsatları okurlara duyurmak. Bilgiyi kişinin kendisi alenileştirmişse ayrıca m.5/2 (d). [KARAR VERİLECEK: B4 – ilanlarda adı geçen kişiler için hukuki sebep, m.5/2 (d) dâhil]
 - **Saklama:**
   - İç inceleme için tutulan kaynak metin parçası, karardan 30 gün sonra silinir.
-  - Yayımlanan ilan, son başvuru tarihinden sonraki bir saat içinde kapanır. Kapandıktan 30 gün sonra tamamen yayından kalkar. [KARAR VERİLECEK: C3 – yayından kalkan ilan kaydının veritabanında saklama süresi]
-  - Proje posta kutusundaki e-posta listesi iletileri: [KARAR VERİLECEK: C3 – e-posta listesi iletilerinin saklama süresi]
+  - Yayımlanan ilan, son başvuru tarihinden sonraki bir saat içinde kapanır. Kapandıktan 30 gün sonra tamamen yayından kalkar. Yayından kalkan ilanın kaydının tamamı veritabanında 12 ay daha tutulur; sonra yalnızca ilanın web adresi ve ilan numarası saklanır. Böylece eski adres, ilanın kaldırıldığını göstermeye devam eder.
+  - Proje posta kutusundaki e-posta listesi iletileri, geldikten 30 gün sonra silinir.
 - **Yapay zekâ desteği (açılışta kapalı):**
   - Bu özellik açıldığında, ilan metinleri taslak hazırlamak için Anthropic'in Claude API hizmetine gönderilir.
   - Göndermeden önce e-posta adresleri, telefon numaraları ve kişi adları metinden çıkarılır (örneğin `Smith Lab` yerine `[PI] Lab` yazılır).
-  - Gönderilen metnin bir kopyası denetim için saklanır. [KARAR VERİLECEK: C3 – denetim kopyasının saklama süresi]
+  - Gönderilen metnin bir kopyası denetim için saklanır ve içerik hakkında karar verildikten 30 gün sonra silinir.
   - Her içeriği yayımlamadan önce editör onaylar.
   - Ayrıntılar "Yurt dışına aktarım" bölümündedir.
 - Bu bilgilerin düzeltilmesini veya kaldırılmasını İngilizce {en: Notice and takedown} (kaldırma ve düzeltme) sayfasından isteyebilirsiniz.
@@ -250,26 +250,24 @@ Bu bölüm, sitemizi kullanmayan ama yayımladığımız bilgilerin kaynakların
 - **Nereden ve nasıl:** Hesap bilgileri, hesap açılırken editörün kendisinden alınır. Denetim kaydını, panelde işlem yapıldığında sistem otomatik olarak oluşturur.
 - **Amaç:** Yönetim paneline erişimi denetlemek ve paneli korumak.
 - **Hukuki sebep:** Meşru menfaatimiz (m.5/2 (f)).
-- **Saklama:** Hesap etkin olduğu sürece. [KARAR VERİLECEK: C3 – denetim kaydının saklama süresi]
+- **Saklama:** Hesap bilgileri, hesap etkin olduğu sürece tutulur. Denetim kaydı girdileri 1 yıl sonra silinir.
 
 ## Kişisel verileri kimlere ve hangi amaçla aktarıyoruz
 
-Kişisel verilerinizi yalnızca aşağıdaki alıcılara ve belirtilen amaçlarla aktarırız. Bazı hizmet sağlayıcılar verileri bizim adımıza ve talimatımızla işler (veri işleyenler). Bu sağlayıcılarla KVKK m.12 kapsamında yazılı sözleşme yaparız. [KARAR VERİLECEK: yayından önce – yedekleme ve e-posta sağlayıcılarının adları (M2); Hosting Türkiye'nin sözleşmedeki ticaret unvanı ve adresi; her sağlayıcının Türkiye'de kayıtlı olduğunun teyidi; sunucu, e-posta ve yedekleme sağlayıcılarıyla ve eklendiğinde e-posta gönderim hizmetiyle KVKK m.12 sözleşmelerinin imzalanması. Bu sözleşmelerin hiçbiri henüz imzalanmadı.]
+Kişisel verilerinizi yalnızca aşağıdaki alıcılara ve belirtilen amaçlarla aktarırız. Bazı hizmet sağlayıcılar ve teknik yöneticimiz verileri bizim adımıza ve talimatımızla işler (veri işleyenler). Bunlarla KVKK m.12 kapsamında yazılı sözleşme yaparız. [KARAR VERİLECEK: yayından önce – yedekleme ve e-posta sağlayıcılarının adları (M2); Hosting Türkiye'nin sözleşmedeki ticaret unvanı ve adresi; her sağlayıcının Türkiye'de kayıtlı olduğunun teyidi; sunucu, e-posta ve yedekleme sağlayıcılarıyla, teknik yöneticiyle ve eklendiğinde e-posta gönderim hizmetiyle KVKK m.12 sözleşmelerinin imzalanması. Bu sözleşmelerin hiçbiri henüz imzalanmadı.]
 
 - **Hosting Türkiye (barındırma, veri işleyen):**
   - Sunucumuz İstanbul'daki bir veri merkezindedir.
   - Burada şunlar tutulur: sitenin, bültenin ve istatistiklerin veritabanları, sunucu erişim kayıtları ve sunucudaki yedekler.
   - Amaç: hizmeti çalıştırmak.
 - **Yedekleme sağlayıcısı (veri işleyen):** Farklı bir Türk şirketinin Türkiye'deki sunucusu. Yalnızca şifreli yedekleri alır. Amaç: veri kaybına karşı koruma.
-- **Geçici posta kutusu (Türkiye'deki posta kutumuz kullanıma girene kadar):** hello@gliagora.com ve privacy@gliagora.com adreslerine gelen iletiler, Cloudflare üzerinden bu posta kutusuna iletilir ve burada tutulur. Amaç: size yanıt vermek. [KARAR VERİLECEK: C1 – geçici posta kutusunun sağlayıcısı ve konumu]
-- **E-posta sağlayıcısı (veri işleyen; Türkiye'deki posta kutumuz kullanıma girdikten sonra):**
+- **E-posta sağlayıcısı (veri işleyen):**
   - Türkiye'de barındırılan posta kutusu ve e-posta gönderim hizmeti.
   - Bülten, onay ve giriş e-postaları ile yanıtlarımız bu hizmet üzerinden gönderilir.
-  - Bize yazdığınız e-postalar burada tutulur.
+  - hello@gliagora.com ve privacy@gliagora.com adreslerine yazdığınız e-postalar burada tutulur.
   - Abone sayısı yaklaşık 1.000'i geçince Türkiye'de bir e-posta gönderim hizmeti eklenir.
-- **Cloudflare (e-posta yönlendirme, geçici):** Türkiye'deki posta kutumuz kullanıma girene kadar, hello@gliagora.com ve privacy@gliagora.com adreslerine gelen e-postaları geçici posta kutumuza yönlendirir. Ayrıntılar "Yurt dışına aktarım" bölümündedir.
 - **Anthropic (Claude API):** Yapay zekâ desteği açıldığında, kişi adları ve iletişim bilgileri çıkarılmış ilan metinlerini alır. Amaç: editörün onaylayacağı taslakları hazırlamak. Bu özellik açılışta kapalıdır.
-- **Sitenin teknik yönetimi:** [KARAR VERİLECEK: C2 – teknik yönetimi veri sorumlusundan başka birinin yürütüp yürütmediği]
+- **Teknik yönetici (veri işleyen):** Sunucumuzu ve yazılımımızı talimatlarımız doğrultusunda, yazılı bir sözleşmeyle yöneten ve kişisel verileri yalnızca bu işin gerektirdiği ölçüde gören bir kişi. Bu iş için sunucuya, yönetim paneline ve veritabanlarına erişimi vardır. Amaç: sunucumuzun ve yazılımımızın bakımını yapmak.
 - **Yetkili kamu kurum ve kuruluşları ile yargı mercileri:** Yalnızca kanunun gerektirdiği hâllerde ve gerektirdiği ölçüde. Bir veri ihlali olursa, gerekiyorsa Kişisel Verileri Koruma Kuruluna bildirim yaparız. [KARAR VERİLECEK: B15 – kamu kurumlarına aktarım ifadesi ve veri ihlali bildirimi]
 
 Şu hizmetler kişisel verilerinizi almaz:
@@ -288,11 +286,7 @@ Bir bağlantıya tıkladığınızda tarayıcınız, geldiğiniz yer olarak gitt
 
 İlke olarak kişisel verilerinizi Türkiye'de tutarız. Veri saklayan veya ileten bileşenler için Türkiye'de kayıtlı ve veri merkezleri Türkiye'de olan sağlayıcıları seçeriz. Bu bileşenler şunlardır: veritabanı, bülten, e-posta gönderimi, posta kutusu, yedekler ve istatistikler.
 
-Bu ilkenin iki istisnası vardır. Ayrıca, kendi seçtiğiniz bazı hizmetler yurt dışında olabilir.
-
-### Geçici e-posta yönlendirmesi (Cloudflare)
-
-Türkiye'deki posta kutumuz kullanıma girene kadar, hello@gliagora.com ve privacy@gliagora.com adreslerine gönderdiğiniz her e-posta önce Cloudflare'in yurt dışındaki e-posta yönlendirme hizmetinden geçer. Oradan geçici posta kutumuza iletilir. Bu yönlendirme, bülten kaydı ve formlar açılmadan önce kapatılır. Bundan sonra e-postalar doğrudan Türkiye'deki posta kutusuna gelir. [KARAR VERİLECEK: C1 – metnin yayın zamanı ve geçici posta kutusunun sağlayıcısı ve konumu; B12 – bu geçici aktarımın KVKK m.9 dayanağı (C1 kabul edilirse bölüm kaldırılır)]
+Bu ilkenin bir istisnası vardır. Ayrıca, kendi seçtiğiniz bazı hizmetler yurt dışında olabilir.
 
 ### Yapay zekâ desteği (Claude API)
 
@@ -398,7 +392,9 @@ Kişisel Verileri Koruma Kuruluna şikâyette bulunmadan önce bize başvurmanı
 
 ## Bu metindeki değişiklikler
 
-Verilerinizi yeni bir amaçla işlemeye başlamadan veya yeni bir alıcıya aktarmadan önce bu metni güncelleriz. Örneğin kayıtlı aramalar ve iş ilanı uyarıları kullanıma girmeden önce metni güncelleriz. Güncel sürüm her zaman bu sayfadadır. [KARAR VERİLECEK: C5 – önemli değişikliklerin üyelere ve abonelere e-postayla bildirilmesi]
+Verilerinizi yeni bir amaçla işlemeye başlamadan veya yeni bir alıcıya aktarmadan önce bu metni güncelleriz. Örneğin kayıtlı aramalar ve iş ilanı uyarıları kullanıma girmeden önce metni güncelleriz. Güncel sürüm her zaman bu sayfadadır.
+
+Önemli değişiklikler şunlardır: yeni bir amaç, yeni bir alıcı, yurt dışına aktarım veya üyeler için yeni yükümlülükler. Bu değişiklikleri üyelere e-postayla bildiririz, değişiklik yürürlüğe girmeden 30 gün önce bu sayfada tarihli bir duyuru yayımlarız ve bir sonraki Glia Notes sayısında da belirtiriz. Daha küçük değişikliklerde yalnızca sayfadaki tarihi güncelleriz.
 
 - **Sürüm:** 1.0
 - **Yürürlük tarihi:** Yayımlandığı tarih.

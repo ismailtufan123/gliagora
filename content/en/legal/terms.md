@@ -22,7 +22,7 @@ Gliagora currently offers:
 - a form to suggest a listing;
 - search.
 
-We are adding the other sections one step at a time. [TO DECIDE: C1 – when the terms go public; this text describes Gliagora at launch (M6), after privacy@gliagora.com has moved to the Turkish mail host (M2)]
+We are adding the other sections one step at a time.
 
 We call each thing we publish an "item", for example a job listing. Every item has:
 
@@ -83,7 +83,8 @@ You must be at least 16 to subscribe to Glia Notes, to have a member account or 
 You can use Gliagora without an account. With a free account you can:
 
 - save positions, and later also events and funding programmes;
-- switch the newsletter on or off and choose your preferred subfields [TO DECIDE: C4 – what preferred subfields do at launch];
+- switch the newsletter on or off;
+- choose your preferred subfields, which only set the default subfield filter on the jobs list while you are signed in;
 - download your data or delete your account at any time.
 
 Your account has no public profile. Other visitors and members cannot see your saved items.
@@ -115,7 +116,7 @@ When you sign in with Google or ORCID, their own terms also apply to your accoun
 
 ## Glia Notes newsletter
 
-Glia Notes is the monthly Gliagora newsletter. It is free.
+Glia Notes is the monthly Gliagora newsletter. It is free, and every subscriber receives the same issue.
 
 - We add you only after you confirm your address with the link we email you. If you have an account, you can subscribe by ticking a separate box in your account settings.
 - Every issue has a one-click unsubscribe link, and unsubscribing takes effect at once. Members can also switch the newsletter off in their settings.
@@ -230,7 +231,8 @@ If you have a complaint, please write to hello@gliagora.com first. We will try t
 We may change these terms, for example when we add new sections or features. When we do:
 
 - we publish the new version on this page with its date, and list the change under "Version history";
-- for important changes, we tell members in advance [TO DECIDE: C5 – how and how far in advance members are told];
+- for important changes (a new purpose for using your data, a new recipient of your data, a transfer of your data abroad, or new duties for members), we tell members by email and show a dated notice on this page 30 days before the change applies, and we mention the change in the next Glia Notes;
+- for smaller edits, we publish the new version without an email or advance notice;
 - if you do not agree, you can stop using Gliagora and delete your account at any time.
 
 If you keep using Gliagora after a change takes effect, the new version applies to you. [TO DECIDE: B16 – change clause]
@@ -239,7 +241,7 @@ If we ever add sponsorship, we will label sponsored content clearly and update t
 
 ## Contact
 
-- Email: hello@gliagora.com for questions, and privacy@gliagora.com for data requests. [TO DECIDE: C1 – privacy@gliagora.com moves to the Turkish mail host at M2]
+- Email: hello@gliagora.com for questions, and privacy@gliagora.com for data requests.
 - [Contact and legal notice](/en/contact/)
 - Notice and takedown
 - Data requests

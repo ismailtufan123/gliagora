@@ -7,7 +7,7 @@ This privacy policy is also available in Turkish as the [KVKK information notice
 ## In short
 
 - We collect as little as we can. For the newsletter we store your email address, its subscription status and a consent record that does not contain your address.
-- Your data is stored on servers in Türkiye. There are two exceptions, explained under "Transfers outside Türkiye" below.
+- Your data is stored on servers in Türkiye. There is one exception, explained under "Transfers outside Türkiye" below.
 - There are no ads, no tracking scripts, no analytics cookies and no open or click tracking in our emails.
 - Our public pages do not fetch anything from other websites. Fonts, map tiles and spam protection run on our own server.
 - You can unsubscribe, download your data and delete your account yourself, at any time.
@@ -24,7 +24,7 @@ The data controller is **Nuray Sancar**, a private individual resident in Türki
 - **Data protection officer:** none is appointed.
 - **EU representative:** none is appointed (see below).
 
-[TO DECIDE: C2 – whether someone else runs the technical side]
+A technical administrator maintains our server and software as our processor (see "Who receives your data").
 
 KVKK applies because the controller is in Türkiye. [TO DECIDE: B6 – registration in the data controllers' registry (VERBİS)] The GDPR applies to you if you are in the European Union, because Gliagora is offered to people there. [TO DECIDE: B10 – EU and EEA]
 
@@ -81,7 +81,7 @@ The address is stored in our newsletter software (listmonk) on our server in Tü
 
 We do not track whether you open an email or click a link, and we use no tracking pixels. Links to employers carry no tracking parameters. Links to our own pages carry campaign tags (UTM tags), so we can count how many visits in total come from the newsletter. The tags are the same for everyone and do not identify you.
 
-If an email cannot be delivered and the failure is permanent, we remove the address at once. After 3 temporary failures, we remove it too. We learn about these failures automatically from the receiving mail server. Legal basis: our legitimate interest in keeping the list accurate and our emails deliverable (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)). [TO DECIDE: C3 – how long bounce records are kept]
+If an email cannot be delivered and the failure is permanent, we remove the address at once. After 3 temporary failures, we remove it too. We learn about these failures automatically from the receiving mail server. Legal basis: our legitimate interest in keeping the list accurate and our emails deliverable (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)). Records of these failures are deleted together with the address.
 
 To unsubscribe, use the one-click link in every email or the switch in your account settings. It takes effect immediately.
 
@@ -112,7 +112,7 @@ What we keep:
   - the account ID that Google or ORCID gives us;
   - the date you joined and the date you were last active;
   - the date we sent you an inactivity warning, if we sent one.
-- **What you save and set:** saved positions, events and programmes, newsletter on or off, and your preferred subfields. [TO DECIDE: C4 – what preferred subfields do at launch]
+- **What you save and set:** saved positions, events and programmes, newsletter on or off, and your preferred subfields. Your preferred subfields only set the default subfield filter on the jobs list while you are signed in. They do not change Glia Notes, which is the same for every subscriber.
 - **Sign-in data:** a session record while you are signed in, and the single-use sign-in links.
 
 If you use different sign-in methods with the same verified email address, we combine them into one account. You can link your ORCID iD from your settings.
@@ -138,7 +138,7 @@ On the [Suggest a listing](/en/suggest/) page, you can point us to a position or
 - **Legal basis:**
   - Reviewing the suggestion: our legitimate interest in finding relevant listings (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
   - Your email address: your consent (GDPR Art. 6(1)(a)). Under KVKK: explicit consent (Art. 5(1)) or legitimate interest (Art. 5(2)(f)). [TO DECIDE: B8 – KVKK basis for the optional email]
-- **How long:** we delete your email address 90 days after we decide on the suggestion. [TO DECIDE: C3 – how long the link and note are kept]
+- **How long:** we delete your email address, the link and the note 90 days after we decide on the suggestion.
 
 ### Spam protection on forms
 
@@ -147,7 +147,7 @@ On the [Suggest a listing](/en/suggest/) page, you can point us to a position or
 - **Rate limits:** the suggestion form accepts at most 5 suggestions an hour from the same IP address. Your IP address is the number that identifies your internet connection. For this limit we store a scrambled code made from your IP address (a hash). This code still counts as personal data. Sign-in and the other forms are limited too. [TO DECIDE: S and M4b – what these limits use to identify requests; the hashed IP address is decided only for the suggestion form, and the sentence on IP addresses under "Server logs" depends on this]
 - **Where it comes from:** automatically, by electronic means, when your browser sends a form.
 - **Legal basis:** our legitimate interest in protecting the forms from abuse (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
-- **How long:** [TO DECIDE: C3 – how long hashed IP addresses are kept, and where]
+- **How long:** the hashed IP address is kept only in the website's database on our server and deleted after 24 hours.
 
 ### Data requests
 
@@ -177,9 +177,9 @@ Every item on Gliagora has a "Report a problem" link. It opens a short form with
 - **Where it comes from:** you, by email.
 - **Why:** to reply to you.
 - **Legal basis:** our legitimate interest in answering messages (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
-- **How long:** [TO DECIDE: C3 – how long ordinary email is kept]
+- **How long:** 2 years after the last message in the conversation.
 
-At present, messages to our email addresses (hello@gliagora.com and privacy@gliagora.com) pass through Cloudflare, outside Türkiye (see "Transfers outside Türkiye").
+Your message is kept in our mailbox at our mail provider in Türkiye (see "Who receives your data").
 
 ### Server logs
 
@@ -209,11 +209,11 @@ The website and the other programs on our server write technical logs while they
 - **Where it comes from:** automatically, by electronic means, from our system.
 - **Why:** to find and fix errors.
 - **Legal basis:** our legitimate interest in running a secure and working website (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
-- **How long:** [TO DECIDE: C3 – how long application logs are kept]
+- **How long:** deleted after 14 days, like the server logs.
 
 ### Visitor statistics
 
-We count visits with Umami, which runs on our own server. It sets no cookies and sends nothing to anyone else. Only we can see the statistics. It also records how fast pages load (Core Web Vitals), so we can fix slow pages.
+We count visits with Umami, which runs on our own server. It sets no cookies and sends nothing to anyone else. Only we and our technical administrator can see the statistics. It also records how fast pages load (Core Web Vitals), so we can fix slow pages.
 
 - **What:** [TO DECIDE: B14 – fields of a raw Umami event, and whether they are personal data]
 - **Where it comes from:** automatically, by electronic means, when you view a page.
@@ -229,7 +229,7 @@ This applies only to people who edit Gliagora.
 - **Where it comes from:** from the editor, and automatically when changes are made.
 - **Why:** to control access to the editing tools and trace changes.
 - **Legal basis:** our legitimate interest in securing the site (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
-- **How long:** while the account is active. [TO DECIDE: C3 – how long the audit log is kept]
+- **How long:** the account, while it is active. Entries in the audit log are deleted after 1 year.
 
 ### People named in listings and sources
 
@@ -241,10 +241,10 @@ We find positions, events and funding on employers' and funders' pages, on job b
 - **Legal basis:** our legitimate interest in publishing accurate information about research opportunities (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)). [TO DECIDE: B4 – legal basis for people named in listings]
 - **Who sees it:** published listings are public on gliagora.com. The map shows institutions, never individuals.
 - **How long:**
-  - Published listings: a listing is taken offline 30 days after it closes, or at once if the employer withdraws it or a removal request succeeds. [TO DECIDE: C3 – how long the record stays in our database after that]
+  - Published listings: a listing is taken offline 30 days after it closes, or at once if the employer withdraws it or a removal request succeeds. After that, we keep the full record in our database for 12 months, then only its web address and ID, so that the old address can keep showing that the listing has been removed.
   - Source text we keep internally while we review an item: deleted 30 days after we decide on the item.
-  - Mailing-list messages in the project mailbox: [TO DECIDE: C3 – how long these messages are kept]
-  - AI drafting: if it is switched on (it is currently switched off), names, email addresses and phone numbers are replaced with placeholders before any text is sent to the AI service (see "Transfers outside Türkiye"). We keep a copy of the text that was sent, so we can check later exactly what left our server. [TO DECIDE: C3 – how long this copy is kept]
+  - Mailing-list messages in the project mailbox: deleted 30 days after they arrive.
+  - AI drafting: if it is switched on (it is currently switched off), names, email addresses and phone numbers are replaced with placeholders before any text is sent to the AI service (see "Transfers outside Türkiye"). We keep a copy of the text that was sent, so we can check later exactly what left our server, and delete it 30 days after we decide on the item.
 
 If you are named and want something corrected or removed, use the notice and takedown page.
 
@@ -252,7 +252,7 @@ If you are named and want something corrected or removed, use the notice and tak
 
 - **What:** encrypted copies of the databases described above.
 - **Where it comes from:** copied automatically from our databases.
-- **Where:** encrypted copies are kept on our server and, every night, copied to a second server at another company in Türkiye, not our main hosting company. [TO DECIDE: C1 – the second server is added at M2; if the texts go public earlier, describe the backup setup before M2]
+- **Where:** encrypted copies are kept on our server and, every night, copied to a second server at another company in Türkiye, not our main hosting company.
 - **Why:** to restore the service after a failure.
 - **Legal basis:** the same basis as the original data, and our legitimate interest in keeping data safe (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
 - **How long:** we keep one copy for each of the last 7 days, the last 4 weeks and the last 6 months, plus every copy from the last 2 days. So anything you delete, including a deleted account and the address of a former subscriber, disappears from the backups within 6 months.
@@ -273,44 +273,47 @@ We send you only emails you asked for, or emails your account or request needs:
 |---|---|---|---|---|
 | Newsletter email address and status | Send Glia Notes | Consent (5(1)) | Consent (a) | Until you unsubscribe; unconfirmed: 7 days |
 | Newsletter consent records | Show your consent | Protecting a right (5(2)(e)) | Legal obligation (c) | While subscribed, plus 3 years; no longer linked to you in our live systems once your address is deleted (backups: within 6 months) |
-| Bounce records | Keep the list accurate | Legitimate interest (5(2)(f)) | Legitimate interests (f) | [TO DECIDE: C3 – period] |
+| Bounce records | Keep the list accurate | Legitimate interest (5(2)(f)) | Legitimate interests (f) | Deleted with the address |
 | Member account | Sign-in, saved items, settings | Contract (5(2)(c)) | Contract (b) | Until you delete it; after 24 months without activity: warning, deletion 30 days later |
 | Saved items and settings | Member features | Contract (5(2)(c)) | Contract (b) | Deleted with the account |
 | Sessions | Keep you signed in | Contract (5(2)(c)) | Contract (b) | 30 days |
 | Sign-in links | Sign you in | Contract (5(2)(c)) | Contract (b) | 15 minutes, single use |
 | Final deletion email | Confirm the deletion | Legal obligation (5(2)(ç)) | Legal obligation (c) | Sent once |
-| Suggestion: link and note | Review the suggestion | Legitimate interest (5(2)(f)) | Legitimate interests (f) | [TO DECIDE: C3 – period] |
+| Suggestion: link and note | Review the suggestion | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 90 days after the decision |
 | Suggestion: your email (optional) | Tell you the outcome | Consent (5(1)) or Legitimate interest (5(2)(f)) [TO DECIDE: B8 – KVKK basis] | Consent (a) | 90 days after the decision, or earlier if you withdraw consent |
-| Hashed IP address | Protect the suggestion form from abuse | Legitimate interest (5(2)(f)) | Legitimate interests (f) | [TO DECIDE: C3 – period] |
+| Hashed IP address | Protect the suggestion form from abuse | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 24 hours |
 | Data requests | Handle your request | Legal obligation (5(2)(ç)) | Legal obligation (c) | 2 years after closure |
 | Removal requests (Law No. 5651) | Handle your request | Legal obligation and Protecting a right (5(2)(ç), (e)) | Legitimate interests (f) | 2 years after closure |
 | Corrections and problem reports | Keep listings accurate | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 2 years after closure |
-| Email to hello@gliagora.com | Reply to you | Legitimate interest (5(2)(f)) | Legitimate interests (f) | [TO DECIDE: C3 – period] |
+| Email to hello@gliagora.com | Reply to you | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 2 years after the last message |
 | Server logs (shortened IP address) | Security and fixing errors | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 14 days |
-| Application logs | Finding and fixing errors | Legitimate interest (5(2)(f)) | Legitimate interests (f) | [TO DECIDE: C3 – period] |
+| Application logs | Finding and fixing errors | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 14 days |
 | Visitor statistics | Overall numbers and page speed | Legitimate interest (5(2)(f)) | Legitimate interests (f) | Single page views 12 months; totals kept |
-| Editor accounts and audit log | Access control | Legitimate interest (5(2)(f)) | Legitimate interests (f) | While active; audit log [TO DECIDE: C3 – period] |
-| Names in published listings | Publish research opportunities | Legitimate interest (5(2)(f)) | Legitimate interests (f) | Offline 30 days after closing; database record [TO DECIDE: C3 – period] |
+| Editor accounts and audit log | Access control | Legitimate interest (5(2)(f)) | Legitimate interests (f) | While active; audit log 1 year |
+| Names in published listings | Publish research opportunities | Legitimate interest (5(2)(f)) | Legitimate interests (f) | Offline 30 days after closing; full record 12 months more, then only the web address and ID |
 | Source text under review | Editorial review | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 30 days after the decision |
-| Mailing-list messages in the project mailbox | Find listings | Legitimate interest (5(2)(f)) | Legitimate interests (f) | [TO DECIDE: C3 – period] |
-| Text sent for AI drafting (names replaced) | Check what was sent | Legitimate interest (5(2)(f)) | Legitimate interests (f) | [TO DECIDE: C3 – period] |
+| Mailing-list messages in the project mailbox | Find listings | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 30 days after arrival |
+| Text sent for AI drafting (names replaced) | Check what was sent | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 30 days after the decision |
 | Backups | Restore after a failure | Same as the data, and Legitimate interest (5(2)(f)) | Same as the data, and Legitimate interests (f) | Within 6 months, for all deleted data |
 
 ## Who receives your data
 
-We share personal data only with the recipients listed in this section, and each one receives only what it needs for its task. The two transfers outside Türkiye are explained in more detail under "Transfers outside Türkiye".
+We share personal data only with the recipients listed in this section, and each one receives only what it needs for its task. The transfer outside Türkiye is explained in more detail under "Transfers outside Türkiye".
 
-Each service provider that handles personal data for us must work on our instructions under a written processor agreement (KVKK Art. 12). [TO DECIDE: before publication – name the backup provider and the mail provider (M2); give Hosting Türkiye's legal entity name and address as on the contract; confirm that each provider is registered in Türkiye; sign the KVKK Art. 12 agreements with the server, mail and backup providers, and with the sending service when it is added. None of these agreements is signed yet.]
+Each service provider or person that handles personal data for us must work on our instructions under a written processor agreement (KVKK Art. 12). [TO DECIDE: before publication – name the backup provider and the mail provider (M2); give Hosting Türkiye's legal entity name and address as on the contract; confirm that each provider is registered in Türkiye; sign the KVKK Art. 12 agreements with the server, mail and backup providers, with the technical administrator, and with the sending service when it is added. None of these agreements is signed yet.]
+
+### Technical administrator
+
+Our technical administrator is a person who maintains our server and software on our instructions, under a written agreement, and sees personal data only when that work requires it. For this work, this person has access to the server, the editing tools and the databases, and is our processor ({tr: veri işleyen}; KVKK Art. 12, GDPR Art. 28).
 
 ### Service providers in Türkiye
 
 - **Hosting Türkiye** (the company that runs our server): our server is in a data centre in Istanbul. It holds the website, its database, the newsletter software and its database, the visitor statistics, the server logs and the local backups.
 - **Backup provider:** a second server at another company in Türkiye, which stores the encrypted backups.
-- **Mail provider:** a mail provider hosted in Türkiye runs our mailbox and sends our emails (newsletter, sign-in links, confirmations). As the newsletter grows, we plan to add a sending service (SMTP relay) that is also in Türkiye.
+- **Mail provider:** a mail provider hosted in Türkiye runs our mailbox, which receives the messages sent to hello@gliagora.com and privacy@gliagora.com, and sends our emails (newsletter, sign-in links, confirmations). As the newsletter grows, we plan to add a sending service (SMTP relay) that is also in Türkiye.
 
 ### Service providers outside Türkiye
 
-- **Cloudflare Email Routing (for now):** passes on the messages sent to hello@gliagora.com and privacy@gliagora.com to our interim mailbox. See "Transfers outside Türkiye".
 - **The Claude API, by Anthropic (currently switched off):** would receive the text of listings and openly licensed papers, with names and contact details replaced or removed. See "Transfers outside Türkiye".
 
 ### Services you deal with directly
@@ -333,12 +336,11 @@ We give personal data to public authorities or courts only when the law requires
 
 ## Transfers outside Türkiye
 
-We choose service providers registered in Türkiye, with data centres in Türkiye. As a rule, your data stays in Türkiye. [TO DECIDE: B12 – access to the server from abroad] There are two exceptions, and two situations in which you deal directly with a service abroad.
+We choose service providers registered in Türkiye, with data centres in Türkiye. As a rule, your data stays in Türkiye. [TO DECIDE: B12 – access to the server from abroad] There is one exception, and two situations in which you deal directly with a service abroad.
 
-### Exceptions
+### Exception
 
-1. **Email to our addresses, for a short interim period.** At present, messages to hello@gliagora.com and privacy@gliagora.com pass through Cloudflare Email Routing, outside Türkiye, before they reach our interim mailbox. We will move these addresses to a mail provider in Türkiye and switch this routing off before newsletter signups and forms open. [TO DECIDE: C1 – when the texts go public; the provider and location of the interim mailbox these addresses forward to. B12 – the KVKK Art. 9 route for this transfer, needed only if the texts go public before M2. If they go public after M2, remove this item and the text that depends on it: "two exceptions" under "In short" and in this section, the note under "Email to hello@gliagora.com" and the Cloudflare Email Routing entry under "Who receives your data".]
-2. **AI help with drafting (the Claude API, by Anthropic).** This is currently switched off. When it is switched on, we send the text of job, event and funding listings after replacing email addresses, phone numbers and personal names with placeholders. We also send the text of openly licensed papers after removing author lists, affiliations, correspondence details, acknowledgements and references. We do not send anything from our subscriber, member or request records. The service runs outside Türkiye. Replacing names lowers the risk, but a name can still slip through. A person checks and approves every item before it is published. [TO DECIDE: B17 – transfer route before AI drafting is switched on]
+**AI help with drafting (the Claude API, by Anthropic).** This is currently switched off. When it is switched on, we send the text of job, event and funding listings after replacing email addresses, phone numbers and personal names with placeholders. We also send the text of openly licensed papers after removing author lists, affiliations, correspondence details, acknowledgements and references. We do not send anything from our subscriber, member or request records. The service runs outside Türkiye. Replacing names lowers the risk, but a name can still slip through. A person checks and approves every item before it is published. [TO DECIDE: B17 – transfer route before AI drafting is switched on]
 
 You can ask for a copy of the safeguard we use for each transfer by writing to privacy@gliagora.com. [TO DECIDE: B12 – which safeguard applies to each transfer, if any; see also B17]
 
@@ -457,7 +459,9 @@ You must be at least 16 to subscribe to Glia Notes, to have a member account or 
 
 ## Changes to this privacy policy
 
-We update this privacy policy when our processing changes. We record every change in the version history below. [TO DECIDE: C5 – how members and subscribers are told about important changes]
+We update this privacy policy when our processing changes. We record every change in the version history below.
+
+For an important change (a new purpose, a new recipient, a transfer abroad or new duties for members), we email members, put a dated notice on this page 30 days before the change applies, and mention it in the next issue of Glia Notes. Smaller edits only get a new date on this page.
 
 If we move to another country, we will move our servers to that part of the world within 4 weeks and update this privacy policy.
 

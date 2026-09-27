@@ -6,8 +6,6 @@ Questions, corrections and removal requests: [hello@gliagora.com](mailto:hello@g
 
 Requests about your personal data: [privacy@gliagora.com](mailto:privacy@gliagora.com)
 
-[TO DECIDE: C1 – publication at M2; until then hello@ mail passes through Cloudflare Email Routing abroad and privacy@ is not yet on the Turkish mail host]
-
 You can write to us in English or Turkish.
 
 ## What Gliagora is
