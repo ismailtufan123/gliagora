@@ -34,6 +34,27 @@ test.describe('HTTP behaviour', () => {
     })
   }
 
+  test('a removed URL answers 410 with a server-rendered page', async ({ request }) => {
+    const response = await request.get('/en/gone-example/')
+    expect(response.status()).toBe(410)
+    const html = await response.text()
+    expect(html).toContain('<main id="main"')
+    expect(html).toContain('Page removed')
+    expect(html).toContain('<meta name="robots" content="noindex"')
+  })
+
+  test('the removed-page itself is not reachable: it is the server-rendered 404', async ({
+    request,
+  }) => {
+    const response = await request.get('/en/gone/')
+    expect(response.status()).toBe(404)
+    const html = await response.text()
+    expect(html).toContain('<main id="main"')
+    expect(html).toContain('Page not found')
+    expect(html).not.toContain('Page removed')
+    expect(html).toContain('<meta name="robots" content="noindex"')
+  })
+
   test('pages declare their language', async ({ request }) => {
     expect(await (await request.get('/en/contact/')).text()).toContain('<html lang="en"')
     expect(await (await request.get('/tr/iletisim/')).text()).toContain('<html lang="tr"')

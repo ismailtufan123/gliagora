@@ -40,6 +40,11 @@
     "text": "This page does not exist or has moved. These are the main parts of Gliagora:",
     "home": "Go to the home page"
   },
+  "gone": {
+    "title": "Page removed",
+    "text": "This page has been removed. Positions and events leave Gliagora some time after they close. These are the main parts of Gliagora:",
+    "home": "Go to the home page"
+  },
   "windows": {
     "jobs": "Jobs",
     "events": "Events",

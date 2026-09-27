@@ -13,6 +13,7 @@ One TypeScript app: Next.js (App Router) with Payload CMS 3 inside it, on Postgr
 | ------------------------- | --------------------------------------------------------------- |
 | `src/app/(frontend)/`     | Public site, one folder per locale: `en/` (`/en/`, `/en/contact/`), `tr/` (`/tr/iletisim/`) |
 | `src/app/global-not-found.tsx` | The 404 page for unknown public URLs (not /admin, /api) |
+| `src/proxy.ts`, `src/lib/gone.ts` | 410 Gone for removed URLs (PLAN §2.5)                 |
 | `messages/`               | All user-visible text, per locale (`en.json`, `tr.json`)        |
 | `content/`                | Long-form pages in Markdown (About, legal texts); see `src/lib/content.ts` |
 | `src/i18n/`               | Locale settings for next-intl                                   |

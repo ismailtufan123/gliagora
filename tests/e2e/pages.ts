@@ -7,4 +7,5 @@ export const PAGES = [
   { path: '/en/jobs/', name: 'placeholder (window)' },
   { path: '/en/learn/bench-to-bedside/', name: 'placeholder (section)' },
   { path: '/this-page-does-not-exist/', name: '404', status: 404 },
+  { path: '/en/gone-example/', name: '410', status: 410 },
 ] as const
