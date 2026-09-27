@@ -23,6 +23,16 @@ test.describe('content pages', () => {
     })
   }
 
+  for (const path of DRAFTS) {
+    test(`${path} has its canonical link and no hreflang while it is a draft`, async ({
+      request,
+    }) => {
+      const html = await (await request.get(path)).text()
+      expect(html).toContain(`<link rel="canonical" href="https://gliagora.com${path}"/>`)
+      expect(html).not.toContain('rel="alternate" hrefLang')
+    })
+  }
+
   test('robots.txt keeps crawlers out of the admin and the API', async ({ request }) => {
     const robots = await (await request.get('/robots.txt')).text()
     expect(robots).toContain('Disallow: /admin')

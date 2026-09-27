@@ -1305,7 +1305,7 @@ Before **any** money arrives (sponsorship, ads, donations, paid events): see an 
 | Images | AVIF/WebP, responsive `srcset`, explicit dimensions, lazy below the fold |
 | Third-party requests | 0 |
 
-The byte budgets above (JavaScript, CSS, HTML, fonts) are checked for every template in CI by `tests/e2e/budgets.spec.ts`, and the end-to-end tests fail on any request to another domain. Lighthouse CI for the Core Web Vitals lab scores (§17.2) is still to be added.
+The budgets above for JavaScript, CSS, HTML and fonts (bytes, preloaded files and families) are checked for every template in CI by `tests/e2e/budgets.spec.ts`, measured from what the browser downloads, and the end-to-end tests fail on any request to another domain. Lighthouse CI for the Core Web Vitals lab scores (§17.2) is still to be added.
 
 ### 17.4 Techniques
 
@@ -1386,7 +1386,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 | M10 | Papers and News | PubMed, bioRxiv, OpenAlex ingestion; paper review; monthly issue pages; news list | Papers and News live | 2 weeks |
 | M11 | Newsletter builder | Builder view; email template; test sends; archive pages | First full digest | 1 week |
 | M12 | Resources and Learn | Resources; articles; Bench to Bedside; evidence labels; author pages; hubs for all windows | All six windows live | 2 weeks |
-| M13 | Signature hero | Needs final logo SVG; §10 in full | 3D hero live | 2 weeks |
+| M13 | Signature hero | Builds on the 6b logo SVGs in `public/brand/`; §10 in full | 3D hero live | 2 weeks |
 | M14 | Hardening | Accessibility audit, performance tuning, security review, restore drill, documentation | Phase 1 complete | 1 week |
 
 Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 2026, the public launch (M6) lands around the turn of the year (late December to early January), still inside the PhD application season.
@@ -1438,7 +1438,7 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 2. A monthly budget of roughly $20–70 is acceptable at launch (plus the EU representative if chosen).
 3. English only at launch, with Turkish legal texts from day one.
 4. No user-generated content is published in Phase 1; suggestions become editorial content after review.
-5. The final logo SVG arrives before M13; a simple placeholder mark is used until then.
+5. Resolved: the final 6b logo SVG files are in `public/brand/` (M0); M13 builds the hero on them.
 6. The operator reviews each milestone on staging from a phone and approves production releases.
 7. Minimum age for the newsletter is 16.
 8. Turkish-registered hosting, mail and relay providers meeting the requirements in §11.4 are available at the listed price ranges `[U]`.
@@ -1474,7 +1474,7 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 | D10 | Data controller in the privacy texts: Nuray Sancar (natural person). She agrees to be named, has access to `hello@` and answers requests; services that process personal data are opened in her name, or a short written agreement covers whoever runs the technical side | §15.1, §15.4 |
 | D11 | Tagline: "Where neuroscience meets". Logo exploration continues on the design canvas (20 concepts so far) | §1, §22.2 |
 | D12 | Logo: concept 6b "Calcium wave with astrocyte" (calcium waves spread from an astrocyte and form a G). Variants: primary, dark, one colour, stacked; simplified marks for 32/24 px and a favicon for 16 px | §7, §22.2 |
-| D13 | No trademark registration for now; a free name-collision search (TÜRKPATENT, EUIPO, WIPO) at M1; registration revisited before any revenue | §22.2 |
+| D13 | No trademark registration for now; a free name-collision search: a web search at M1 (done 2026-09-27, no other use of the name found), and the TÜRKPATENT, EUIPO and WIPO searches by the operator before M6; registration revisited before any revenue | §22.2 |
 | D14 | Social profiles @gliagora on Instagram and LinkedIn, reserved by the operator; the site links to them as plain links (no embedded feeds, no tracking scripts) | §2 (footer), §18 |
 | D15 | About page credential: "Nuray Sancar, MSc in Neuroscience" | §2 (About), §22.2 |
 | D16 | Newsletter cadence: monthly, first Tuesday at 13:00 UTC; the name is still open | §13, §22.2 |

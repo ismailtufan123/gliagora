@@ -1,10 +1,12 @@
 import type { MetadataRoute } from 'next'
 
 import { CONTENT_PAGES } from '@/lib/content'
-import { SITE_ORIGIN, translationsOf } from '@/lib/site'
+import { alternatesFor } from '@/lib/metadata'
+import { SITE_ORIGIN } from '@/lib/site'
 
 // /sitemap.xml (PLAN §16): only pages meant to be indexed, so no placeholders and no draft
-// texts. From M4, when listings arrive, this becomes a sitemap index with one file per type.
+// texts; hreflang alternates as on the pages themselves (alternatesFor). From M4, when listings
+// arrive, this becomes a sitemap index with one file per type.
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages: { path: string; lastModified?: string }[] = [
     { path: '/en/' },
@@ -13,19 +15,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       .map((page) => ({ path: page.path, lastModified: page.updated })),
   ]
   return pages.map(({ path, lastModified }) => {
-    const translations = Object.entries(translationsOf(path))
+    const languages = alternatesFor(path)?.languages
     return {
       url: `${SITE_ORIGIN}${path}`,
       ...(lastModified ? { lastModified } : {}),
-      ...(translations.length > 1
-        ? {
-            alternates: {
-              languages: Object.fromEntries(
-                translations.map(([locale, href]) => [locale, `${SITE_ORIGIN}${href}`]),
-              ),
-            },
-          }
-        : {}),
+      ...(languages ? { alternates: { languages: languages as Record<string, string> } } : {}),
     }
   })
 }
