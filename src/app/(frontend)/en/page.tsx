@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
-import { Lockup } from '@/components/Lockup'
 import { CONTACT_EMAIL } from '@/lib/site'
 
 // Coming-soon page (M0), until the home page of M6. English only (PLAN §12). Static HTML and CSS.
+// The logo is in the header; the H1 is the tagline, as on the future home page (PLAN §9.1).
 export const metadata: Metadata = { alternates: { canonical: '/en/' } }
 
 export default async function ComingSoonPage() {
@@ -12,13 +12,8 @@ export default async function ComingSoonPage() {
   const t = await getTranslations({ locale: 'en' })
 
   return (
-    <main id="main" className="page-frame grid flex-1 content-center gap-8 py-12">
-      <h1>
-        <Lockup size="large" name={t('brand.name')} descriptor={t('brand.descriptor')} />
-      </h1>
-      <p className="max-w-[14ch] font-display text-hero leading-[1.02] font-bold tracking-[-0.01em]">
-        {t('brand.tagline')}
-      </p>
+    <main id="main" className="page-frame grid flex-1 content-center gap-8 py-16">
+      <h1 className="max-w-[14ch] text-hero leading-[1.02]">{t('brand.tagline')}</h1>
       <div className="grid max-w-measure gap-4 text-card">
         <p>{t('home.comingSoon')}</p>
         <p>

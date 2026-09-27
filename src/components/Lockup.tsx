@@ -1,5 +1,5 @@
 type LockupProps = {
-  size: 'large' | 'small'
+  size: 'large' | 'small' | 'header'
   /** "Gliagora" and "Neuroscience" (brand.name, brand.descriptor in the messages). */
   name: string
   descriptor: string
@@ -7,13 +7,13 @@ type LockupProps = {
   href?: string
 }
 
-const markSize = { large: 64, small: 40 }
-const textSize = { large: 'text-h3', small: 'text-card' }
+const markSize = { large: 64, small: 40, header: 32 }
+const textSize = { large: 'text-h3', small: 'text-card', header: 'text-body' }
 
 // Logo 6b (D12): the light mark by default, the dark mark when the system uses dark mode.
 function Mark({ size }: { size: number }) {
   return (
-    <picture>
+    <picture className="shrink-0">
       <source srcSet="/brand/gliagora-mark-dark.svg" media="(prefers-color-scheme: dark)" />
       <img src="/brand/gliagora-mark.svg" alt="" width={size} height={size} />
     </picture>

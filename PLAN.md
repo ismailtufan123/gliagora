@@ -124,6 +124,8 @@
 
 **Mobile:** logo lockup, search icon, menu button. The menu is a full-height disclosure panel: six windows (expandable), Map, Learn, About, then the CTA. Filters live in a bottom sheet (§7).
 
+**Breakpoints and behaviour (built in M1):** the desktop header shows from 1280px, because the six windows, language menu and CTA need about 1,200px in Turkish; below that, the menu button opens the mobile panel, and below 768px the language list moves into the panel as well. Below 480px the menu button shows only its icon, as in §9.2, and keeps the name "Menu". Menus are native disclosure elements (`<details>`), so they open without JavaScript; a small script adds Esc (closes and returns focus), close on outside click or focus, one open menu at a time, and the inert background of the mobile panel.
+
 **Footer (sitemap footer):** Windows | Learn | About (About, Sources and editorial policy, Contact) | Legal (Privacy, KVKK texts, Cookies, Terms, Takedown, Data requests, Accessibility). The **Contact and legal notice** link appears on every page, including home (Law 5651, §15).
 
 ### 2.4 Shared filter model (URL encoding)
@@ -136,7 +138,7 @@ One `FilterState` type drives lists, the map, subfield hubs and (Phase 2) saved 
 | `type` | position type slugs | jobs |
 | `stage` | career stage slugs | jobs, events, funding |
 | `country`, `region` | ISO 3166-1 alpha-2 / M49 region slug | jobs, events, map |
-| `deadline` | `7d`, `30d`, `90d`, `this-month`, `YYYY-MM-DD..YYYY-MM-DD` | jobs, events, funding |
+| `deadline` | `7d`, `14d` (the "Closing soon" menu entry, same threshold as the badge), `30d`, `90d`, `this-month`, `YYYY-MM-DD..YYYY-MM-DD` | jobs, events, funding |
 | `etype`, `format`, `dtype` | event type, format, deadline type | events |
 | `institution` | ROR ID | jobs, events, map |
 | `q` | free text | all |
@@ -156,6 +158,7 @@ Example: `/en/jobs/?type=phd&subfield=systems-circuits,computational-theoretical
 | Event ended | Stays 30 days (with "This event has ended"), then `410` |
 | Institution with no active items | `200` + `noindex`, excluded from sitemap |
 | Unknown URL | `404` with search and links to the six windows |
+| Window or section not built yet | `200` placeholder page with `noindex`, so no header or footer link leads to a 404; replaced by the real page in its milestone |
 
 ---
 
