@@ -12,7 +12,7 @@ const CONTENT_DIR = path.join(process.cwd(), 'content')
 export function slugify(text: string): string {
   return text
     .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/ı/g, 'i')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
