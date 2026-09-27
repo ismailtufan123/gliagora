@@ -294,8 +294,8 @@ How 410 works (built in M1): `src/proxy.ts` runs before every page under `/en/` 
 
 ### 4.6 Geography and country sets
 
-- `country`: ISO 3166-1 alpha-2. `region`: UN M49 (Africa; Northern America; Latin America and the Caribbean; Asia; Europe; Oceania) with subregions.
-- `CountrySet` for funding eligibility, each with `sourceUrl` and `lastVerifiedAt`: `eu27`, `horizon-europe-associated`, `embc-members`, `world-bank-lmic` (updated each July). Membership lists must be verified when entered `[U]`.
+- `country`: ISO 3166-1 alpha-2, plus `XK` (Kosovo) and `TW` (Taiwan), which M49 does not list but ROR and funders use. `region`: UN M49 (Africa; Northern America; Latin America and the Caribbean; Asia; Europe; Oceania) with subregions (the M49 sub-regions; for Sub-Saharan Africa and Latin America the intermediate regions). Country names in English and Turkish come from Unicode CLDR.
+- `CountrySet` for funding eligibility, each with `sourceUrl` and `lastVerifiedAt`: `eu27`, `horizon-europe-associated`, `embc-members`, `world-bank-lmic` (updated each July). Entered in M3 and checked against their official sources on 2026-09-27 `[V]`: `horizon-europe-associated` holds the 19 countries associated to the whole programme; Canada, Japan, New Zealand and the Republic of Korea (Pillar II only) and Morocco (association being processed) are named in the set's note instead; `embc-members` holds the 32 member states (associate members India, Singapore and Taiwan in the note); `world-bank-lmic` holds the low, lower-middle and upper-middle income economies of fiscal year 2027. M9 checks every set again before the funding finder relies on it.
 - Institutions come from ROR (CC0, with coordinates) `[V]`; non-ROR organizations (e.g., small companies) are created manually with coordinates entered by hand.
 
 ### 4.7 Supporting vocabularies
@@ -321,8 +321,8 @@ PostgreSQL 16+ managed through Payload collections (TypeScript schema in the rep
 | Entity | Key fields | Relations and notes |
 |---|---|---|
 | `Institution` | `rorId` (unique, nullable), `name`, `aliases[]`, `types[]`, `countryCode`, `city`, `lat`, `lng`, `website`, `status`, `origin` (ror/manual), `rorRelease` | 1–n Job, Event, Venue; cached counts of active items |
-| `Country` | `code`, `name` (localized), `m49Region`, `m49Subregion` | n–n `CountrySet` |
-| `CountrySet` | `slug`, `label`, `countries[]`, `sourceUrl`, `lastVerifiedAt` | used by funding eligibility |
+| `Country` | `code` (the record's ID), `name` (localized), `region`, `subregion`, `m49Code` | n–n `CountrySet` |
+| `CountrySet` | `slug`, `label` (localized), `description` (localized), `countries[]`, `sourceUrl`, `lastVerifiedAt`, `verificationNote` | used by funding eligibility; every change kept as a version |
 | `Term` | `vocabulary`, `slug`, `label` (localized), `description` (localized), `parent`, `group` (methods only, §4.3), `synonyms[]`, `mappings{mesh[], openalexTopics[]}`, `hubIntro` (localized; subfields only, §16.3), `isActive`, `sortOrder` | n–n with all content types; slug unique per vocabulary and fixed once saved; never deleted (deactivated instead); every change kept as a version |
 | `Job` | `shortId`, `slug`, `status`, `title`, `originalLanguage`, `institution`, `locationOverride`, `positionType`, `careerStages[]`, `subfields[]`, `methods[]`, `modelSystems[]`, `deadlineDate`, `deadlineTz`, `deadlineKind` (fixed/rolling/until-filled), `startText`, `summary` (EN, ≤280 chars), `originalUrl`, `canonicalUrl`, `source`, `submission`, `verifiedAt`, `lastCheckedAt`, `linkStatus`, `publishedAt`, `expiredAt`, `duplicateOf`, `fingerprint`, `aiAssisted`, `internalNotes` | n–1 Institution; n–1 Source |
 | `Event` | `slug`, `status`, `title`, `eventType`, `format`, `startDate`, `endDate`, `timezone`, `venue` or `institution`, `organizerName`, `officialUrl`, `summary`, `openRegistration`, `subfields[]`, `methods[]`, `careerStages[]`, `verifiedAt`, `linkStatus` | 1–n `EventDeadline` (`type`, `date`, `tz`, `note`, `url`) |

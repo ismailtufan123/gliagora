@@ -3,6 +3,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildConfig } from 'payload'
 
+import { Countries } from './collections/Countries'
+import { CountrySets } from './collections/CountrySets'
 import { Terms } from './collections/Terms'
 import { Users } from './collections/Users'
 import { migrations } from './migrations'
@@ -21,7 +23,7 @@ export default buildConfig({
       titleSuffix: ' – Gliagora admin',
     },
   },
-  collections: [Users, Terms],
+  collections: [Users, Terms, Countries, CountrySets],
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL ?? '',
