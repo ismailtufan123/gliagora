@@ -7,7 +7,7 @@ Instructions for Claude Code in this repository. Read this file first, then `PLA
 Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, events, funding, papers, news, resources, a world map and a monthly newsletter, **Glia Notes**. Tagline: "Where neuroscience meets".
 
 - Data controller and editor: Nuray Sancar (natural person, Türkiye). The team has no professional web-development background: explain choices briefly and prefer boring, well-documented tools.
-- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D22). If a task conflicts with `PLAN.md`, stop and ask.
+- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D31). If a task conflicts with `PLAN.md`, stop and ask.
 
 ## Current milestone
 
@@ -30,7 +30,7 @@ The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RA
 - Public pages load nothing from other domains. Fonts are self-hosted WOFF2.
 - Local and staging environments use generated fake data only. Never put real personal data in fixtures, tests, logs, issues or prompts.
 - Collect the minimum: the newsletter stores an email address only. No application-level IP logging; access-log retention follows PLAN §18.
-- Social profiles (Instagram, LinkedIn) are plain `<a>` links (D14).
+- Social profiles (Instagram, LinkedIn) are plain `<a>` links (D14), hidden until the operator sends the exact addresses (D31); never guess them.
 
 ### Secrets
 

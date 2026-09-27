@@ -52,8 +52,11 @@ export function translationsOf(path: string): Partial<Record<Locale, string>> {
   return TRANSLATIONS.find((pair) => Object.values(pair).includes(path)) ?? {}
 }
 
-/** Profiles on other sites, as plain links only (D14): no embeds, no tracking. */
-export const SOCIAL_LINKS = [
-  { key: 'instagram', href: 'https://www.instagram.com/gliagora/' },
-  { key: 'linkedin', href: 'https://www.linkedin.com/company/gliagora/' },
-] as const
+type SocialLink = { key: 'instagram' | 'linkedin'; href: string }
+
+/**
+ * Profiles on other sites, as plain links only (D14): no embeds, no tracking. Empty until the
+ * operator sends the exact addresses (D31); never guess them. The footer and the structured data
+ * show them once they are listed here.
+ */
+export const SOCIAL_LINKS: readonly SocialLink[] = []

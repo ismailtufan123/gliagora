@@ -1080,7 +1080,7 @@ Order checklist: data centre in Türkiye; renewal price after any campaign perio
 | Launch | English UI and content. Turkish legal texts (aydınlatma metni, açık rıza metni, contact page) live at launch. |
 | Routing | `/{locale}/` prefix for every public page; locale switcher keeps the path and query string; no automatic redirects. Each locale is a static route folder (`src/app/(frontend)/en`, `tr`), so every unknown public URL gets the server-rendered global 404 page (English); `/admin` and `/api` answer their own 404s. |
 | UI strings | All strings in `messages/{locale}.json` (ICU format: plurals, selects, dates); lint rule blocks hard-coded strings in components. |
-| Content | Proposed (D28): legal texts and About as Markdown files in the repository (`content/{locale}/…`), so git history is their version record; a legal text is published or changed only after the operator has approved that exact text. Payload localized fields for the other evergreen content (Learn, guides, taxonomy labels). Aggregated items keep original title and language with an English summary; they are never machine-translated. |
+| Content | Legal texts and About as Markdown files in the repository (`content/{locale}/…`), so git history is their version record; a legal text is published or changed only after the operator has approved that exact text. Payload localized fields for the other evergreen content (Learn, guides, taxonomy labels). Aggregated items keep original title and language with an English summary; they are never machine-translated. |
 | `hreflang` | Only between pages with a real, reviewed translation; `x-default` → English; one sitemap per locale. |
 | Formatting | `Intl` for dates, numbers, relative time and sorting (`Intl.Collator('tr')`); unambiguous dates ("14 Nov 2026"); time-zone-aware deadlines. |
 | Turkish specifics | Locale-aware casing (İ/ı); no CSS `text-transform`; search normalises dotted/dotless i and accents; fonts cover Turkish glyphs. |
@@ -1181,6 +1181,14 @@ This section is written without legal advice, as requested. Items that cannot be
 ### 15.3 Revenue, tax and commercial triggers
 
 Before **any** money arrives (sponsorship, ads, donations, paid events): see an accountant and register for tax **first**. The social-content-producer exemption (GVK 20/B) is unlikely to cover a website: the implementing communiqué excludes personal websites, although the scope was widened in 2024, so this needs an accountant's view `[U]`. Also before the first sponsored email: İYS registration; clear "Sponsored" labels on site and in email; update Terms and Privacy.
+
+**Before-any-revenue checklist** (sponsorship, ads, donations, paid events or services):
+
+- See an accountant and register for tax (see above).
+- Add the operator's full name (or company name) and postal address to the contact and legal notice page (D9).
+- Run the trademark name searches in TÜRKPATENT, EUIPO and WIPO, and decide whether to register the name (D13).
+- İYS registration before the first sponsored email; "Sponsored" labels on the site and in email.
+- Update the terms of use and the privacy policy; the operator approves the new texts (D28).
 
 ### 15.4 Required legal pages and their contents
 
@@ -1289,9 +1297,9 @@ The texts are Markdown files in `content/{locale}/` (D28). Each stays a draft (v
 | Automated a11y | Playwright + axe-core on ~12 templates × light/dark × desktop/mobile; 0 serious or critical issues allowed | Every pull request |
 | Keyboard paths | Playwright scripts: skip link, mega-menu, search dialog, filters, bottom sheet, map panel, newsletter form (focus order and focus return) | Every pull request |
 | Contrast | `src/app/(frontend)/tokens.test.ts` validates all token pairs in §7.2 | Every pull request |
-| Performance lab | Lighthouse CI with budgets (§17.3) | Every pull request |
-| Manual a11y | Keyboard-only walkthrough; screen readers: Orca (Linux), VoiceOver (iOS/macOS) or TalkBack (Android); zoom and forced-colours checks | End of each milestone |
-| Real device | Mid-range Android phone on a throttled 4G connection | End of each milestone |
+| Performance lab | Lighthouse CI with budgets (§17.3), against the deployed site | From S on; part of the pre-launch checklist (§20). Byte budgets and font layout shift are checked on every pull request already |
+| Manual a11y | Keyboard-only walkthrough; screen readers: Orca (Linux), VoiceOver (iOS/macOS) or TalkBack (Android); zoom and forced-colours checks | On the deployed site, from S on; part of the pre-launch checklist (§20) |
+| Real device | Mid-range Android phone on a throttled 4G connection | On the deployed site, from S on; part of the pre-launch checklist (§20) |
 | Real-user monitoring | `web-vitals` in the browser → aggregated events in Umami (no personal data) → p75 per template and region | Continuous; weekly review |
 
 ### 17.3 Budgets
@@ -1300,7 +1308,7 @@ The texts are Markdown files in `content/{locale}/` (D28). Each stays a draft (v
 |---|---|
 | HTML (list pages) | ≤60 KB gzip |
 | CSS (total) | ≤35 KB gzip |
-| JavaScript on content pages (initial, incl. framework runtime) | ≤140 KB gzip. Measured at M1: 135 KB on every template, of which about 132 KB is React and Next.js themselves; the header's own script is about 3 KB. Proposed in M1, replacing the unverified 130 KB estimate |
+| JavaScript on ordinary pages (initial, incl. framework runtime) | ≤140 KB gzip (D29). Measured at M1: 135 KB on every template, of which about 132 KB is React and Next.js themselves; the header's own script is about 3 KB. The map and hero chunks below have their own budgets and load only on their own routes |
 | Hero chunk (home only, after `load`) | ≤230 KB gzip |
 | Map chunk (on demand) | ≤280 KB gzip `[U]` |
 | Fonts | 2 families; ≤4 files preloaded; ≤120 KB total |
@@ -1381,7 +1389,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 | M4 | Jobs | Job collection; review queue v1; "Suggest a listing"; list, filters, chips, URL state; detail; closing soon; auto-expiry; sitemaps; basic search | Jobs window live (soft launch) | 2–3 weeks |
 | M4b | Accounts and self-service privacy | Member sign-in (Google, ORCID, email link); saved items; digest settings and subfield preferences; export and delete; inactivity clean-up; automatic acknowledgements for requests | Accounts ready on staging, released with M6 | 1.5–2 weeks |
 | M5 | Map | Basemap extract and assets; `/en/map/`; jobs split view; clustering; institution panel; list sync | Map live | 1–2 weeks |
-| M6 | Home and public launch | Home with static poster hero, live counts, latest positions and deadlines, windows overview, newsletter blocks; launch checklist (§3.4 gate) | **Public launch (Phase 1a)** | 1 week + seeding |
+| M6 | Home and public launch | Home with static poster hero, live counts, latest positions and deadlines, windows overview, newsletter blocks; pre-launch checklist below and the §3.4 gate | **Public launch (Phase 1a)** | 1 week + seeding |
 | M7 | Curation automation | Source register; allowed monitors; dedupe; link checker; dashboard widgets; local tag suggester; optional AI tier | Faster curation | 1–2 weeks |
 | M8 | Events and alerts | Events, deadlines, list and month views, iCal feeds, add to calendar, eligible Event markup; saved searches with weekly job alerts | Events window and alerts live | 2–3 weeks |
 | M9 | Funding | Programs, calls, country sets, eligibility finder, last-verified rules and alerts | Funding window live | 2 weeks |
@@ -1394,7 +1402,15 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 **M1 notes (2026-09-27).**
 - Legal pages delivered in M1 as drafts: contact and legal notice (EN, TR), privacy policy, KVKK aydınlatma metni, terms of use. Still to write, each with the feature it describes: açık rıza metni (M2, with the newsletter signup); notice and takedown and data requests (M4 and M4b, with their forms); cookies and storage, accessibility statement, and sources and editorial policy (before the M6 launch, as part of the "all legal pages live" gate in §3.4).
 - The §12 pseudo-locale screenshot tests are added in M4, when filters and cards exist. In M1 the header is checked in Turkish (labels about 50% longer than English), with WCAG 1.4.12 text spacing and at 320px on every template.
-- Lighthouse CI (§17.2) is still to be added; byte budgets and layout shift while fonts load are already checked in CI.
+- Lighthouse CI, the screen-reader check and the real-phone check (§17.2) run on the deployed site, so they are on the pre-launch checklist below; byte budgets and layout shift while fonts load are already checked in CI.
+
+**Pre-launch checklist** (after S, before the M6 public launch; M6 works through it together with the §3.4 gate):
+
+- Lighthouse CI with the §17.3 budgets running against the deployed site (staging if S sets one up, otherwise production), Core Web Vitals "good" in lab tests.
+- Screen-reader walkthrough of every template on the deployed site: Orca (Linux), VoiceOver (iOS or macOS) and TalkBack (Android), plus keyboard-only, zoom and forced-colours checks (§17.2).
+- Real-device check on a mid-range Android phone over throttled 4G (§17.2).
+- Legal texts: the one-time lawyer review of the questions in `docs/legal-open-questions.md` (group b), then the operator approves each text (D28); all required legal pages live (§3.4).
+- axe: 0 serious or critical issues; SPF, DKIM and DMARC pass; backup restore drill passed (§3.4).
 
 Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 2026, the public launch (M6) lands around the turn of the year (late December to early January), still inside the PhD application season.
 
@@ -1457,7 +1473,7 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 | 1 | Resolved: hosting in Türkiye on the lowest-cost setup (D22, §11.7.1); Cloudflare Workers rejected for now because of the KVKK transfer rules | — | — |
 | 2 | Resolved: tagline "Where neuroscience meets" (D11) | — | — |
 | 3 | Resolved: logo 6b "Calcium wave with astrocyte" (D12); the SVG files are in `public/brand/` (M0), with a dark version of the small mark added in M1 | — | — |
-| 4 | Resolved: no trademark filing for now (D13). Name-collision search, M1 (2026-09-27): a web search found no other use of "Gliagora" (nearest: unrelated names such as "Gligora" and "Liagora"); the TÜRKPATENT, EUIPO (TMview) and WIPO Global Brand Database searches are interactive and are left to the operator | Before M6 (launch) | Launch under the name; record the three results here |
+| 4 | Resolved: no trademark filing for now; the M1 web search found no other use of "Gliagora" (nearest: unrelated names such as "Gligora" and "Liagora"). The TÜRKPATENT, EUIPO and WIPO searches are on the before-any-revenue checklist (§15.3, D13) | — | — |
 | 5 | Resolved: the operator reserves the @gliagora handles; the footer shows plain links (D14) | — | — |
 | 6 | Resolved: "Nuray Sancar, MSc in Neuroscience" (D15); Bench to Bedside written as research translation without a clinician (D19) | — | — |
 | 7 | Resolved: "Glia Notes", first Tuesday of each month, 13:00 UTC (D16, D20) | — | — |
@@ -1481,7 +1497,7 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 | D10 | Data controller in the privacy texts: Nuray Sancar (natural person). She agrees to be named, has access to `hello@` and answers requests; services that process personal data are opened in her name, or a short written agreement covers whoever runs the technical side | §15.1, §15.4 |
 | D11 | Tagline: "Where neuroscience meets". Logo exploration continues on the design canvas (20 concepts so far) | §1, §22.2 |
 | D12 | Logo: concept 6b "Calcium wave with astrocyte" (calcium waves spread from an astrocyte and form a G). Variants: primary, dark, one colour, stacked; simplified marks for 32/24 px and a favicon for 16 px | §7, §22.2 |
-| D13 | No trademark registration for now; a free name-collision search: a web search at M1 (done 2026-09-27, no other use of the name found), and the TÜRKPATENT, EUIPO and WIPO searches by the operator before M6; registration revisited before any revenue | §22.2 |
+| D13 | No trademark registration for now. Name-collision search: the web search at M1 (2026-09-27, no other use of the name found) is enough for now; the TÜRKPATENT, EUIPO and WIPO searches move to the before-any-revenue checklist (§15.3) | §15.3, §22.2 |
 | D14 | Social profiles @gliagora on Instagram and LinkedIn, reserved by the operator; the site links to them as plain links (no embedded feeds, no tracking scripts) | §2 (footer), §18 |
 | D15 | About page credential: "Nuray Sancar, MSc in Neuroscience" | §2 (About), §22.2 |
 | D16 | Newsletter cadence: monthly, first Tuesday at 13:00 UTC; the name is still open | §13, §22.2 |
@@ -1496,7 +1512,10 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 | D25 | Success green darkened to `#1E754A` so it passes AA on every surface; ₺ and ə in body text come from the system fallback font (accepted) | §7.2, §7.3 |
 | D26 | ESLint stays on version 9 until `eslint-config-next` supports ESLint 10 | — |
 | D27 | Deploys: a manual GitHub Actions workflow (on `main`, switched on by the variable `DEPLOY_ENABLED`) connects over SSH with a key restricted to `deploy-remote.sh` and logs in to GHCR with the job's own short-lived `GITHUB_TOKEN`; no long-lived token on the server. Written now, inactive until the server exists | §11.5, `deploy/README.md` |
-| D28 | Proposed in M1, awaiting the operator's confirmation: legal texts and the About page are Markdown files in the repository (`content/`), not Payload fields. Git history records each version (useful for the consent-text version, §3.2), and the pages are static and need no database. The approval step is the operator's explicit approval of the exact text: a legal text shows a "draft" notice and is not indexed until then, and any later change to an approved legal text needs the operator's approval again before it is merged (CLAUDE.md, rule c) | §12, §15.4 |
+| D28 | Approved after M1 (2026-09-27): legal texts and the About page are Markdown files in the repository (`content/`), not Payload fields. Git history records each version (useful for the consent-text version, §3.2), and the pages are static and need no database. A text goes live only after the operator approves that exact wording: until then it shows a "draft" notice and is not indexed, and any later change to an approved legal text needs the operator's approval again before it is merged (CLAUDE.md, rule c) | §12, §15.4 |
+| D29 | JavaScript budget: at most 140 KB gzip per ordinary page (M1 measured 135 KB, about 132 KB of it React and Next.js). The map (M5) and the 3D hero (M13) keep their own budgets (§17.3) and load only on their own routes | §17.3 |
+| D30 | `gliagora-mark-small-dark.svg` (the small mark in the dark-mode colours) approved for the header in dark mode | §7 |
+| D31 | The Instagram and LinkedIn links stay hidden until the operator sends the exact profile addresses; addresses are never guessed | §2.3, D14 |
 
 ---
 

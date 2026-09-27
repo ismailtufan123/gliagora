@@ -62,15 +62,17 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
       </nav>
       <div className="page-frame flex flex-wrap items-center justify-between gap-x-8 gap-y-4 border-t border-line py-6 text-caption">
         <a href={paths.contact(locale)}>{t('footer.contact')}</a>
-        <ul role="list" aria-label={t('footer.follow')} className="flex gap-6">
-          {SOCIAL_LINKS.map((link) => (
-            <li key={link.key}>
-              <a href={link.href} rel="me">
-                {t(`footer.social.${link.key}`)}
-              </a>
-            </li>
-          ))}
-        </ul>
+        {SOCIAL_LINKS.length > 0 && (
+          <ul role="list" aria-label={t('footer.follow')} className="flex gap-6">
+            {SOCIAL_LINKS.map((link) => (
+              <li key={link.key}>
+                <a href={link.href} rel="me">
+                  {t(`footer.social.${link.key}`)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </footer>
   )
