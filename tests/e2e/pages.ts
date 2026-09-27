@@ -1,3 +1,5 @@
+import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
+
 // Public templates covered by the end-to-end tests. Add every new page template here (PLAN §17.2).
 export const PAGES = [
   { path: '/en/', name: 'home' },
@@ -17,6 +19,9 @@ export const PAGES = [
   { path: '/en/subfields/glia/', name: 'subfield hub' },
   // From the ROR test data that CI loads (pnpm ror:import tests/fixtures/ror/…-sample.zip).
   { path: '/en/institutions/california-institute-of-technology-05dxps055/', name: 'institution' },
+  // From the fake jobs (pnpm fake:jobs, src/scripts/fake-jobs-fixed.ts).
+  { path: jobPath(FIXED_JOBS.open), name: 'job (open)' },
+  { path: jobPath(FIXED_JOBS.expiredRecently), name: 'job (closed)' },
   { path: '/this-page-does-not-exist/', name: '404', status: 404 },
   { path: '/en/gone-example/', name: '410', status: 410 },
 ] as const

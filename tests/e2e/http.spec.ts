@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
+
 // PLAN §2.1 and §2.5: locale prefix, trailing slashes, redirects and status codes.
 test.describe('HTTP behaviour', () => {
   test.skip(({ isMobile }) => isMobile, 'HTTP checks do not depend on the device')
@@ -73,17 +75,34 @@ test.describe('Record pages', () => {
 
   const CALTECH = '/en/institutions/california-institute-of-technology-05dxps055/'
 
-  test('an institution page renders on the server, not indexed while it has no items', async ({
-    request,
-  }) => {
+  test('an institution page renders on the server', async ({ request }) => {
     const response = await request.get(CALTECH)
     expect(response.status()).toBe(200)
     const html = await response.text()
     expect(html).toContain('<h1>California Institute of Technology</h1>')
     expect(html).toContain('Pasadena, United States')
     expect(html).toContain('href="https://ror.org/05dxps055"')
-    expect(html).toContain('<meta name="robots" content="noindex"')
     expect(html).toContain(`<link rel="canonical" href="https://gliagora.com${CALTECH}"`)
+    // A deep page: breadcrumbs as structured data (PLAN §16.2).
+    expect(html).toContain('"@type":"BreadcrumbList"')
+  })
+
+  test('an institution without open positions is not indexed (PLAN §2.5)', async ({ request }) => {
+    // In the ROR test data, but no fake jobs are placed there.
+    const response = await request.get('/en/institutions/037mpqg03/')
+    expect(response.url()).toContain('/en/institutions/xstrata-united-kingdom-037mpqg03/')
+    const html = await response.text()
+    expect(html).toContain('There are no open positions here at the moment.')
+    expect(html).toContain('<meta name="robots" content="noindex"')
+  })
+
+  test('an institution with an open position lists it and is indexed', async ({ request }) => {
+    const response = await request.get(`/en/institutions/${FIXED_JOBS.open.institutionRorId}/`)
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    expect(html).toContain(`href="${jobPath(FIXED_JOBS.open)}"`)
+    expect(html).not.toContain('There are no open positions here')
+    expect(html).not.toContain('<meta name="robots" content="noindex"')
   })
 
   for (const path of ['/en/institutions/05dxps055/', '/en/institutions/caltech-05dxps055/']) {
@@ -129,11 +148,9 @@ test.describe('Record pages', () => {
     expect(response.headers()['cache-control']).toContain('no-store')
   })
 
-  test('record redirects are cached for a day at most, since names can change back', async ({
-    request,
-  }) => {
+  test('institution redirects are not stored, since names can change back', async ({ request }) => {
     const response = await request.get('/en/institutions/05dxps055/', { maxRedirects: 0 })
-    expect(response.headers()['cache-control']).toBe('public, max-age=86400')
+    expect(response.headers()['cache-control']).toContain('no-store')
   })
 
   test('a subfield hub renders on the server, not indexed yet', async ({ request }) => {
@@ -145,8 +162,136 @@ test.describe('Record pages', () => {
     expect(html).toContain('<meta name="robots" content="noindex"')
   })
 
+  test('a subfield hub lists its open positions, and no closed ones', async ({ request }) => {
+    const html = await (await request.get('/en/subfields/glia/')).text()
+    expect(html).toContain(`href="${jobPath(FIXED_JOBS.open)}"`)
+    const synapses = await (await request.get('/en/subfields/synapses-plasticity/')).text()
+    expect(synapses).not.toContain(jobPath(FIXED_JOBS.expiredRecently))
+  })
+
   test('the subfield index lists every subfield', async ({ request }) => {
     const html = await (await request.get('/en/subfields/')).text()
     expect(html.match(/href="\/en\/subfields\/[a-z-]+\/"/g)).toHaveLength(19)
+  })
+})
+
+// Job pages and their lifecycle (PLAN §2.5, §3.2). Needs the fake jobs: pnpm fake:jobs.
+test.describe('Job pages', () => {
+  test.skip(({ isMobile }) => isMobile, 'HTTP checks do not depend on the device')
+
+  const OPEN = jobPath(FIXED_JOBS.open)
+  const CLOSED = jobPath(FIXED_JOBS.expiredRecently)
+  const POSTING = (job: { institutionRorId: string; shortId: string }) =>
+    `https://careers.example.org/${job.institutionRorId}/positions/${job.shortId}`
+
+  test('an open job renders on the server, indexed, with its canonical URL', async ({
+    request,
+  }) => {
+    const response = await request.get(OPEN)
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    expect(html).toContain(FIXED_JOBS.open.title)
+    expect(html).toContain(`<link rel="canonical" href="https://gliagora.com${OPEN}"`)
+    expect(html).not.toContain('<meta name="robots" content="noindex"')
+    expect(html).toContain(`href="${POSTING(FIXED_JOBS.open)}"`)
+    expect(html).toContain('View original posting')
+    expect(html).not.toContain('This position has closed')
+    // Facts only: breadcrumbs as structured data, never JobPosting (PLAN §16.2).
+    expect(html).toContain('"@type":"BreadcrumbList"')
+    expect(html).not.toContain('JobPosting')
+    // Nothing internal reaches the page.
+    expect(html).not.toContain('Fake data (pnpm fake:jobs)')
+  })
+
+  test('a closed job shows the notice, no way to apply, and is not indexed', async ({
+    request,
+  }) => {
+    const response = await request.get(CLOSED)
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    expect(html).toContain('This position has closed')
+    expect(html).toContain('<meta name="robots" content="noindex"')
+    expect(html).toContain(`<link rel="canonical" href="https://gliagora.com${CLOSED}"`)
+    expect(html).not.toContain(POSTING(FIXED_JOBS.expiredRecently))
+    // The similar open positions come before the facts of the closed one.
+    expect(html.indexOf('Similar positions')).toBeLessThan(html.indexOf('Original language'))
+  })
+
+  for (const [name, job] of [
+    ['closed more than 30 days ago', FIXED_JOBS.expiredLongAgo],
+    ['withdrawn', FIXED_JOBS.withdrawn],
+  ] as const) {
+    test(`a job ${name} answers 410 with the removed-page`, async ({ request }) => {
+      const response = await request.get(jobPath(job))
+      expect(response.status()).toBe(410)
+      expect(response.headers()['cache-control']).toContain('no-store')
+      const html = await response.text()
+      expect(html).toContain('Page removed')
+      expect(html).toContain('<meta name="robots" content="noindex"')
+      expect(html).not.toContain(job.title)
+    })
+  }
+
+  for (const path of [
+    jobPath(FIXED_JOBS.draft),
+    // A draft is unknown without its slug too: no redirect gives its address away.
+    `/en/jobs/${FIXED_JOBS.draft.shortId}/`,
+    '/en/jobs/no-such-job-zzzzz/',
+    '/en/jobs/PhD-test1/',
+    '/en/jobs/phd/',
+    // Until the jobs feed (M4.8) takes this name.
+    '/en/jobs/feed.xml',
+  ]) {
+    test(`${path} is a server-rendered 404`, async ({ request }) => {
+      const response = await request.get(path)
+      expect(response.status()).toBe(404)
+      expect(response.headers()['cache-control']).toContain('no-store')
+      const html = await response.text()
+      expect(html).toContain('Page not found')
+      expect(html).not.toContain(FIXED_JOBS.draft.title)
+    })
+  }
+
+  test('an outdated slug redirects permanently to the current URL, keeping the query', async ({
+    request,
+  }) => {
+    const response = await request.get(`/en/jobs/old-title-${FIXED_JOBS.open.shortId}/?a=1&b=2`, {
+      maxRedirects: 0,
+    })
+    expect(response.status()).toBe(308)
+    const location = new URL(response.headers()['location']!, 'http://x')
+    expect(location.pathname).toBe(OPEN)
+    expect(location.search).toBe('?a=1&b=2')
+  })
+
+  test('a job URL without its slug redirects permanently to the current URL', async ({
+    request,
+  }) => {
+    for (const job of [FIXED_JOBS.rolling, FIXED_JOBS.expiredRecently]) {
+      const response = await request.get(`/en/jobs/${job.shortId}/`, { maxRedirects: 0 })
+      expect(response.status()).toBe(308)
+      expect(new URL(response.headers()['location']!, 'http://x').pathname).toBe(jobPath(job))
+    }
+  })
+
+  test('job redirects are not kept by caches, since a title changed back would loop', async ({
+    request,
+  }) => {
+    for (const path of [
+      `/en/jobs/old-title-${FIXED_JOBS.open.shortId}/`,
+      `/en/jobs/${FIXED_JOBS.open.shortId}/`,
+    ]) {
+      const response = await request.get(path, { maxRedirects: 0 })
+      expect(response.status()).toBe(308)
+      expect(response.headers()['cache-control']).toContain('no-store')
+    }
+  })
+
+  test('the jobs list the breadcrumbs and "all positions" links lead to answers 200', async ({
+    request,
+  }) => {
+    for (const path of ['/en/jobs/?type=phd', '/en/jobs/?type=phd&subfield=glia']) {
+      expect((await request.get(path)).status()).toBe(200)
+    }
   })
 })

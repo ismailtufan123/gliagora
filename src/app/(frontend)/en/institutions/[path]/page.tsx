@@ -2,17 +2,26 @@ import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
+import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { JobList } from '@/components/jobs/JobList'
 import { NotFoundContent } from '@/components/NotFoundContent'
 import { institutionPath, matchDetailRoute } from '@/lib/detail-routes'
-import { institutionByUrlId } from '@/lib/records'
+import { jobsListPath } from '@/lib/jobs/view'
+import { institutionByUrlId, openJobsAtInstitution, requestTime } from '@/lib/records'
 import { rorUrl } from '@/lib/ror/ror-id'
 import { paths } from '@/lib/site'
 
 // An institution (PLAN §3.2 "Institution page", §9.6): ROR name, city, country, website, ROR
-// link, open positions and upcoming events. Positions arrive with M4, events with M8 and the mini
-// map with M5. Not indexed while it has no active items (PLAN §2.5). No institution logos.
-// The proxy has already answered 404 for unknown IDs and redirected outdated slugs.
+// link, open positions and upcoming events. Events arrive with M8 and the mini map with M5.
+// Breadcrumbs (Home › institution; there is no institution index) give the BreadcrumbList data
+// every deep page has (§16.2).
+// Indexed only while it has open positions (PLAN §2.5; events count too from M8). No
+// institution logos. The proxy has already answered 404 for unknown IDs and redirected outdated
+// slugs.
 export const dynamic = 'force-dynamic'
+
+/** Open positions shown here, nearest deadline first; the jobs list has the rest. */
+const POSITIONS = 10
 
 type Props = { params: Promise<{ path: string }> }
 
@@ -29,12 +38,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const institution = await load(params)
   if (!institution) return { robots: { index: false } }
   const t = await getTranslations({ locale: 'en', namespace: 'institution' })
+  const positions = await openJobsAtInstitution(institution.id, 'en', POSITIONS)
   return {
     title: institution.name,
     description: t('description', { name: institution.name }),
     alternates: { canonical: institutionPath(institution.slug, urlId(institution)) },
-    // Institutions are indexed only while they have active positions or events (from M4).
-    robots: { index: false },
+    // Indexed only while it has open positions (PLAN §2.5); upcoming events count too from M8.
+    ...(positions.total > 0 ? {} : { robots: { index: false } }),
   }
 }
 
@@ -46,6 +56,7 @@ export default async function Page({ params }: Props) {
   // the client only (CLAUDE.md), so show the 404 content directly.
   if (!institution) return <NotFoundContent locale="en" kind="notFound" />
 
+  const positions = await openJobsAtInstitution(institution.id, 'en', POSITIONS)
   const country = typeof institution.country === 'object' ? institution.country?.name : null
   const { city } = institution
   const place = city && country ? t('location', { city, country }) : (city ?? country)
@@ -57,10 +68,14 @@ export default async function Page({ params }: Props) {
   return (
     <main id="main" className="page-frame flex-1 py-12">
       <article className="prose">
+        <Breadcrumbs
+          locale="en"
+          items={[{ label: t('home'), href: paths.home() }, { label: institution.name }]}
+        />
         <h1>{institution.name}</h1>
         {place && <p className="text-card">{place}</p>}
         {institution.status !== 'active' && <p role="note">{t('notActive')}</p>}
-        <ul role="list" className="flex flex-wrap gap-x-6 gap-y-2">
+        <ul role="list" className="flex list-none flex-wrap gap-x-6 gap-y-2 ps-0">
           {institution.website && (
             <li>
               <a href={institution.website}>{t('website')}</a>
@@ -79,7 +94,26 @@ export default async function Page({ params }: Props) {
         )}
 
         <h2>{t('positions')}</h2>
-        <p>{t.rich('noPositions', { link: link(paths.window('jobs')) })}</p>
+        {positions.jobs.length > 0 ? (
+          <>
+            <JobList
+              jobs={positions.jobs}
+              now={requestTime()}
+              locale="en"
+              headingLevel={3}
+              showInstitution={false}
+            />
+            {positions.total > POSITIONS && (
+              <p>
+                <a href={jobsListPath({ institution: urlId(institution) })}>
+                  {t('allPositions', { count: positions.total, name: institution.name })}
+                </a>
+              </p>
+            )}
+          </>
+        ) : (
+          <p>{t.rich('noPositions', { link: link(paths.window('jobs')) })}</p>
+        )}
 
         <h2>{t('events')}</h2>
         <p>{t.rich('noEvents', { link: link(paths.window('events')) })}</p>

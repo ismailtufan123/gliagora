@@ -1,16 +1,22 @@
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import type { ReactNode } from 'react'
 
 import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { JobList } from '@/components/jobs/JobList'
 import { NotFoundContent } from '@/components/NotFoundContent'
 import { SUBFIELDS_PATH, subfieldPath } from '@/lib/detail-routes'
-import { activeSubfields, subfieldBySlug } from '@/lib/records'
+import { jobsListPath } from '@/lib/jobs/view'
+import { activeSubfields, openJobsInSubfield, requestTime, subfieldBySlug } from '@/lib/records'
 import { paths } from '@/lib/site'
 
-// A subfield hub (PLAN §2.2, §16.3). In M3 it is a skeleton: the subfield, its written
-// introduction once there is one, and the other subfields. The windows add their items from M4 on.
-// The proxy has already answered 404 or 410 for unknown and retired subfields.
+// A subfield hub (PLAN §2.2, §16.3): the subfield, its written introduction once there is one,
+// its open positions (from M4) and the other subfields. The other windows add their items in
+// their milestones. The proxy has already answered 404 or 410 for unknown and retired subfields.
 export const dynamic = 'force-dynamic'
+
+/** Open positions shown here, nearest deadline first; the jobs list has the rest. */
+const POSITIONS = 10
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -40,6 +46,8 @@ export default async function Page({ params }: Props) {
   const label = subfield.label ?? slug
   const others = (await activeSubfields('en')).filter((other) => other.slug !== slug)
   const intro = (subfield.hubIntro ?? '').split(/\n\s*\n/).filter((part) => part.trim())
+  const positions = await openJobsInSubfield(subfield.id, 'en', POSITIONS)
+  const allJobsLink = (chunks: ReactNode) => <a href={paths.window('jobs')}>{chunks}</a>
 
   return (
     <main id="main" className="page-frame flex-1 py-12">
@@ -57,6 +65,21 @@ export default async function Page({ params }: Props) {
         {intro.map((paragraph) => (
           <p key={paragraph}>{paragraph.trim()}</p>
         ))}
+        <h2>{t('subfields.positions')}</h2>
+        {positions.jobs.length > 0 ? (
+          <>
+            <JobList jobs={positions.jobs} now={requestTime()} locale="en" headingLevel={3} />
+            {positions.total > POSITIONS && (
+              <p>
+                <a href={jobsListPath({ subfield: slug })}>
+                  {t('subfields.allPositions', { count: positions.total, subfield: label })}
+                </a>
+              </p>
+            )}
+          </>
+        ) : (
+          <p>{t.rich('subfields.noPositions', { link: allJobsLink })}</p>
+        )}
         <p className="text-text-muted">{t('subfields.comingSoon')}</p>
         <h2>{t('subfields.others')}</h2>
         <ul role="list">

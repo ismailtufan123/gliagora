@@ -32,5 +32,35 @@ export async function detailLookup(): Promise<DetailLookup> {
       })
       return docs[0] ? { isActive: docs[0].isActive !== false } : null
     },
+    job: async (shortId) => {
+      const { docs } = await payload.find({
+        collection: 'jobs',
+        where: { shortId: { equals: shortId } },
+        select: {
+          slug: true,
+          shortId: true,
+          status: true,
+          deadlineKind: true,
+          deadlineAt: true,
+          expiredAt: true,
+          withdrawnAt: true,
+        },
+        limit: 1,
+        depth: 0,
+        pagination: false,
+      })
+      const doc = docs[0]
+      // Every saved job has both: the collection sets them when the job is created.
+      if (!doc?.slug || !doc.shortId) return null
+      return {
+        slug: doc.slug,
+        shortId: doc.shortId,
+        status: doc.status,
+        deadlineKind: doc.deadlineKind,
+        deadlineAt: doc.deadlineAt,
+        expiredAt: doc.expiredAt,
+        withdrawnAt: doc.withdrawnAt,
+      }
+    },
   }
 }
