@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    terms: Term;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -76,6 +77,7 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    terms: TermsSelect<false> | TermsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -84,10 +86,10 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'tr') | ('en' | 'tr')[];
   globals: {};
   globalsSelect: {};
-  locale: null;
+  locale: 'en' | 'tr';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -142,6 +144,72 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Tags shared by every content type (PLAN §4). A slug cannot change once saved; deactivate a term instead of deleting it. Every change is kept under Versions.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "terms".
+ */
+export interface Term {
+  id: number;
+  vocabulary:
+    | 'subfield'
+    | 'method'
+    | 'model-system'
+    | 'position-type'
+    | 'career-stage'
+    | 'event-type'
+    | 'event-format'
+    | 'deadline-type'
+    | 'funding-type'
+    | 'resource-type'
+    | 'evidence-level'
+    | 'disease-area';
+  label?: string | null;
+  /**
+   * Used in URLs and filters, e.g. systems-circuits. It cannot be changed after saving (PLAN §4.1).
+   */
+  slug: string;
+  /**
+   * One sentence on what the term covers.
+   */
+  description?: string | null;
+  /**
+   * Optional, same vocabulary. Filters include children: rodent also finds mouse and rat.
+   */
+  parent?: (number | null) | Term;
+  /**
+   * Arranges the method filter (PLAN §4.3).
+   */
+  group?:
+    | ('recording-imaging' | 'manipulation' | 'molecular' | 'behaviour-clinical' | 'computational' | 'engineering')
+    | null;
+  /**
+   * Other words people use for this term, e.g. LTP for synaptic plasticity. Used by search and tag suggestions.
+   */
+  synonyms?: string[] | null;
+  /**
+   * Used to route paper candidates to this term (M10).
+   */
+  mappings?: {
+    mesh?: string[] | null;
+    openalexTopics?: string[] | null;
+  };
+  /**
+   * Human-written introduction for the subfield hub page, 150–300 words (PLAN §16.3). Separate paragraphs with a blank line.
+   */
+  hubIntro?: string | null;
+  /**
+   * Inactive terms stay on existing items but cannot be chosen for new ones.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first in lists and filters.
+   */
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -164,10 +232,15 @@ export interface PayloadKv {
  */
 export interface PayloadLockedDocument {
   id: number;
-  document?: {
-    relationTo: 'users';
-    value: number | User;
-  } | null;
+  document?:
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'terms';
+        value: number | Term;
+      } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'users';
@@ -232,6 +305,30 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "terms_select".
+ */
+export interface TermsSelect<T extends boolean = true> {
+  vocabulary?: T;
+  label?: T;
+  slug?: T;
+  description?: T;
+  parent?: T;
+  group?: T;
+  synonyms?: T;
+  mappings?:
+    | T
+    | {
+        mesh?: T;
+        openalexTopics?: T;
+      };
+  hubIntro?: T;
+  isActive?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildConfig } from 'payload'
 
+import { Terms } from './collections/Terms'
 import { Users } from './collections/Users'
 import { migrations } from './migrations'
 
@@ -20,7 +21,7 @@ export default buildConfig({
       titleSuffix: ' – Gliagora admin',
     },
   },
-  collections: [Users],
+  collections: [Users, Terms],
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL ?? '',
@@ -31,6 +32,16 @@ export default buildConfig({
     // Applied automatically when the production server starts (see src/instrumentation.ts).
     prodMigrations: migrations,
   }),
+  // Localized fields (taxonomy labels, country names) have an English and a Turkish value; an
+  // empty Turkish value falls back to English (PLAN §12).
+  localization: {
+    locales: [
+      { code: 'en', label: 'English' },
+      { code: 'tr', label: 'Türkçe' },
+    ],
+    defaultLocale: 'en',
+    fallback: true,
+  },
   secret: process.env.PAYLOAD_SECRET ?? '',
   // No usage data sent to Payload.
   telemetry: false,

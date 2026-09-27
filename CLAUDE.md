@@ -11,7 +11,7 @@ Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, even
 
 ## Current milestone
 
-**M1 Design system and shell** (PLAN §20). Milestone order: M0 → M1 → M3 → S (one-time server setup) → M2 → M4 → … (D23).
+**M3 Taxonomy and institutions** (PLAN §20). Milestone order: M0 → M1 → M3 → S (one-time server setup) → M2 → M4 → … (D23).
 
 The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM) is bought but not set up. Server setup is postponed until just before M4: do not work on the server until the operator says so. Work locally only; nothing may depend on a live server. The server files in `deploy/` are prepared but have never been run.
 
