@@ -22,6 +22,22 @@ export function slugify(text: string): string {
 const escapeHtml = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
+/** The plain text of rendered inline HTML (tags removed, marked's entities decoded). */
+const plainText = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&(?:quot|#39|lt|gt);/g, ' ')
+    .replace(/&amp;/g, ' and ')
+
+// Links may only lead to this site, to web pages or to an email address. Anything else, such as
+// javascript: or data: URLs, stops the build instead of reaching a page.
+const SAFE_LINK = /^(?:\/(?!\/)|#|https:\/\/|http:\/\/|mailto:)/i
+
+function checkedHref(href: string): string {
+  if (!SAFE_LINK.test(href)) throw new Error(`Unsafe link in Markdown content: ${href}`)
+  return href
+}
+
 /** Markdown to HTML. Headings get ids for deep links; raw HTML in the source is shown as text. */
 export function renderMarkdown(markdown: string): string {
   const used = new Map<string, number>()
@@ -30,7 +46,7 @@ export function renderMarkdown(markdown: string): string {
     renderer: {
       heading({ tokens, depth }: Tokens.Heading) {
         const html = this.parser.parseInline(tokens)
-        const base = slugify(html.replace(/<[^>]*>/g, '')) || 'section'
+        const base = slugify(plainText(html)) || 'section'
         const count = used.get(base) ?? 0
         used.set(base, count + 1)
         const id = count ? `${base}-${count + 1}` : base
@@ -38,6 +54,14 @@ export function renderMarkdown(markdown: string): string {
       },
       html({ text }: Tokens.HTML | Tokens.Tag) {
         return escapeHtml(text)
+      },
+      link(token: Tokens.Link) {
+        checkedHref(token.href)
+        return Renderer.prototype.link.call(this, token)
+      },
+      // Images are not used in long-form pages yet; they would need credits (PLAN §7.4).
+      image({ href }: Tokens.Image) {
+        throw new Error(`Images are not supported in Markdown content: ${href}`)
       },
       // Keyboard users can scroll a wide table because its box can take focus.
       table(token: Tokens.Table) {

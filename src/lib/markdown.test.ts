@@ -21,6 +21,33 @@ describe('renderMarkdown', () => {
     expect(html).toContain('<h3 id="your-rights"><em>Your</em> rights</h3>')
   })
 
+  it('makes heading ids from the text, not from HTML entities', () => {
+    const html = renderMarkdown(
+      '## "Suggest a listing" form\n\n## Terms & conditions\n\n## Gliagora\'s data',
+    )
+    expect(html).toContain('id="suggest-a-listing-form"')
+    expect(html).toContain('id="terms-and-conditions"')
+    expect(html).toContain('id="gliagora-s-data"')
+  })
+
+  it('refuses links that are not web pages, site paths or email addresses', () => {
+    for (const markdown of [
+      '[x](javascript:alert(1))',
+      '[x](JaVaScRiPt:alert(1))',
+      '<javascript:alert(1)>',
+      '[x][ref]\n\n[ref]: javascript:alert(1)',
+      '[x](&#106;avascript:alert(1))',
+      '[x](data:text/html,hello)',
+      '[x](//evil.example/)',
+    ]) {
+      expect(() => renderMarkdown(markdown), markdown).toThrow(/Unsafe link|Images/)
+    }
+    expect(() => renderMarkdown('![alt](/brand/gliagora-mark.svg)')).toThrow(/Images/)
+    expect(
+      renderMarkdown('[a](/en/) [b](https://example.org/) [c](mailto:hello@gliagora.com)'),
+    ).toContain('<a href="/en/">a</a>')
+  })
+
   it('shows raw HTML as text instead of rendering it', () => {
     const html = renderMarkdown('Hello <script>alert(1)</script>\n\n<div onclick="x()">block</div>')
     expect(html).not.toContain('<script>')
