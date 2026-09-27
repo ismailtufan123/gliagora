@@ -508,7 +508,7 @@ Findings from the check:
 | 4 | clamp(2.2rem, 1.5rem + 3vw, 3.5rem) | H1 |
 | 5 | clamp(2.6rem, 1.6rem + 5vw, 5.2rem) | hero display |
 
-Rules: sentence case everywhere; no all-caps labels; no single word styled differently inside a headline; left-aligned text; measure 60–72ch; tabular figures in counters and tables where the font supports them `[U]`.
+Rules: sentence case everywhere; no all-caps labels; no single word styled differently inside a headline; left-aligned text; measure 60–72 characters (set in rem, `--measure: 36rem`, because `ch` changes with the loaded font); tabular figures in counters and tables where the font supports them `[U]`.
 
 ### 7.4 Space, shape, depth and motion
 
@@ -1156,7 +1156,7 @@ This section is written without legal advice, as requested. Items that cannot be
 | Data subject rights | KVKK Arts. 11 and 13 (answer free of charge within 30 days); GDPR Arts. 12–22 (one month) | Form + `privacy@`; tracker with due dates | Well established; wording `[U]` |
 | Breaches | KVKK: notify the Board within 72 hours (Board decision) `[U]`; GDPR Art. 33 (72 hours) | Breach runbook with contacts and templates | `[U]` |
 | EU visitors | GDPR applies to offering services to people in the EU; a non-EU controller needs an EU representative (Art. 27) unless processing is occasional | See §15.2 flag 1 | Pricing `[V]`; assessment `[U]` |
-| Cookies | ePrivacy Art. 5(3) | Only strictly necessary storage (member and admin session cookies; theme choice in `localStorage`); cookieless analytics; no banner | — |
+| Cookies | ePrivacy Art. 5(3) | Only strictly necessary storage (member and admin session cookies; a theme choice in `localStorage` only if a theme switch is ever added: dark mode follows the system, §7.2); cookieless analytics; no banner | — |
 | Email | Double opt-in; one-click unsubscribe (RFC 8058) | listmonk configuration + headers | — |
 | Accounts | Member data; provider terms (Google OAuth, ORCID Public API) | Server-side redirect sign-in with minimal scopes; providers named in the privacy policy; no personal data sent to providers (data only flows in) | `[U]` KVKK view of social sign-in (own assessment); ORCID Public API free for non-commercial use `[V]` |
 | Maps | OSMF tile policy; ODbL attribution | Self-hosted tiles; visible attribution | `[V]` |
@@ -1183,6 +1183,8 @@ This section is written without legal advice, as requested. Items that cannot be
 Before **any** money arrives (sponsorship, ads, donations, paid events): see an accountant and register for tax **first**. The social-content-producer exemption (GVK 20/B) is unlikely to cover a website: the implementing communiqué excludes personal websites, although the scope was widened in 2024, so this needs an accountant's view `[U]`. Also before the first sponsored email: İYS registration; clear "Sponsored" labels on site and in email; update Terms and Privacy.
 
 ### 15.4 Required legal pages and their contents
+
+The texts are Markdown files in `content/{locale}/` (D28). Each stays a draft (visible notice, `noindex`, not in the sitemap) until the operator approves that exact text; open questions are listed in `docs/legal-open-questions.md`.
 
 | Page | Contents |
 |---|---|
@@ -1298,12 +1300,14 @@ Before **any** money arrives (sponsorship, ads, donations, paid events): see an 
 |---|---|
 | HTML (list pages) | ≤60 KB gzip |
 | CSS (total) | ≤35 KB gzip |
-| JavaScript on content pages (initial, incl. framework runtime) | ≤130 KB gzip `[U]` baseline to measure at M1 |
+| JavaScript on content pages (initial, incl. framework runtime) | ≤140 KB gzip. Measured at M1: 135 KB on every template, of which about 132 KB is React and Next.js themselves; the header's own script is about 3 KB. Proposed in M1, replacing the unverified 130 KB estimate |
 | Hero chunk (home only, after `load`) | ≤230 KB gzip |
 | Map chunk (on demand) | ≤280 KB gzip `[U]` |
 | Fonts | 2 families; ≤4 files preloaded; ≤120 KB total |
 | Images | AVIF/WebP, responsive `srcset`, explicit dimensions, lazy below the fold |
 | Third-party requests | 0 |
+
+The budgets above for JavaScript, CSS, HTML and fonts (bytes, preloaded files and families) are checked for every template in CI by `tests/e2e/budgets.spec.ts`, measured from what the browser downloads, and the end-to-end tests fail on any request to another domain. Lighthouse CI for the Core Web Vitals lab scores (§17.2) is still to be added.
 
 ### 17.4 Techniques
 
@@ -1384,8 +1388,13 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 | M10 | Papers and News | PubMed, bioRxiv, OpenAlex ingestion; paper review; monthly issue pages; news list | Papers and News live | 2 weeks |
 | M11 | Newsletter builder | Builder view; email template; test sends; archive pages | First full digest | 1 week |
 | M12 | Resources and Learn | Resources; articles; Bench to Bedside; evidence labels; author pages; hubs for all windows | All six windows live | 2 weeks |
-| M13 | Signature hero | Needs final logo SVG; §10 in full | 3D hero live | 2 weeks |
+| M13 | Signature hero | Builds on the 6b logo SVGs in `public/brand/`; §10 in full | 3D hero live | 2 weeks |
 | M14 | Hardening | Accessibility audit, performance tuning, security review, restore drill, documentation | Phase 1 complete | 1 week |
+
+**M1 notes (2026-09-27).**
+- Legal pages delivered in M1 as drafts: contact and legal notice (EN, TR), privacy policy, KVKK aydınlatma metni, terms of use. Still to write, each with the feature it describes: açık rıza metni (M2, with the newsletter signup); notice and takedown and data requests (M4 and M4b, with their forms); cookies and storage, accessibility statement, and sources and editorial policy (before the M6 launch, as part of the "all legal pages live" gate in §3.4).
+- The §12 pseudo-locale screenshot tests are added in M4, when filters and cards exist. In M1 the header is checked in Turkish (labels about 50% longer than English), with WCAG 1.4.12 text spacing and at 320px on every template.
+- Lighthouse CI (§17.2) is still to be added; byte budgets and layout shift while fonts load are already checked in CI.
 
 Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 2026, the public launch (M6) lands around the turn of the year (late December to early January), still inside the PhD application season.
 
@@ -1436,7 +1445,7 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 2. A monthly budget of roughly $20–70 is acceptable at launch (plus the EU representative if chosen).
 3. English only at launch, with Turkish legal texts from day one.
 4. No user-generated content is published in Phase 1; suggestions become editorial content after review.
-5. The final logo SVG arrives before M13; a simple placeholder mark is used until then.
+5. Resolved: the final 6b logo SVG files are in `public/brand/` (M0); M13 builds the hero on them.
 6. The operator reviews each milestone on staging from a phone and approves production releases.
 7. Minimum age for the newsletter is 16.
 8. Turkish-registered hosting, mail and relay providers meeting the requirements in §11.4 are available at the listed price ranges `[U]`.
@@ -1447,8 +1456,8 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 |---|---|---|---|
 | 1 | Resolved: hosting in Türkiye on the lowest-cost setup (D22, §11.7.1); Cloudflare Workers rejected for now because of the KVKK transfer rules | — | — |
 | 2 | Resolved: tagline "Where neuroscience meets" (D11) | — | — |
-| 3 | Resolved: logo 6b "Calcium wave with astrocyte" (D12). Remaining: export the final SVG files | M1 | 6b SVGs replace the placeholder mark; M13 hero builds on them |
-| 4 | Resolved: no trademark filing for now (D13); a free name-collision search still runs at M1 | — | — |
+| 3 | Resolved: logo 6b "Calcium wave with astrocyte" (D12); the SVG files are in `public/brand/` (M0), with a dark version of the small mark added in M1 | — | — |
+| 4 | Resolved: no trademark filing for now (D13). Name-collision search, M1 (2026-09-27): a web search found no other use of "Gliagora" (nearest: unrelated names such as "Gligora" and "Liagora"); the TÜRKPATENT, EUIPO (TMview) and WIPO Global Brand Database searches are interactive and are left to the operator | Before M6 (launch) | Launch under the name; record the three results here |
 | 5 | Resolved: the operator reserves the @gliagora handles; the footer shows plain links (D14) | — | — |
 | 6 | Resolved: "Nuray Sancar, MSc in Neuroscience" (D15); Bench to Bedside written as research translation without a clinician (D19) | — | — |
 | 7 | Resolved: "Glia Notes", first Tuesday of each month, 13:00 UTC (D16, D20) | — | — |
@@ -1472,7 +1481,7 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 | D10 | Data controller in the privacy texts: Nuray Sancar (natural person). She agrees to be named, has access to `hello@` and answers requests; services that process personal data are opened in her name, or a short written agreement covers whoever runs the technical side | §15.1, §15.4 |
 | D11 | Tagline: "Where neuroscience meets". Logo exploration continues on the design canvas (20 concepts so far) | §1, §22.2 |
 | D12 | Logo: concept 6b "Calcium wave with astrocyte" (calcium waves spread from an astrocyte and form a G). Variants: primary, dark, one colour, stacked; simplified marks for 32/24 px and a favicon for 16 px | §7, §22.2 |
-| D13 | No trademark registration for now; a free name-collision search (TÜRKPATENT, EUIPO, WIPO) at M1; registration revisited before any revenue | §22.2 |
+| D13 | No trademark registration for now; a free name-collision search: a web search at M1 (done 2026-09-27, no other use of the name found), and the TÜRKPATENT, EUIPO and WIPO searches by the operator before M6; registration revisited before any revenue | §22.2 |
 | D14 | Social profiles @gliagora on Instagram and LinkedIn, reserved by the operator; the site links to them as plain links (no embedded feeds, no tracking scripts) | §2 (footer), §18 |
 | D15 | About page credential: "Nuray Sancar, MSc in Neuroscience" | §2 (About), §22.2 |
 | D16 | Newsletter cadence: monthly, first Tuesday at 13:00 UTC; the name is still open | §13, §22.2 |

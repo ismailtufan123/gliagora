@@ -3,6 +3,36 @@
  * Contrast pairs are checked by tokens.test.ts next to this file.
  */
 
+/*
+ * Size-adjusted fallbacks for the web fonts (PLAN §7.3): while Commissioner and Atkinson
+ * Hyperlegible Next load, text is drawn in a local font scaled to their metrics, so nothing
+ * shifts when they arrive. Arial, Liberation Sans and Arimo share the same metrics, and Roboto
+ * (Android) differs by 0.2%. The values are those next/font computes for Arial from our font
+ * files; if the font files change, recompute them (set `adjustFontFallback: 'Arial'` in
+ * fonts.ts, build, and copy the numbers from the generated "Fallback" @font-face rules).
+ */
+@font-face {
+  font-family: 'Commissioner Fallback';
+  src:
+    local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans'),
+    local('Arimo'), local('Roboto'), local('Roboto-Regular');
+  ascent-override: 97.91%;
+  descent-override: 19.83%;
+  line-gap-override: 0%;
+  size-adjust: 103.87%;
+}
+
+@font-face {
+  font-family: 'Atkinson Fallback';
+  src:
+    local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans'),
+    local('Arimo'), local('Roboto'), local('Roboto-Regular');
+  ascent-override: 99.04%;
+  descent-override: 31.8%;
+  line-gap-override: 0%;
+  size-adjust: 99.36%;
+}
+
 :root {
   color-scheme: light dark;
 
@@ -32,8 +62,8 @@
   --font-fallback:
     'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Noto Sans', 'DejaVu Sans', system-ui,
     sans-serif;
-  --font-display-stack: var(--font-commissioner), var(--font-fallback);
-  --font-body-stack: var(--font-atkinson), var(--font-fallback);
+  --font-display-stack: var(--font-commissioner), 'Commissioner Fallback', var(--font-fallback);
+  --font-body-stack: var(--font-atkinson), 'Atkinson Fallback', var(--font-fallback);
   --step--1: 0.875rem;
   --step-0: 1.0625rem;
   --step-1: 1.25rem;
@@ -41,7 +71,11 @@
   --step-3: clamp(1.75rem, 1.3rem + 1.6vw, 2.44rem);
   --step-4: clamp(2.2rem, 1.5rem + 3vw, 3.5rem);
   --step-5: clamp(2.6rem, 1.6rem + 5vw, 5.2rem);
-  --measure: 66ch;
+  /*
+   * About 66 characters per line of body text (PLAN §7.1: 60–72). In rem, not ch: ch is the width
+   * of "0" in the current font, so the column changed width when the web font arrived.
+   */
+  --measure: 36rem;
 
   /* Space (4px base) */
   --space-1: 0.25rem;

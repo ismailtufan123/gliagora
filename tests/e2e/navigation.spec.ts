@@ -244,18 +244,32 @@ test('in forced-colours mode the header keeps a visible edge', async ({ page }) 
   await expect(header(page)).toHaveCSS('border-bottom-width', '1px')
 })
 
-test('every link in the header and footer leads to a page', async ({ page, request }) => {
-  await page.goto('/en/')
-  const hrefs = await page
-    .locator('header a[href], footer a[href]')
-    .evaluateAll((links) => links.map((link) => link.getAttribute('href') ?? ''))
-  const internal = [...new Set(hrefs.filter((href) => href.startsWith('/')))]
-  expect(internal.length).toBeGreaterThan(10)
-  for (const href of internal) {
-    // No redirect either: every link already ends with a slash (PLAN §2.1).
-    const response = await request.get(href, { maxRedirects: 0 })
-    expect(response.status(), href).toBe(200)
-  }
+for (const path of ['/en/', '/tr/iletisim/']) {
+  test(`${path}: every link in the header and footer leads to a page`, async ({
+    page,
+    request,
+  }) => {
+    await page.goto(path)
+    const hrefs = await page
+      .locator('header a[href], footer a[href]')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href') ?? ''))
+    const internal = [...new Set(hrefs.filter((href) => href.startsWith('/')))]
+    expect(internal.length).toBeGreaterThan(10)
+    for (const href of internal) {
+      // No redirect either: every link already ends with a slash (PLAN §2.1).
+      const response = await request.get(href, { maxRedirects: 0 })
+      expect(response.status(), href).toBe(200)
+    }
+  })
+}
+
+test('the Turkish language menu links back to the English page', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the language menu shows in the header from 768px')
+  await page.goto('/tr/iletisim/')
+  await header(page).getByLabel('Dil: Türkçe (TR)').click()
+  const english = header(page).locator('.menu-panel').getByRole('link', { name: 'English' })
+  await expect(english).toHaveAttribute('href', '/en/contact/')
+  await expect(english).toHaveAttribute('hreflang', 'en')
 })
 
 test('placeholder pages are not indexed', async ({ request }) => {

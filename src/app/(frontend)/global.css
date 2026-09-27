@@ -121,6 +121,8 @@
     font-weight: 700;
     line-height: 1.15;
     letter-spacing: -0.01em;
+    /* Long words may break rather than overflow a narrow screen (WCAG 1.4.10, 1.4.12). */
+    overflow-wrap: anywhere;
   }
 
   a {
@@ -303,6 +305,8 @@
     z-index: var(--z-sheet);
     overflow-y: auto;
     overscroll-behavior: contain;
+    /* Room for the focus outline when a focused item is scrolled to the panel's edge. */
+    scroll-padding-block: var(--space-2);
     padding: var(--space-4) var(--gutter) var(--space-12);
     background: var(--bg);
   }

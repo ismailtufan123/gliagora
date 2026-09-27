@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import en from '../../messages/en.json'
 import { CONTENT_PAGES, formatDate } from './content'
+import { renderContentFile } from './markdown'
 
 describe('content pages', () => {
   for (const [key, page] of Object.entries(CONTENT_PAGES)) {
@@ -19,6 +20,12 @@ describe('content pages', () => {
       expect(Object.keys(en.pages)).toContain(page.messages)
     })
   }
+
+  it('uses no italics until an italic font ships (PLAN §7.3; tools/fonts/README.md)', () => {
+    for (const page of Object.values(CONTENT_PAGES)) {
+      expect(renderContentFile(page.file), page.file).not.toContain('<em>')
+    }
+  })
 
   it('formats dates without ambiguity', () => {
     expect(formatDate('2026-09-27', 'en')).toBe('27 September 2026')
