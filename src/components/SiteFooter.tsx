@@ -6,7 +6,7 @@ import { SOCIAL_LINKS, WINDOWS, paths } from '@/lib/site'
 
 // PLAN §2.3: sitemap footer (Windows | Learn | About | Legal). The contact and legal notice link
 // is on every page (Law 5651, PLAN §15). Profiles elsewhere are plain links (D14).
-// Sources joins the About column, and a fourth Legal column is added, with their pages.
+// Sources and the other legal texts join their columns with their pages.
 export async function SiteFooter({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale })
 
