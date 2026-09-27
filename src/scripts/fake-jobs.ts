@@ -1,7 +1,8 @@
 // Adds fake jobs for local development and CI (D38): pnpm fake:jobs
 // About 60 generated jobs over the test institutions, plus the fixed jobs the end-to-end tests
-// rely on (src/scripts/fake-jobs-fixed.ts). Earlier fake jobs are removed first, so the script can
-// run again at any time. Needs the test institutions: pnpm ror:import tests/fixtures/ror/…-sample.zip
+// rely on (src/scripts/fake-jobs-fixed.ts), then a handful of suggestions and candidates for the
+// review queue (src/scripts/fake-queue-data.ts). Earlier fake data is removed first, so the script
+// can run again at any time. Needs the test institutions: pnpm ror:import tests/fixtures/ror/…-sample.zip
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
@@ -9,6 +10,8 @@ import { FAKE_DATA } from '@/collections/Jobs'
 
 import { FAKE_INSTITUTIONS, FAKE_NOTE, fakeJobs } from './fake-jobs-data'
 import { FIXED_JOBS } from './fake-jobs-fixed'
+import { addFakeQueue, removeFakeQueue } from './fake-queue'
+import { FAKE_QUEUE_INSTITUTIONS } from './fake-queue-data'
 
 // PAYLOAD_JOBS_AUTORUN is "true" only on the production server (deploy/compose.prod.yml).
 if (process.env.PAYLOAD_JOBS_AUTORUN === 'true') {
@@ -23,6 +26,8 @@ const payload = await getPayload({ config })
 const context = { fakeData: FAKE_DATA }
 
 try {
+  // The queue first: its candidates refer to the fake jobs.
+  const removedQueue = await removeFakeQueue(payload)
   const removed = await payload.delete({
     collection: 'jobs',
     where: { internalNotes: { equals: FAKE_NOTE } },
@@ -37,6 +42,7 @@ try {
     ...new Set([
       ...FAKE_INSTITUTIONS.map(({ rorId }) => rorId),
       ...Object.values(FIXED_JOBS).map((job) => job.institutionRorId),
+      ...FAKE_QUEUE_INSTITUTIONS,
     ]),
   ]
   const institutions = await payload.find({
@@ -75,8 +81,9 @@ try {
 
   const jobs = fakeJobs(new Date())
   const counts: Record<string, number> = {}
+  const jobId = new Map<string, number>()
   for (const { institutionRorId, ...job } of jobs) {
-    await payload.create({
+    const created = await payload.create({
       collection: 'jobs',
       data: {
         ...job,
@@ -94,12 +101,22 @@ try {
       depth: 0,
       context,
     })
+    jobId.set(job.shortId, created.id)
     counts[job.status] = (counts[job.status] ?? 0) + 1
   }
-  payload.logger.info(
-    `Removed ${removed.docs.length} and added ${jobs.length} fake jobs: ${Object.entries(counts)
+  const queue = await addFakeQueue(payload, {
+    institutionId: new Map([...institutionId].map(([rorId, id]) => [String(rorId), id])),
+    jobId,
+  })
+  const byStatus = (numbers: Record<string, number>) =>
+    Object.entries(numbers)
       .map(([status, n]) => `${n} ${status}`)
-      .join(', ')}`,
+      .join(', ')
+  payload.logger.info(
+    `Removed ${removed.docs.length} and added ${jobs.length} fake jobs: ${byStatus(counts)}`,
+  )
+  payload.logger.info(
+    `Removed ${removedQueue.submissions} and added ${queue.submissions} fake suggestions; removed ${removedQueue.candidates} and added ${Object.values(queue.candidates).reduce((a, b) => a + b, 0)} fake candidates: ${byStatus(queue.candidates)}`,
   )
   process.exit(0)
 } catch (error) {

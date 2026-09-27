@@ -3,10 +3,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildConfig } from 'payload'
 
+import { Candidates } from './collections/Candidates'
 import { Countries } from './collections/Countries'
 import { CountrySets } from './collections/CountrySets'
 import { Institutions } from './collections/Institutions'
 import { Jobs } from './collections/Jobs'
+import { Submissions } from './collections/Submissions'
 import { Terms } from './collections/Terms'
 import { Users } from './collections/Users'
 import { RorImport } from './globals/RorImport'
@@ -26,8 +28,13 @@ export default buildConfig({
     meta: {
       titleSuffix: ' – Gliagora admin',
     },
+    components: {
+      // The review queue, jobs in review and the deadline tracker above the collections.
+      beforeDashboard: ['/admin/ReviewDashboard#ReviewDashboard'],
+    },
   },
-  collections: [Users, Jobs, Terms, Countries, CountrySets, Institutions],
+  // The order of the admin menu: the daily work first (PLAN §6.5).
+  collections: [Users, Candidates, Submissions, Jobs, Terms, Countries, CountrySets, Institutions],
   globals: [RorImport],
   jobs: {
     tasks: [RorImportTask],

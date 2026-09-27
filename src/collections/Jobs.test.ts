@@ -697,7 +697,10 @@ describe('Jobs: deleting', () => {
   })
 
   it('refuses to delete a published job, also for code that bypasses access control', async () => {
-    const payload = (job: Record<string, unknown>) => ({ findByID: vi.fn(async () => job) })
+    const payload = (job: Record<string, unknown>) => ({
+      findByID: vi.fn(async () => job),
+      count: vi.fn(async () => ({ totalDocs: 0 })),
+    })
     const remove = (job: Record<string, unknown>, context = {}) =>
       keepPublished?.({ id: 1, req: request(payload(job)), context } as never)
     await expect(remove({ status: 'expired', publishedAt: '2026-09-01' })).rejects.toThrow(
@@ -709,6 +712,23 @@ describe('Jobs: deleting', () => {
       remove({ status: 'expired', publishedAt: '2026-09-01' }, { fakeData: FAKE_DATA }),
     ).resolves.toBeUndefined()
   })
+
+  it('keeps a draft that the review queue points at', async () => {
+    const count = vi.fn(async () => ({ totalDocs: 1 }))
+    const findByID = vi.fn(async () => ({ status: 'draft', publishedAt: null }))
+    const remove = (context = {}) =>
+      keepPublished?.({ id: 5, req: request({ findByID, count }), context } as never)
+    await expect(remove()).rejects.toThrow(/review queue/)
+    // Made from an accepted candidate, or the job a candidate is marked as repeating.
+    expect(count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'candidates',
+        where: { or: [{ publishedRef: { equals: 5 } }, { duplicateOf: { equals: 5 } }] },
+      }),
+    )
+    // The fake data script still replaces its own jobs.
+    await expect(remove({ fakeData: FAKE_DATA })).resolves.toBeUndefined()
+  })
 })
 
 describe('Jobs: configuration', () => {
@@ -718,6 +738,28 @@ describe('Jobs: configuration', () => {
 
   it('offers no Duplicate action, since a copy would repeat the short ID', () => {
     expect(Jobs.disableDuplicate).toBe(true)
+  })
+
+  it('shows the suggestion a job came from read-only and keeps it', () => {
+    expect(field('submission').access?.update?.()).toBe(false)
+    expect(field('submission')).toMatchObject({ admin: { readOnly: true, position: 'sidebar' } })
+    const [restore] = Jobs.hooks?.beforeValidate ?? []
+    const restored = restore?.({
+      data: { title: 'Old title' },
+      operation: 'update',
+      originalDoc: { shortId: 'k3f9a', submission: 9 },
+      req: {},
+    } as never)
+    expect(restored).toMatchObject({ submission: 9 })
+    const [guard] = Jobs.hooks?.beforeChange ?? []
+    expect(() =>
+      guard?.({
+        data: { shortId: 'k3f9a', submission: null },
+        originalDoc: { shortId: 'k3f9a', submission: 9 },
+        operation: 'update',
+        req: {},
+      } as never),
+    ).toThrow()
   })
 
   it('shows the short ID read-only and keeps it fixed', () => {
