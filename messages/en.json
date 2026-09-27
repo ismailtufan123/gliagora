@@ -11,7 +11,8 @@
     "tagline": "Where neuroscience meets"
   },
   "a11y": {
-    "skipLink": "Skip to main content"
+    "skipLink": "Skip to main content",
+    "breadcrumb": "Breadcrumb"
   },
   "footer": {
     "contact": "Contact and legal notice",
@@ -133,5 +134,30 @@
       "title": "Terms of use",
       "description": "The rules for using Gliagora | Neuroscience, its member accounts, forms and newsletter."
     }
+  },
+  "institution": {
+    "description": "{name}: neuroscience positions and events at this institution, on Gliagora.",
+    "location": "{city}, {country}",
+    "website": "Website",
+    "rorRecord": "ROR record",
+    "otherNames": "Also known as: {names}",
+    "notActive": "The Research Organization Registry lists this institution as no longer active.",
+    "positions": "Open positions",
+    "noPositions": "There are no open positions here at the moment. See <link>all positions</link>.",
+    "events": "Upcoming events",
+    "noEvents": "There are no upcoming events here at the moment. See <link>all events</link>.",
+    "source": "Institution data: <link>Research Organization Registry (ROR)</link>, CC0."
+  },
+  "subfields": {
+    "title": "Subfields",
+    "description": "The subfields of neuroscience that connect positions, events, funding, papers, news and resources on Gliagora.",
+    "intro": "Every listing on Gliagora is tagged with one or more of these subfields. Each subfield has a page that will bring together its positions, events, funding, papers, news and resources.",
+    "home": "Home",
+    "hubDescription": "{subfield} on Gliagora: neuroscience positions, events, funding, papers, news and resources in this subfield.",
+    "comingSoon": "Positions, events, funding, papers, news and resources in this subfield will appear here as each part of Gliagora opens.",
+    "others": "Other subfields"
+  },
+  "unavailable": {
+    "text": "Gliagora is temporarily unavailable. Please try again in a few minutes."
   }
 }

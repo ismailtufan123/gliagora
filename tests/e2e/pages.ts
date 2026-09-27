@@ -9,6 +9,10 @@ export const PAGES = [
   { path: '/en/legal/terms/', name: 'terms of use' },
   { path: '/en/jobs/', name: 'placeholder (window)' },
   { path: '/en/learn/bench-to-bedside/', name: 'placeholder (section)' },
+  { path: '/en/subfields/', name: 'subfield index' },
+  { path: '/en/subfields/glia/', name: 'subfield hub' },
+  // From the ROR test data that CI loads (pnpm ror:import tests/fixtures/ror/…-sample.zip).
+  { path: '/en/institutions/california-institute-of-technology-05dxps055/', name: 'institution' },
   { path: '/this-page-does-not-exist/', name: '404', status: 404 },
   { path: '/en/gone-example/', name: '410', status: 410 },
 ] as const

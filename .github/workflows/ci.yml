@@ -67,7 +67,7 @@ jobs:
         run: |
           set -euo pipefail
           docker network create smoke
-          docker run -d --name db --network smoke \
+          docker run -d --name db --network smoke -p 127.0.0.1:5432:5432 \
             -e POSTGRES_USER=gliagora -e POSTGRES_PASSWORD=smoke-test-only -e POSTGRES_DB=gliagora \
             "$POSTGRES_IMAGE"
           for i in $(seq 1 30); do docker exec db pg_isready -U gliagora -d gliagora && break; sleep 2; done
@@ -92,6 +92,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Institutions for the institution pages: 21 records from a ROR release (CC0), imported with
+      # the same code as the nightly import. The taxonomy and countries come with the migrations.
+      - name: Load test data
+        run: pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip
+        env:
+          DATABASE_URL: postgres://gliagora:smoke-test-only@localhost:5432/gliagora
+          PAYLOAD_SECRET: test-data-only
       - name: Install Chromium for Playwright
         run: pnpm exec playwright install --with-deps chromium
       - name: End-to-end tests (Playwright + axe)
