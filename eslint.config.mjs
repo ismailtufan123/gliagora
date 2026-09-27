@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from 'eslint/config'
 import nextVitals from 'eslint-config-next/core-web-vitals'
 import nextTs from 'eslint-config-next/typescript'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
 
 // Attributes whose value people read or hear (alt="" stays allowed for decorative images).
 const VISIBLE_ATTRIBUTES =
@@ -17,6 +18,17 @@ export default defineConfig([
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
       ],
+    },
+  },
+  {
+    // PLAN §17.2: the full recommended accessibility rules (eslint-config-next enables only a few).
+    // The plugin itself is registered by eslint-config-next; this adds its rules.
+    files: ['src/**/*.tsx'],
+    ignores: ['src/app/(payload)/**'],
+    rules: {
+      ...jsxA11y.flatConfigs.recommended.rules,
+      // Safari drops list semantics from lists styled without bullets, so role="list" stays.
+      'jsx-a11y/no-redundant-roles': ['error', { ul: ['list'], ol: ['list'] }],
     },
   },
   {

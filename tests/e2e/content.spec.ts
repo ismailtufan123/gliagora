@@ -23,6 +23,22 @@ test.describe('content pages', () => {
     })
   }
 
+  test('robots.txt keeps crawlers out of the admin and the API', async ({ request }) => {
+    const robots = await (await request.get('/robots.txt')).text()
+    expect(robots).toContain('Disallow: /admin')
+    expect(robots).toContain('Disallow: /api')
+    expect(robots).toContain('Sitemap: https://gliagora.com/sitemap.xml')
+  })
+
+  test('the sitemap lists no draft or placeholder', async ({ request }) => {
+    const xml = await (await request.get('/sitemap.xml')).text()
+    expect(xml).toContain('<loc>https://gliagora.com/en/</loc>')
+    expect(xml).toContain('<loc>https://gliagora.com/en/about/</loc>')
+    for (const path of [...DRAFTS, '/en/jobs/', '/en/gone/']) {
+      expect(xml).not.toContain(`<loc>https://gliagora.com${path}</loc>`)
+    }
+  })
+
   for (const path of CONTENT) {
     test(`${path}: every link to this site leads to a page`, async ({ page, request }) => {
       await page.goto(path)

@@ -1298,12 +1298,14 @@ Before **any** money arrives (sponsorship, ads, donations, paid events): see an 
 |---|---|
 | HTML (list pages) | ≤60 KB gzip |
 | CSS (total) | ≤35 KB gzip |
-| JavaScript on content pages (initial, incl. framework runtime) | ≤130 KB gzip `[U]` baseline to measure at M1 |
+| JavaScript on content pages (initial, incl. framework runtime) | ≤140 KB gzip. Measured at M1: 135 KB on every template, of which about 132 KB is React and Next.js themselves; the header's own script is about 3 KB. Proposed in M1, replacing the unverified 130 KB estimate |
 | Hero chunk (home only, after `load`) | ≤230 KB gzip |
 | Map chunk (on demand) | ≤280 KB gzip `[U]` |
 | Fonts | 2 families; ≤4 files preloaded; ≤120 KB total |
 | Images | AVIF/WebP, responsive `srcset`, explicit dimensions, lazy below the fold |
 | Third-party requests | 0 |
+
+The byte budgets above (JavaScript, CSS, HTML, fonts) are checked for every template in CI by `tests/e2e/budgets.spec.ts`, and the end-to-end tests fail on any request to another domain. Lighthouse CI for the Core Web Vitals lab scores (§17.2) is still to be added.
 
 ### 17.4 Techniques
 
@@ -1447,8 +1449,8 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 |---|---|---|---|
 | 1 | Resolved: hosting in Türkiye on the lowest-cost setup (D22, §11.7.1); Cloudflare Workers rejected for now because of the KVKK transfer rules | — | — |
 | 2 | Resolved: tagline "Where neuroscience meets" (D11) | — | — |
-| 3 | Resolved: logo 6b "Calcium wave with astrocyte" (D12). Remaining: export the final SVG files | M1 | 6b SVGs replace the placeholder mark; M13 hero builds on them |
-| 4 | Resolved: no trademark filing for now (D13); a free name-collision search still runs at M1 | — | — |
+| 3 | Resolved: logo 6b "Calcium wave with astrocyte" (D12); the SVG files are in `public/brand/` (M0), with a dark version of the small mark added in M1 | — | — |
+| 4 | Resolved: no trademark filing for now (D13). Name-collision search, M1 (2026-09-27): a web search found no other use of "Gliagora" (nearest: unrelated names such as "Gligora" and "Liagora"); the TÜRKPATENT, EUIPO (TMview) and WIPO Global Brand Database searches are interactive and are left to the operator | Before M6 (launch) | Launch under the name; record the three results here |
 | 5 | Resolved: the operator reserves the @gliagora handles; the footer shows plain links (D14) | — | — |
 | 6 | Resolved: "Nuray Sancar, MSc in Neuroscience" (D15); Bench to Bedside written as research translation without a clinician (D19) | — | — |
 | 7 | Resolved: "Glia Notes", first Tuesday of each month, 13:00 UTC (D16, D20) | — | — |
