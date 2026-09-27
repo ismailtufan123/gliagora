@@ -40,6 +40,11 @@
     "text": "Aradığınız sayfa mevcut değil ya da taşınmış olabilir. Gliagora'nın ana bölümleri şunlardır:",
     "home": "Ana sayfaya git"
   },
+  "gone": {
+    "title": "Sayfa kaldırıldı",
+    "text": "Bu sayfa kaldırıldı. Pozisyonlar ve etkinlikler, kapandıktan bir süre sonra Gliagora'dan çıkarılır. Gliagora'nın ana bölümleri şunlardır:",
+    "home": "Ana sayfaya git"
+  },
   "windows": {
     "jobs": "Pozisyonlar",
     "events": "Etkinlikler",

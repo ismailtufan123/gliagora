@@ -160,6 +160,8 @@ Example: `/en/jobs/?type=phd&subfield=systems-circuits,computational-theoretical
 | Unknown URL | `404` with search and links to the six windows |
 | Window or section not built yet | `200` placeholder page with `noindex`, so no header or footer link leads to a 404; replaced by the real page in its milestone |
 
+How 410 works (built in M1): `src/proxy.ts` runs before every page under `/en/` and `/tr/`, checks the URL against the removed-URL list (`src/lib/gone.ts`) and shows a server-rendered "Page removed" page (`noindex`, links to the six windows) with status `410`. In M4 the same check covers listings that closed more than 30 days ago or were withdrawn.
+
 ---
 
 ## 3. Features per phase, acceptance criteria and phase gates
