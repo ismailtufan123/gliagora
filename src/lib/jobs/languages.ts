@@ -1,5 +1,6 @@
 // Languages a posting may be written in (ISO 639-1), for the "Original language" fact (PLAN §3.2).
-// The labels are for the admin; public pages name languages through the messages.
+// The labels are for the admin; public pages name languages in the page's language with
+// Intl.DisplayNames (`languageName` in ./format.ts).
 
 export const ORIGINAL_LANGUAGES = [
   { value: 'en', label: 'English' },
@@ -46,3 +47,14 @@ export const ORIGINAL_LANGUAGES = [
 ] as const
 
 export type OriginalLanguage = (typeof ORIGINAL_LANGUAGES)[number]['value']
+
+/** The languages of the list that are written right to left. */
+const RIGHT_TO_LEFT: ReadonlySet<string> = new Set(['ar', 'fa', 'he'])
+
+/**
+ * The `dir` for text in another language, next to its `lang`: `rtl` for a right-to-left language,
+ * so an Arabic title ending in "(PhD)" is aligned and ordered as its readers expect on our
+ * left-to-right pages, and isolated from the text around it; otherwise none (the page's own).
+ */
+export const textDirection = (code: string | undefined): 'rtl' | undefined =>
+  code && RIGHT_TO_LEFT.has(code) ? 'rtl' : undefined

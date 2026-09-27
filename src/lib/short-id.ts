@@ -7,7 +7,10 @@ import { randomInt } from 'node:crypto'
 
 const SHORT_ID_ALPHABET = '0123456789abcdefghjkmnpqrstvwxyz'
 
-export const SHORT_ID_PATTERN = /^[0-9a-hjkmnp-tv-z]{5}$/
+/** One character of a short ID, as a regular-expression class (for URL patterns). */
+export const SHORT_ID_CHAR = '[0-9a-hjkmnp-tv-z]'
+
+export const SHORT_ID_PATTERN = new RegExp(`^${SHORT_ID_CHAR}{5}$`)
 
 export function newShortId(): string {
   return Array.from({ length: 5 }, () => SHORT_ID_ALPHABET[randomInt(32)]).join('')

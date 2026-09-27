@@ -11,6 +11,7 @@ import {
   isCalendarDay,
   isClosingSoon,
   isOpen,
+  listingState,
   storedDay,
   type ListingDates,
 } from './deadline'
@@ -187,5 +188,40 @@ describe('open, closed and gone', () => {
     const withdrawn = fixed({ status: 'withdrawn', withdrawnAt: '2026-09-28T10:00:00.000Z' })
     expect(goneAt(withdrawn, now)?.toISOString()).toBe('2026-09-28T10:00:00.000Z')
     expect(goneAt(fixed({}), now)).toBeNull()
+  })
+})
+
+describe('listingState', () => {
+  const now = at('2026-10-01T12:00:00Z')
+  const iso = (ms: number) => new Date(now.getTime() + ms).toISOString()
+  const job = (overrides: Partial<ListingDates>): ListingDates => ({
+    status: 'published',
+    deadlineKind: 'fixed',
+    deadlineAt: iso(10 * DAY),
+    ...overrides,
+  })
+
+  it('hides drafts and jobs in review, which were never public', () => {
+    expect(listingState(job({ status: 'draft' }), now)).toBe('hidden')
+    expect(listingState(job({ status: 'in_review', deadlineAt: iso(-60 * DAY) }), now)).toBe(
+      'hidden',
+    )
+  })
+
+  it('is open while published and before the end of the deadline day', () => {
+    expect(listingState(job({}), now)).toBe('open')
+    expect(listingState(job({ deadlineKind: 'until-filled', deadlineAt: null }), now)).toBe('open')
+  })
+
+  it('is closed from the end of the deadline day, before the hourly check has run', () => {
+    expect(listingState(job({ deadlineAt: iso(-HOUR) }), now)).toBe('closed')
+    expect(listingState(job({ deadlineAt: iso(0) }), now)).toBe('closed')
+    expect(listingState(job({ status: 'expired', expiredAt: iso(-DAY) }), now)).toBe('closed')
+  })
+
+  it('is gone from 30 days after closing, and at once when withdrawn', () => {
+    expect(listingState(job({ deadlineAt: iso(-30 * DAY) }), now)).toBe('gone')
+    expect(listingState(job({ deadlineAt: iso(-30 * DAY + 1) }), now)).toBe('closed')
+    expect(listingState(job({ status: 'withdrawn', withdrawnAt: iso(-HOUR) }), now)).toBe('gone')
   })
 })

@@ -5,17 +5,18 @@ import { GONE_PAGE, isGone } from '@/lib/gone'
 
 import messages from '../messages/en.json'
 
-// Answers about records depend on the database, which changes (the nightly ROR import adds
-// institutions; a retired subfield can be reactivated), so they must not be kept by caches.
+// Answers about records depend on the database and the time, which change (the nightly ROR
+// import adds institutions; a retired subfield can be reactivated; a withdrawn job can be published
+// again), so they must not be kept by caches. This includes redirects: slugs follow names and
+// titles, which can change back, and a stored A→B redirect would then meet a fresh B→A, a loop.
 const NOT_STORED = { 'Cache-Control': 'private, no-store' }
-// Slugs follow names, which can change back; a day keeps browsers from holding an old redirect.
-const REDIRECT_CACHE = { 'Cache-Control': 'public, max-age=86400' }
 
 // Runs before the pages under /en/ and /tr/ (Next.js "proxy", formerly middleware).
 // Removed URLs get the removed-page with status 410 (PLAN §2.5); the removed-page itself is not
 // a page of its own, so a direct request to it gets the 404 page. Pages that show a database
-// record (institutions, subfield hubs) are checked here first, so an unknown record gets a real
-// 404 and an outdated URL a permanent redirect (src/lib/detail-routes.ts).
+// record (institutions, subfield hubs, jobs) are checked here first, so an unknown record gets a
+// real 404, an outdated URL a permanent redirect, and a withdrawn job or one that closed more than
+// 30 days ago the removed-page with 410 (src/lib/detail-routes.ts).
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const route = matchDetailRoute(pathname)
@@ -23,7 +24,7 @@ export async function proxy(request: NextRequest) {
     let resolution: Resolution
     try {
       const { detailLookup } = await import('@/lib/detail-lookup')
-      resolution = await resolveDetailRoute(route, await detailLookup())
+      resolution = await resolveDetailRoute(route, await detailLookup(), new Date())
     } catch (error) {
       // The database is unreachable: a temporary state, so say so rather than answer 500.
       console.error('Record lookup failed:', error instanceof Error ? error.message : error)
@@ -51,7 +52,7 @@ export async function proxy(request: NextRequest) {
         const target = new URL(resolution.to, request.url)
         target.search = request.nextUrl.search
         const response = NextResponse.redirect(target, 308)
-        response.headers.set('Cache-Control', REDIRECT_CACHE['Cache-Control'])
+        response.headers.set('Cache-Control', NOT_STORED['Cache-Control'])
         return response
       }
       case 'render':

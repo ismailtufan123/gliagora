@@ -187,3 +187,19 @@ export function goneAt(listing: ListingDates, now: Instant = Date.now()): Date |
   }
   return new Date(gone)
 }
+
+/**
+ * What a listing's address shows (PLAN §2.5): `hidden` for drafts and listings in review, which
+ * were never public (404); `open`; `closed`, the closed notice, not indexed, from the end of the
+ * deadline day even before the hourly check marks it expired; `gone` (410) once withdrawn or 30
+ * days after closing.
+ */
+export type ListingState = 'hidden' | 'open' | 'closed' | 'gone'
+
+export function listingState(listing: ListingDates, now: Instant = Date.now()): ListingState {
+  if (listing.status === 'draft' || listing.status === 'in_review') return 'hidden'
+  if (listing.status === 'withdrawn') return 'gone'
+  const gone = goneAt(listing, now)
+  if (gone && toMs(now) >= gone.getTime()) return 'gone'
+  return isOpen(listing, now) ? 'open' : 'closed'
+}
