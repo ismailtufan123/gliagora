@@ -1493,7 +1493,7 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 | D6 | Turkey-only hosting (Option T) kept; latency accepted | §11.4 |
 | D7 | Member accounts at launch: passwordless sign-in with Google, ORCID and email link; saved items and digest preferences in 1a, saved searches with alerts in 1b | §2, §3, §5.1, §7.5, §9.12, §11.3, §13, §15, §18–§20 |
 | D8 | Self-service privacy: instant unsubscribe, export and deletion with automatic confirmations; instant acknowledgement for other requests | §3.2, §15.4, §18.1 |
-| D9 | Contact page shows only `hello@gliagora.com` at launch; the operator's name appears as data controller in the privacy texts; name and address go on the contact page before any revenue | §15.1, §15.2, §15.4 |
+| D9 | Contact page shows only email addresses at launch (`hello@gliagora.com`, and `privacy@gliagora.com` for data requests, §11.6); the operator's name appears as data controller in the privacy texts; name and address go on the contact page before any revenue | §15.1, §15.2, §15.4 |
 | D10 | Data controller in the privacy texts: Nuray Sancar (natural person). She agrees to be named, has access to `hello@` and answers requests; services that process personal data are opened in her name, or a short written agreement covers whoever runs the technical side | §15.1, §15.4 |
 | D11 | Tagline: "Where neuroscience meets". Logo exploration continues on the design canvas (20 concepts so far) | §1, §22.2 |
 | D12 | Logo: concept 6b "Calcium wave with astrocyte" (calcium waves spread from an astrocyte and form a G). Variants: primary, dark, one colour, stacked; simplified marks for 32/24 px and a favicon for 16 px | §7, §22.2 |
