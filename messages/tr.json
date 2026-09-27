@@ -130,9 +130,25 @@
       "title": "KVKK aydınlatma metni",
       "description": "6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında Gliagora | Neuroscience aydınlatma metni."
     },
+    "acikRiza": {
+      "title": "Glia Notes açık rıza metni",
+      "description": "Glia Notes bülteni için e-posta adresinizin işlenmesine verdiğiniz açık rıza: hangi veriler, hangi amaçla ve ne kadar süreyle işlenir, açık rızanızı nasıl geri alabilirsiniz."
+    },
+    "cookies": {
+      "title": "Çerezler ve depolama (İngilizce)",
+      "description": "Gliagora'nın tarayıcınızda neyi, neden ve ne kadar süreyle sakladığı: yalnızca kesinlikle gerekli olanlar; analiz veya üçüncü taraf çerezi yoktur (İngilizce)."
+    },
     "terms": {
       "title": "Kullanım koşulları (İngilizce)",
       "description": "Gliagora | Neuroscience'ın, üye hesaplarının, formların ve bültenin kullanım kuralları (İngilizce)."
+    },
+    "takedown": {
+      "title": "Kaldırma ve düzeltme talepleri (İngilizce)",
+      "description": "Gliagora'daki bir içeriğin düzeltilmesini veya kaldırılmasını nasıl isteyebileceğiniz, talebinizde neleri belirtmeniz gerektiği, ne kadar sürede işlem yaptığımız ve kaldırılan bir ilana ne olduğu (İngilizce)."
+    },
+    "dataRequests": {
+      "title": "Veri talepleri (İngilizce)",
+      "description": "Gliagora'nın hakkınızda tuttuğu kişisel verileri nasıl görebileceğiniz ve indirebileceğiniz, bunların düzeltilmesini veya silinmesini nasıl isteyebileceğiniz, talebin size ait olduğunu nasıl doğruladığımız ve ne kadar sürede yanıt verdiğimiz (İngilizce)."
     }
   },
   "institution": {

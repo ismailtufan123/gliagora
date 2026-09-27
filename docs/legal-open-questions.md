@@ -7,10 +7,10 @@ After M1 the drafts had 111 open questions, plus one open point that was only ma
 | Group | What happens | Count |
 |---|---|---|
 | (a) Answerable from PLAN.md | The answer is now written into the draft and its marker is gone. | 49 questions |
-| (b) Needs a lawyer | One review by a lawyer between S and M2, before the texts go live (pre-launch checklist, PLAN §20, D32). | 47 questions, merged into **17** (B1–B17), plus **B18** added on 2026-09-27 (C2): **18** in all |
+| (b) Needs a lawyer | One review by a lawyer between S and M2, before the texts go live (pre-launch checklist, PLAN §20, D32). | 47 questions, merged into **17** (B1–B17), plus **B18** added on 2026-09-27 (C2) and **B19** added with the açık rıza metni on 2026-09-27: **19** in all |
 | (c) Only the operator can decide | Decided by the operator on 2026-09-27 (PLAN D32–D36). The decisions are written into the drafts and their markers are gone. | 13 questions, merged into **5** (C1–C5) |
 
-Five more questions were settled by a default (listed below, with the other defaults the drafts follow). Two questions were split between groups (privacy policy 22 and terms 3), so the tables at the end have 114 rows for 112 questions. In the drafts every remaining marker names its item, for example `[TO DECIDE: B4 – …]` or `[KARAR VERİLECEK: B7 – …]`. A few markers name a milestone or a step instead ("S and M4b", "M4", "before publication", "when ALTCHA … are built", and "before signing" in the processing agreement): they are facts to fill in at that point, not questions.
+Five more questions were settled by a default (listed below, with the other defaults the drafts follow). Two questions were split between groups (privacy policy 22 and terms 3), so the tables at the end have 114 rows for 112 questions. In the drafts every remaining marker names its item, for example `[TO DECIDE: B4 – …]` or `[KARAR VERİLECEK: B7 – …]`. A few markers name a milestone or a step instead ("S and M4b", "M4", "M4b", "M2 and the translated-version notice", "before publication", "when ALTCHA … are built", and "before signing" in the processing agreement): they are facts to fill in at that point, not questions.
 
 ## (c) Decisions for the operator — decided 2026-09-27
 
@@ -22,7 +22,7 @@ The operator decided all five on 2026-09-27; they are recorded in PLAN §22.3 (D
 
 **In the drafts.** Nothing is public before M2, so no text describes the interim forwarding, the interim mailbox or a transfer abroad for it. Each draft reads as it will be true when it goes live: at M2, or by M6 for the terms. This also settles part (3) of B12.
 
-Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/terms.md`
+Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/terms.md`, `content/tr/legal/acik-riza-metni.md`, `content/en/legal/cookies.md`, `content/en/legal/takedown.md`, `content/en/legal/data-requests.md`
 
 ### C2. Access by anyone other than the controller: yes
 
@@ -46,7 +46,7 @@ Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md
 
 The lawyer sees the final table in B11.
 
-Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/takedown.md`
 
 ### C4. Preferred subfields at launch: approved as proposed
 
@@ -58,7 +58,7 @@ Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md
 
 **Decided.** Important changes (a new purpose, a new recipient, a transfer abroad or new duties for members) are emailed to members, shown as a dated notice on the page 30 days before they apply, and mentioned in the next Glia Notes. Smaller edits only get a new date on the page. (D36) The lawyer still checks the terms' change clause in B16.
 
-Texts: `content/en/legal/terms.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+Texts: `content/en/legal/terms.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/cookies.md`
 
 ## (b) Questions for the one-time lawyer review
 
@@ -68,17 +68,17 @@ To be answered in one review before the texts go live. Each question is written 
 
 Gliagora is run by one natural person resident in Türkiye (no company, no revenue, no ads or sponsorship at launch). It publishes only editorial content: suggestions are checked and rewritten by her before publication, and there is no user content in Phase 1. (1) Is she the içerik sağlayıcı under Law 5651 Art. 2, and not a yer sağlayıcı for the suggestions she rewrites? (2) Under Art. 3 and Art. 5 of the 2007 regulation, is an email address under an 'İletişim' heading, reachable from the home page, enough at launch, or must her full name and postal address appear from day one? (3) Not needed for launch: once the first revenue arrives, which details does Art. 5 require (name, postal address, telephone, tax number?), and is a virtual-office address acceptable instead of the business address from the tax registration?
 
-**Why it matters.** Decides whether the contact pages can go live with an email address only (D9), and whether the sentence naming the editor as content provider stays on both contact pages. Part (3) goes on the before-any-revenue checklist.
+**Why it matters.** Decides whether the contact pages can go live with an email address only (D9), and whether the sentence naming the editor as content provider stays on both contact pages and the notice and takedown page. Part (3) goes on the before-any-revenue checklist.
 
-Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/terms.md`
+Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/terms.md`, `content/en/legal/takedown.md`
 
 ### B2. Law 5651 Art. 9: deadline for personal-rights removal requests
 
 Under Law 5651 Art. 9 as now in force: (1) how soon must a content provider answer a request to remove content that violates personal rights, and must that answer be a decision (remove or refuse), or is an acknowledgement enough? (2) Is our plan lawful: an automatic acknowledgement at once, and a decision usually within 72 hours (or within the legal deadline, if the law requires a decision)? (3) Is it correct and advisable to tell people that they can also apply directly to the sulh ceza hâkimliği, without contacting us first?
 
-**Why it matters.** Sets the takedown timelines on three pages now, on the notice and takedown page (M4) and in the admin countdown. If a decision is required within 24 hours, the operator must check requests every day. The sentence about the sulh ceza hâkimliği is removed unless you confirm it.
+**Why it matters.** Sets the takedown timelines on four pages, including the notice and takedown page, and in the admin countdown (M4). If a decision is required within 24 hours, the operator must check requests every day. The sentence about the sulh ceza hâkimliği is removed unless you confirm it.
 
-Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/terms.md`
+Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/terms.md`, `content/en/legal/takedown.md`
 
 ### B3. Law 4904: the publisher statement
 
@@ -90,19 +90,19 @@ Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/term
 
 ### B4. Legal bases (KVKK m.5, GDPR Art. 6) for everything except the newsletter
 
-PLAN fixes only the newsletter basis (açık rıza / consent). Is the proposed basis right for each other activity in the two notices? In particular: consent records (m.5/2(ç) or (e); GDPR 6(1)(c) with Art. 7(1), or (f)); member accounts and the session cookie (m.5/2(c); 6(1)(b)); the inactivity warning (f) and the final account-deletion email (ç); KVKK data requests (ç) and Law 5651 removal requests (ç/e; GDPR (f)); corrections, ordinary email, logs, rate limits, analytics, admin accounts and backups (f); and people named in employers' public postings, such as a lab head (f, plus m.5/2(d) for data they made public themselves?). Does the notice also meet GDPR Art. 14 for those named people?
+PLAN fixes only the newsletter basis (açık rıza / consent). Is the proposed basis right for each other activity in the two notices? In particular: consent records (m.5/2(ç) or (e); GDPR 6(1)(c) with Art. 7(1), or (f)); member accounts and the session cookie (m.5/2(c); 6(1)(b)); the inactivity warning (f) and the final account-deletion email (ç); KVKK data requests (ç) and Law 5651 removal requests (ç/e; GDPR (f)); corrections, ordinary email, logs, rate limits, analytics, admin accounts, the sign-in security and editor cookies, and backups (f); and people named in employers' public postings, such as a lab head (f, plus m.5/2(d) for data they made public themselves?). Does the notice also meet GDPR Art. 14 for those named people?
 
 **Why it matters.** Every row of both notices depends on it. The legal-basis markers can only be removed after this answer.
 
-Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/tr/legal/acik-riza-metni.md`, `content/en/legal/cookies.md`
 
 ### B5. KVKK applications without a published postal address
 
-The controller publishes no postal address before any revenue (D9), and PLAN lists no KEP address. Under the Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğ: (1) are these channels enough: the data-request web form with an email verification link; email to privacy@gliagora.com from an address registered with us (and what about an unregistered address?); and an application signed with a secure electronic or mobile signature and sent by email? (2) Must she also give an address for written applications, or get a KEP address? If so, may it be the business or virtual-office address planned for later? (3) May an application ask only for name, email and the request, with identity checked by the verification link, instead of the T.C. kimlik number and an address for notices?
+The controller publishes no postal address before any revenue (D9), and PLAN lists no KEP address. Under the Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğ: (1) are these channels enough: the data-request web form with an email verification link; email to privacy@gliagora.com from an address registered with us (and what about an unregistered address?); and an application signed with a secure electronic or mobile signature and sent by email? (2) Must she also give an address for written applications, or get a KEP address? If so, may it be the business or virtual-office address planned for later? (3) May an application ask only for name, email and the request, with identity checked by the verification link, instead of the T.C. kimlik number and an address for notices? May we ever ask for a copy of an identity document?
 
-**Why it matters.** 'How to apply' is a required element of both notices (KVKK Art. 10). If a postal or KEP address is required, the operator needs one before signups open at M2. All four texts must use the same wording.
+**Why it matters.** 'How to apply' is a required element of both notices (KVKK Art. 10). If a postal or KEP address is required, the operator needs one before signups open at M2. All five texts must use the same wording.
 
-Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/data-requests.md`
 
 ### B6. VERBİS registration
 
@@ -116,9 +116,9 @@ Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md
 
 PLAN sets 16 as the minimum age for the newsletter. (1) In Türkiye, can a 16- or 17-year-old who has discernment (TMK m.16) validly give açık rıza for the newsletter, and enter into the free member-account contract (m.5/2(c)), without a parent or guardian? (2) Is 16 also acceptable for the optional email on the suggestion form, and for EU users, given that GDPR Art. 8 lets member states set an age between 13 and 16? Until you answer, the drafts use one rule: 16 for every feature.
 
-**Why it matters.** The age is stated on the signup form (M2) and for accounts (M4b). If 18 or a guardian's consent is needed, the forms and three texts change.
+**Why it matters.** The age is stated on the signup form (M2) and for accounts (M4b). If 18 or a guardian's consent is needed, the forms and four texts change.
 
-Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/terms.md`
+Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/terms.md`, `content/tr/legal/acik-riza-metni.md`
 
 ### B8. Optional email on the 'Suggest a listing' form
 
@@ -126,7 +126,7 @@ The form has an optional email field with an unticked checkbox. The address is u
 
 **Why it matters.** If the answer is açık rıza, a second açık rıza metni must be written and approved before the form goes live (it is built in M4).
 
-Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/tr/legal/acik-riza-metni.md`
 
 ### B9. Accepting the terms (contract basis for accounts)
 
@@ -142,7 +142,7 @@ Please check against the current law: (1) the lists of rights (KVKK m.11; GDPR A
 
 **Why it matters.** These are required elements of both notices, and PLAN marks the wording [U] (§15.1).
 
-Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/takedown.md`, `content/en/legal/data-requests.md`
 
 ### B11. Retention periods and proof of consent
 
@@ -150,7 +150,7 @@ Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/priv
 
 **Why it matters.** The retention table is a required part of the privacy policy. PLAN marks both periods [U]. If more proof must be kept, the rule 'deleted at once on unsubscribe' changes.
 
-Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/tr/legal/acik-riza-metni.md`, `content/en/legal/takedown.md`, `content/en/legal/data-requests.md`
 
 ### B12. Cloudflare DNS and server access from abroad (transfers under KVKK m.9)
 
@@ -168,13 +168,13 @@ Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md
 
 Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
 
-### B14. Cookieless analytics (Umami)
+### B14. Cookieless analytics (Umami) and the strictly necessary cookies
 
-Umami runs on our own server in Türkiye and sets no cookies. It keeps raw page-view events for 12 months and totals with no end date. The exact fields of a raw event will be listed from the installed version at server setup and given to you with the texts. Are raw events personal data under KVKK and the GDPR? If so, is legitimate interest (m.5/2(f); Art. 6(1)(f)) enough without consent, and does ePrivacy Art. 5(3) still allow the site to run without a banner?
+(1) Umami runs on our own server in Türkiye and sets no cookies. It keeps raw page-view events for 12 months and totals with no end date. The exact fields of a raw event will be listed from the installed version at server setup and given to you with the texts. Are raw events personal data under KVKK and the GDPR? If so, is legitimate interest (m.5/2(f); Art. 6(1)(f)) enough without consent, and does ePrivacy Art. 5(3) still allow the site to run without a banner? (2) The cookies and storage page lists everything else the site stores in a browser: the member session cookie (30 days), short-lived sign-in security cookies, and, for editors only, the editor session cookie (2 hours), a cookie that remembers an editor's light or dark choice (1 year) and working data of the editing area, such as a copied field, in the editor's browser storage (localStorage). Are all of these exempt from consent as strictly necessary, under ePrivacy Art. 5(3) and the KVKK Authority's cookie guide (Çerez Uygulamaları Hakkında Rehber)?
 
-**Why it matters.** 'No cookie banner' (PLAN decision 4) and the analytics sections of both notices rest on this.
+**Why it matters.** 'No cookie banner' (PLAN decision 4), the cookies and storage page and the analytics sections of both notices rest on this.
 
-Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/data-requests.md`, `content/en/legal/cookies.md`
 
 ### B15. Data breaches and disclosure to authorities
 
@@ -208,6 +208,14 @@ Besides the controller, one natural person, the technical administrator, maintai
 
 Texts: `docs/legal/veri-isleme-sozlesmesi-taslak.md`; the role is described in `content/en/legal/privacy.md` and `content/tr/legal/kvkk-aydinlatma-metni.md`
 
+### B19. Glia Notes: the consent wording, and Law 6563
+
+(1) The newsletter signup form is on the English pages. Next to the unticked box it says 'I agree to receive Glia Notes by email.' and links to the privacy policy and the KVKK texts. The Turkish açık rıza metni, kept separate from the aydınlatma metni, quotes the full statement the box stands for: 'KVKK aydınlatma metnini ve Glia Notes açık rıza metnini okudum. E-posta adresimin, Glia Notes bülteninin ve abonelik onay e-postasının bana gönderilmesi amacıyla açık rıza metninde anlatıldığı şekilde işlenmesine açık rıza veriyorum. En az 16 yaşındayım.' Does this give specific, informed and freely given açık rıza under KVKK, or must the form show the full statement next to the box, in Turkish as well as in English? Is the statement itself adequate, including its first sentence, which confirms that the aydınlatma metni was read, although PLAN keeps the consent separate from the notice? (2) At launch Glia Notes is free and has no advertising or sponsorship. It lists positions, deadlines, papers, funding and news from other organisations, with links to their original pages and to Gliagora pages. Is it a commercial electronic message (ticari elektronik ileti) under Law No. 6563 and its regulation? If so, İYS registration and an approval (onay) under Law 6563 would be needed from M2, not only before the first sponsored issue as PLAN §13 and §15.3 assume. If an onay is needed, can the same unticked box collect both the KVKK açık rıza and the 6563 onay?
+
+**Why it matters.** Decides the signup form built for M2: the checkbox label, and whether the Turkish statement must appear on the form. It also decides whether İYS registration must be done before signups open at M2 instead of in Phase 4. PLAN marks the İYS details [U] (§15.1).
+
+Texts: `content/tr/legal/acik-riza-metni.md`; possibly also the newsletter section of `content/en/legal/privacy.md`
+
 ## Defaults applied
 
 Settled in the drafts by a default, mostly following PLAN; change any of them by telling me.
@@ -217,7 +225,7 @@ Settled in the drafts by a default, mostly following PLAN; change any of them by
 - **Texts published at M2 describe later features.** The privacy texts published at M2 already describe accounts, the suggestion form and 'Report a problem' as they will work ('if you create an account…'). Each description is checked against the built feature at M4 and M4b, and a new approval is needed only if the wording must change. (Source: C1; PLAN §20 (M2, M4, M4b), D28.)
 - **Licence of our summaries.** The terms keep 'quote with attribution and a link'. No CC BY licence is offered, and the terms say nothing about bulk or automated reuse (including the jobs feed) unless a problem arises. (Source: en-terms Q5; PLAN §15.4 (terms: licence of our summaries), §2.2.)
 - **Language of messages and requests.** Both contact pages and the KVKK aydınlatma metni say that people may write in Turkish or English. (Source: tr-iletisim Q8; PLAN §1, §12, §15.4, D10.)
-- **Version label and effective date.** Every legal text that carries a version line (privacy policy, KVKK aydınlatma metni, terms) starts at 'Version 1.0', not '1'. The effective date is the publication date, written in the approval commit that sets draft to false. (Source: en-privacy Q30, tr-kvkk Q22, en-terms Q1; PLAN D28, §12, §15.4.)
+- **Version label and effective date.** Every legal text that carries a version line or a version history (privacy policy, KVKK aydınlatma metni, terms, açık rıza metni, cookies and storage) starts at 'Version 1.0', not '1'. The effective date is the publication date, written in the approval commit that sets draft to false. (Source: en-privacy Q30, tr-kvkk Q22, en-terms Q1; PLAN D28, §12, §15.4.)
 - **Turkish apostrophes.** All Turkish texts follow the TDK spelling guide, as the drafts already do: no apostrophe before suffixes on the names of institutions, boards and laws (Kanununun, Kuruluna), an apostrophe after company, brand and place names (Gliagora'nın, Türkiye'de). PLAN says nothing on this, so this default follows TDK, not PLAN. (Source: tr-kvkk Q30.)
 - **Spelling.** The English texts use British spelling, as the drafts already do ('organisation', 'licence', 'programme'). PLAN mixes British and American spelling, so this is a default; tell me if the site should use American spelling. (Source: en-terms Q21.)
 

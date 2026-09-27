@@ -6,7 +6,7 @@ Gliagora, İngilizce yayın yapan bir bilgi sitesidir. Sinirbilim alanındaki i�
 
 - Metinde "biz" dediğimizde veri sorumlusunu, yani Gliagora'yı yöneten Nuray Sancar'ı kastediyoruz.
 - Bu metin sizi bilgilendirir. Sizden onay istemez.
-- Glia Notes bülteni için açık rızanızı ayrı bir metinle isteriz: Açık rıza metni.
+- Glia Notes bülteni için açık rızanızı ayrı bir metinle isteriz: [Açık rıza metni](/tr/legal/acik-riza-metni/).
 - Daha ayrıntılı bilgi için İngilizce [gizlilik politikasına](/en/legal/privacy/) bakabilirsiniz.
 
 ## Veri sorumlusu
@@ -53,7 +53,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - Üyeyseniz, girişte doğruladığınız e-posta adresi bu onay adımının yerine geçer. Hesabınıza yalnızca ORCID ile giriş yapıyorsanız, önce bir e-posta adresini doğrulamanız gerekir.
 - **Amaç:** Glia Notes'u (aylık Gliagora bülteni) size e-postayla göndermek. Bültenlerde açılma veya tıklama takibi ve takip pikseli yoktur.
 - **Hukuki sebep:**
-  - Açık rızanız (KVKK m.5/1). Açık rızanızı ayrı bir metinle isteriz: Açık rıza metni.
+  - Açık rızanız (KVKK m.5/1). Açık rızanızı ayrı bir metinle isteriz: [Açık rıza metni](/tr/legal/acik-riza-metni/).
   - Teslim edilemeyen adresleri listeden çıkarırken meşru menfaatimize (m.5/2 (f)) dayanırız. Bu menfaat, listeyi doğru ve güncel tutmaktır.
 - **Nerede:** Türkiye'deki kendi sunucumuzda çalışan bülten yazılımının (listmonk) veritabanında. Sitenin veritabanında bülten için e-posta adresiniz tutulmaz, yalnızca bir abone numarası tutulur. Üyeyseniz e-posta adresiniz ayrıca üye hesabınızda kayıtlıdır.
 - **Saklama:**
@@ -132,7 +132,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - talebin durumu ve yapılan işlem.
 - **Nereden ve nasıl:** Sizden, şu yollardan biriyle:
   - her içerikteki "{en: Report a problem}" (Sorun bildirin) bağlantısı (içerik bilgisi önceden doldurulur) [KARAR VERİLECEK: M4 – "{en: Report a problem}" formunun hangi alanları topladığı ve e-posta adresi isteyip istemediği];
-  - İngilizce {en: Notice and takedown} (kaldırma ve düzeltme) sayfası;
+  - İngilizce [{en: Notice and takedown}](/en/legal/takedown/) (kaldırma ve düzeltme) sayfası;
   - e-posta.
 - **Amaç:** Talebinizi incelemek ve size yanıt vermek. Gerekiyorsa içeriği düzeltmek veya yayından kaldırmak ve bunu kayıt altına almak. Kaldırılmasına karar verilen içerik hemen yayından kalkar veya düzeltilir.
 - **Hukuki sebep:**
@@ -147,7 +147,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - e-posta adresiniz ve açıklamanız;
   - talebin alındığı tarih ve yanıt için son tarih;
   - talebin durumu ve sonuçlandığı tarih.
-- **Nereden ve nasıl:** Sizden: veri talebi sayfasından (İngilizce), e-postayla veya üyeyseniz hesap ayarlarındaki araçlarla.
+- **Nereden ve nasıl:** Sizden: [veri talebi sayfasından](/en/legal/data-requests/) (İngilizce), e-postayla veya üyeyseniz hesap ayarlarındaki araçlarla.
 - **Amaç:** KVKK m.11 kapsamındaki başvurunuzu sonuçlandırmak, size yanıt vermek ve yanıt sürelerini izlemek.
 - **Hukuki sebep:** Hukuki yükümlülüğümüzü yerine getirmek için zorunlu olması (KVKK m.5/2 (ç)). KVKK m.13, başvurulara yanıt vermemizi gerektirir.
 - **Saklama:** Talep kapandıktan sonra 2 yıl. Bu süre, sitenin veritabanındaki kayıtları ve e-posta yazışmalarını kapsar. [KARAR VERİLECEK: B11 – süre teyit edilecek]
@@ -239,7 +239,7 @@ Bu bölüm, sitemizi kullanmayan ama yayımladığımız bilgilerin kaynakların
   - Gönderilen metnin bir kopyası denetim için saklanır ve içerik hakkında karar verildikten 30 gün sonra silinir.
   - Her içeriği yayımlamadan önce editör onaylar.
   - Ayrıntılar "Yurt dışına aktarım" bölümündedir.
-- Bu bilgilerin düzeltilmesini veya kaldırılmasını İngilizce {en: Notice and takedown} (kaldırma ve düzeltme) sayfasından isteyebilirsiniz.
+- Bu bilgilerin düzeltilmesini veya kaldırılmasını İngilizce [{en: Notice and takedown}](/en/legal/takedown/) (kaldırma ve düzeltme) sayfasından isteyebilirsiniz.
 
 ### Yönetim paneli kullanıcıları
 
@@ -320,7 +320,7 @@ Tarayıcınızda yalnızca hizmetin çalışması için zorunlu bilgileri saklar
 - üye oturum çerezi: sözleşmenin ifası (m.5/2 (c));
 - giriş güvenliği çerezleri ve yönetim paneli oturum çerezi: meşru menfaatimiz (m.5/2 (f)).
 
-Analiz veya reklam çerezi kullanmayız. Üçüncü taraf çerezi yoktur. İstatistik yazılımımız çerez kullanmaz. Ayrıntılar, üyelik açılmadan önce yayımlayacağımız İngilizce çerezler ve depolama sayfasında yer alacaktır.
+Analiz veya reklam çerezi kullanmayız. Üçüncü taraf çerezi yoktur. İstatistik yazılımımız çerez kullanmaz. Ayrıntılar, İngilizce [çerezler ve depolama sayfasında](/en/legal/cookies/) yer alır.
 
 ## Otomatik kararlar
 
@@ -359,7 +359,7 @@ Bazı işlemleri bize başvurmadan, kendiniz hemen yapabilirsiniz:
 - **Verilerinizi indirme:** Hesap ayarlarınızdaki "{en: Download my data}" (Verilerimi indir) düğmesiyle verilerinizi bir JSON dosyası olarak indirebilirsiniz.
 - **Hesabınızı silme:** Hesap ayarlarınızdaki "{en: Delete my account}" (Hesabımı sil) düğmesini kullanın. Onayınızdan sonra hesabınız hemen silinir.
 - **Üye değilseniz:**
-  - Veri talebi sayfasından (İngilizce) verilerinizin silinmesini isteyebilirsiniz.
+  - [Veri talebi sayfasından](/en/legal/data-requests/) (İngilizce) verilerinizin silinmesini isteyebilirsiniz.
   - E-posta adresinize bir doğrulama bağlantısı gelir. Bu bağlantıya tıkladığınızda, e-posta adresinize bağlı kayıtlar otomatik olarak silinir. Bülten aboneliğiniz ve ilan önerme formunda verdiğiniz e-posta adresi silinir; açık rıza kayıtlarınız anonim hâle getirilir. Ardından silme işlemini bildiren bir e-posta alırsınız.
   - Başvuru kayıtları, açık rıza kayıtları, e-posta yazışmaları, erişim kayıtları ve yedekler için yukarıdaki saklama süreleri geçerlidir.
 
@@ -369,7 +369,7 @@ Avrupa Birliğinde bulunuyorsanız, AB Genel Veri Koruma Tüzüğü (GDPR) kapsa
 
 Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğe göre bize şu yollarla başvurabilirsiniz:
 
-- **Veri talebi sayfası:** Veri talebi sayfasındaki formu (İngilizce) kullanabilirsiniz. Bu form, başvurular için geliştirdiğimiz uygulamadır.
+- **Veri talebi sayfası:** [Veri talebi sayfasındaki](/en/legal/data-requests/) formu (İngilizce) kullanabilirsiniz. Bu form, başvurular için geliştirdiğimiz uygulamadır.
 - **E-posta:** privacy@gliagora.com adresine yazabilirsiniz. Bunun için bize daha önce bildirdiğiniz ve sistemimizde kayıtlı olan e-posta adresinizi kullanın, örneğin bülten aboneliğinizde veya üye hesabınızda kayıtlı adresi.
 - **Güvenli elektronik imza veya mobil imza:** Bu imzalardan biriyle imzaladığınız başvurunuzu privacy@gliagora.com adresine e-postayla gönderebilirsiniz.
 - **Kayıtlı elektronik posta (KEP) ve yazılı başvuru:** [KARAR VERİLECEK: B5 – KEP adresi, yazılı başvuru adresi ve başvuru yollarının Tebliğe uygunluğu]

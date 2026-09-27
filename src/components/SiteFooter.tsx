@@ -6,7 +6,8 @@ import { SOCIAL_LINKS, WINDOWS, paths } from '@/lib/site'
 
 // PLAN §2.3: sitemap footer (Windows | Learn | About | Legal). The contact and legal notice link
 // is on every page (Law 5651, PLAN §15). Profiles elsewhere are plain links (D14).
-// Sources and the other legal texts join their columns with their pages.
+// Sources and the accessibility statement join their columns with their pages. The Legal column
+// follows PLAN §2.3; the Turkish texts carry hrefLang="tr".
 export async function SiteFooter({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale })
 
@@ -34,7 +35,11 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
       links: [
         { label: t('pages.privacy.title'), href: CONTENT_PAGES.privacy.path },
         { label: t('pages.kvkk.title'), href: CONTENT_PAGES.kvkk.path, hrefLang: 'tr' },
+        { label: t('pages.acikRiza.title'), href: CONTENT_PAGES.acikRiza.path, hrefLang: 'tr' },
+        { label: t('pages.cookies.title'), href: CONTENT_PAGES.cookies.path },
         { label: t('pages.terms.title'), href: CONTENT_PAGES.terms.path },
+        { label: t('pages.takedown.title'), href: CONTENT_PAGES.takedown.path },
+        { label: t('pages.dataRequests.title'), href: CONTENT_PAGES.dataRequests.path },
       ],
     },
   ]

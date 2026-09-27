@@ -47,7 +47,7 @@ Bir içerik nedeniyle kişilik haklarınızın ihlal edildiğini düşünüyorsa
 
 Hatalı bir bilgiyi ya da kapanmış veya geri çekilmiş bir ilanı bildirmek için de bize yazabilirsiniz. İşverenler kendi ilanlarının güncellenmesini ya da kaldırılmasını isteyebilir.
 
-Talebinizi İngilizce {en: Notice and takedown} sayfasındaki formla ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine gönderebilirsiniz. Talebinizde şunları belirtin:
+Talebinizi İngilizce [{en: Notice and takedown}](/en/legal/takedown/) sayfasındaki formla ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine gönderebilirsiniz. Talebinizde şunları belirtin:
 
 - ilgili sayfanın bağlantısı;
 - sorunun ne olduğu;
@@ -71,7 +71,7 @@ Kişisel verilerinizin hangi amaçlarla işlendiği, veri sorumlusunun kimliği 
 
 - Üyeyseniz verilerinizi hesap ayarlarınızdan indirebilir ya da hesabınızı silebilirsiniz.
 - Glia Notes bülteni için verdiğiniz açık rızayı istediğiniz zaman geri alabilirsiniz. Bunun için her e-postadaki abonelikten çıkma bağlantısına tıklamanız yeterlidir; üyeyseniz bülteni hesap ayarlarınızdan da kapatabilirsiniz. Aboneliğiniz hemen sona erer.
-- Diğer başvurular için İngilizce {en: Data requests} sayfasını kullanabilir ya da [privacy@gliagora.com](mailto:privacy@gliagora.com) adresine Türkçe ya da İngilizce yazabilirsiniz.
+- Diğer başvurular için İngilizce [{en: Data requests}](/en/legal/data-requests/) sayfasını kullanabilir ya da [privacy@gliagora.com](mailto:privacy@gliagora.com) adresine Türkçe ya da İngilizce yazabilirsiniz.
 
 Üye hesapları ve {en: Data requests} sayfası, Gliagora'yı geliştirdikçe adım adım açılacaktır. {en: Data requests} sayfası açılana kadar [privacy@gliagora.com](mailto:privacy@gliagora.com) adresine yazabilirsiniz.
 
@@ -81,4 +81,4 @@ Başvurularınız ücretsiz olarak, niteliğine göre en kısa sürede ve en ge�
 
 ## Dil
 
-Gliagora İngilizce öncelikli bir sitedir. Şimdilik yalnızca bu sayfa, KVKK aydınlatma metni ve Glia Notes için açık rıza metni Türkçedir; gizlilik politikası ve kullanım koşulları İngilizcedir. Sitenin geri kalanı İngilizcedir; yeterli ilgi olursa Türkçe sürümün eklenmesi planlanmaktadır.
+Gliagora İngilizce öncelikli bir sitedir. Şimdilik yalnızca bu sayfa, KVKK aydınlatma metni ve Glia Notes için [açık rıza metni](/tr/legal/acik-riza-metni/) Türkçedir; gizlilik politikası ve kullanım koşulları İngilizcedir. Sitenin geri kalanı İngilizcedir; yeterli ilgi olursa Türkçe sürümün eklenmesi planlanmaktadır.
