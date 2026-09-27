@@ -11,7 +11,14 @@ export const WINDOWS = ['jobs', 'events', 'funding', 'papers', 'news', 'resource
 export type WindowKey = (typeof WINDOWS)[number]
 
 /** Sections that are not windows but have their own page (PLAN §2.2). */
-export const SECTIONS = ['map', 'suggest', 'learn', 'benchToBedside', 'newsletter'] as const
+export const SECTIONS = [
+  'map',
+  'suggest',
+  'learn',
+  'benchToBedside',
+  'newsletter',
+  'about',
+] as const
 export type SectionKey = (typeof SECTIONS)[number]
 
 const sectionPaths: Record<SectionKey, string> = {
@@ -20,6 +27,7 @@ const sectionPaths: Record<SectionKey, string> = {
   learn: 'learn/',
   benchToBedside: 'learn/bench-to-bedside/',
   newsletter: 'newsletter/',
+  about: 'about/',
 }
 
 // Paths always end with a slash (PLAN §2.1). Pages that exist only in English link there from

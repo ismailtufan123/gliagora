@@ -101,11 +101,20 @@
     "suggest": "İlan önerin",
     "learn": "Öğrenin",
     "benchToBedside": "Bench to Bedside",
-    "newsletter": "Glia Notes"
+    "newsletter": "Glia Notes",
+    "about": "Hakkında"
   },
   "placeholder": {
     "text": "Gliagora'nın bu bölümü hazırlanıyor ve yakında burada açılacak.",
     "contact": "Soru ve önerileriniz için bize <email>hello@gliagora.com</email> adresinden ulaşabilirsiniz.",
     "home": "Ana sayfaya git"
+  },
+  "pages": {
+    "draftNotice": "Taslak: bu metin hazırlanıyor ve gözden geçiriliyor. Henüz yürürlükte değildir.",
+    "updated": "Son güncelleme: {date}",
+    "about": {
+      "title": "Gliagora hakkında",
+      "description": "Gliagora'nın neden var olduğu, adının nereden geldiği, içeriklerin nasıl seçilip doğrulandığı ve siteyi kimin yürüttüğü."
+    }
   }
 }
