@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { METHOD_GROUPS, VOCABULARIES, isValidSlug } from '@/lib/taxonomy'
-
 import { TAXONOMY_2026_09 as TERMS } from './taxonomy-2026-09'
+
+// The seed is frozen, so this test checks it against the plan as of 2026-09, not against the
+// current vocabulary lists in src/lib/taxonomy.ts.
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 // PLAN §4.2–4.7, in the plan's order.
 const EXPECTED: Record<string, string[]> = {
@@ -174,15 +176,15 @@ const PLAN_LABELS: Record<string, string> = {
 
 describe('initial taxonomy (PLAN §4)', () => {
   it('has exactly the plan’s terms, vocabulary by vocabulary, in the plan’s order', () => {
-    for (const { value } of VOCABULARIES) {
-      const slugs = TERMS.filter((term) => term.vocabulary === value).map((term) => term.slug)
-      expect(slugs, value).toEqual(EXPECTED[value])
+    for (const [vocabulary, expected] of Object.entries(EXPECTED)) {
+      const slugs = TERMS.filter((term) => term.vocabulary === vocabulary).map((term) => term.slug)
+      expect(slugs, vocabulary).toEqual(expected)
     }
     expect(TERMS).toHaveLength(Object.values(EXPECTED).flat().length)
   })
 
   it('uses valid slugs', () => {
-    for (const term of TERMS) expect(isValidSlug(term.slug), term.slug).toBe(true)
+    for (const term of TERMS) expect(term.slug, term.slug).toMatch(SLUG)
   })
 
   it('uses the plan’s labels where the plan gives them', () => {
@@ -193,11 +195,9 @@ describe('initial taxonomy (PLAN §4)', () => {
   })
 
   it('puts every method in its plan group, and gives no group to other terms', () => {
-    const groups = new Set<string>(METHOD_GROUPS.map((group) => group.value))
     for (const term of TERMS) {
       if (term.vocabulary === 'method') {
         expect(term.group, term.slug).toBe(METHOD_GROUP_OF[term.slug])
-        expect(groups.has(term.group ?? '')).toBe(true)
       } else {
         expect(term.group, term.slug).toBeUndefined()
       }
@@ -223,8 +223,8 @@ describe('initial taxonomy (PLAN §4)', () => {
   })
 
   it('keeps synonyms trimmed, unique within a vocabulary and different from the labels', () => {
-    for (const { value } of VOCABULARIES) {
-      const terms = TERMS.filter((term) => term.vocabulary === value)
+    for (const vocabulary of Object.keys(EXPECTED)) {
+      const terms = TERMS.filter((term) => term.vocabulary === vocabulary)
       const labels = new Set(terms.map((term) => term.label.toLowerCase()))
       const seen = new Map<string, string>()
       for (const term of terms) {
@@ -236,6 +236,16 @@ describe('initial taxonomy (PLAN §4)', () => {
           seen.set(key, term.slug)
         }
       }
+    }
+  })
+
+  it('leaves out words that would tag unrelated adverts', () => {
+    const all = new Set(TERMS.flatMap((term) => term.synonyms.map((s) => s.toLowerCase())))
+    for (const word of ['ltd', 'mrs', 'bids', 'ms', 'ad', 'pd', 'pi', 'em', 'none', 'n/a']) {
+      expect(all.has(word), word).toBe(false)
+    }
+    for (const word of ['award', 'startup', 'virtual', 'remote', 'hearing', 'touch', "master's"]) {
+      expect(all.has(word), word).toBe(false)
     }
   })
 })

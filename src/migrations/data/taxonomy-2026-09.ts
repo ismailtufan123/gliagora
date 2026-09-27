@@ -1,10 +1,34 @@
-import type { MethodGroup, Vocabulary } from '@/lib/taxonomy'
-
 // The initial taxonomy (PLAN §4.2–4.7), inserted once by migration 20260927_140000_seed_taxonomy.
 // Frozen: later terms and changes are made in the admin, where every change is kept as a version.
 // Labels and descriptions are in English; Turkish ones are added with the Turkish site (PLAN §12).
 // Synonyms feed search and tag suggestions. Words that would tag the wrong items are left out on
-// purpose: bare "LTD" (matches "Ltd"), "hearing", "touch", "pain", "remote", "in vitro" and others.
+// purpose: common words and short acronyms that are also ordinary words or other abbreviations
+// ("LTD" matches "Ltd", "MRS" "Mrs", "BIDS" "grant bids", "MS" "MS degree", "PI" any advert that
+// names its supervisor), and phrases found in unrelated adverts ("hearing from you", "award",
+// "startup package", "remote participation", "in vitro" slices from mice).
+
+// The values of the database enums as created by migration 20260927_133459_taxonomy. Kept here
+// rather than imported, so that later changes to the collection cannot change what this seed was.
+type Vocabulary =
+  | 'subfield'
+  | 'method'
+  | 'model-system'
+  | 'position-type'
+  | 'career-stage'
+  | 'event-type'
+  | 'event-format'
+  | 'deadline-type'
+  | 'funding-type'
+  | 'resource-type'
+  | 'evidence-level'
+  | 'disease-area'
+type MethodGroup =
+  | 'recording-imaging'
+  | 'manipulation'
+  | 'molecular'
+  | 'behaviour-clinical'
+  | 'computational'
+  | 'engineering'
 
 export type TermSeed = {
   vocabulary: Vocabulary
@@ -453,7 +477,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'Electron microscopy of neural tissue and connectomics, the mapping of neurons and their synaptic connections.',
     group: 'recording-imaging',
     synonyms: [
-      'EM',
       'volume electron microscopy',
       'vEM',
       'serial-section EM',
@@ -464,6 +487,7 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'ultrastructure',
       'wiring diagram',
       'dense reconstruction',
+      'electron microscopy',
     ],
   },
   {
@@ -475,7 +499,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     synonyms: [
       'magnetic resonance imaging',
       'functional magnetic resonance imaging',
-      'BOLD',
       'resting-state fMRI',
       'task fMRI',
       'structural MRI',
@@ -484,7 +507,8 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'tractography',
       'ultra-high-field MRI',
       'MR spectroscopy',
-      'MRS',
+      'BOLD fMRI',
+      'BOLD signal',
     ],
   },
   {
@@ -582,7 +606,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'tDCS',
       'transcranial direct current stimulation',
       'tACS',
-      'DBS',
       'deep brain stimulation',
       'focused ultrasound',
       'transcranial ultrasound stimulation',
@@ -690,7 +713,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'viral tracing',
       'rabies tracing',
       'tissue clearing',
-      'CLARITY',
       'iDISCO',
       'immunohistochemistry',
       'IHC',
@@ -698,6 +720,7 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'in situ hybridization',
       'stereology',
       'Golgi staining',
+      'CLARITY clearing',
     ],
   },
   {
@@ -763,7 +786,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'investigator-initiated trial',
       'patient-oriented research',
       'good clinical practice',
-      'GCP',
     ],
   },
   {
@@ -859,7 +881,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     group: 'computational',
     synonyms: [
       'neuroinformatics',
-      'BIDS',
       'Brain Imaging Data Structure',
       'NWB',
       'Neurodata Without Borders',
@@ -1104,12 +1125,12 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'octopus',
       'squid',
       'honeybee',
-      'ants',
       'locust',
       'leech',
       'crustaceans',
       'planarian',
       'Hydra',
+      'social insects',
     ],
   },
   {
@@ -1174,7 +1195,7 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     slug: 'not-applicable',
     label: 'Not applicable',
     description: 'Used when no model system applies to the item.',
-    synonyms: ['N/A', 'none', 'no model system', 'not relevant'],
+    synonyms: ['no model system', 'no model organism'],
   },
   {
     vocabulary: 'position-type',
@@ -1182,7 +1203,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     label: 'MSc',
     description: "Places on taught and research master's programmes.",
     synonyms: [
-      "master's",
       "master's programme",
       "master's program",
       "master's place",
@@ -1191,7 +1211,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       "taught master's",
       "research master's",
       'MRes',
-      'MPhil',
     ],
   },
   {
@@ -1261,8 +1280,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     description:
       'Academic posts such as lecturer, assistant, associate or full professor, and group leader.',
     synonyms: [
-      'principal investigator',
-      'PI',
       'group leader',
       'junior group leader',
       'lecturer',
@@ -1273,6 +1290,7 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'professorship',
       'tenure-track position',
       'faculty position',
+      'principal investigator position',
     ],
   },
   {
@@ -1293,7 +1311,8 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'biotech',
       'pharma',
       'pharmaceutical industry',
-      'startup',
+      'biotech startup',
+      'startup company',
     ],
   },
   {
@@ -1302,13 +1321,13 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     label: 'BSc/MSc student',
     description: "Students on a bachelor's or master's programme.",
     synonyms: [
-      'undergraduate',
       "bachelor's student",
       "master's student",
       'BSc student',
       'MSc student',
       'MRes student',
       'summer student',
+      'undergraduate student',
     ],
   },
   {
@@ -1349,14 +1368,10 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     label: 'Postdoc (3–7 years after PhD)',
     description: 'Researchers between three and seven years after the award of their PhD.',
     synonyms: [
-      'postdoctoral researcher',
-      'postdoctoral fellow',
-      'postdoctoral scientist',
-      'post-doc',
-      'PDRA',
-      'research fellow',
       'experienced postdoc',
       'senior postdoc',
+      'experienced postdoctoral researcher',
+      '3 to 7 years after PhD',
     ],
   },
   {
@@ -1366,18 +1381,17 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     description:
       'Researchers more than seven years after their PhD, or who already lead their own research.',
     synonyms: [
-      'principal investigator',
-      'PI',
       'group leader',
       'junior group leader',
       'lab head',
       'faculty member',
-      'professor',
       'senior researcher',
       'established researcher',
       'new investigator',
       'tenure-track',
       'more than 7 years after PhD',
+      'independent group leader',
+      'independent investigator',
     ],
   },
   {
@@ -1415,7 +1429,7 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'private sector',
       'application scientist',
       'clinical scientist',
-      'industry',
+      'industrial researcher',
     ],
   },
   {
@@ -1530,7 +1544,7 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     slug: 'in-person',
     label: 'In person',
     description: 'The event takes place at a physical venue only.',
-    synonyms: ['on-site', 'face-to-face', 'in-person only', 'physical meeting', 'on campus'],
+    synonyms: ['face-to-face', 'in-person only', 'physical meeting', 'on campus', 'on-site only'],
   },
   {
     vocabulary: 'event-format',
@@ -1538,7 +1552,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     label: 'Online',
     description: 'The event takes place online only.',
     synonyms: [
-      'virtual',
       'webinar format',
       'fully online',
       'fully virtual',
@@ -1659,7 +1672,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     label: 'Individual fellowship',
     description: 'Fellowships and scholarships awarded to an individual researcher or student.',
     synonyms: [
-      'fellowship',
       'research fellowship',
       'postdoctoral fellowship',
       'doctoral fellowship',
@@ -1737,7 +1749,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     label: 'Prize',
     description: 'Prizes and awards that recognise research achievements.',
     synonyms: [
-      'award',
       'research award',
       'medal',
       'honour',
@@ -1747,6 +1758,7 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'poster prize',
       'best poster award',
       'prize lecture',
+      'achievement award',
     ],
   },
   {
@@ -1813,7 +1825,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
     label: 'Data standard',
     description: 'Standards and formats for organising and describing data, such as BIDS and NWB.',
     synonyms: [
-      'BIDS',
       'Brain Imaging Data Structure',
       'NWB',
       'Neurodata Without Borders',
@@ -1985,9 +1996,7 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'neurodegeneration',
       'dementia',
       "Alzheimer's disease",
-      'AD',
       "Parkinson's disease",
-      'PD',
       'amyotrophic lateral sclerosis',
       'ALS',
       'motor neuron disease',
@@ -2127,7 +2136,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'Inflammatory and demyelinating diseases of the nervous system, such as multiple sclerosis, neuromyelitis optica and encephalitis.',
     synonyms: [
       'multiple sclerosis',
-      'MS',
       'demyelination',
       'neuromyelitis optica',
       'NMOSD',
@@ -2215,7 +2223,6 @@ export const TAXONOMY_2026_09: TermSeed[] = [
       'Angelman syndrome',
       'fragile X syndrome',
       'spinal muscular atrophy',
-      'SMA',
       'hereditary ataxia',
       'leukodystrophy',
       'mitochondrial disease',

@@ -20,7 +20,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   );
   
   CREATE TABLE "terms_locales" (
-  	"label" varchar NOT NULL,
+  	"label" varchar,
   	"description" varchar,
   	"hub_intro" varchar,
   	"id" serial PRIMARY KEY NOT NULL,
@@ -52,7 +52,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   );
   
   CREATE TABLE "_terms_v_locales" (
-  	"version_label" varchar NOT NULL,
+  	"version_label" varchar,
   	"version_description" varchar,
   	"version_hub_intro" varchar,
   	"id" serial PRIMARY KEY NOT NULL,
@@ -111,9 +111,9 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "_terms_v" CASCADE;
   DROP TABLE "_terms_v_locales" CASCADE;
   DROP TABLE "_terms_v_texts" CASCADE;
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_terms_fk";
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_terms_fk";
   
-  DROP INDEX "payload_locked_documents_rels_terms_id_idx";
+  DROP INDEX IF EXISTS "payload_locked_documents_rels_terms_id_idx";
   ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "terms_id";
   DROP TYPE "public"."_locales";
   DROP TYPE "public"."enum_terms_vocabulary";

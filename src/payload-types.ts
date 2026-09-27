@@ -164,7 +164,7 @@ export interface Term {
     | 'resource-type'
     | 'evidence-level'
     | 'disease-area';
-  label: string;
+  label?: string | null;
   /**
    * Used in URLs and filters, e.g. systems-circuits. It cannot be changed after saving (PLAN §4.1).
    */

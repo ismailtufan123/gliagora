@@ -1,11 +1,11 @@
 import type {
-  CollectionBeforeChangeHook,
   CollectionConfig,
   RelationshipFieldSingleValidation,
   TextFieldManyValidation,
 } from 'payload'
-import { ValidationError } from 'payload'
 
+import { fixedFieldHooks } from '@/lib/fixed-fields'
+import { requiredInEnglish } from '@/lib/localized'
 import {
   METHOD_GROUPS,
   MESH_ID_PATTERN,
@@ -17,22 +17,27 @@ import {
 
 type TermData = { vocabulary?: string | null }
 
-// A relationship value is an ID, or a populated document when read with depth > 0.
+// A relationship value is an ID, or a populated document when read with depth > 0. Returns
+// undefined for an empty value and NaN for anything that is not a valid ID.
 const idOf = (value: unknown): number | undefined => {
   const raw = typeof value === 'object' && value !== null && 'id' in value ? value.id : value
+  if (raw == null || raw === '') return undefined
   const id = Number(raw)
-  return raw == null || raw === '' || Number.isNaN(id) ? undefined : id
+  return Number.isSafeInteger(id) && id > 0 ? id : Number.NaN
 }
 
 const matchAll =
   (pattern: RegExp, message: string): TextFieldManyValidation =>
-  (values) =>
-    (values ?? []).every((value) => pattern.test(value)) || message
+  (values) => {
+    if (values == null) return true
+    return (Array.isArray(values) && values.every((value) => pattern.test(value))) || message
+  }
 
 // A parent must be in the same vocabulary and must not make a term its own ancestor.
 const validateParent: RelationshipFieldSingleValidation = async (value, { id, data, req }) => {
   const parentId = idOf(value)
-  if (parentId == null) return true
+  if (parentId === undefined) return true
+  if (Number.isNaN(parentId)) return 'Choose a parent term from the list.'
   if (id != null && parentId === Number(id)) return 'A term cannot be its own parent.'
   const parent = await req.payload.findByID({
     collection: 'terms',
@@ -59,23 +64,6 @@ const validateParent: RelationshipFieldSingleValidation = async (value, { id, da
   return loops ? 'This parent would make the term its own ancestor.' : true
 }
 
-// Slug and vocabulary are fixed once saved (PLAN §4.1). The admin shows them read-only; this also
-// stops code that bypasses access control from changing them.
-const keepIdentity: CollectionBeforeChangeHook = ({ data, originalDoc, operation, req }) => {
-  if (operation !== 'update' || !originalDoc) return data
-  const changed = (['vocabulary', 'slug'] as const).filter(
-    (key) => key in data && data[key] !== originalDoc[key],
-  )
-  if (changed.length > 0) {
-    throw new ValidationError({
-      collection: 'terms',
-      errors: changed.map((path) => ({ path, message: 'This cannot be changed after saving.' })),
-      req,
-    })
-  }
-  return data
-}
-
 // PLAN §4: one vocabulary set shared by every content type. Each term has a stable slug, a
 // localized label and description, synonyms for search and tag suggestions, and optional
 // mappings used to route paper candidates (M10).
@@ -96,10 +84,13 @@ export const Terms: CollectionConfig = {
     // Content refers to terms by ID, and published slugs never change (PLAN §4.1).
     delete: () => false,
   },
+  // A copy would repeat the slug, which must be unique in its vocabulary.
+  disableDuplicate: true,
   // The changelog for new and edited terms (PLAN §4.1).
   versions: { maxPerDoc: 100 },
   indexes: [{ fields: ['vocabulary', 'slug'], unique: true }],
-  hooks: { beforeChange: [keepIdentity] },
+  // Slug and vocabulary are fixed once saved (PLAN §4.1).
+  hooks: fixedFieldHooks('terms', ['vocabulary', 'slug']),
   fields: [
     {
       name: 'vocabulary',
@@ -113,8 +104,9 @@ export const Terms: CollectionConfig = {
     {
       name: 'label',
       type: 'text',
-      required: true,
       localized: true,
+      // Required in English; an empty Turkish label falls back to English (PLAN §12).
+      validate: requiredInEnglish('Enter the English label.'),
     },
     {
       name: 'slug',

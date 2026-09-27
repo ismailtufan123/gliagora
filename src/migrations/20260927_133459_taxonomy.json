@@ -395,7 +395,7 @@
           "name": "label",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "description": {
           "name": "description",
@@ -805,7 +805,7 @@
           "name": "version_label",
           "type": "varchar",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "version_description": {
           "name": "version_description",
