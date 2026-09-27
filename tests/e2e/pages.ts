@@ -4,7 +4,7 @@ export const PAGES = [
   { path: '/en/contact/', name: 'contact (en)' },
   { path: '/tr/iletisim/', name: 'contact (tr)' },
   { path: '/en/about/', name: 'about' },
-  { path: '/en/legal/privacy/', name: 'privacy notice' },
+  { path: '/en/legal/privacy/', name: 'privacy policy' },
   { path: '/tr/legal/kvkk-aydinlatma-metni/', name: 'KVKK notice (tr)' },
   { path: '/en/legal/terms/', name: 'terms of use' },
   { path: '/en/jobs/', name: 'placeholder (window)' },

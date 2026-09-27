@@ -27,14 +27,14 @@ We publish information about open positions. We are not an employment agency. We
 
 Gliagora has one editor, the person who runs it. Our editor writes our summaries, checks every listing against the employer's page and approves it before it goes live. Nothing is published without that check, including listings that visitors suggest.
 
-Under Türkiye's internet law (Law No. 5651), our editor is the "content provider" (içerik sağlayıcı): the person responsible for what we publish. [TO DECIDE: confirm this role under Law No. 5651. PLAN implies it but does not state it.] Our editor is also the data controller named in the [privacy notice](/en/legal/privacy/).
+Under Türkiye's internet law (Law No. 5651), our editor is the "content provider" (içerik sağlayıcı): the person responsible for what we publish. [TO DECIDE: confirm this role under Law No. 5651. PLAN implies it but does not state it.] Our editor is also the data controller named in the [privacy policy](/en/legal/privacy/).
 
 - At present, we do not publish anything written by visitors or members.
 - We link to employers' pages and other sources. Those pages belong to their owners. A link does not mean we endorse the employer or the page.
 
 For now, this page gives an email address only.
 
-[TO DECIDE: whether the editor is named on this page at launch or only in the privacy notice (D9).]
+[TO DECIDE: whether the editor is named on this page at launch or only in the privacy policy (D9).]
 
 [TO DECIDE: before Gliagora receives any income (D9), add the operator's full name (or company name), postal address and any other identifying details that the Law 5651 regulation (Art. 5) lists for commercial content providers; check, for example, whether a telephone number is required. The address will be the business address from the tax registration or a virtual office. Also confirm PLAN's reading that, under the Law 5651 regulation, a non-commercial site may list an email address alone. PLAN marks this reading as unverified.]
 
@@ -64,12 +64,12 @@ You can ask to see your personal data, get a copy of it, correct it or delete it
 
 [TO DECIDE: how written and KEP applications under the KVKK application communiqué are received while no postal address is published (D9), and whether email from an unregistered address is accepted as a KVKK application.]
 
-The [privacy notice](/en/legal/privacy/) explains how we handle personal data. Under Türkiye's Personal Data Protection Law (KVKK), we also publish an information notice in Turkish: [information notice under KVKK](/tr/legal/kvkk-aydinlatma-metni/) (KVKK aydınlatma metni).
+The [privacy policy](/en/legal/privacy/) explains how we handle personal data. Under Türkiye's Personal Data Protection Law (KVKK), we also publish an information notice in Turkish: [information notice under KVKK](/tr/legal/kvkk-aydinlatma-metni/) (KVKK aydınlatma metni).
 
 ## Legal pages
 
 - [Terms of use](/en/legal/terms/)
-- [Privacy notice](/en/legal/privacy/)
+- [Privacy policy](/en/legal/privacy/)
 - Cookies and storage
 - Notice and takedown (corrections and removals)
 - Data requests

@@ -113,7 +113,7 @@ When you sign in with Google or ORCID, their own terms also apply to your accoun
 
 - Before you delete your account, you can download your data with "Download my data". You get one file in JSON, a common format that other programs can read.
 - You can delete your account at any time with "Delete my account" in your account settings. We delete your account, saved items, preferences and newsletter subscription straight away, and send you one email to confirm.
-- Copies in our encrypted backups disappear as the backups age out, within 6 months. [TO DECIDE: confirm that the 6-month backup ageing also covers deleted member accounts.] The [privacy notice](/en/legal/privacy/) explains what we keep and for how long.
+- Copies in our encrypted backups disappear as the backups age out, within 6 months. [TO DECIDE: confirm that the 6-month backup ageing also covers deleted member accounts.] The [privacy policy](/en/legal/privacy/) explains what we keep and for how long.
 - If you have not used Gliagora while signed in for 24 months, we email you a warning. If you do not sign in within 30 days of that email, we delete your account.
 - We may suspend or delete an account that breaks these terms. When we can, we tell you why.
 
@@ -125,7 +125,7 @@ Glia Notes is the monthly Gliagora newsletter. It is free.
 - Every issue has a one-click unsubscribe link, and unsubscribing takes effect at once. Members can also switch the newsletter off in their settings.
 - We do not track whether you open Glia Notes or which links you personally click. We only count, in total and without cookies, how many visits to Gliagora come from the newsletter.
 
-How we handle your email address is explained in the [privacy notice](/en/legal/privacy/). In Turkish: the [KVKK aydınlatma metni](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice under Turkish data protection law) and the açık rıza metni (consent text for the newsletter).
+How we handle your email address is explained in the [privacy policy](/en/legal/privacy/). In Turkish: the [KVKK aydınlatma metni](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice under Turkish data protection law) and the açık rıza metni (consent text for the newsletter).
 
 ## Using our forms
 
@@ -209,7 +209,7 @@ Most items on Gliagora link to other websites, such as employers' job postings. 
 
 We collect as little personal data as we can. What we collect, why, how long we keep it and what rights you have are explained in:
 
-- the [privacy notice](/en/legal/privacy/);
+- the [privacy policy](/en/legal/privacy/);
 - the cookies and storage page;
 - the [KVKK aydınlatma metni](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice, in Turkish).
 
