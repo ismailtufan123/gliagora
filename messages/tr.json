@@ -11,7 +11,8 @@
     "tagline": "Sinirbilimin buluştuğu yer"
   },
   "a11y": {
-    "skipLink": "Ana içeriğe geç"
+    "skipLink": "Ana içeriğe geç",
+    "breadcrumb": "İçerik yolu"
   },
   "footer": {
     "contact": "İletişim ve yasal bilgiler",
@@ -133,5 +134,30 @@
       "title": "Kullanım koşulları (İngilizce)",
       "description": "Gliagora | Neuroscience'ın, üye hesaplarının, formların ve bültenin kullanım kuralları (İngilizce)."
     }
+  },
+  "institution": {
+    "description": "{name}: bu kurumdaki sinirbilim pozisyonları ve etkinlikleri, Gliagora’da.",
+    "location": "{city}, {country}",
+    "website": "Web sitesi",
+    "rorRecord": "ROR kaydı",
+    "otherNames": "Diğer adları: {names}",
+    "notActive": "Research Organization Registry bu kurumu artık etkin değil olarak gösteriyor.",
+    "positions": "Açık pozisyonlar",
+    "noPositions": "Şu anda burada açık pozisyon yok. <link>Tüm pozisyonlara</link> göz atın.",
+    "events": "Yaklaşan etkinlikler",
+    "noEvents": "Şu anda burada yaklaşan etkinlik yok. <link>Tüm etkinliklere</link> göz atın.",
+    "source": "Kurum verileri: <link>Research Organization Registry (ROR)</link>, CC0."
+  },
+  "subfields": {
+    "title": "Alt alanlar",
+    "description": "Gliagora’da pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları birbirine bağlayan sinirbilim alt alanları.",
+    "intro": "Gliagora’daki her ilan bu alt alanlardan en az biriyle etiketlenir. Her alt alanın, o alandaki pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları bir araya getirecek bir sayfası vardır.",
+    "home": "Ana sayfa",
+    "hubDescription": "Gliagora’da {subfield}: bu alt alandaki sinirbilim pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları.",
+    "comingSoon": "Bu alt alandaki pozisyonlar, etkinlikler, fonlar, makaleler, haberler ve kaynaklar Gliagora’nın her bölümü açıldıkça burada görünecek.",
+    "others": "Diğer alt alanlar"
+  },
+  "unavailable": {
+    "text": "Gliagora şu anda geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra yeniden deneyin."
   }
 }

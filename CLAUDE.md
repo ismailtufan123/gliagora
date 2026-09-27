@@ -11,7 +11,7 @@ Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, even
 
 ## Current milestone
 
-**M3 Taxonomy and institutions** (PLAN §20). Milestone order: M0 → M1 → M3 → S (one-time server setup) → M2 → M4 → … (D23).
+M3 Taxonomy and institutions is done. Next is **S, the one-time server setup**, which starts only when the operator says so (PLAN §20). Milestone order: M0 → M1 → M3 → S (one-time server setup) → M2 → M4 → … (D23).
 
 The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM) is bought but not set up. Server setup is postponed until just before M4: do not work on the server until the operator says so. Work locally only; nothing may depend on a live server. The server files in `deploy/` are prepared but have never been run.
 
@@ -72,7 +72,7 @@ The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RA
 - Long-form pages (About, legal texts) are Markdown in `content/{locale}/…`, listed in `src/lib/content.ts` and rendered by `ContentPage` (D28). A legal text keeps `draft: true` (draft notice, `noindex`) until the operator approves that exact text; never set it to `false` on your own, and do not merge a change to an approved (non-draft) legal text without the operator's approval. In these files, mark a phrase in another language as `{en: Suggest a listing}` or `{tr: açık rıza}` (WCAG 3.1.2), and an open point as `[TO DECIDE: …]` / `[KARAR VERİLECEK: …]`; links may only be site paths, `https://`, `http://` or `mailto:`.
 - Navigation lives in `src/lib/site.ts` (windows, sections, paths) and `src/lib/navigation.ts` (mega-menus). Every link in the header and footer must lead to a page (an end-to-end test checks this): a section that is not built yet gets a `PlaceholderPage` (`noindex`) until its milestone.
 - Header menus are `<details>` disclosures that work without JavaScript; `DisclosureEnhancer` adds Esc, outside click and the mobile menu's inert background.
-- Do not call `notFound()` inside a page: in Next.js 16.3 its 404 content renders only with JavaScript. Unknown public URLs, including unknown paths under `/en/` and `/tr/`, already get the server-rendered global 404 (`src/app/global-not-found.tsx`); `/admin` and `/api` answer their own 404s (Payload). Removed URLs answer 410: `src/proxy.ts` checks `isGone()` in `src/lib/gone.ts` and shows the removed-page with status 410; M4 connects it to closed and withdrawn listings. Dynamic detail routes (M4) also need a server-side 404 for unknown IDs, because such a URL matches the route: the proxy can rewrite them to `/_not-found` with status 404, as it already does for `/en/gone/`.
+- Do not call `notFound()` inside a page: in Next.js 16.3 its 404 content renders only with JavaScript. Unknown public URLs, including unknown paths under `/en/` and `/tr/`, already get the server-rendered global 404 (`src/app/global-not-found.tsx`); `/admin` and `/api` answer their own 404s (Payload). Removed URLs answer 410: `src/proxy.ts` checks `isGone()` in `src/lib/gone.ts` and shows the removed-page with status 410; M4 connects it to closed and withdrawn listings. Pages that show a database record (institutions, subfield hubs; jobs and events from M4) are resolved in the proxy before rendering (`src/lib/detail-routes.ts`, with the database lookup in `src/lib/detail-lookup.ts`): unknown record → 404, outdated slug → 308, retired → 410. Add each new detail route there, and give its page `export const dynamic = 'force-dynamic'` (the build has no database).
 
 ## Commands
 

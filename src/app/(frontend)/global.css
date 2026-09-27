@@ -340,6 +340,19 @@
     color: var(--badge-text);
   }
 
+  /* The path to the current page; the separators are hidden from screen readers. */
+  .breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .breadcrumbs li + li::before {
+    content: '›' / '';
+    margin-inline-end: var(--space-2);
+    color: var(--text-muted);
+  }
+
   /* Long-form text: legal pages, About. */
   .prose {
     display: grid;

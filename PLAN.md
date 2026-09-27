@@ -80,8 +80,8 @@
 | Job detail | `/en/jobs/{slug}-{id}/` | Yes while open; noindex 30 days after closing; then 410 | 1a |
 | Suggest a listing | `/en/suggest/` | Yes | 1a |
 | World map | `/en/map/` | Yes | 1a |
-| Institution | `/en/institutions/{slug}-{rorId}/` | Only with ≥1 active item | 1a |
-| Subfield hubs | `/en/subfields/`, `/en/subfields/{slug}/` | Yes (with human-written intro) | 1a (jobs only) → 1d (all windows) |
+| Institution | `/en/institutions/{slug}-{rorId}/` (institutions without a ROR ID: `{slug}-{shortId}`, a 5-character ID) | Only with ≥1 active item (built in M3; `noindex` until M4 adds items) | 1a |
+| Subfield hubs | `/en/subfields/`, `/en/subfields/{slug}/` | Yes (with human-written intro; skeletons built in M3 are `noindex`) | 1a (jobs only) → 1d (all windows) |
 | Events | `/en/events/` (`?view=month&month=2026-11`) | Yes | 1b |
 | Event detail | `/en/events/{slug}-{id}/` (+ `event.ics`) | Yes until end date + 30 days | 1b |
 | Events feed | `/en/events/calendar.ics` | No | 1b |
@@ -160,7 +160,7 @@ Example: `/en/jobs/?type=phd&subfield=systems-circuits,computational-theoretical
 | Unknown URL | `404` with search and links to the six windows |
 | Window or section not built yet | `200` placeholder page with `noindex`, so no header or footer link leads to a 404; replaced by the real page in its milestone |
 
-How 410 works (built in M1): `src/proxy.ts` runs before every page under `/en/` and `/tr/`, checks the URL against the removed-URL list (`src/lib/gone.ts`) and shows a server-rendered "Page removed" page (`noindex`, links to the six windows) with status `410`. In M4 the same check covers listings that closed more than 30 days ago or were withdrawn. Detail routes also need a server-side 404 for unknown IDs (Next.js 16.3 renders `notFound()` in a page only with JavaScript); the proxy can answer those with the global 404 page, as it does for a direct request to the removed-page.
+How 410 works (built in M1): `src/proxy.ts` runs before every page under `/en/` and `/tr/`, checks the URL against the removed-URL list (`src/lib/gone.ts`) and shows a server-rendered "Page removed" page (`noindex`, links to the six windows) with status `410`. In M4 the same check covers listings that closed more than 30 days ago or were withdrawn. Pages that show a database record are resolved in the proxy too (built in M3, `src/lib/detail-routes.ts`), because Next.js 16.3 renders `notFound()` in a page only with JavaScript and a redirect must be sent before the page starts streaming: an unknown record gets the global 404 page with status `404`, a URL whose slug is missing or out of date gets a `308` to the current URL (the ID at the end stays the same; the query string is kept), and a retired subfield gets `410`. M4 adds jobs and events to the same resolver.
 
 ---
 
@@ -1403,6 +1403,13 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 - Legal pages delivered in M1 as drafts: contact and legal notice (EN, TR), privacy policy, KVKK aydınlatma metni, terms of use. Still to write, each with the feature it describes: açık rıza metni (M2, with the newsletter signup); notice and takedown and data requests (M4 and M4b, with their forms); cookies and storage, accessibility statement, and sources and editorial policy (before the M6 launch, as part of the "all legal pages live" gate in §3.4).
 - The §12 pseudo-locale screenshot tests are added in M4, when filters and cards exist. In M1 the header is checked in Turkish (labels about 50% longer than English), with WCAG 1.4.12 text spacing and at 320px on every template.
 - Lighthouse CI, the screen-reader check and the real-phone check (§17.2) run on the deployed site, so they are on the pre-launch checklist below; byte budgets and layout shift while fonts load are already checked in CI.
+
+**M3 notes (2026-09-27).**
+- Taxonomy: the 117 terms of §4.2–4.7 are seeded in English with descriptions and synonyms; Turkish labels come with the Turkish site (§12). Synonyms leave out words that would tag unrelated adverts (bare acronyms such as LTD, MS, PI, BIDS; words such as "award", "virtual", "master's"). The tag suggester (M7) matches all-caps synonyms case-sensitively and as whole words, and prefers the longest match within a vocabulary.
+- Geography: 250 countries (UN M49 plus XK and TW) and the four country sets, each checked against its official source on 2026-09-27 (§4.6).
+- Institutions: the full ROR v2.13 import took about 15 minutes locally (140,078 institutions); later imports change only what ROR changed. The server checks Zenodo every night at 03:30 UTC; the admin shows the state under System → ROR import.
+- Institution pages and subfield hubs are built and `noindex`: institution pages become indexable with their first active item (M4), hubs with their written introductions. The proxy resolves record URLs (404 for unknown, 308 to the current URL, 410 for a retired subfield, 503 while the database is unreachable) and keeps those answers out of caches.
+- Later milestones pick up: the institution mini map (M5), re-checking the country sets (M9), and the MeSH and OpenAlex mappings of the terms (M10).
 
 **Pre-launch checklist** (after S, before the M6 public launch; M6 works through it together with the §3.4 gate):
 
