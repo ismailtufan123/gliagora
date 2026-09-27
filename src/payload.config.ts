@@ -5,8 +5,11 @@ import { buildConfig } from 'payload'
 
 import { Countries } from './collections/Countries'
 import { CountrySets } from './collections/CountrySets'
+import { Institutions } from './collections/Institutions'
 import { Terms } from './collections/Terms'
 import { Users } from './collections/Users'
+import { RorImport } from './globals/RorImport'
+import { RorImportTask } from './jobs/rorImport'
 import { migrations } from './migrations'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -23,7 +26,15 @@ export default buildConfig({
       titleSuffix: ' – Gliagora admin',
     },
   },
-  collections: [Users, Terms, Countries, CountrySets],
+  collections: [Users, Terms, Countries, CountrySets, Institutions],
+  globals: [RorImport],
+  jobs: {
+    tasks: [RorImportTask],
+    // Scheduled jobs (the nightly ROR import) run only where PAYLOAD_JOBS_AUTORUN is "true": on the
+    // production server (deploy/compose.prod.yml), never in CI or local development.
+    autoRun: () =>
+      process.env.PAYLOAD_JOBS_AUTORUN === 'true' ? [{ cron: '*/10 * * * *', queue: 'ror' }] : [],
+  },
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL ?? '',

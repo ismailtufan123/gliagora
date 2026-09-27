@@ -1,0 +1,2304 @@
+[
+    {
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2025-05-05",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "caltech.edu"
+        ],
+        "established": 1891,
+        "external_ids": [
+            {
+                "all": [
+                    "100006961",
+                    "100009676",
+                    "100012614",
+                    "100014551",
+                    "100015381",
+                    "100016647"
+                ],
+                "preferred": "100006961",
+                "type": "fundref"
+            },
+            {
+                "all": [
+                    "grid.20861.3d"
+                ],
+                "preferred": "grid.20861.3d",
+                "type": "grid"
+            },
+            {
+                "all": [
+                    "0000 0001 0706 8890"
+                ],
+                "preferred": null,
+                "type": "isni"
+            },
+            {
+                "all": [
+                    "Q161562"
+                ],
+                "preferred": null,
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/05dxps055",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://www.caltech.edu"
+            },
+            {
+                "type": "wikipedia",
+                "value": "http://en.wikipedia.org/wiki/California_Institute_of_Technology"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "NA",
+                    "continent_name": "North America",
+                    "country_code": "US",
+                    "country_name": "United States",
+                    "country_subdivision_code": "CA",
+                    "country_subdivision_name": "California",
+                    "lat": 34.14778,
+                    "lng": -118.14452,
+                    "name": "Pasadena"
+                },
+                "geonames_id": 5381396
+            }
+        ],
+        "names": [
+            {
+                "lang": null,
+                "types": [
+                    "acronym"
+                ],
+                "value": "CIT"
+            },
+            {
+                "lang": "en",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "value": "California Institute of Technology"
+            },
+            {
+                "lang": null,
+                "types": [
+                    "alias"
+                ],
+                "value": "Caltech"
+            },
+            {
+                "lang": "es",
+                "types": [
+                    "label"
+                ],
+                "value": "Instituto de Tecnología de California"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Caltech Submillimeter Observatory",
+                "type": "child",
+                "id": "https://ror.org/01e6j9276"
+            },
+            {
+                "label": "Infrared Processing and Analysis Center",
+                "type": "child",
+                "id": "https://ror.org/05q79g396"
+            },
+            {
+                "label": "Joint Center for Artificial Photosynthesis",
+                "type": "child",
+                "id": "https://ror.org/05jtgpc57"
+            },
+            {
+                "label": "Keck Institute for Space Studies",
+                "type": "child",
+                "id": "https://ror.org/05xkke381"
+            },
+            {
+                "label": "Jet Propulsion Laboratory",
+                "type": "child",
+                "id": "https://ror.org/027k65916"
+            },
+            {
+                "label": "Institute for Collaborative Biotechnologies",
+                "type": "child",
+                "id": "https://ror.org/04kz4p343"
+            },
+            {
+                "label": "Resnick Sustainability Institute",
+                "type": "child",
+                "id": "https://ror.org/04bxjes65"
+            },
+            {
+                "label": "Caltech Alumni Association",
+                "type": "child",
+                "id": "https://ror.org/04knm0293"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "education",
+            "funder"
+        ]
+    },
+    {
+        "locations": [
+            {
+                "geonames_id": 2925533,
+                "geonames_details": {
+                    "continent_code": "EU",
+                    "continent_name": "Europe",
+                    "country_code": "DE",
+                    "country_name": "Germany",
+                    "country_subdivision_code": "HE",
+                    "country_subdivision_name": "Hesse",
+                    "lat": 50.11552,
+                    "lng": 8.68417,
+                    "name": "Frankfurt am Main"
+                }
+            }
+        ],
+        "established": 1914,
+        "external_ids": [
+            {
+                "type": "grid",
+                "all": [
+                    "grid.419505.c"
+                ],
+                "preferred": "grid.419505.c"
+            },
+            {
+                "type": "isni",
+                "all": [
+                    "0000 0004 0491 3878"
+                ],
+                "preferred": null
+            },
+            {
+                "type": "wikidata",
+                "all": [
+                    "Q832398"
+                ],
+                "preferred": null
+            }
+        ],
+        "id": "https://ror.org/02h1nk258",
+        "domains": [],
+        "links": [
+            {
+                "type": "website",
+                "value": "http://brain.mpg.de/home.html"
+            },
+            {
+                "type": "wikipedia",
+                "value": "http://en.wikipedia.org/wiki/Max_Planck_Institute_for_Brain_Research"
+            }
+        ],
+        "names": [
+            {
+                "value": "Max Planck Institute for Brain Research",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "lang": "en"
+            },
+            {
+                "value": "Max-Planck-Institut für Hirnforschung",
+                "types": [
+                    "label"
+                ],
+                "lang": "de"
+            }
+        ],
+        "relationships": [
+            {
+                "type": "parent",
+                "label": "Max Planck Society",
+                "id": "https://ror.org/01hhn8329"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "facility"
+        ],
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        }
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2026-09-22",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "ki.se"
+        ],
+        "established": 1810,
+        "external_ids": [
+            {
+                "all": [
+                    "501100004047",
+                    "501100009741"
+                ],
+                "preferred": "501100004047",
+                "type": "fundref"
+            },
+            {
+                "all": [
+                    "grid.4714.6"
+                ],
+                "preferred": "grid.4714.6",
+                "type": "grid"
+            },
+            {
+                "all": [
+                    "0000 0004 1937 0626"
+                ],
+                "preferred": null,
+                "type": "isni"
+            },
+            {
+                "all": [
+                    "Q219564"
+                ],
+                "preferred": null,
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/056d84691",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://ki.se"
+            },
+            {
+                "type": "wikipedia",
+                "value": "http://en.wikipedia.org/wiki/Karolinska_Institutet"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "EU",
+                    "continent_name": "Europe",
+                    "country_code": "SE",
+                    "country_name": "Sweden",
+                    "country_subdivision_code": "AB",
+                    "country_subdivision_name": "Stockholm",
+                    "lat": 59.32938,
+                    "lng": 18.06871,
+                    "name": "Stockholm"
+                },
+                "geonames_id": 2673730
+            }
+        ],
+        "names": [
+            {
+                "lang": null,
+                "types": [
+                    "acronym"
+                ],
+                "value": "KI"
+            },
+            {
+                "lang": "fi",
+                "types": [
+                    "label"
+                ],
+                "value": "Karoliininen instituutti"
+            },
+            {
+                "lang": "en",
+                "types": [
+                    "alias"
+                ],
+                "value": "Karolinska Institute"
+            },
+            {
+                "lang": "sv",
+                "types": [
+                    "label",
+                    "ror_display"
+                ],
+                "value": "Karolinska Institutet"
+            },
+            {
+                "lang": "en",
+                "types": [
+                    "alias"
+                ],
+                "value": "Royal Caroline Institute"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Integrated Cardio Metabolic Centre",
+                "type": "child",
+                "id": "https://ror.org/01pgex273"
+            },
+            {
+                "label": "Ming Wai Lau Centre for Reparative Medicine",
+                "type": "child",
+                "id": "https://ror.org/03j0jxk49"
+            },
+            {
+                "label": "Center for Innovative Medicine",
+                "type": "child",
+                "id": "https://ror.org/00dgqhm63"
+            },
+            {
+                "label": "Karolinska University Hospital",
+                "type": "related",
+                "id": "https://ror.org/00m8d6786"
+            },
+            {
+                "label": "National Bioinformatics Infrastructure Sweden",
+                "type": "related",
+                "id": "https://ror.org/00enajs79"
+            },
+            {
+                "label": "Swedish National Data Service",
+                "type": "related",
+                "id": "https://ror.org/00ancw882"
+            },
+            {
+                "label": "Swedish Biodiversity Data Infrastructure",
+                "type": "related",
+                "id": "https://ror.org/0221pcv84"
+            },
+            {
+                "label": "Erik och Edith Fernströms stiftelse för medicinsk forskning",
+                "type": "related",
+                "id": "https://ror.org/058hjn335"
+            },
+            {
+                "label": "Ulla och Gustaf af Ugglas stiftelse",
+                "type": "related",
+                "id": "https://ror.org/01cybbe83"
+            },
+            {
+                "label": "Stiftelsen Robert Lundbergs Minnesfond",
+                "type": "related",
+                "id": "https://ror.org/012cbfd74"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "education",
+            "funder"
+        ]
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2020-03-15",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2026-09-22",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "alleninstitute.org"
+        ],
+        "established": 2003,
+        "external_ids": [
+            {
+                "all": [
+                    "100017008",
+                    "100017023"
+                ],
+                "preferred": "100017008",
+                "type": "fundref"
+            },
+            {
+                "all": [
+                    "grid.507729.e"
+                ],
+                "preferred": "grid.507729.e",
+                "type": "grid"
+            },
+            {
+                "all": [
+                    "Q24191489"
+                ],
+                "preferred": null,
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/03cpe7c52",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://alleninstitute.org/"
+            },
+            {
+                "type": "wikipedia",
+                "value": "https://en.wikipedia.org/wiki/Allen_Institute"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "NA",
+                    "continent_name": "North America",
+                    "country_code": "US",
+                    "country_name": "United States",
+                    "country_subdivision_code": "WA",
+                    "country_subdivision_name": "Washington",
+                    "lat": 47.60621,
+                    "lng": -122.33207,
+                    "name": "Seattle"
+                },
+                "geonames_id": 5809844
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "value": "Allen Institute"
+            }
+        ],
+        "relationships": [],
+        "status": "active",
+        "types": [
+            "funder",
+            "nonprofit"
+        ]
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2026-09-22",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "fundacaochampalimaud.pt"
+        ],
+        "established": 2004,
+        "external_ids": [
+            {
+                "all": [
+                    "501100014069"
+                ],
+                "preferred": "501100014069",
+                "type": "fundref"
+            },
+            {
+                "all": [
+                    "grid.421010.6"
+                ],
+                "preferred": "grid.421010.6",
+                "type": "grid"
+            },
+            {
+                "all": [
+                    "0000 0004 0453 9636"
+                ],
+                "preferred": null,
+                "type": "isni"
+            },
+            {
+                "all": [
+                    "Q5069928"
+                ],
+                "preferred": null,
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/03g001n57",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://www.fchampalimaud.org/"
+            },
+            {
+                "type": "wikipedia",
+                "value": "https://en.wikipedia.org/wiki/Champalimaud_Foundation"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "EU",
+                    "continent_name": "Europe",
+                    "country_code": "PT",
+                    "country_name": "Portugal",
+                    "country_subdivision_code": "11",
+                    "country_subdivision_name": "Lisbon",
+                    "lat": 38.72509,
+                    "lng": -9.1498,
+                    "name": "Lisbon"
+                },
+                "geonames_id": 2267057
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "value": "Champalimaud Foundation"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Centro Champalimaud",
+                "type": "child",
+                "id": "https://ror.org/007rd1x46"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "facility",
+            "funder"
+        ]
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "ista.ac.at"
+        ],
+        "established": 2007,
+        "external_ids": [
+            {
+                "all": [
+                    "100014988"
+                ],
+                "preferred": "100014988",
+                "type": "fundref"
+            },
+            {
+                "all": [
+                    "grid.33565.36"
+                ],
+                "preferred": "grid.33565.36",
+                "type": "grid"
+            },
+            {
+                "all": [
+                    "0000 0004 0431 2247"
+                ],
+                "preferred": null,
+                "type": "isni"
+            },
+            {
+                "all": [
+                    "Q1665176"
+                ],
+                "preferred": null,
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/03gnh5541",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://ista.ac.at/"
+            },
+            {
+                "type": "wikipedia",
+                "value": "https://en.wikipedia.org/wiki/Institute_of_Science_and_Technology_Austria"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "EU",
+                    "continent_name": "Europe",
+                    "country_code": "AT",
+                    "country_name": "Austria",
+                    "country_subdivision_code": "3",
+                    "country_subdivision_name": "Lower Austria",
+                    "lat": 48.30521,
+                    "lng": 16.32522,
+                    "name": "Klosterneuburg"
+                },
+                "geonames_id": 2773913
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "alias"
+                ],
+                "value": "IST Austria"
+            },
+            {
+                "lang": null,
+                "types": [
+                    "acronym"
+                ],
+                "value": "ISTA"
+            },
+            {
+                "lang": "en",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "value": "Institute of Science and Technology Austria"
+            }
+        ],
+        "relationships": [],
+        "status": "active",
+        "types": [
+            "education",
+            "funder"
+        ]
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2025-09-19",
+                "schema_version": "2.1"
+            },
+            "last_modified": {
+                "date": "2025-09-22",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [],
+        "established": null,
+        "external_ids": [],
+        "id": "https://ror.org/053sba816",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://www.ru.nl/en/donders-institute"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "EU",
+                    "continent_name": "Europe",
+                    "country_code": "NL",
+                    "country_name": "The Netherlands",
+                    "country_subdivision_code": "GE",
+                    "country_subdivision_name": "Gelderland",
+                    "lat": 51.8425,
+                    "lng": 5.85278,
+                    "name": "Nijmegen"
+                },
+                "geonames_id": 2750053
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "alias"
+                ],
+                "value": "Donders Institute"
+            },
+            {
+                "lang": "en",
+                "types": [
+                    "label",
+                    "ror_display"
+                ],
+                "value": "Donders Institute for Brain, Cognition and Behaviour"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Radboud University Nijmegen",
+                "type": "parent",
+                "id": "https://ror.org/016xsfp80"
+            },
+            {
+                "label": "Center for Language Studies",
+                "type": "child",
+                "id": "https://ror.org/00gxyk415"
+            },
+            {
+                "label": "Donders Centre for Cognition",
+                "type": "child",
+                "id": "https://ror.org/05ft09q38"
+            },
+            {
+                "label": "Donders Centre for Cognitive Neuroimaging",
+                "type": "child",
+                "id": "https://ror.org/01jdz5g73"
+            },
+            {
+                "label": "Donders Centre for Neuroscience",
+                "type": "child",
+                "id": "https://ror.org/0546zz821"
+            },
+            {
+                "label": "Donders Community for Medical Neuroscience",
+                "type": "child",
+                "id": "https://ror.org/04h6t4j49"
+            },
+            {
+                "label": "Max Planck Institute for Psycholinguistics",
+                "type": "related",
+                "id": "https://ror.org/00671me87"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "facility"
+        ]
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "hacettepe.edu.tr"
+        ],
+        "established": 1967,
+        "external_ids": [
+            {
+                "all": [
+                    "501100005378"
+                ],
+                "preferred": null,
+                "type": "fundref"
+            },
+            {
+                "all": [
+                    "grid.14442.37"
+                ],
+                "preferred": "grid.14442.37",
+                "type": "grid"
+            },
+            {
+                "all": [
+                    "0000 0001 2342 7339"
+                ],
+                "preferred": null,
+                "type": "isni"
+            },
+            {
+                "all": [
+                    "Q1567050"
+                ],
+                "preferred": null,
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/04kwvgz42",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://www.hacettepe.edu.tr"
+            },
+            {
+                "type": "wikipedia",
+                "value": "http://en.wikipedia.org/wiki/Hacettepe_University"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "AS",
+                    "continent_name": "Asia",
+                    "country_code": "TR",
+                    "country_name": "Türkiye",
+                    "country_subdivision_code": "06",
+                    "country_subdivision_name": "Ankara",
+                    "lat": 39.91987,
+                    "lng": 32.85427,
+                    "name": "Ankara"
+                },
+                "geonames_id": 323786
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "value": "Hacettepe University"
+            },
+            {
+                "lang": "tr",
+                "types": [
+                    "label"
+                ],
+                "value": "Hacettepe Üniversitesi"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Hacettepe University Hospital",
+                "type": "related",
+                "id": "https://ror.org/024q5j973"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "education",
+            "funder"
+        ]
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2026-09-22",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "ku.edu.tr"
+        ],
+        "established": 1993,
+        "external_ids": [
+            {
+                "all": [
+                    "501100018719"
+                ],
+                "preferred": "501100018719",
+                "type": "fundref"
+            },
+            {
+                "all": [
+                    "grid.15876.3d"
+                ],
+                "preferred": "grid.15876.3d",
+                "type": "grid"
+            },
+            {
+                "all": [
+                    "0000 0001 0688 7552"
+                ],
+                "preferred": null,
+                "type": "isni"
+            },
+            {
+                "all": [
+                    "Q1193155"
+                ],
+                "preferred": null,
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/00jzwgz36",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://www.ku.edu.tr"
+            },
+            {
+                "type": "wikipedia",
+                "value": "http://en.wikipedia.org/wiki/Ko%C3%A7_University"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "AS",
+                    "continent_name": "Asia",
+                    "country_code": "TR",
+                    "country_name": "Türkiye",
+                    "country_subdivision_code": "34",
+                    "country_subdivision_name": "Istanbul",
+                    "lat": 41.01384,
+                    "lng": 28.94966,
+                    "name": "Istanbul"
+                },
+                "geonames_id": 745044
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "value": "Koç University"
+            },
+            {
+                "lang": "tr",
+                "types": [
+                    "label"
+                ],
+                "value": "Koç Üniversitesi"
+            },
+            {
+                "lang": "az",
+                "types": [
+                    "label"
+                ],
+                "value": "Qoç Universiteti"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Koç Üniversitesi Translasyonel Tıp Araştırma Merkezi",
+                "type": "child",
+                "id": "https://ror.org/03j1wrb54"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "education",
+            "funder"
+        ]
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "boun.edu.tr"
+        ],
+        "established": 1863,
+        "external_ids": [
+            {
+                "all": [
+                    "501100005037"
+                ],
+                "preferred": null,
+                "type": "fundref"
+            },
+            {
+                "all": [
+                    "grid.11220.30"
+                ],
+                "preferred": "grid.11220.30",
+                "type": "grid"
+            },
+            {
+                "all": [
+                    "0000 0001 2253 9056"
+                ],
+                "preferred": null,
+                "type": "isni"
+            },
+            {
+                "all": [
+                    "Q896267"
+                ],
+                "preferred": null,
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/03z9tma90",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://bogazici.edu.tr"
+            },
+            {
+                "type": "wikipedia",
+                "value": "http://en.wikipedia.org/wiki/Bo%C4%9Fazi%C3%A7i_University"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "AS",
+                    "continent_name": "Asia",
+                    "country_code": "TR",
+                    "country_name": "Türkiye",
+                    "country_subdivision_code": "34",
+                    "country_subdivision_name": "Istanbul",
+                    "lat": 41.01384,
+                    "lng": 28.94966,
+                    "name": "Istanbul"
+                },
+                "geonames_id": 745044
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "value": "Boğaziçi University"
+            },
+            {
+                "lang": "tr",
+                "types": [
+                    "label"
+                ],
+                "value": "Boğaziçi Üniversitesi"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Feza Gürsey Institute",
+                "type": "child",
+                "id": "https://ror.org/01h4kpz66"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "education",
+            "funder"
+        ]
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "istanbul.edu.tr"
+        ],
+        "established": 1453,
+        "external_ids": [
+            {
+                "all": [
+                    "501100002657",
+                    "501100004006"
+                ],
+                "preferred": "501100002657",
+                "type": "fundref"
+            },
+            {
+                "all": [
+                    "grid.9601.e"
+                ],
+                "preferred": "grid.9601.e",
+                "type": "grid"
+            },
+            {
+                "all": [
+                    "0000 0001 2166 6619"
+                ],
+                "preferred": null,
+                "type": "isni"
+            },
+            {
+                "all": [
+                    "Q192964"
+                ],
+                "preferred": null,
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/03a5qrr21",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://www.istanbul.edu.tr"
+            },
+            {
+                "type": "wikipedia",
+                "value": "http://en.wikipedia.org/wiki/Istanbul_University"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "AS",
+                    "continent_name": "Asia",
+                    "country_code": "TR",
+                    "country_name": "Türkiye",
+                    "country_subdivision_code": "34",
+                    "country_subdivision_name": "Istanbul",
+                    "lat": 41.01384,
+                    "lng": 28.94966,
+                    "name": "Istanbul"
+                },
+                "geonames_id": 745044
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "value": "Istanbul University"
+            },
+            {
+                "lang": "tr",
+                "types": [
+                    "label"
+                ],
+                "value": "İstanbul Üniversitesi"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "İstanbul Eğitim ve Araştırma Hastanesi",
+                "type": "related",
+                "id": "https://ror.org/00nwc4v84"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "education",
+            "funder"
+        ]
+    },
+    {
+        "locations": [
+            {
+                "geonames_id": 4744870,
+                "geonames_details": {
+                    "continent_code": "NA",
+                    "continent_name": "North America",
+                    "country_code": "US",
+                    "country_name": "United States",
+                    "country_subdivision_code": "VA",
+                    "country_subdivision_name": "Virginia",
+                    "lat": 39.04372,
+                    "lng": -77.48749,
+                    "name": "Ashburn"
+                }
+            }
+        ],
+        "established": 2006,
+        "external_ids": [
+            {
+                "type": "fundref",
+                "all": [
+                    "100022388"
+                ],
+                "preferred": "100022388"
+            },
+            {
+                "type": "grid",
+                "all": [
+                    "grid.443970.d"
+                ],
+                "preferred": "grid.443970.d"
+            },
+            {
+                "type": "wikidata",
+                "all": [
+                    "Q1319362"
+                ],
+                "preferred": null
+            }
+        ],
+        "id": "https://ror.org/013sk6x84",
+        "domains": [],
+        "links": [
+            {
+                "type": "website",
+                "value": "https://www.janelia.org/"
+            },
+            {
+                "type": "wikipedia",
+                "value": "https://en.wikipedia.org/wiki/Janelia_Research_Campus"
+            }
+        ],
+        "names": [
+            {
+                "value": "Janelia Research Campus",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "lang": "en"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Howard Hughes Medical Institute",
+                "type": "parent",
+                "id": "https://ror.org/006w34k90"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "facility",
+            "funder"
+        ],
+        "admin": {
+            "created": {
+                "date": "2019-11-07",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        }
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2026-09-22",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "ucl.ac.uk"
+        ],
+        "established": 1826,
+        "external_ids": [
+            {
+                "all": [
+                    "501100000765",
+                    "501100000685",
+                    "501100008538",
+                    "501100001285",
+                    "501100006154",
+                    "501100001299",
+                    "501100001283",
+                    "501100006637",
+                    "501100001281",
+                    "501100001282",
+                    "501100000845",
+                    "501100013915",
+                    "501100013270",
+                    "501100013818",
+                    "501100014052",
+                    "501100019910",
+                    "501100020810",
+                    "501100022596"
+                ],
+                "preferred": "501100000765",
+                "type": "fundref"
+            },
+            {
+                "all": [
+                    "grid.83440.3b"
+                ],
+                "preferred": "grid.83440.3b",
+                "type": "grid"
+            },
+            {
+                "all": [
+                    "0000 0001 2190 1201"
+                ],
+                "preferred": null,
+                "type": "isni"
+            },
+            {
+                "all": [
+                    "Q193196"
+                ],
+                "preferred": null,
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/02jx3x895",
+        "links": [
+            {
+                "type": "website",
+                "value": "http://www.ucl.ac.uk/"
+            },
+            {
+                "type": "wikipedia",
+                "value": "http://en.wikipedia.org/wiki/University_College_London"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "EU",
+                    "continent_name": "Europe",
+                    "country_code": "GB",
+                    "country_name": "United Kingdom",
+                    "country_subdivision_code": "ENG",
+                    "country_subdivision_name": "England",
+                    "lat": 51.50853,
+                    "lng": -0.12574,
+                    "name": "London"
+                },
+                "geonames_id": 2643743
+            }
+        ],
+        "names": [
+            {
+                "lang": "cy",
+                "types": [
+                    "label"
+                ],
+                "value": "Coleg Prifysgol Llundain"
+            },
+            {
+                "lang": "en",
+                "types": [
+                    "alias"
+                ],
+                "value": "London University"
+            },
+            {
+                "lang": null,
+                "types": [
+                    "acronym"
+                ],
+                "value": "UCL"
+            },
+            {
+                "lang": "en",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "value": "University College London"
+            },
+            {
+                "lang": "en",
+                "types": [
+                    "alias"
+                ],
+                "value": "University College, London"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Centre for the Observation and Modelling of Earthquakes, Volcanoes and Tectonics",
+                "type": "child",
+                "id": "https://ror.org/047d2d387"
+            },
+            {
+                "label": "Institute of Structural and Molecular Biology",
+                "type": "child",
+                "id": "https://ror.org/05wsetc54"
+            },
+            {
+                "label": "MRC Clinical Trials Unit at UCL",
+                "type": "child",
+                "id": "https://ror.org/001mm6w73"
+            },
+            {
+                "label": "MRC Laboratory for Molecular Cell Biology",
+                "type": "child",
+                "id": "https://ror.org/00fv61j67"
+            },
+            {
+                "label": "MRC Prion Unit",
+                "type": "child",
+                "id": "https://ror.org/043j90n04"
+            },
+            {
+                "label": "MRC Unit for Lifelong Health and Ageing",
+                "type": "child",
+                "id": "https://ror.org/03kpvby98"
+            },
+            {
+                "label": "NIHR Moorfields Biomedical Research Centre",
+                "type": "child",
+                "id": "https://ror.org/004hydx84"
+            },
+            {
+                "label": "Sierra Leone Urban Research Centre",
+                "type": "child",
+                "id": "https://ror.org/05s21y527"
+            },
+            {
+                "label": "UCL Biomedical Research Centre",
+                "type": "child",
+                "id": "https://ror.org/03r9qc142"
+            },
+            {
+                "label": "University College London Qatar",
+                "type": "child",
+                "id": "https://ror.org/0078bd381"
+            },
+            {
+                "label": "Wellcome / EPSRC Centre for Interventional and Surgical Sciences",
+                "type": "child",
+                "id": "https://ror.org/03r42r570"
+            },
+            {
+                "label": "Wellcome Centre for Human Neuroimaging",
+                "type": "child",
+                "id": "https://ror.org/02704qw51"
+            },
+            {
+                "label": "UCL Hospitals Charitable Foundation",
+                "type": "child",
+                "id": "https://ror.org/05mz0pr34"
+            },
+            {
+                "label": "Sainsbury Wellcome Centre",
+                "type": "child",
+                "id": "https://ror.org/04kjqkz56"
+            },
+            {
+                "label": "UCL Queen Square Institute of Neurology",
+                "type": "child",
+                "id": "https://ror.org/0370htr03"
+            },
+            {
+                "label": "Gatsby Computational Neuroscience Unit",
+                "type": "child",
+                "id": "https://ror.org/0269epf40"
+            },
+            {
+                "label": "University of London",
+                "type": "parent",
+                "id": "https://ror.org/04cw6st05"
+            },
+            {
+                "label": "Great Ormond Street Hospital",
+                "type": "related",
+                "id": "https://ror.org/00zn2c847"
+            },
+            {
+                "label": "Moorfields Eye Hospital",
+                "type": "related",
+                "id": "https://ror.org/03tb37539"
+            },
+            {
+                "label": "National Hospital for Neurology and Neurosurgery",
+                "type": "related",
+                "id": "https://ror.org/048b34d51"
+            },
+            {
+                "label": "Royal National Orthopaedic Hospital",
+                "type": "related",
+                "id": "https://ror.org/043j9bc42"
+            },
+            {
+                "label": "Royal National Orthopaedic Hospital NHS Trust",
+                "type": "related",
+                "id": "https://ror.org/03dx46b94"
+            },
+            {
+                "label": "The Royal Free Hospital",
+                "type": "related",
+                "id": "https://ror.org/01ge67z96"
+            },
+            {
+                "label": "University College Hospital",
+                "type": "related",
+                "id": "https://ror.org/00wrevg56"
+            },
+            {
+                "label": "University College Hospital at Westmoreland Street",
+                "type": "related",
+                "id": "https://ror.org/02pkrn365"
+            },
+            {
+                "label": "Wellcome Trust Centre for the History of Medicine",
+                "type": "related",
+                "id": "https://ror.org/05d64cx77"
+            },
+            {
+                "label": "Whittington Hospital",
+                "type": "related",
+                "id": "https://ror.org/01ckbq028"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "education",
+            "funder"
+        ]
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2026-09-15",
+                "schema_version": "2.1"
+            },
+            "last_modified": {
+                "date": "2026-09-22",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "xjqg.edu.cn"
+        ],
+        "established": 2026,
+        "external_ids": [],
+        "id": "https://ror.org/04pmxyf70",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://www.xjqg.edu.cn"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "AS",
+                    "continent_name": "Asia",
+                    "country_code": "CN",
+                    "country_name": "China",
+                    "country_subdivision_code": "XJ",
+                    "country_subdivision_name": "Xinjiang",
+                    "lat": 43.80096,
+                    "lng": 87.60046,
+                    "name": "Ürümqi"
+                },
+                "geonames_id": 1529102
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "label"
+                ],
+                "value": "Xinjiang Industrial Vocational and Technical University"
+            },
+            {
+                "lang": "zh",
+                "types": [
+                    "label",
+                    "ror_display"
+                ],
+                "value": "新疆工业职业技术大学"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Xinjiang Industry Technical College",
+                "type": "predecessor",
+                "id": "https://ror.org/01mj1ap13"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "education"
+        ]
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2024-07-24",
+                "schema_version": "2.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [
+            "vermontstate.edu"
+        ],
+        "established": null,
+        "external_ids": [
+            {
+                "all": [
+                    "0000 0005 0952 887X"
+                ],
+                "preferred": "0000 0005 0952 887X",
+                "type": "isni"
+            },
+            {
+                "all": [
+                    "Q113245681"
+                ],
+                "preferred": "Q113245681",
+                "type": "wikidata"
+            }
+        ],
+        "id": "https://ror.org/03m6ee736",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://vermontstate.edu"
+            },
+            {
+                "type": "wikipedia",
+                "value": "https://en.wikipedia.org/wiki/Vermont_State_University"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "NA",
+                    "continent_name": "North America",
+                    "country_code": "US",
+                    "country_name": "United States",
+                    "country_subdivision_code": "VT",
+                    "country_subdivision_name": "Vermont",
+                    "lat": 44.63561,
+                    "lng": -72.6804,
+                    "name": "Johnson"
+                },
+                "geonames_id": 5237538
+            },
+            {
+                "geonames_details": {
+                    "continent_code": "NA",
+                    "continent_name": "North America",
+                    "country_code": "US",
+                    "country_name": "United States",
+                    "country_subdivision_code": "VT",
+                    "country_subdivision_name": "Vermont",
+                    "lat": 44.51422,
+                    "lng": -72.01093,
+                    "name": "Lyndon"
+                },
+                "geonames_id": 5238190
+            },
+            {
+                "geonames_details": {
+                    "continent_code": "NA",
+                    "continent_name": "North America",
+                    "country_code": "US",
+                    "country_name": "United States",
+                    "country_subdivision_code": "VT",
+                    "country_subdivision_name": "Vermont",
+                    "lat": 43.92507,
+                    "lng": -72.66594,
+                    "name": "Randolph"
+                },
+                "geonames_id": 5240140
+            },
+            {
+                "geonames_details": {
+                    "continent_code": "NA",
+                    "continent_name": "North America",
+                    "country_code": "US",
+                    "country_name": "United States",
+                    "country_subdivision_code": "VT",
+                    "country_subdivision_name": "Vermont",
+                    "lat": 44.43755,
+                    "lng": -73.06818,
+                    "name": "Williston"
+                },
+                "geonames_id": 5243008
+            },
+            {
+                "geonames_details": {
+                    "continent_code": "NA",
+                    "continent_name": "North America",
+                    "country_code": "US",
+                    "country_name": "United States",
+                    "country_subdivision_code": "VT",
+                    "country_subdivision_name": "Vermont",
+                    "lat": 43.61062,
+                    "lng": -73.17983,
+                    "name": "Castleton"
+                },
+                "geonames_id": 5281166
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "label",
+                    "ror_display"
+                ],
+                "value": "Vermont State University"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Northern Vermont University",
+                "type": "predecessor",
+                "id": "https://ror.org/04anrxg79"
+            },
+            {
+                "label": "Vermont Technical College",
+                "type": "predecessor",
+                "id": "https://ror.org/00j32a689"
+            },
+            {
+                "label": "Castleton University",
+                "type": "predecessor",
+                "id": "https://ror.org/01qdjtw37"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "education"
+        ]
+    },
+    {
+        "locations": [
+            {
+                "geonames_id": 1675151,
+                "geonames_details": {
+                    "continent_code": "AS",
+                    "continent_name": "Asia",
+                    "country_code": "TW",
+                    "country_name": "Taiwan",
+                    "country_subdivision_code": null,
+                    "country_subdivision_name": "Taiwan",
+                    "lat": 24.80361,
+                    "lng": 120.96861,
+                    "name": "Hsinchu"
+                }
+            }
+        ],
+        "established": 1911,
+        "external_ids": [
+            {
+                "type": "fundref",
+                "all": [
+                    "501100005057"
+                ],
+                "preferred": null
+            },
+            {
+                "type": "grid",
+                "all": [
+                    "grid.38348.34"
+                ],
+                "preferred": "grid.38348.34"
+            },
+            {
+                "type": "isni",
+                "all": [
+                    "0000 0004 0532 0580"
+                ],
+                "preferred": null
+            },
+            {
+                "type": "wikidata",
+                "all": [
+                    "Q43406"
+                ],
+                "preferred": null
+            }
+        ],
+        "id": "https://ror.org/00zdnkx70",
+        "domains": [],
+        "links": [
+            {
+                "type": "website",
+                "value": "http://www.nthu.edu.tw/english/"
+            },
+            {
+                "type": "wikipedia",
+                "value": "http://en.wikipedia.org/wiki/National_Tsing_Hua_University"
+            }
+        ],
+        "names": [
+            {
+                "value": "NTHU",
+                "types": [
+                    "acronym"
+                ],
+                "lang": null
+            },
+            {
+                "value": "National Tsing Hua University",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "lang": "en"
+            }
+        ],
+        "relationships": [
+            {
+                "type": "parent",
+                "label": "University System of Taiwan",
+                "id": "https://ror.org/054kvr030"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "education",
+            "funder"
+        ],
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        }
+    },
+    {
+        "locations": [
+            {
+                "geonames_id": 786714,
+                "geonames_details": {
+                    "continent_code": "EU",
+                    "continent_name": "Europe",
+                    "country_code": "XK",
+                    "country_name": "Kosovo",
+                    "country_subdivision_code": null,
+                    "country_subdivision_name": "Pristina",
+                    "lat": 42.67272,
+                    "lng": 21.16688,
+                    "name": "Pristina"
+                }
+            }
+        ],
+        "established": 1958,
+        "external_ids": [
+            {
+                "type": "grid",
+                "all": [
+                    "grid.412416.4"
+                ],
+                "preferred": "grid.412416.4"
+            },
+            {
+                "type": "isni",
+                "all": [
+                    "0000 0004 4647 7277"
+                ],
+                "preferred": null
+            }
+        ],
+        "id": "https://ror.org/005tw0h26",
+        "domains": [],
+        "links": [
+            {
+                "type": "website",
+                "value": "http://qkuk.org/"
+            }
+        ],
+        "names": [
+            {
+                "value": "Qendra Klinike Universitare e Kosovës",
+                "types": [
+                    "alias"
+                ],
+                "lang": "sq"
+            },
+            {
+                "value": "UCCK",
+                "types": [
+                    "acronym"
+                ],
+                "lang": null
+            },
+            {
+                "value": "University Clinical Center of Kosovo",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "lang": "en"
+            }
+        ],
+        "relationships": [],
+        "status": "active",
+        "types": [
+            "healthcare"
+        ],
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        }
+    },
+    {
+        "locations": [
+            {
+                "geonames_id": 4241704,
+                "geonames_details": {
+                    "continent_code": "NA",
+                    "continent_name": "North America",
+                    "country_code": "US",
+                    "country_name": "United States",
+                    "country_subdivision_code": "IL",
+                    "country_subdivision_name": "Illinois",
+                    "lat": 39.73394,
+                    "lng": -90.22901,
+                    "name": "Jacksonville"
+                }
+            }
+        ],
+        "established": 1846,
+        "external_ids": [
+            {
+                "type": "grid",
+                "all": [
+                    "grid.421071.1"
+                ],
+                "preferred": "grid.421071.1"
+            },
+            {
+                "type": "isni",
+                "all": [
+                    "0000 0004 0414 2807"
+                ],
+                "preferred": null
+            },
+            {
+                "type": "wikidata",
+                "all": [
+                    "Q6722050"
+                ],
+                "preferred": null
+            }
+        ],
+        "id": "https://ror.org/04yw47259",
+        "domains": [],
+        "links": [
+            {
+                "type": "website",
+                "value": "https://www.mac.edu/"
+            },
+            {
+                "type": "wikipedia",
+                "value": "https://en.wikipedia.org/wiki/MacMurray_College"
+            }
+        ],
+        "names": [
+            {
+                "value": "Macmurray College",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "lang": "en"
+            }
+        ],
+        "relationships": [],
+        "status": "inactive",
+        "types": [
+            "education"
+        ],
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        }
+    },
+    {
+        "locations": [
+            {
+                "geonames_id": 2661604,
+                "geonames_details": {
+                    "continent_code": "EU",
+                    "continent_name": "Europe",
+                    "country_code": "CH",
+                    "country_name": "Switzerland",
+                    "country_subdivision_code": "BS",
+                    "country_subdivision_name": "Basel-City",
+                    "lat": 47.55839,
+                    "lng": 7.57327,
+                    "name": "Basel"
+                }
+            }
+        ],
+        "established": 2000,
+        "external_ids": [
+            {
+                "type": "grid",
+                "all": [
+                    "grid.509969.a"
+                ],
+                "preferred": "grid.509969.a"
+            },
+            {
+                "type": "wikidata",
+                "all": [
+                    "Q22387380"
+                ],
+                "preferred": null
+            }
+        ],
+        "id": "https://ror.org/03ybx0x41",
+        "domains": [],
+        "links": [
+            {
+                "type": "website",
+                "value": "https://biomedizin.unibas.ch/"
+            }
+        ],
+        "names": [
+            {
+                "value": "DBM",
+                "types": [
+                    "acronym"
+                ],
+                "lang": null
+            },
+            {
+                "value": "Department of Biological and Clinical Sciences",
+                "types": [
+                    "alias"
+                ],
+                "lang": "en"
+            },
+            {
+                "value": "Department of Biomedicine Basel",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "lang": "en"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "University Children’s Hospital Basel",
+                "type": "parent",
+                "id": "https://ror.org/02nhqek82"
+            },
+            {
+                "label": "University Hospital of Basel",
+                "type": "parent",
+                "id": "https://ror.org/04k51q396"
+            },
+            {
+                "label": "University of Basel",
+                "type": "parent",
+                "id": "https://ror.org/02s6k3f65"
+            },
+            {
+                "label": "University of Basel",
+                "type": "successor",
+                "id": "https://ror.org/02s6k3f65"
+            }
+        ],
+        "status": "withdrawn",
+        "types": [
+            "facility"
+        ],
+        "admin": {
+            "created": {
+                "date": "2021-04-06",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        }
+    },
+    {
+        "locations": [
+            {
+                "geonames_id": 2643743,
+                "geonames_details": {
+                    "continent_code": "EU",
+                    "continent_name": "Europe",
+                    "country_code": "GB",
+                    "country_name": "United Kingdom",
+                    "country_subdivision_code": "ENG",
+                    "country_subdivision_name": "England",
+                    "lat": 51.50853,
+                    "lng": -0.12574,
+                    "name": "London"
+                }
+            }
+        ],
+        "established": 1926,
+        "external_ids": [
+            {
+                "type": "grid",
+                "all": [
+                    "grid.2483.d"
+                ],
+                "preferred": "grid.2483.d"
+            },
+            {
+                "type": "wikidata",
+                "all": [
+                    "Q689443"
+                ],
+                "preferred": null
+            }
+        ],
+        "id": "https://ror.org/037mpqg03",
+        "domains": [],
+        "links": [
+            {
+                "type": "wikipedia",
+                "value": "https://en.wikipedia.org/wiki/Xstrata"
+            }
+        ],
+        "names": [
+            {
+                "value": "Xstrata (United Kingdom)",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "lang": null
+            }
+        ],
+        "relationships": [],
+        "status": "active",
+        "types": [
+            "company"
+        ],
+        "admin": {
+            "created": {
+                "date": "2018-11-14",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2024-12-11",
+                "schema_version": "2.1"
+            }
+        }
+    },
+    {
+        "admin": {
+            "created": {
+                "date": "2023-02-28",
+                "schema_version": "1.0"
+            },
+            "last_modified": {
+                "date": "2026-09-22",
+                "schema_version": "2.1"
+            }
+        },
+        "domains": [],
+        "established": null,
+        "external_ids": [],
+        "id": "https://ror.org/04p94ax69",
+        "links": [
+            {
+                "type": "website",
+                "value": "https://lilncog.univ-lille.fr"
+            }
+        ],
+        "locations": [
+            {
+                "geonames_details": {
+                    "continent_code": "EU",
+                    "continent_name": "Europe",
+                    "country_code": "FR",
+                    "country_name": "France",
+                    "country_subdivision_code": "HDF",
+                    "country_subdivision_name": "Hauts-de-France",
+                    "lat": 50.63391,
+                    "lng": 3.05512,
+                    "name": "Lille"
+                },
+                "geonames_id": 2998324
+            }
+        ],
+        "names": [
+            {
+                "lang": "en",
+                "types": [
+                    "alias"
+                ],
+                "value": "LilNCog"
+            },
+            {
+                "lang": "en",
+                "types": [
+                    "ror_display",
+                    "label"
+                ],
+                "value": "Lille Neurosciences & Cognition"
+            },
+            {
+                "lang": "en",
+                "types": [
+                    "alias"
+                ],
+                "value": "Lille Neurosciences and Cognition"
+            },
+            {
+                "lang": "fr",
+                "types": [
+                    "alias"
+                ],
+                "value": "U1172"
+            }
+        ],
+        "relationships": [
+            {
+                "label": "Université de Lille",
+                "type": "parent",
+                "id": "https://ror.org/02kzqn938"
+            },
+            {
+                "label": "Inserm",
+                "type": "parent",
+                "id": "https://ror.org/02vjkv261"
+            },
+            {
+                "label": "Centre Hospitalier Universitaire de Lille",
+                "type": "parent",
+                "id": "https://ror.org/02ppyfa04"
+            }
+        ],
+        "status": "active",
+        "types": [
+            "facility"
+        ]
+    }
+]

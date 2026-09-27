@@ -320,7 +320,7 @@ PostgreSQL 16+ managed through Payload collections (TypeScript schema in the rep
 
 | Entity | Key fields | Relations and notes |
 |---|---|---|
-| `Institution` | `rorId` (unique, nullable), `name`, `aliases[]`, `types[]`, `countryCode`, `city`, `lat`, `lng`, `website`, `status`, `origin` (ror/manual), `rorRelease` | 1–n Job, Event, Venue; cached counts of active items |
+| `Institution` | `rorId` (unique, nullable), `shortId` (unique; institutions without a ROR ID, for their URL), `name`, `slug` (from the name), `aliases[]`, `types[]`, `country` (the `Country` code), `city`, `lat`, `lng`, `website`, `status` (active/inactive/withdrawn, as in ROR), `origin` (ror/manual), `rorRelease`, `rorLastModified` | 1–n Job, Event, Venue; cached counts of active items (M4) |
 | `Country` | `code` (the record's ID), `name` (localized), `region`, `subregion`, `m49Code` | n–n `CountrySet` |
 | `CountrySet` | `slug`, `label` (localized), `description` (localized), `countries[]`, `sourceUrl`, `lastVerifiedAt`, `verificationNote` | used by funding eligibility; every change kept as a version |
 | `Term` | `vocabulary`, `slug`, `label` (localized), `description` (localized), `parent`, `group` (methods only, §4.3), `synonyms[]`, `mappings{mesh[], openalexTopics[]}`, `hubIntro` (localized; subfields only, §16.3), `isActive`, `sortOrder` | n–n with all content types; slug unique per vocabulary and fixed once saved; never deleted (deactivated instead); every change kept as a version |
@@ -393,7 +393,7 @@ NewsletterIssue ─refs→ published items       listmonk.subscriber ←uuid─ 
 | bioRxiv API | Preprint candidates | `/details/biorxiv/{from}/{to}/{cursor}` with the neuroscience category filter; no key `[V]` | Licence field filters candidates (CC BY, CC BY-SA, CC0 only); "Preprint – not peer reviewed" label | Daily |
 | OpenAlex API | Paper candidates, topics | Free API key (daily allowance of about $1: unlimited single lookups, ~10,000 list/filter calls, ~1,000 searches; `mailto` polite pool retired in Feb 2026) `[V]` | CC0 metadata; also resolves each candidate's open-access licence by DOI (free single lookups) `[U]` exact fields | Weekly |
 | Crossref REST API | DOI metadata for manual adds | API with contact email `[U]` | Metadata only | On demand |
-| ROR data dump (Zenodo) | Institutions | Monthly import of the schema-v2 JSON dump; ROR API v2 for single lookups (API v1 retired Dec 2025) `[V]` | CC0; credit anyway | Monthly |
+| ROR data dump (Zenodo) | Institutions | Import of the schema-v2 JSON dump, streamed (about 140,000 records, 320 MB unpacked; the first import takes about 15 minutes, later ones only change what changed in ROR); ROR API v2 for single lookups when an editor adds an institution by its ROR ID (API v1 retired Dec 2025) `[V]`. Withdrawn records are not added; records are never deleted. The state of the last import is shown in the admin (System → ROR import) | CC0; credit anyway (institution pages credit ROR) | The server checks Zenodo every night and imports a new release (ROR publishes about monthly) |
 | News outlets and press offices | News | RSS for discovery | Our own headline + our own 2–3 sentences + link; no images | Daily skim, weekly publishing |
 | Resource projects (e.g., OpenNeuro, DANDI, MNE-Python, FreeSurfer, FSL, SPM, DeepLabCut, Suite2p, Allen Brain Atlas, EBRAINS) | Resources | Manual | Link + own description + licence as stated by the project | Quarterly link check |
 

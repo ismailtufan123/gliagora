@@ -3,6 +3,7 @@ import * as migration_20260927_133459_taxonomy from './20260927_133459_taxonomy'
 import * as migration_20260927_140000_seed_taxonomy from './20260927_140000_seed_taxonomy';
 import * as migration_20260927_140459_geography from './20260927_140459_geography';
 import * as migration_20260927_141000_seed_geography from './20260927_141000_seed_geography';
+import * as migration_20260927_142000_institutions from './20260927_142000_institutions';
 
 export const migrations = [
   {
@@ -29,5 +30,10 @@ export const migrations = [
     up: migration_20260927_141000_seed_geography.up,
     down: migration_20260927_141000_seed_geography.down,
     name: '20260927_141000_seed_geography',
+  },
+  {
+    up: migration_20260927_142000_institutions.up,
+    down: migration_20260927_142000_institutions.down,
+    name: '20260927_142000_institutions',
   },
 ];
