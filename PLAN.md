@@ -508,7 +508,7 @@ Findings from the check:
 | 4 | clamp(2.2rem, 1.5rem + 3vw, 3.5rem) | H1 |
 | 5 | clamp(2.6rem, 1.6rem + 5vw, 5.2rem) | hero display |
 
-Rules: sentence case everywhere; no all-caps labels; no single word styled differently inside a headline; left-aligned text; measure 60–72ch; tabular figures in counters and tables where the font supports them `[U]`.
+Rules: sentence case everywhere; no all-caps labels; no single word styled differently inside a headline; left-aligned text; measure 60–72 characters (set in rem, `--measure: 36rem`, because `ch` changes with the loaded font); tabular figures in counters and tables where the font supports them `[U]`.
 
 ### 7.4 Space, shape, depth and motion
 
@@ -1156,7 +1156,7 @@ This section is written without legal advice, as requested. Items that cannot be
 | Data subject rights | KVKK Arts. 11 and 13 (answer free of charge within 30 days); GDPR Arts. 12–22 (one month) | Form + `privacy@`; tracker with due dates | Well established; wording `[U]` |
 | Breaches | KVKK: notify the Board within 72 hours (Board decision) `[U]`; GDPR Art. 33 (72 hours) | Breach runbook with contacts and templates | `[U]` |
 | EU visitors | GDPR applies to offering services to people in the EU; a non-EU controller needs an EU representative (Art. 27) unless processing is occasional | See §15.2 flag 1 | Pricing `[V]`; assessment `[U]` |
-| Cookies | ePrivacy Art. 5(3) | Only strictly necessary storage (member and admin session cookies; theme choice in `localStorage`); cookieless analytics; no banner | — |
+| Cookies | ePrivacy Art. 5(3) | Only strictly necessary storage (member and admin session cookies; a theme choice in `localStorage` only if a theme switch is ever added: dark mode follows the system, §7.2); cookieless analytics; no banner | — |
 | Email | Double opt-in; one-click unsubscribe (RFC 8058) | listmonk configuration + headers | — |
 | Accounts | Member data; provider terms (Google OAuth, ORCID Public API) | Server-side redirect sign-in with minimal scopes; providers named in the privacy policy; no personal data sent to providers (data only flows in) | `[U]` KVKK view of social sign-in (own assessment); ORCID Public API free for non-commercial use `[V]` |
 | Maps | OSMF tile policy; ODbL attribution | Self-hosted tiles; visible attribution | `[V]` |
@@ -1183,6 +1183,8 @@ This section is written without legal advice, as requested. Items that cannot be
 Before **any** money arrives (sponsorship, ads, donations, paid events): see an accountant and register for tax **first**. The social-content-producer exemption (GVK 20/B) is unlikely to cover a website: the implementing communiqué excludes personal websites, although the scope was widened in 2024, so this needs an accountant's view `[U]`. Also before the first sponsored email: İYS registration; clear "Sponsored" labels on site and in email; update Terms and Privacy.
 
 ### 15.4 Required legal pages and their contents
+
+The texts are Markdown files in `content/{locale}/` (D28). Each stays a draft (visible notice, `noindex`, not in the sitemap) until the operator approves that exact text; open questions are listed in `docs/legal-open-questions.md`.
 
 | Page | Contents |
 |---|---|
@@ -1388,6 +1390,11 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 | M12 | Resources and Learn | Resources; articles; Bench to Bedside; evidence labels; author pages; hubs for all windows | All six windows live | 2 weeks |
 | M13 | Signature hero | Builds on the 6b logo SVGs in `public/brand/`; §10 in full | 3D hero live | 2 weeks |
 | M14 | Hardening | Accessibility audit, performance tuning, security review, restore drill, documentation | Phase 1 complete | 1 week |
+
+**M1 notes (2026-09-27).**
+- Legal pages delivered in M1 as drafts: contact and legal notice (EN, TR), privacy policy, KVKK aydınlatma metni, terms of use. Still to write, each with the feature it describes: açık rıza metni (M2, with the newsletter signup); notice and takedown and data requests (M4 and M4b, with their forms); cookies and storage, accessibility statement, and sources and editorial policy (before the M6 launch, as part of the "all legal pages live" gate in §3.4).
+- The §12 pseudo-locale screenshot tests are added in M4, when filters and cards exist. In M1 the header is checked in Turkish (labels about 50% longer than English), with WCAG 1.4.12 text spacing and at 320px on every template.
+- Lighthouse CI (§17.2) is still to be added; byte budgets and layout shift while fonts load are already checked in CI.
 
 Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 2026, the public launch (M6) lands around the turn of the year (late December to early January), still inside the PhD application season.
 

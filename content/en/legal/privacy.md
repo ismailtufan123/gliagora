@@ -16,7 +16,7 @@ This notice is also available in Turkish as the [KVKK information notice ({tr: a
 
 ## Who is responsible for your data
 
-The data controller is **Nuray Sancar**, a private individual resident in Türkiye. Under the Turkish Personal Data Protection Law (KVKK) she is the *{tr: veri sorumlusu}*; under the EU General Data Protection Regulation (GDPR) she is the *controller*. She runs Gliagora in her own name. There is no company behind it. In this notice, "we" and "us" mean her.
+The data controller is **Nuray Sancar**, a private individual resident in Türkiye. Under the Turkish Personal Data Protection Law (KVKK) she is the {tr: veri sorumlusu}; under the EU General Data Protection Regulation (GDPR) she is the "controller". She runs Gliagora in her own name. There is no company behind it. In this notice, "we" and "us" mean her.
 
 - **Email:** hello@gliagora.com. Use it for all privacy questions and requests. [TO DECIDE: privacy@gliagora.com once the Turkish mailbox exists, M2]
 - **Web form:** the data-request page.
@@ -40,11 +40,11 @@ The legal bases we refer to under KVKK (Art. 5):
 
 | Name used in this notice | KVKK article | Meaning |
 |---|---|---|
-| Consent | Art. 5(1) | your explicit consent (*{tr: açık rıza}*) |
+| Consent | Art. 5(1) | your explicit consent ({tr: açık rıza}) |
 | Contract | Art. 5(2)(c) | necessary to set up or perform a contract with you |
 | Legal obligation | Art. 5(2)(ç) | necessary to meet a legal obligation of the controller |
 | Protecting a right | Art. 5(2)(e) | necessary to establish, use or protect a right |
-| Legitimate interest | Art. 5(2)(f) | necessary for the controller's legitimate interest (*{tr: meşru menfaat}*), without harming your basic rights and freedoms |
+| Legitimate interest | Art. 5(2)(f) | necessary for the controller's legitimate interest ({tr: meşru menfaat}), without harming your basic rights and freedoms |
 
 The legal bases we refer to under the GDPR (Art. 6(1)):
 
@@ -420,7 +420,7 @@ For access, correction or objection, use the data-request page or write to hello
 
 If you are not satisfied with our answer, you can complain:
 
-- **in Türkiye,** to the Personal Data Protection Board (*{tr: Kişisel Verileri Koruma Kurulu}*). Under KVKK Art. 14, you must first send your request to us. If we reject your request, if you find our answer insufficient, or if we do not answer in time, you can complain to the Board within 30 days of learning our answer, and in any case within 60 days of the date of your request. [TO DECIDE: confirm these periods]
+- **in Türkiye,** to the Personal Data Protection Board ({tr: Kişisel Verileri Koruma Kurulu}). Under KVKK Art. 14, you must first send your request to us. If we reject your request, if you find our answer insufficient, or if we do not answer in time, you can complain to the Board within 30 days of learning our answer, and in any case within 60 days of the date of your request. [TO DECIDE: confirm these periods]
 - **in the European Union,** to the data protection authority of the country where you live, where you work or where you think the problem happened (GDPR Art. 77).
 
 ## EU representative

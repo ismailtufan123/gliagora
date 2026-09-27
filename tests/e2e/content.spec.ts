@@ -33,6 +33,17 @@ test.describe('content pages', () => {
     })
   }
 
+  test('home and About carry Organization and WebSite data, and pages name the site', async ({
+    request,
+  }) => {
+    for (const path of ['/en/', '/en/about/']) {
+      const html = await (await request.get(path)).text()
+      expect(html).toContain('"@type":"Organization"')
+      expect(html).toContain('"@type":"WebSite"')
+      expect(html).toContain('<meta property="og:site_name" content="Gliagora | Neuroscience"/>')
+    }
+  })
+
   test('robots.txt keeps crawlers out of the admin and the API', async ({ request }) => {
     const robots = await (await request.get('/robots.txt')).text()
     expect(robots).toContain('Disallow: /admin')

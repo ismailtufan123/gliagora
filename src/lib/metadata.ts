@@ -14,6 +14,12 @@ export async function localeMetadata(locale: Locale): Promise<Metadata> {
     title: { default: t('homeTitle'), template: t('titleTemplate', { title: '%s' }) },
     description: t('description'),
     icons: { icon: [{ url: '/brand/favicon.svg', type: 'image/svg+xml' }] },
+    // PLAN §1: og:site_name keeps the descriptor.
+    openGraph: {
+      siteName: t('siteName'),
+      type: 'website',
+      locale: locale === 'tr' ? 'tr_TR' : 'en',
+    },
   }
 }
 

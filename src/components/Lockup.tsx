@@ -8,10 +8,10 @@ type LockupProps = {
 }
 
 const markSize = { large: 64, small: 40, header: 32 }
-const textSize = { large: 'text-h3', small: 'text-card', header: 'text-body' }
-const gap = { large: 'gap-3', small: 'gap-3', header: 'gap-1.5 sm:gap-2' }
-// The header lockup must fit next to the menu button on 320px screens.
-const markClass = { large: '', small: '', header: 'size-7 sm:size-8' }
+const textSize = { large: 'text-body sm:text-h3', small: 'text-card', header: 'text-body' }
+const gap = { large: 'gap-2 sm:gap-3', small: 'gap-3', header: 'gap-1.5 sm:gap-2' }
+// Lockups must fit a 320px screen: the header one next to the menu button.
+const markClass = { large: 'size-10 sm:size-16', small: '', header: 'size-7 sm:size-8' }
 
 // Logo 6b (D12): the light mark by default, the dark mark when the system uses dark mode.
 // At 32px and below, the simplified small mark (D24).

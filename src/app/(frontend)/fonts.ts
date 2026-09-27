@@ -1,7 +1,7 @@
 import localFont from 'next/font/local'
 
 // Self-hosted WOFF2 files (PLAN §7.3); see tools/fonts/README.md for how they are built.
-// next/font adds size-adjusted fallback fonts, so text does not shift when the fonts load.
+// Size-adjusted fallback fonts (tokens.css) keep text from shifting when these fonts load.
 // The global 404 page imports them too, and Next.js adds that page to every route; so the admin
 // also receives the font preload headers (about 70 KB, admin only). Turbopack merges the CSS of
 // the public pages into one chunk, so a separate copy without preloading does not avoid this.
@@ -12,6 +12,8 @@ export const displayFont = localFont({
   style: 'normal',
   display: 'swap',
   variable: '--font-commissioner',
+  // The size-adjusted fallback is declared in tokens.css with more local fonts than Arial.
+  adjustFontFallback: false,
 })
 
 export const bodyFont = localFont({
@@ -20,6 +22,7 @@ export const bodyFont = localFont({
   style: 'normal',
   display: 'swap',
   variable: '--font-atkinson',
+  adjustFontFallback: false,
 })
 
 export const fontVariables = `${displayFont.variable} ${bodyFont.variable}`
