@@ -27,7 +27,7 @@ We publish information about open positions. We are not an employment agency. We
 
 Gliagora has one editor, the person who runs it. Our editor writes our summaries, checks every listing against the employer's page and approves it before it goes live. Nothing is published without that check, including listings that visitors suggest.
 
-Under Türkiye's internet law (Law No. 5651), our editor is the "content provider" (içerik sağlayıcı): the person responsible for what we publish. [TO DECIDE: confirm this role under Law No. 5651. PLAN implies it but does not state it.] Our editor is also the data controller named in the [privacy policy](/en/legal/privacy/).
+Under Türkiye's internet law (Law No. 5651), our editor is the "content provider" ({tr: içerik sağlayıcı}): the person responsible for what we publish. [TO DECIDE: confirm this role under Law No. 5651. PLAN implies it but does not state it.] Our editor is also the data controller named in the [privacy policy](/en/legal/privacy/).
 
 - At present, we do not publish anything written by visitors or members.
 - We link to employers' pages and other sources. Those pages belong to their owners. A link does not mean we endorse the employer or the page.
@@ -48,7 +48,7 @@ Tell us if something we published is wrong or out of date, or if it affects your
 
 Include the link to the page, what is wrong and what you would like us to do. Employers can ask us to update or remove their own listings in the same way. If you use the form on the notice and takedown page, you get an automatic email as soon as we receive your request.
 
-If content affects your personal rights, you can ask us to remove it (Law No. 5651, Article 9). You can also apply directly to a criminal judgeship of peace (sulh ceza hâkimliği) to have the content removed or access to it blocked. [TO DECIDE: check against the current text of Law 5651 Art. 9(1).]
+If content affects your personal rights, you can ask us to remove it (Law No. 5651, Article 9). You can also apply directly to a criminal judgeship of peace ({tr: sulh ceza hâkimliği}) to have the content removed or access to it blocked. [TO DECIDE: check against the current text of Law 5651 Art. 9(1).]
 
 We reply to requests about your personal rights within 24 hours. We usually decide within 72 hours. If we remove a listing or page, it goes offline at once. If the problem can be fixed, we may correct it instead.
 
@@ -64,7 +64,7 @@ You can ask to see your personal data, get a copy of it, correct it or delete it
 
 [TO DECIDE: how written and KEP applications under the KVKK application communiqué are received while no postal address is published (D9), and whether email from an unregistered address is accepted as a KVKK application.]
 
-The [privacy policy](/en/legal/privacy/) explains how we handle personal data. Under Türkiye's Personal Data Protection Law (KVKK), we also publish an information notice in Turkish: [information notice under KVKK](/tr/legal/kvkk-aydinlatma-metni/) (KVKK aydınlatma metni).
+The [privacy policy](/en/legal/privacy/) explains how we handle personal data. Under Türkiye's Personal Data Protection Law (KVKK), we also publish an information notice in Turkish: [information notice under KVKK](/tr/legal/kvkk-aydinlatma-metni/) ({tr: KVKK aydınlatma metni}).
 
 ## Legal pages
 
@@ -74,6 +74,6 @@ The [privacy policy](/en/legal/privacy/) explains how we handle personal data. U
 - Notice and takedown (corrections and removals)
 - Data requests
 - Accessibility statement
-- In Turkish: [information notice under KVKK](/tr/legal/kvkk-aydinlatma-metni/) (KVKK aydınlatma metni), newsletter consent text (açık rıza metni) and [contact page](/tr/iletisim/) (İletişim)
+- In Turkish: [information notice under KVKK](/tr/legal/kvkk-aydinlatma-metni/) ({tr: KVKK aydınlatma metni}), newsletter consent text ({tr: açık rıza metni}) and [contact page](/tr/iletisim/) ({tr: İletişim})
 
-[TO DECIDE: the links to the suggestion form (/en/suggest/, M4), account settings (/en/account/privacy/, M4b) and the accessibility statement (not drafted yet) lead nowhere until those pages exist. Hide them until then.]
+[TO DECIDE: the suggestion form link leads to a placeholder until M4; account settings, cookies, notice and takedown, data requests and the accessibility statement are plain text until their pages exist. Link them when they do.]

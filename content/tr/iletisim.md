@@ -1,4 +1,4 @@
-Bu sayfada Gliagora | Neuroscience ile nasıl iletişim kurabileceğinizi ve siteyle ilgili yasal bilgileri bulabilirsiniz. Bu sayfanın İngilizce sürümü: [Contact and legal notice](/en/contact/).
+Bu sayfada Gliagora | Neuroscience ile nasıl iletişim kurabileceğinizi ve siteyle ilgili yasal bilgileri bulabilirsiniz. Bu sayfanın İngilizce sürümü: [{en: Contact and legal notice}](/en/contact/).
 
 ## İletişim
 
@@ -16,7 +16,7 @@ Her türlü soru ve talebiniz için bize e-posta ile yazabilirsiniz:
 
 Gliagora | Neuroscience (gliagora.com), İngilizce öncelikli bir sinirbilim sitesidir. Sinirbilim alanındaki iş ilanlarını, etkinlikleri, burs ve destek (fon) olanaklarını, makaleleri, haberleri ve kaynakları özenle seçip tek çatı altında toplamayı amaçlar. Şu anda sitede iş ilanları, dünya haritası, kurum sayfaları ve Glia Notes adlı aylık bültenimiz yer alır. Diğer bölümler adım adım eklenecektir.
 
-Her içerikte temel bilgileri, kendi sözcüklerimizle yazdığımız kısa bir özeti ve asıl kaynağın bağlantısını veririz. Her içerik yayımlanmadan önce editör tarafından incelenir ve onaylanır. Gliagora şu anda kimseden ücret almaz. Hiçbir içerik ücret karşılığında yayımlanmaz ya da öne çıkarılmaz. Ayrıntılar için İngilizce Sources and editorial policy sayfasına bakabilirsiniz.
+Her içerikte temel bilgileri, kendi sözcüklerimizle yazdığımız kısa bir özeti ve asıl kaynağın bağlantısını veririz. Her içerik yayımlanmadan önce editör tarafından incelenir ve onaylanır. Gliagora şu anda kimseden ücret almaz. Hiçbir içerik ücret karşılığında yayımlanmaz ya da öne çıkarılmaz. Ayrıntılar için İngilizce {en: Sources and editorial policy} sayfasına bakabilirsiniz.
 
 ## Gliagora özel istihdam bürosu değildir
 
@@ -34,7 +34,7 @@ Her ilanda işverenin kendi ilan sayfasının bağlantısı bulunur. Başvurunuz
 
 ## İçerik sağlayıcı bilgileri
 
-Gliagora'yı bir gerçek kişi işletir. Bu kişi, 5651 sayılı İnternet Ortamında Yapılan Yayınların Düzenlenmesi ve Bu Yayınlar Yoluyla İşlenen Suçlarla Mücadele Edilmesi Hakkında Kanun (5651 sayılı Kanun) kapsamında içerik sağlayıcıdır ve sitede kendi hazırladığı içeriği yayımlar. Şu anda sitede kullanıcıların oluşturduğu içerik yayımlanmaz. "Suggest a listing" (ilan önerin) formuyla gönderilen öneriler, ancak editör tarafından incelendikten sonra ve editörün kendi sözcükleriyle hazırladığı içerik olarak yayımlanabilir.
+Gliagora'yı bir gerçek kişi işletir. Bu kişi, 5651 sayılı İnternet Ortamında Yapılan Yayınların Düzenlenmesi ve Bu Yayınlar Yoluyla İşlenen Suçlarla Mücadele Edilmesi Hakkında Kanun (5651 sayılı Kanun) kapsamında içerik sağlayıcıdır ve sitede kendi hazırladığı içeriği yayımlar. Şu anda sitede kullanıcıların oluşturduğu içerik yayımlanmaz. "{en: Suggest a listing}" (ilan önerin) formuyla gönderilen öneriler, ancak editör tarafından incelendikten sonra ve editörün kendi sözcükleriyle hazırladığı içerik olarak yayımlanabilir.
 
 - **İletişim:** [hello@gliagora.com](mailto:hello@gliagora.com)
 - **Kimlik:** Siteyi işleten kişinin kimliği, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında hazırlanan [aydınlatma metninde](/tr/legal/kvkk-aydinlatma-metni/) veri sorumlusu olarak yer alır.
@@ -47,13 +47,13 @@ Bir içerik nedeniyle kişilik haklarınızın ihlal edildiğini düşünüyorsa
 
 Hatalı bir bilgiyi ya da kapanmış veya geri çekilmiş bir ilanı bildirmek için de bize yazabilirsiniz. İşverenler kendi ilanlarının güncellenmesini ya da kaldırılmasını isteyebilir.
 
-Talebinizi İngilizce Notice and takedown sayfasındaki formla ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine gönderebilirsiniz. Talebinizde şunları belirtin:
+Talebinizi İngilizce {en: Notice and takedown} sayfasındaki formla ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine gönderebilirsiniz. Talebinizde şunları belirtin:
 
 - ilgili sayfanın bağlantısı;
 - sorunun ne olduğu;
 - ne yapılmasını istediğiniz (yayından çıkarma ya da düzeltme).
 
-Sitedeki her içerikte bir "Report a problem" (sorun bildir) bağlantısı da bulunur. Sürecin ayrıntıları da aynı sayfada yer alır.
+Sitedeki her içerikte bir "{en: Report a problem}" (sorun bildir) bağlantısı da bulunur. Sürecin ayrıntıları da aynı sayfada yer alır.
 
 **Süreler:**
 
@@ -67,7 +67,7 @@ Kişisel verilerinizin hangi amaçlarla işlendiği, veri sorumlusunun kimliği 
 
 - Üyeyseniz verilerinizi hesap ayarlarınızdan indirebilir ya da hesabınızı silebilirsiniz.
 - Glia Notes bülteni için verdiğiniz açık rızayı istediğiniz zaman geri alabilirsiniz. Bunun için her e-postadaki abonelikten çıkma bağlantısına tıklamanız yeterlidir; üyeyseniz bülteni hesap ayarlarınızdan da kapatabilirsiniz. Aboneliğiniz hemen sona erer.
-- Diğer başvurular için İngilizce Data requests sayfasını kullanabilir ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine Türkçe olarak yazabilirsiniz.
+- Diğer başvurular için İngilizce {en: Data requests} sayfasını kullanabilir ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine Türkçe olarak yazabilirsiniz.
 
 Başvurularınız ücretsiz olarak, niteliğine göre en kısa sürede ve en geç 30 gün içinde sonuçlandırılır.
 
@@ -75,4 +75,4 @@ Başvurularınız ücretsiz olarak, niteliğine göre en kısa sürede ve en ge�
 
 ## Dil
 
-Gliagora İngilizce öncelikli bir sitedir. Şimdilik yalnızca bu sayfa ve yasal metinler Türkçedir. Sitenin geri kalanı İngilizcedir; yeterli ilgi olursa Türkçe sürümün eklenmesi planlanmaktadır.
+Gliagora İngilizce öncelikli bir sitedir. Şimdilik yalnızca bu sayfa ile KVKK aydınlatma metni Türkçedir; gizlilik politikası ve kullanım koşulları İngilizcedir. Sitenin geri kalanı İngilizcedir; yeterli ilgi olursa Türkçe sürümün eklenmesi planlanmaktadır.

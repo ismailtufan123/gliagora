@@ -1,8 +1,8 @@
 This notice explains what personal data Gliagora | Neuroscience (gliagora.com) processes, why, on what legal basis, how long we keep it and what rights you have. It covers the website, the Glia Notes newsletter, member accounts and the forms on the site.
 
-Version 0.1, 26 September 2026. [TO DECIDE: effective date at publication]
+Version 0.1, 27 September 2026. [TO DECIDE: effective date at publication]
 
-This notice is also available in Turkish as the [KVKK information notice (aydınlatma metni)](/tr/legal/kvkk-aydinlatma-metni/). Your consent to the newsletter is set out in Turkish in a separate consent text (açık rıza metni).
+This notice is also available in Turkish as the [KVKK information notice ({tr: aydınlatma metni})](/tr/legal/kvkk-aydinlatma-metni/). Your consent to the newsletter is set out in Turkish in a separate consent text ({tr: açık rıza metni}).
 
 ## In short
 
@@ -16,7 +16,7 @@ This notice is also available in Turkish as the [KVKK information notice (aydın
 
 ## Who is responsible for your data
 
-The data controller is **Nuray Sancar**, a private individual resident in Türkiye. Under the Turkish Personal Data Protection Law (KVKK) she is the *veri sorumlusu*; under the EU General Data Protection Regulation (GDPR) she is the *controller*. She runs Gliagora in her own name. There is no company behind it. In this notice, "we" and "us" mean her.
+The data controller is **Nuray Sancar**, a private individual resident in Türkiye. Under the Turkish Personal Data Protection Law (KVKK) she is the *{tr: veri sorumlusu}*; under the EU General Data Protection Regulation (GDPR) she is the *controller*. She runs Gliagora in her own name. There is no company behind it. In this notice, "we" and "us" mean her.
 
 - **Email:** hello@gliagora.com. Use it for all privacy questions and requests. [TO DECIDE: privacy@gliagora.com once the Turkish mailbox exists, M2]
 - **Web form:** the data-request page.
@@ -40,11 +40,11 @@ The legal bases we refer to under KVKK (Art. 5):
 
 | Name used in this notice | KVKK article | Meaning |
 |---|---|---|
-| Consent | Art. 5(1) | your explicit consent (*açık rıza*) |
+| Consent | Art. 5(1) | your explicit consent (*{tr: açık rıza}*) |
 | Contract | Art. 5(2)(c) | necessary to set up or perform a contract with you |
 | Legal obligation | Art. 5(2)(ç) | necessary to meet a legal obligation of the controller |
 | Protecting a right | Art. 5(2)(e) | necessary to establish, use or protect a right |
-| Legitimate interest | Art. 5(2)(f) | necessary for the controller's legitimate interest (*meşru menfaat*), without harming your basic rights and freedoms |
+| Legitimate interest | Art. 5(2)(f) | necessary for the controller's legitimate interest (*{tr: meşru menfaat}*), without harming your basic rights and freedoms |
 
 The legal bases we refer to under the GDPR (Art. 6(1)):
 
@@ -420,7 +420,7 @@ For access, correction or objection, use the data-request page or write to hello
 
 If you are not satisfied with our answer, you can complain:
 
-- **in Türkiye,** to the Personal Data Protection Board (*Kişisel Verileri Koruma Kurulu*). Under KVKK Art. 14, you must first send your request to us. If we reject your request, if you find our answer insufficient, or if we do not answer in time, you can complain to the Board within 30 days of learning our answer, and in any case within 60 days of the date of your request. [TO DECIDE: confirm these periods]
+- **in Türkiye,** to the Personal Data Protection Board (*{tr: Kişisel Verileri Koruma Kurulu}*). Under KVKK Art. 14, you must first send your request to us. If we reject your request, if you find our answer insufficient, or if we do not answer in time, you can complain to the Board within 30 days of learning our answer, and in any case within 60 days of the date of your request. [TO DECIDE: confirm these periods]
 - **in the European Union,** to the data protection authority of the country where you live, where you work or where you think the problem happened (GDPR Art. 77).
 
 ## EU representative
@@ -429,7 +429,7 @@ We have not appointed a representative in the European Union under GDPR Art. 27.
 
 ## Minimum age
 
-You must be at least 16 to subscribe to Glia Notes. The signup form says so. [TO DECIDE: whether 16 also applies to member accounts and the suggestion form] [TO DECIDE: whether subscribers aged 16–17 in Türkiye can give explicit consent (açık rıza) without a parent or guardian, given the age of majority of 18 under the Turkish Civil Code]
+You must be at least 16 to subscribe to Glia Notes. The signup form says so. [TO DECIDE: whether 16 also applies to member accounts and the suggestion form] [TO DECIDE: whether subscribers aged 16–17 in Türkiye can give explicit consent ({tr: açık rıza}) without a parent or guardian, given the age of majority of 18 under the Turkish Civil Code]
 
 ## How we protect your data
 
@@ -455,4 +455,4 @@ If we move to another country, we will move our servers to that part of the worl
 
 | Version | Date | Changes |
 |---|---|---|
-| 0.1 | 2026-09-26 | First draft |
+| 0.1 | 2026-09-27 | First draft |

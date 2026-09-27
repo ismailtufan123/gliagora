@@ -7,7 +7,7 @@ Gliagora, İngilizce yayın yapan bir bilgi sitesidir. Sinirbilim alanındaki i�
 - Metinde "biz" dediğimizde veri sorumlusunu, yani Gliagora'yı yöneten Nuray Sancar'ı kastediyoruz.
 - Bu metin sizi bilgilendirir. Sizden onay istemez.
 - Glia Notes bülteni için açık rızanızı ayrı bir metinle isteriz: Açık rıza metni.
-- Daha ayrıntılı bilgi için İngilizce [gizlilik bildirimine](/en/legal/privacy/) bakabilirsiniz.
+- Daha ayrıntılı bilgi için İngilizce [gizlilik politikasına](/en/legal/privacy/) bakabilirsiniz.
 
 ## Veri sorumlusu
 
@@ -22,7 +22,7 @@ Gliagora, İngilizce yayın yapan bir bilgi sitesidir. Sinirbilim alanındaki i�
 
 Kişisel verilerinizi elektronik ortamda, tamamen veya kısmen otomatik yollarla topluyoruz:
 
-- **Doğrudan sizden:** bülten formu, üyelik ve hesap ayarları, "Suggest a listing" (İlan önerin) ve "Report a problem" (Sorun bildirin) formları, veri talebi sayfası, kaldırma ve düzeltme sayfası ve bize gönderdiğiniz e-postalar aracılığıyla.
+- **Doğrudan sizden:** bülten formu, üyelik ve hesap ayarları, "{en: Suggest a listing}" (İlan önerin) ve "{en: Report a problem}" (Sorun bildirin) formları, veri talebi sayfası, kaldırma ve düzeltme sayfası ve bize gönderdiğiniz e-postalar aracılığıyla.
 - **Seçtiğiniz giriş sağlayıcısından:** Google veya ORCID ile giriş yaptığınızda.
 - **Sunucumuz tarafından otomatik olarak:** erişim kayıtları, uygulama kayıtları, ziyaret istatistikleri, form güvenliği ve sistemin kendi ürettiği kayıtlar (açık rıza kayıtları, oturumlar, denetim kaydı).
 - **Herkese açık kaynaklardan:** işverenlerin kendi ilan sayfaları.
@@ -105,7 +105,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - Silme bildirimi e-postası, silme talebinizi yerine getirdiğimizi bildirir. Hukuki yükümlülüğümüze (m.5/2 (ç)) dayanır.
 - **Yaş:** [KARAR VERİLECEK: Üyelik için alt yaş sınırı. Bülten için 16 belirlenmiştir.]
 
-### İlan önerme formu ("Suggest a listing")
+### İlan önerme formu ("{en: Suggest a listing}")
 
 - **Veriler:**
   - önerdiğiniz sayfanın adresi (URL);
@@ -113,7 +113,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - en fazla 500 karakterlik notunuz;
   - formu gönderdiğiniz sitenin dil sürümü;
   - isteğe bağlı olarak e-posta adresiniz.
-- **Nereden ve nasıl:** Sizden, ["Suggest a listing"](/en/suggest/) (İlan önerin) sayfasındaki formla. E-posta alanı isteğe bağlıdır; yanındaki onay kutusu önceden işaretlenmemiştir.
+- **Nereden ve nasıl:** Sizden, ["{en: Suggest a listing}"](/en/suggest/) (İlan önerin) sayfasındaki formla. E-posta alanı isteğe bağlıdır; yanındaki onay kutusu önceden işaretlenmemiştir.
 - **Amaç:**
   - Önerinizi değerlendirmek. Hiçbir öneri otomatik olarak yayımlanmaz; her öneriyi editör inceler.
   - E-posta adresinizi verdiyseniz, adresinizi yalnızca size sonucu bildirmek için kullanırız.
@@ -132,10 +132,10 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - talebin alındığı ve yanıtlanması gereken tarihler;
   - talebin durumu ve yapılan işlem.
 - **Nereden ve nasıl:** Sizden, şu yollardan biriyle:
-  - her içerikteki "Report a problem" (Sorun bildirin) bağlantısı (içerik bilgisi önceden doldurulur);
+  - her içerikteki "{en: Report a problem}" (Sorun bildirin) bağlantısı (içerik bilgisi önceden doldurulur);
   - kaldırma ve düzeltme sayfası (İngilizce);
   - e-posta.
-  - [KARAR VERİLECEK: "Report a problem" formunun hangi alanları içereceği.]
+  - [KARAR VERİLECEK: "{en: Report a problem}" formunun hangi alanları içereceği.]
 - **Amaç:** Talebinizi incelemek ve size yanıt vermek. Gerekiyorsa içeriği düzeltmek veya yayından kaldırmak ve bunu kayıt altına almak. Kaldırılmasına karar verilen içerik hemen yayından kalkar veya düzeltilir.
 - **Hukuki sebep:**
   - kişilik haklarınızın ihlal edildiği gerekçesiyle, 5651 sayılı İnternet Kanunu m.9 kapsamında içeriğin yayından çıkarılmasını isteyebilirsiniz. Bu talepler için hukuki sebep, hukuki yükümlülüğümüzdür (KVKK m.5/2 (ç));
@@ -166,7 +166,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 ### Form ve giriş güvenliği
 
 - **Veriler:** IP adresinizin karma (hash) değeri.
-- **Nereden ve nasıl:** "Suggest a listing" (İlan önerin) formunu gönderdiğinizde, otomatik olarak. [KARAR VERİLECEK: giriş ve diğer formlardaki sınırlamanın da karma IP ile yapılıp yapılmayacağı (M4b).]
+- **Nereden ve nasıl:** "{en: Suggest a listing}" (İlan önerin) formunu gönderdiğinizde, otomatik olarak. [KARAR VERİLECEK: giriş ve diğer formlardaki sınırlamanın da karma IP ile yapılıp yapılmayacağı (M4b).]
 - **Amaç:** İstenmeyen gönderileri (spam) ve kötüye kullanımı önlemek.
   - Örneğin ilan önerme formunda aynı IP adresinden saatte en fazla 5 gönderim kabul edilir.
   - Spam koruması (ALTCHA) kendi sunucumuzda çalışır; başka bir hizmete veri gitmez.
@@ -363,15 +363,15 @@ Bülten için verdiğiniz açık rızayı istediğiniz zaman geri alabilirsiniz.
 Bazı işlemleri bize başvurmadan, kendiniz hemen yapabilirsiniz:
 
 - **Abonelikten çıkma:** Her bültendeki tek tıkla abonelikten çıkma bağlantısını kullanın veya hesap ayarlarınızda bülten seçeneğini kapatın. Hemen geçerli olur.
-- **Verilerinizi indirme:** Hesap ayarlarınızdaki "Download my data" (Verilerimi indir) düğmesiyle verilerinizi bir JSON dosyası olarak indirebilirsiniz.
-- **Hesabınızı silme:** Hesap ayarlarınızdaki "Delete my account" (Hesabımı sil) düğmesini kullanın. Onayınızdan sonra hesabınız hemen silinir.
+- **Verilerinizi indirme:** Hesap ayarlarınızdaki "{en: Download my data}" (Verilerimi indir) düğmesiyle verilerinizi bir JSON dosyası olarak indirebilirsiniz.
+- **Hesabınızı silme:** Hesap ayarlarınızdaki "{en: Delete my account}" (Hesabımı sil) düğmesini kullanın. Onayınızdan sonra hesabınız hemen silinir.
 - **Üye değilseniz:**
   - Veri talebi sayfasından (İngilizce) verilerinizin silinmesini isteyebilirsiniz.
   - E-posta adresinize bir doğrulama bağlantısı gelir. Bu bağlantıya tıkladığınızda, e-posta adresinize bağlı kayıtlar otomatik olarak silinir. Örneğin bülten aboneliğiniz ve ilan önerme formunda verdiğiniz e-posta adresi silinir. Ardından silme işlemini bildiren bir e-posta alırsınız.
   - Başvuru kayıtları, açık rıza kayıtları, erişim kayıtları ve yedekler için yukarıdaki saklama süreleri geçerlidir.
   - [KARAR VERİLECEK: otomatik silmenin hangi kayıtları kapsadığı.]
 
-Avrupa Birliğinde bulunuyorsanız, AB Genel Veri Koruma Tüzüğü (GDPR) kapsamındaki haklarınız İngilizce [gizlilik bildiriminde](/en/legal/privacy/) anlatılır.
+Avrupa Birliğinde bulunuyorsanız, AB Genel Veri Koruma Tüzüğü (GDPR) kapsamındaki haklarınız İngilizce [gizlilik politikasında](/en/legal/privacy/) anlatılır.
 
 ## Başvuru yolları
 

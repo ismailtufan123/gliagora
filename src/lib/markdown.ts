@@ -3,6 +3,8 @@ import path from 'node:path'
 
 import { Marked, Renderer, type TokenizerAndRendererExtension, type Tokens } from 'marked'
 
+import { locales } from '@/i18n/routing'
+
 // Long-form pages (About, legal texts) are Markdown files in content/, reviewed through pull
 // requests (PLAN §12). They are turned into HTML at build time; the pages are static.
 
@@ -40,7 +42,8 @@ function checkedHref(href: string): string {
 
 // Open points in draft texts, "[TO DECIDE: …]" or "[KARAR VERİLECEK: …]", are highlighted so a
 // reviewer can find them.
-const MARKER = /^\[(?:TO DECIDE|KARAR VERİLECEK):[^\]]*\]/
+// One level of brackets inside is allowed, e.g. a link: "[TO DECIDE: see [privacy](/en/…) first]".
+const MARKER = /^\[(?:TO DECIDE|KARAR VERİLECEK):(?:[^[\]]|\[[^[\]]*\])*\]/
 const openPoints: TokenizerAndRendererExtension = {
   name: 'openPoint',
   level: 'inline',
@@ -60,12 +63,34 @@ const openPoints: TokenizerAndRendererExtension = {
   },
 }
 
+// A phrase in another language, written "{en: Suggest a listing}" or "{tr: açık rıza}", is marked
+// with its language so screen readers pronounce it correctly (WCAG 3.1.2).
+const LANGUAGE_PART = new RegExp(`^\\{(${locales.join('|')}): ([^{}]+)\\}`)
+const languageParts: TokenizerAndRendererExtension = {
+  name: 'languagePart',
+  level: 'inline',
+  start: (src) => src.match(new RegExp(`\\{(?:${locales.join('|')}): `))?.index,
+  tokenizer(src) {
+    const match = LANGUAGE_PART.exec(src)
+    if (!match) return undefined
+    return {
+      type: 'languagePart',
+      raw: match[0],
+      lang: match[1],
+      tokens: this.lexer.inlineTokens(match[2] ?? ''),
+    }
+  },
+  renderer(token) {
+    return `<span lang="${token.lang}">${this.parser.parseInline(token.tokens ?? [])}</span>`
+  },
+}
+
 /** Markdown to HTML. Headings get ids for deep links; raw HTML in the source is shown as text. */
 export function renderMarkdown(markdown: string): string {
   const used = new Map<string, number>()
   const marked = new Marked({
     gfm: true,
-    extensions: [openPoints],
+    extensions: [openPoints, languageParts],
     renderer: {
       heading({ tokens, depth }: Tokens.Heading) {
         const html = this.parser.parseInline(tokens)

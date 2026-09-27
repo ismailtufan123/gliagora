@@ -125,7 +125,7 @@ Glia Notes is the monthly Gliagora newsletter. It is free.
 - Every issue has a one-click unsubscribe link, and unsubscribing takes effect at once. Members can also switch the newsletter off in their settings.
 - We do not track whether you open Glia Notes or which links you personally click. We only count, in total and without cookies, how many visits to Gliagora come from the newsletter.
 
-How we handle your email address is explained in the [privacy policy](/en/legal/privacy/). In Turkish: the [KVKK aydınlatma metni](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice under Turkish data protection law) and the açık rıza metni (consent text for the newsletter).
+How we handle your email address is explained in the [privacy policy](/en/legal/privacy/). In Turkish: the [{tr: KVKK aydınlatma metni}](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice under Turkish data protection law) and the {tr: açık rıza metni} (consent text for the newsletter).
 
 ## Using our forms
 
@@ -211,7 +211,7 @@ We collect as little personal data as we can. What we collect, why, how long we 
 
 - the [privacy policy](/en/legal/privacy/);
 - the cookies and storage page;
-- the [KVKK aydınlatma metni](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice, in Turkish).
+- the [{tr: KVKK aydınlatma metni}](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice, in Turkish).
 
 To see, correct, download or delete your data, use your account settings or the Data requests page.
 
