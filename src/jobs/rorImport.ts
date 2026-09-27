@@ -44,6 +44,25 @@ export async function importRorDump(
 }
 
 /**
+ * Payload marks a running job as processing and does not recover it if the process stops. The app
+ * runs as one process, so at startup no import can still be running: a job still marked as
+ * processing was cut off by a restart (a deploy, a reboot, running out of memory). Left in place,
+ * it would stop every later scheduled run. It is removed, and the admin shows what happened; the
+ * next night's run imports the release again, which only changes what still differs.
+ */
+export async function releaseInterruptedImports(payload: Payload): Promise<void> {
+  const where = { taskSlug: { equals: 'rorImport' }, processing: { equals: true } }
+  const { totalDocs } = await payload.count({ collection: 'payload-jobs', where })
+  if (totalDocs === 0) return
+  await payload.delete({ collection: 'payload-jobs', where })
+  await payload.updateGlobal({
+    slug: 'ror-import',
+    data: { lastError: 'An import was cut off by a restart. The next nightly run continues it.' },
+  })
+  payload.logger.warn('ROR import: released an import that a restart cut off')
+}
+
+/**
  * Checks Zenodo for a new ROR release and imports it (PLAN §6.2). The check is one small request,
  * so it runs every night; ROR publishes about once a month. The import is idempotent: after an
  * interruption the next run picks up where the data differs.

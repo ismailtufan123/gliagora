@@ -49,18 +49,25 @@ export async function importRorRecords({
     failed: 0,
   }
 
+  // Read in pages of 5,000 IDs rather than all at once: the whole table (about 140,000 rows) in
+  // one query takes about 1 GB of memory and blocks the web server for seconds.
   const existing = new Map<string, Existing>()
-  const found = await payload.find({
-    collection: 'institutions',
-    where: { rorId: { exists: true } },
-    select: { rorId: true, rorLastModified: true },
-    pagination: false,
-    depth: 0,
-  })
-  for (const doc of found.docs) {
-    if (doc.rorId) {
-      existing.set(doc.rorId, { id: doc.id, rorLastModified: doc.rorLastModified ?? null })
+  for (let page = 1; ; page++) {
+    const found = await payload.find({
+      collection: 'institutions',
+      where: { rorId: { exists: true } },
+      select: { rorId: true, rorLastModified: true },
+      sort: 'id',
+      limit: 5_000,
+      page,
+      depth: 0,
+    })
+    for (const doc of found.docs) {
+      if (doc.rorId) {
+        existing.set(doc.rorId, { id: doc.id, rorLastModified: doc.rorLastModified ?? null })
+      }
     }
+    if (!found.hasNextPage) break
   }
 
   const countries = await payload.find({

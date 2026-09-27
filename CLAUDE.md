@@ -84,7 +84,7 @@ Fill these in as the project grows.
 - `pnpm lint`, `pnpm typecheck`, `pnpm test` — checks (`pnpm format` fixes formatting)
 - `pnpm test:e2e` — Playwright + axe tests against a running app (`pnpm build && pnpm start`); every new page template goes into `tests/e2e/pages.ts`
 - `pnpm migrate:create <name>`, then `pnpm generate:types` — after changing a collection; commit the migration and types with it
-- `pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip` — load 21 test institutions (the e2e tests need them); without a file it downloads and imports the latest ROR release (about 15 minutes the first time)
+- `pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip` — load 20 test institutions (21 ROR records, one withdrawn and skipped; the e2e tests need them); without a file it downloads and imports the latest ROR release (about 15 minutes the first time)
 
 ## Target repository layout
 

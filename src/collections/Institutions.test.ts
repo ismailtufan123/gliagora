@@ -83,6 +83,61 @@ describe('Institutions', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it('gives a short ID when the ROR ID field holds only spaces', async () => {
+    const data = await run({ name: 'Example Lab', rorId: '   ' })
+    expect(data.rorId).toBeNull()
+    expect(data.shortId).toMatch(SHORT_ID_PATTERN)
+    expect(data.origin).toBe('manual')
+  })
+
+  it('refuses to change or remove a saved ROR ID', async () => {
+    const originalDoc = { rorId: '05dxps055', origin: 'ror', name: 'Caltech' }
+    await expect(run({ rorId: null }, { operation: 'update', originalDoc })).rejects.toThrow()
+    await expect(
+      run({ rorId: '02h1nk258' }, { operation: 'update', originalDoc }),
+    ).rejects.toThrow()
+    await expect(
+      run({ rorId: 'https://ror.org/05dxps055' }, { operation: 'update', originalDoc }),
+    ).resolves.toMatchObject({ rorId: '05dxps055' })
+  })
+
+  it('makes an institution added by hand a ROR institution when it gets a ROR ID', async () => {
+    const data = await run(
+      { rorId: '05dxps055' },
+      { operation: 'update', originalDoc: { name: 'Caltech', origin: 'manual', shortId: 'k3f9a' } },
+    )
+    expect(data.origin).toBe('ror')
+  })
+
+  it('explains when the ROR API cannot be reached, unless the editor filled in the name', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('busy', { status: 503 })),
+    )
+    await expect(run({ rorId: '05dxps055' })).rejects.toThrow()
+    await expect(run({ rorId: '05dxps055', name: 'Caltech' })).resolves.toMatchObject({
+      name: 'Caltech',
+      origin: 'ror',
+    })
+  })
+
+  it('checks the coordinate ranges, and requires coordinates only when added by hand', () => {
+    const lat = Institutions.fields
+      .flatMap((f) => ('fields' in f ? f.fields : [f]))
+      .find((f) => 'name' in f && f.name === 'lat') as {
+      validate: (v: unknown, o: unknown) => unknown
+    }
+    expect(lat.validate(95, { data: { origin: 'ror' } })).not.toBe(true)
+    expect(lat.validate(-45.5, { data: { origin: 'manual' } })).toBe(true)
+    expect(lat.validate(null, { data: { origin: 'manual' } })).not.toBe(true)
+    expect(lat.validate(null, { data: { origin: 'ror' } })).toBe(true)
+  })
+
+  it('lets only institutions added by hand be deleted', () => {
+    const remove = Institutions.access?.delete as () => unknown
+    expect(remove()).toEqual({ origin: { equals: 'manual' } })
+  })
+
   it('offers no Duplicate action, since a copy would repeat the ROR ID or short ID', () => {
     expect(Institutions.disableDuplicate).toBe(true)
   })

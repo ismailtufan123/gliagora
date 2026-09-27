@@ -37,6 +37,8 @@ services:
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET in .env}
       # Runs scheduled jobs: the nightly check for a new ROR release (PLAN §6.2).
       PAYLOAD_JOBS_AUTORUN: 'true'
+      # Optional; raises the ROR API rate limit for editors adding institutions by ROR ID.
+      ROR_CLIENT_ID: ${ROR_CLIENT_ID:-}
     depends_on:
       db:
         condition: service_healthy

@@ -296,7 +296,7 @@ export interface CountrySet {
   createdAt: string;
 }
 /**
- * Institutions from ROR are imported every month and updated automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.
+ * Institutions from ROR are imported and kept up to date automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "institutions".

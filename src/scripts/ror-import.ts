@@ -13,8 +13,10 @@ const payload = await getPayload({ config })
 const file = process.argv[2]
 try {
   if (file) {
-    // Dump files are named after their release, e.g. v2.13-2026-09-22-ror-data.zip.
-    const match = /(v\d+(?:\.\d+)*)-(\d{4}-\d{2}-\d{2})-ror-data/.exec(path.basename(file))
+    // A dump downloaded from Zenodo is named after its release (v2.13-2026-09-22-ror-data.zip).
+    // Any other file, such as the CI sample, is recorded as "local", so the nightly job still
+    // imports the full release.
+    const match = /^(v\d+(?:\.\d+)*)-(\d{4}-\d{2}-\d{2})-ror-data\.zip$/.exec(path.basename(file))
     const release = { version: match?.[1] ?? 'local', date: match?.[2] ?? '' }
     await importRorDump(payload, path.resolve(file), release)
   } else {

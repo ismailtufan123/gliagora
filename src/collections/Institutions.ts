@@ -1,5 +1,6 @@
 import { randomInt } from 'node:crypto'
 import type { CollectionBeforeValidateHook, CollectionConfig } from 'payload'
+import { ValidationError } from 'payload'
 
 import { fetchRorInstitution } from '@/lib/ror/api'
 import { ROR_STATUSES, ROR_TYPES } from '@/lib/ror/record'
@@ -28,27 +29,63 @@ const prepare: CollectionBeforeValidateHook<Institution> = async ({
   originalDoc,
   operation,
   context,
+  req,
 }) => {
   if (!data) return data
-  const merged = { ...originalDoc, ...data } as InstitutionData
+  const saved = (originalDoc ?? {}) as InstitutionData
   if (typeof data.rorId === 'string') {
-    data.rorId = data.rorId.trim() === '' ? null : (parseRorId(data.rorId) ?? data.rorId)
+    const trimmed = data.rorId.trim()
+    data.rorId = trimmed === '' ? null : (parseRorId(trimmed) ?? trimmed)
   }
-  const rorId = data.rorId ?? merged.rorId
+  const refuse = (message: string): never => {
+    throw new ValidationError({
+      collection: 'institutions',
+      errors: [{ path: 'rorId', message }],
+      req,
+    })
+  }
+  // The import finds an institution by its ROR ID, so a saved ROR ID stays: changing or removing
+  // it would make the next import add the institution a second time.
+  if (operation === 'update' && saved.rorId && 'rorId' in data && data.rorId !== saved.rorId) {
+    refuse('A saved ROR ID cannot be changed or removed.')
+  }
+  const rorId = 'rorId' in data ? data.rorId : saved.rorId
+
   if (operation === 'create' && rorId && isRorId(rorId) && !context[ROR_IMPORT_CONTEXT]) {
-    // Between monthly imports an editor can add a ROR institution by its ID alone.
-    const found = await fetchRorInstitution(rorId)
+    // Between imports an editor can add a ROR institution by its ID alone.
+    let found = null
+    try {
+      found = await fetchRorInstitution(rorId)
+    } catch {
+      if (!data.name) {
+        refuse(
+          'The ROR API could not be reached. Try again later, or fill in the name, country, city and coordinates yourself.',
+        )
+      }
+    }
     if (found) {
       const { countryCode, ...rest } = found
       Object.assign(data, rest, { country: data.country ?? countryCode, origin: 'ror' })
     }
   }
-  const name = data.name ?? merged.name
+
+  const name = data.name ?? saved.name
   if (name) data.slug = slugify(name, { fallback: 'institution' })
-  if (!(data.rorId ?? merged.rorId) && !merged.shortId) data.shortId = newShortId()
-  if (!data.origin && !merged.origin) data.origin = rorId ? 'ror' : 'manual'
+  // Every institution needs an ID for its URL: the ROR ID, or else a short ID.
+  if (!rorId && !saved.shortId && !data.shortId) data.shortId = newShortId()
+  if (rorId && !saved.rorId) data.origin = 'ror'
+  else if (!data.origin && !saved.origin) data.origin = 'manual'
   return data
 }
+
+const inRange =
+  (limit: number, name: string) =>
+  (value: number | null | undefined, { data }: { data: Partial<InstitutionData> }) => {
+    if (typeof value === 'number') {
+      return Math.abs(value) <= limit || `The ${name} must be between -${limit} and ${limit}.`
+    }
+    return data.origin !== 'manual' || `Enter the ${name}.`
+  }
 
 // PLAN §5.1: institutions come from ROR (CC0, monthly import); organizations without a ROR ID,
 // such as small companies, are added by hand with coordinates.
@@ -61,7 +98,12 @@ export const Institutions: CollectionConfig = {
     defaultColumns: ['name', 'city', 'country', 'origin', 'status'],
     listSearchableFields: ['name', 'rorId', 'city'],
     description:
-      'Institutions from ROR are imported every month and updated automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.',
+      'Institutions from ROR are imported and kept up to date automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.',
+  },
+  access: {
+    // Content will refer to institutions (M4), and the import would add a deleted ROR
+    // institution again, so only institutions added by hand can be deleted.
+    delete: () => ({ origin: { equals: 'manual' } }),
   },
   hooks: { beforeValidate: [prepare] },
   // A copy would repeat the ROR ID or short ID, which must be unique.
@@ -171,10 +213,7 @@ export const Institutions: CollectionConfig = {
           type: 'number',
           min: -90,
           max: 90,
-          validate: (
-            value: number | null | undefined,
-            { data }: { data: Partial<InstitutionData> },
-          ) => data.origin !== 'manual' || typeof value === 'number' || 'Enter the latitude.',
+          validate: inRange(90, 'latitude'),
         },
         {
           name: 'lng',
@@ -182,10 +221,7 @@ export const Institutions: CollectionConfig = {
           type: 'number',
           min: -180,
           max: 180,
-          validate: (
-            value: number | null | undefined,
-            { data }: { data: Partial<InstitutionData> },
-          ) => data.origin !== 'manual' || typeof value === 'number' || 'Enter the longitude.',
+          validate: inRange(180, 'longitude'),
         },
       ],
     },

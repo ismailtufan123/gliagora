@@ -9,10 +9,24 @@ type Stored = { id: number; rorId: string; rorLastModified: string; data: Record
 function fakePayload(existing: Stored[] = [], { failOn }: { failOn?: string } = {}) {
   const rows = [...existing]
   const payload = {
-    find: vi.fn(async ({ collection }: { collection: string }) =>
-      collection === 'countries'
-        ? { docs: [{ id: 'US' }, { id: 'TR' }] }
-        : { docs: rows.map(({ id, rorId, rorLastModified }) => ({ id, rorId, rorLastModified })) },
+    find: vi.fn(
+      async ({
+        collection,
+        page = 1,
+        limit,
+      }: {
+        collection: string
+        page?: number
+        limit?: number
+      }) => {
+        if (collection === 'countries') return { docs: [{ id: 'US' }, { id: 'TR' }] }
+        const all = rows.map(({ id, rorId, rorLastModified }) => ({ id, rorId, rorLastModified }))
+        const size = limit ?? all.length
+        return {
+          docs: all.slice((page - 1) * size, page * size),
+          hasNextPage: page * size < all.length,
+        }
+      },
     ),
     create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
       if (data.rorId === failOn) throw new Error('database refused')
@@ -133,5 +147,19 @@ describe('importRorRecords', () => {
       release: 'v2.13',
     })
     expect(counts).toMatchObject({ created: 1, unchanged: 1 })
+  })
+
+  it('reads the existing institutions page by page', async () => {
+    const many = Array.from({ length: 12_000 }, (_, i) => ({
+      id: i + 1,
+      rorId: `id${i}`,
+      rorLastModified: '2025-01-01',
+      data: {},
+    }))
+    const { payload, spies } = fakePayload(many)
+    await importRorRecords({ payload, records: stream([]), release: 'v2.13' })
+    const pages = spies.find.mock.calls.filter(([args]) => args.collection === 'institutions')
+    expect(pages).toHaveLength(3)
+    expect(pages.every(([args]) => args.limit === 5_000)).toBe(true)
   })
 })
