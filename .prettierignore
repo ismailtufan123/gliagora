@@ -10,3 +10,6 @@ src/app/(payload)/admin/importMap.js
 
 # Prose documents are edited by hand
 *.md
+
+# Test data copied as is from its source
+tests/fixtures/

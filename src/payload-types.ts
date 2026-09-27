@@ -71,7 +71,9 @@ export interface Config {
     terms: Term;
     countries: Country;
     'country-sets': CountrySet;
+    institutions: Institution;
     'payload-kv': PayloadKv;
+    'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -82,7 +84,9 @@ export interface Config {
     terms: TermsSelect<false> | TermsSelect<true>;
     countries: CountriesSelect<false> | CountriesSelect<true>;
     'country-sets': CountrySetsSelect<false> | CountrySetsSelect<true>;
+    institutions: InstitutionsSelect<false> | InstitutionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -91,15 +95,27 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'tr') | ('en' | 'tr')[];
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'ror-import': RorImport;
+    'payload-jobs-stats': PayloadJobsStat;
+  };
+  globalsSelect: {
+    'ror-import': RorImportSelect<false> | RorImportSelect<true>;
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
+  };
   locale: 'en' | 'tr';
   widgets: {
     collections: CollectionsWidget;
   };
   user: User;
   jobs: {
-    tasks: unknown;
+    tasks: {
+      rorImport: TaskRorImport;
+      inline: {
+        input: unknown;
+        output: unknown;
+      };
+    };
     workflows: unknown;
   };
 }
@@ -280,6 +296,59 @@ export interface CountrySet {
   createdAt: string;
 }
 /**
+ * Institutions from ROR are imported and kept up to date automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "institutions".
+ */
+export interface Institution {
+  id: number;
+  name: string;
+  /**
+   * e.g. 05dxps055 (https://ror.org/05dxps055)
+   */
+  rorId?: string | null;
+  origin: 'ror' | 'manual';
+  status: 'active' | 'inactive' | 'withdrawn';
+  /**
+   * Made from the name; the ID at the end of the URL keeps old links working.
+   */
+  slug: string;
+  /**
+   * Ends the URL of an institution without a ROR ID.
+   */
+  shortId?: string | null;
+  /**
+   * Other names, acronyms and names in other languages, for search.
+   */
+  aliases?: string[] | null;
+  types?:
+    | (
+        | 'education'
+        | 'healthcare'
+        | 'company'
+        | 'archive'
+        | 'nonprofit'
+        | 'government'
+        | 'facility'
+        | 'funder'
+        | 'other'
+      )[]
+    | null;
+  country?: (string | null) | Country;
+  city?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  website?: string | null;
+  /**
+   * The ROR data release this record last came from.
+   */
+  rorRelease?: string | null;
+  rorLastModified?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -295,6 +364,107 @@ export interface PayloadKv {
     | number
     | boolean
     | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs".
+ */
+export interface PayloadJob {
+  id: number;
+  /**
+   * Input data provided to the job
+   */
+  input?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  taskStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  completedAt?: string | null;
+  totalTried?: number | null;
+  /**
+   * If hasError is true this job will not be retried
+   */
+  hasError?: boolean | null;
+  /**
+   * If hasError is true, this is the error that caused it
+   */
+  error?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Task execution log
+   */
+  log?:
+    | {
+        executedAt: string;
+        completedAt: string;
+        taskSlug: 'inline' | 'rorImport';
+        taskID: string;
+        input?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        output?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        state: 'failed' | 'succeeded';
+        error?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  taskSlug?: ('inline' | 'rorImport') | null;
+  queue?: string | null;
+  waitUntil?: string | null;
+  processing?: boolean | null;
+  meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -318,6 +488,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'country-sets';
         value: number | CountrySet;
+      } | null)
+    | ({
+        relationTo: 'institutions';
+        value: number | Institution;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -438,11 +612,66 @@ export interface CountrySetsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "institutions_select".
+ */
+export interface InstitutionsSelect<T extends boolean = true> {
+  name?: T;
+  rorId?: T;
+  origin?: T;
+  status?: T;
+  slug?: T;
+  shortId?: T;
+  aliases?: T;
+  types?: T;
+  country?: T;
+  city?: T;
+  lat?: T;
+  lng?: T;
+  website?: T;
+  rorRelease?: T;
+  rorLastModified?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  meta?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -477,6 +706,90 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
+ * The institutions are updated from the ROR data dump on Zenodo. The server checks for a new release every night and imports it (PLAN §6.2).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ror-import".
+ */
+export interface RorImport {
+  id: number;
+  release?: string | null;
+  releaseDate?: string | null;
+  lastImportedAt?: string | null;
+  lastCheckedAt?: string | null;
+  counts?: {
+    read?: number | null;
+    created?: number | null;
+    updated?: number | null;
+    unchanged?: number | null;
+    /**
+     * Withdrawn in ROR
+     */
+    skipped?: number | null;
+    invalid?: number | null;
+    /**
+     * See the server log
+     */
+    failed?: number | null;
+  };
+  lastError?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ror-import_select".
+ */
+export interface RorImportSelect<T extends boolean = true> {
+  release?: T;
+  releaseDate?: T;
+  lastImportedAt?: T;
+  lastCheckedAt?: T;
+  counts?:
+    | T
+    | {
+        read?: T;
+        created?: T;
+        updated?: T;
+        unchanged?: T;
+        skipped?: T;
+        invalid?: T;
+        failed?: T;
+      };
+  lastError?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats_select".
+ */
+export interface PayloadJobsStatsSelect<T extends boolean = true> {
+  stats?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "collections_widget".
  */
@@ -485,6 +798,17 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskRorImport".
+ */
+export interface TaskRorImport {
+  input?: unknown;
+  output: {
+    release?: string | null;
+    imported?: boolean | null;
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
