@@ -328,6 +328,14 @@
     font-weight: 700;
   }
 
+  /* "[TO DECIDE: …]" markers in draft texts (src/lib/markdown.ts). */
+  .open-point {
+    padding-inline: 0.15em;
+    border-radius: var(--corner-control);
+    background: var(--badge-bg);
+    color: var(--badge-text);
+  }
+
   /* Long-form text: legal pages, About. */
   .prose {
     display: grid;

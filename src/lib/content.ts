@@ -1,13 +1,15 @@
 import type { Locale } from '@/i18n/routing'
 
 // Long-form pages kept as Markdown in content/ (PLAN §12), rendered by ContentPage.
-// Titles and descriptions are in messages/{locale}.json under `pages.<key>`.
+// Titles and descriptions are in messages/{locale}.json under `pages.<messages>`, read in the
+// page's own locale (the English and Turkish contact pages share `pages.contact`).
 // `updated` is the date of the last change to the text; change it with the text.
 // `draft: true` shows a "draft" notice and keeps the page out of search engines. A legal text
 // leaves draft only after the operator has approved it (CLAUDE.md).
 
 type ContentPageInfo = {
   locale: Locale
+  messages: 'about' | 'privacy' | 'kvkk' | 'terms' | 'contact'
   path: string
   file: string
   updated: string
@@ -17,10 +19,52 @@ type ContentPageInfo = {
 export const CONTENT_PAGES = {
   about: {
     locale: 'en',
+    messages: 'about',
     path: '/en/about/',
     file: 'en/about.md',
     updated: '2026-09-27',
     draft: false,
+  },
+  // Legal texts (PLAN §15.4): drafts written in M1 for the operator's review.
+  contact: {
+    locale: 'en',
+    messages: 'contact',
+    path: '/en/contact/',
+    file: 'en/contact.md',
+    updated: '2026-09-27',
+    draft: true,
+  },
+  iletisim: {
+    locale: 'tr',
+    messages: 'contact',
+    path: '/tr/iletisim/',
+    file: 'tr/iletisim.md',
+    updated: '2026-09-27',
+    draft: true,
+  },
+  privacy: {
+    locale: 'en',
+    messages: 'privacy',
+    path: '/en/legal/privacy/',
+    file: 'en/legal/privacy.md',
+    updated: '2026-09-27',
+    draft: true,
+  },
+  kvkk: {
+    locale: 'tr',
+    messages: 'kvkk',
+    path: '/tr/legal/kvkk-aydinlatma-metni/',
+    file: 'tr/legal/kvkk-aydinlatma-metni.md',
+    updated: '2026-09-27',
+    draft: true,
+  },
+  terms: {
+    locale: 'en',
+    messages: 'terms',
+    path: '/en/legal/terms/',
+    file: 'en/legal/terms.md',
+    updated: '2026-09-27',
+    draft: true,
   },
 } as const satisfies Record<string, ContentPageInfo>
 

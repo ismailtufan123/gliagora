@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { Marked, Renderer, type Tokens } from 'marked'
+import { Marked, Renderer, type TokenizerAndRendererExtension, type Tokens } from 'marked'
 
 // Long-form pages (About, legal texts) are Markdown files in content/, reviewed through pull
 // requests (PLAN §12). They are turned into HTML at build time; the pages are static.
@@ -38,11 +38,34 @@ function checkedHref(href: string): string {
   return href
 }
 
+// Open points in draft texts, "[TO DECIDE: …]" or "[KARAR VERİLECEK: …]", are highlighted so a
+// reviewer can find them.
+const MARKER = /^\[(?:TO DECIDE|KARAR VERİLECEK):[^\]]*\]/
+const openPoints: TokenizerAndRendererExtension = {
+  name: 'openPoint',
+  level: 'inline',
+  start: (src) => src.match(/\[(?:TO DECIDE|KARAR VERİLECEK):/)?.index,
+  tokenizer(src) {
+    const match = MARKER.exec(src)
+    if (!match) return undefined
+    // Only the text inside the brackets is parsed again, so the marker cannot match itself.
+    return {
+      type: 'openPoint',
+      raw: match[0],
+      tokens: this.lexer.inlineTokens(match[0].slice(1, -1)),
+    }
+  },
+  renderer(token) {
+    return `<mark class="open-point">[${this.parser.parseInline(token.tokens ?? [])}]</mark>`
+  },
+}
+
 /** Markdown to HTML. Headings get ids for deep links; raw HTML in the source is shown as text. */
 export function renderMarkdown(markdown: string): string {
   const used = new Map<string, number>()
   const marked = new Marked({
     gfm: true,
+    extensions: [openPoints],
     renderer: {
       heading({ tokens, depth }: Tokens.Heading) {
         const html = this.parser.parseInline(tokens)

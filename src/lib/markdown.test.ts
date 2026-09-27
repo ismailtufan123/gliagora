@@ -55,6 +55,15 @@ describe('renderMarkdown', () => {
     expect(html).toContain('&lt;script&gt;')
   })
 
+  it('highlights open points in draft texts', () => {
+    const html = renderMarkdown(
+      'Text [TO DECIDE: the *date*] and [KARAR VERİLECEK: adres]. A [link](/en/about/).',
+    )
+    expect(html).toContain('<mark class="open-point">[TO DECIDE: the <em>date</em>]</mark>')
+    expect(html).toContain('<mark class="open-point">[KARAR VERİLECEK: adres]</mark>')
+    expect(html).toContain('<a href="/en/about/">link</a>')
+  })
+
   it('renders tables, lists and links', () => {
     const html = renderMarkdown(
       '| A | B |\n|---|---|\n| 1 | 2 |\n\n1. one\n2. two\n\n[Contact](/en/contact/)',
