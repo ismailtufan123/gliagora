@@ -92,7 +92,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
         <div className="ms-auto flex items-center gap-2">
           <LocaleSwitcher className="hidden md:block" locale={locale} labels={localeLabels} />
           <a
-            className="button button-primary hidden md:inline-flex"
+            className="button button-primary hidden max-w-52 text-center leading-tight whitespace-normal md:inline-flex"
             href={paths.section('newsletter')}
           >
             {t('header.digest')}

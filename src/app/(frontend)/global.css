@@ -79,9 +79,19 @@
     scroll-padding-top: calc(var(--header-height) + var(--space-4));
   }
 
-  /* While the mobile menu is open, the page behind it does not scroll. */
-  html.scroll-locked {
-    overflow: hidden;
+  /*
+   * While the mobile menu is open, the page behind it neither scrolls nor takes focus, even
+   * without JavaScript (hidden content leaves the tab order and the accessibility tree). Only
+   * below the desktop breakpoint, where the mobile menu is shown (SiteHeader.tsx).
+   */
+  @media (width < 80rem) {
+    html:has(.site-header details[data-modal][open]) {
+      overflow: hidden;
+    }
+
+    body:has(> .site-header details[data-modal][open]) > :not(.site-header) {
+      visibility: hidden;
+    }
   }
 
   body {
@@ -156,6 +166,8 @@
     gap: var(--space-2);
     min-height: 2.75rem;
     padding-inline: var(--space-4);
+    /* Transparent until forced-colours mode draws it, so buttons keep their shape there. */
+    border: 1px solid transparent;
     border-radius: var(--corner-control);
     font-weight: 700;
     line-height: 1.2;
@@ -174,7 +186,7 @@
   }
 
   .button-secondary {
-    border: 1px solid var(--line-strong);
+    border-color: var(--line-strong);
     color: var(--text);
   }
 
@@ -190,6 +202,12 @@
     height: var(--header-height);
     background: var(--bg);
     box-shadow: 0 1px 0 var(--line);
+  }
+
+  @media (forced-colors: active) {
+    .site-header {
+      border-bottom: 1px solid CanvasText;
+    }
   }
 
   .nav-link {
@@ -224,6 +242,7 @@
     align-items: center;
     justify-content: center;
     min-height: 2rem;
+    border: 1px solid transparent;
     border-radius: var(--corner-control);
     color: var(--text);
   }

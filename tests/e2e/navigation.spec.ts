@@ -57,6 +57,28 @@ test.describe('desktop navigation', () => {
     )
   })
 
+  test('on a filtered list, the matching menu entry is current, not "All positions"', async ({
+    page,
+  }) => {
+    await page.goto('/en/jobs/?type=phd')
+    const nav = header(page).getByRole('navigation', { name: 'Main' })
+    await nav.getByLabel('Jobs menu').click()
+    await expect(nav.getByRole('link', { name: 'PhD' })).toHaveAttribute('aria-current', 'page')
+    await expect(nav.getByRole('link', { name: 'All positions' })).not.toHaveAttribute(
+      'aria-current',
+    )
+  })
+
+  test('focus in a mega-menu moves to the menu button when the window narrows', async ({
+    page,
+  }) => {
+    await page.goto('/en/')
+    await header(page).getByLabel('Jobs menu').click()
+    await header(page).getByRole('link', { name: 'All positions' }).focus()
+    await page.setViewportSize({ width: 1024, height: 800 })
+    await expect(menuButton(page)).toBeFocused()
+  })
+
   test('the language menu names the current language and what is coming', async ({ page }) => {
     await page.goto('/en/contact/')
     const button = header(page).getByLabel('Language: English (EN)')
@@ -96,6 +118,38 @@ test.describe('mobile menu', () => {
   })
 })
 
+test.describe('mobile menu, small landscape screen', () => {
+  test.skip(({ isMobile }) => !isMobile, 'the mobile menu shows below 1280px')
+  test.use({ viewport: { width: 667, height: 375 } })
+
+  test('tabbing out of an open section keeps the focused item in view', async ({ page }) => {
+    await page.goto('/en/')
+    await menuButton(page).click()
+    const panel = header(page).locator('.mobile-panel')
+    await panel.locator('summary').first().click()
+    await panel.getByRole('link', { name: 'Suggest a listing' }).focus()
+    await page.keyboard.press('Tab')
+    const focused = page.locator(':focus')
+    await expect(focused).toHaveText('Events')
+    await expect(focused).toBeInViewport()
+  })
+
+  test('focus in the mobile menu moves to the desktop navigation when the window widens', async ({
+    page,
+  }) => {
+    await page.goto('/en/')
+    await menuButton(page).click()
+    await header(page).locator('.mobile-panel summary').first().click()
+    await header(page).locator('.mobile-panel').getByRole('link', { name: 'PhD' }).focus()
+    await page.setViewportSize({ width: 1300, height: 800 })
+    await expect(
+      header(page)
+        .getByRole('navigation', { name: 'Main' })
+        .getByRole('link', { name: 'Jobs', exact: true }),
+    ).toBeFocused()
+  })
+})
+
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false })
 
@@ -104,6 +158,9 @@ test.describe('without JavaScript', () => {
     if (isMobile) {
       await menuButton(page).click()
       await expect(header(page).locator('.mobile-panel')).toBeVisible()
+      // The page behind the panel is hidden, so Tab cannot reach it.
+      await expect(page.locator('main')).toBeHidden()
+      await expect(page.locator('footer')).toBeHidden()
     } else {
       await header(page).getByLabel('Resources menu').click()
       await expect(header(page).getByRole('link', { name: 'Datasets' })).toBeVisible()
@@ -130,6 +187,33 @@ for (const colorScheme of ['light', 'dark'] as const) {
     expect(serious.map((v) => `${v.id}: ${v.help}`)).toEqual([])
   })
 }
+
+// WCAG 1.4.12: with the text-spacing overrides, nothing may be cut off or scroll sideways.
+const TEXT_SPACING =
+  '* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }'
+for (const width of [320, 1280]) {
+  for (const path of ['/en/contact/', '/tr/iletisim/']) {
+    test(`${path} at ${width}px with text spacing has no horizontal scroll`, async ({
+      page,
+      isMobile,
+    }) => {
+      test.skip(isMobile, 'the width is set explicitly')
+      await page.setViewportSize({ width, height: 800 })
+      await page.goto(path)
+      await page.addStyleTag({ content: TEXT_SPACING })
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      )
+      expect(overflow).toBeLessThanOrEqual(0)
+    })
+  }
+}
+
+test('in forced-colours mode the header keeps a visible edge', async ({ page }) => {
+  await page.emulateMedia({ forcedColors: 'active' })
+  await page.goto('/en/')
+  await expect(header(page)).toHaveCSS('border-bottom-width', '1px')
+})
 
 test('every link in the header and footer leads to a page', async ({ page, request }) => {
   await page.goto('/en/')
