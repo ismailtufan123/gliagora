@@ -23,6 +23,7 @@
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
     "ror:import": "payload run src/scripts/ror-import.ts",
+    "fake:jobs": "payload run src/scripts/fake-jobs.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
