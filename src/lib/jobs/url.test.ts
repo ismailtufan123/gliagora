@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { canonicalUrl, isHttpUrl } from './url'
+import { addressProblem, canonicalUrl, isHttpUrl } from './url'
 
 describe('isHttpUrl', () => {
   it('accepts full http and https addresses', () => {
@@ -113,5 +113,25 @@ describe('canonicalUrl', () => {
     expect(canonicalUrl('mailto:jobs@example.org')).toBeNull()
     expect(canonicalUrl('example.org/job')).toBeNull()
     expect(canonicalUrl('')).toBeNull()
+  })
+})
+
+describe('addressProblem', () => {
+  it('accepts a full http or https address', () => {
+    expect(addressProblem('https://www.example.org/jobs/123')).toBeNull()
+    expect(addressProblem('http://example.org/job?utm_source=list')).toBeNull()
+  })
+
+  it('asks for a full address otherwise', () => {
+    for (const value of ['www.example.org/job', 'ftp://example.org/job', 'javascript:alert(1)']) {
+      expect(addressProblem(value)).toMatch(/full address/)
+    }
+  })
+
+  it('refuses an address whose canonical form is longer than 2000 characters', () => {
+    // 999 characters as typed, but each of these letters takes 9 once percent-encoded.
+    expect(addressProblem('https://www.example.org/jobs/' + '神経'.repeat(485))).toBe(
+      'This address is too long.',
+    )
   })
 })

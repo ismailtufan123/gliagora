@@ -1,0 +1,44 @@
+// Styles for our own admin components, with Payload's theme variables, so light and dark mode
+// follow the admin's own setting.
+
+// The review queue above the collections on the dashboard (src/admin/ReviewDashboard.tsx).
+.review-dashboard {
+  margin-bottom: calc(var(--base) * 2);
+  padding: var(--base) calc(var(--base) * 1.5);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-m);
+  background: var(--theme-elevation-50);
+
+  &__title {
+    margin: 0 0 calc(var(--base) * 0.5);
+  }
+
+  &__subtitle {
+    margin: var(--base) 0 calc(var(--base) * 0.5);
+  }
+
+  &__counts,
+  &__deadlines {
+    margin: 0;
+    padding-left: calc(var(--base) * 1.25);
+  }
+
+  li + li {
+    margin-top: calc(var(--base) * 0.25);
+  }
+
+  p {
+    margin: calc(var(--base) * 0.5) 0 0;
+  }
+
+  a {
+    text-decoration: underline;
+
+    // Payload's admin CSS removes the outline from links (`a:focus`) and underlines them on focus
+    // instead; these links are always underlined, so they get Payload's own focus outline back.
+    &:focus-visible {
+      outline: var(--accessibility-outline);
+      outline-offset: var(--accessibility-outline-offset);
+    }
+  }
+}

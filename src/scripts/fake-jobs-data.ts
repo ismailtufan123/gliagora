@@ -8,6 +8,10 @@ import { type DedupeFacts, likelyDuplicate, normaliseTitle } from '@/lib/jobs/si
 
 import { FIXED_JOBS, type FixedJob } from './fake-jobs-fixed'
 
+/** The address of a fake posting, on the reserved example.org domain. */
+export const postingUrl = (rorId: string, id: string) =>
+  `https://careers.example.org/${rorId}/positions/${id}`
+
 /** Marks every fake job (in `internalNotes`), so the next run can remove them first. */
 export const FAKE_NOTE = 'Fake data (pnpm fake:jobs)'
 
@@ -281,7 +285,7 @@ export function fakeJobs(now: Date, seed = SEED): FakeJob[] {
       modelSystems,
       careerStages: [...(fixed.careerStages ?? [])],
       summary: summaryOf(random, fixed.positionType, topic, methods, modelSystems),
-      originalUrl: `https://careers.example.org/${fixed.institutionRorId}/positions/${fixed.shortId}`,
+      originalUrl: postingUrl(fixed.institutionRorId, fixed.shortId),
       startText: 'By agreement',
       checks: allChecks(fixed.status !== 'draft'),
       ...lifecycle({ ...fixed, day, timeZone }, nowMs, random),
@@ -329,7 +333,7 @@ export function fakeJobs(now: Date, seed = SEED): FakeJob[] {
       modelSystems,
       careerStages: some(random, CAREER_STAGES[positionType] as string[], 1, 2),
       summary: summaryOf(random, positionType, topic, methods, modelSystems),
-      originalUrl: `https://careers.example.org/${institution.rorId}/positions/${shortId}`,
+      originalUrl: postingUrl(institution.rorId, shortId),
       startText: pick(random, STARTS),
       checks: allChecks(status !== 'draft' && status !== 'in_review'),
       ...lifecycle({ status, deadlineKind, day, timeZone }, nowMs, random),

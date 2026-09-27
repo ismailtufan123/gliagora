@@ -68,6 +68,8 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    candidates: Candidate;
+    submissions: Submission;
     jobs: Job;
     terms: Term;
     countries: Country;
@@ -82,6 +84,8 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    candidates: CandidatesSelect<false> | CandidatesSelect<true>;
+    submissions: SubmissionsSelect<false> | SubmissionsSelect<true>;
     jobs: JobsSelect<false> | JobsSelect<true>;
     terms: TermsSelect<false> | TermsSelect<true>;
     countries: CountriesSelect<false> | CountriesSelect<true>;
@@ -164,6 +168,198 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
+}
+/**
+ * The review queue, newest first (PLAN §6.3). Work through the New and Triaged candidates: open the original posting, check that it is on the employer's own page and still open, then fill in the title and institution. To accept, set the status to Accepted and save: a draft job is made and linked under "Job created"; open it, add the facts and publish it. Otherwise reject it with a reason, or mark it as a duplicate of a job. Candidates are never deleted: they record every decision.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "candidates".
+ */
+export interface Candidate {
+  id: number;
+  /**
+   * Open it and check it: accept only postings on the employer's own website, never on a job board or an agency's site (PLAN §6.1).
+   */
+  rawUrl?: string | null;
+  /**
+   * The title exactly as the employer posted it, in its language.
+   */
+  rawTitle?: string | null;
+  /**
+   * The employer. Search by name or ROR ID. Needed to accept.
+   */
+  institution?: (number | null) | Institution;
+  /**
+   * Jobs with the same address, and jobs not closed yet at the same institution with a similar title (PLAN §6.3), found when the candidate was last saved. If one is the same position, mark this candidate as its duplicate.
+   */
+  possibleDuplicates?: (number | Job)[] | null;
+  /**
+   * Candidates for the same address that were not rejected.
+   */
+  possibleDuplicateCandidates?: (number | Candidate)[] | null;
+  /**
+   * Text from the source, such as a mailing-list announcement, for editors only. Never shown on the site or copied into a job; deleted 30 days after the decision (PLAN §5.1).
+   */
+  snippet?: string | null;
+  /**
+   * Facts a source monitor read from the posting (from M7), to check against the original.
+   */
+  extracted?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * The address as https, without tracking parameters and fragments, for finding the same posting twice.
+   */
+  canonicalUrl?: string | null;
+  /**
+   * The title in lower case without accents or punctuation, for comparing titles.
+   */
+  fingerprint?: string | null;
+  /**
+   * Triaged: checked, not decided yet. Accepted makes a draft job and is final. A rejected or duplicate candidate can be reopened as Triaged.
+   */
+  status: 'new' | 'triaged' | 'accepted' | 'rejected' | 'duplicate';
+  decisionReason?:
+    | (
+        | 'not-neuroscience'
+        | 'agency-or-intermediary'
+        | 'closed'
+        | 'not-a-position'
+        | 'not-employer-page'
+        | 'spam'
+        | 'other'
+      )
+    | null;
+  /**
+   * The job with the same position. Search by title or short ID.
+   */
+  duplicateOf?: (number | null) | Job;
+  /**
+   * For editors only; never shown on the site.
+   */
+  decisionNote?: string | null;
+  /**
+   * When it was accepted, rejected or marked as a duplicate.
+   */
+  decidedAt?: string | null;
+  /**
+   * The draft job made when the candidate was accepted: open it to add the facts and publish it.
+   */
+  publishedRef?: (number | null) | Job;
+  /**
+   * The "Suggest a listing" suggestion it came from, with its note.
+   */
+  submission?: (number | null) | Submission;
+  /**
+   * What it becomes when accepted. Events, funding and papers follow later.
+   */
+  kind: 'job';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Institutions from ROR are imported and kept up to date automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "institutions".
+ */
+export interface Institution {
+  id: number;
+  name: string;
+  /**
+   * e.g. 05dxps055 (https://ror.org/05dxps055)
+   */
+  rorId?: string | null;
+  origin: 'ror' | 'manual';
+  status: 'active' | 'inactive' | 'withdrawn';
+  /**
+   * Made from the name; the ID at the end of the URL keeps old links working.
+   */
+  slug: string;
+  /**
+   * Ends the URL of an institution without a ROR ID.
+   */
+  shortId?: string | null;
+  /**
+   * Other names, acronyms and names in other languages, for search.
+   */
+  aliases?: string[] | null;
+  types?:
+    | (
+        | 'education'
+        | 'healthcare'
+        | 'company'
+        | 'archive'
+        | 'nonprofit'
+        | 'government'
+        | 'facility'
+        | 'funder'
+        | 'other'
+      )[]
+    | null;
+  country?: (string | null) | Country;
+  city?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  website?: string | null;
+  /**
+   * The ROR data release this record last came from.
+   */
+  rorRelease?: string | null;
+  rorLastModified?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Countries and areas with their UN M49 regions (PLAN §4.6). Kosovo (XK) and Taiwan (TW) are included although M49 does not list them, because ROR and funders use them.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "countries".
+ */
+export interface Country {
+  /**
+   * ISO 3166-1 alpha-2, e.g. DE. Cannot be changed.
+   */
+  id: string;
+  name?: string | null;
+  region?: ('africa' | 'northern-america' | 'latin-america-caribbean' | 'asia' | 'europe' | 'oceania') | null;
+  subregion?:
+    | (
+        | 'northern-africa'
+        | 'eastern-africa'
+        | 'middle-africa'
+        | 'southern-africa'
+        | 'western-africa'
+        | 'caribbean'
+        | 'central-america'
+        | 'south-america'
+        | 'central-asia'
+        | 'eastern-asia'
+        | 'south-eastern-asia'
+        | 'southern-asia'
+        | 'western-asia'
+        | 'eastern-europe'
+        | 'northern-europe'
+        | 'southern-europe'
+        | 'western-europe'
+        | 'australia-new-zealand'
+        | 'melanesia'
+        | 'micronesia'
+        | 'polynesia'
+      )
+    | null;
+  /**
+   * Empty for XK and TW.
+   */
+  m49Code?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * Positions from employers' own pages (PLAN §6). Save a draft at any time; to publish, fill in the facts and tick the checklist. Published jobs are never deleted: set them to Expired or Withdrawn. Every change is kept under Versions.
@@ -742,107 +938,13 @@ export interface Job {
   linkStatus: 'unchecked' | 'ok' | 'redirect' | 'broken' | 'gone';
   lastCheckedAt?: string | null;
   /**
+   * The "Suggest a listing" suggestion this job came from, if any.
+   */
+  submission?: (number | null) | Submission;
+  /**
    * Tick if the summary or tags started from an AI draft (PLAN §6.6).
    */
   aiAssisted?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Institutions from ROR are imported and kept up to date automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "institutions".
- */
-export interface Institution {
-  id: number;
-  name: string;
-  /**
-   * e.g. 05dxps055 (https://ror.org/05dxps055)
-   */
-  rorId?: string | null;
-  origin: 'ror' | 'manual';
-  status: 'active' | 'inactive' | 'withdrawn';
-  /**
-   * Made from the name; the ID at the end of the URL keeps old links working.
-   */
-  slug: string;
-  /**
-   * Ends the URL of an institution without a ROR ID.
-   */
-  shortId?: string | null;
-  /**
-   * Other names, acronyms and names in other languages, for search.
-   */
-  aliases?: string[] | null;
-  types?:
-    | (
-        | 'education'
-        | 'healthcare'
-        | 'company'
-        | 'archive'
-        | 'nonprofit'
-        | 'government'
-        | 'facility'
-        | 'funder'
-        | 'other'
-      )[]
-    | null;
-  country?: (string | null) | Country;
-  city?: string | null;
-  lat?: number | null;
-  lng?: number | null;
-  website?: string | null;
-  /**
-   * The ROR data release this record last came from.
-   */
-  rorRelease?: string | null;
-  rorLastModified?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Countries and areas with their UN M49 regions (PLAN §4.6). Kosovo (XK) and Taiwan (TW) are included although M49 does not list them, because ROR and funders use them.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "countries".
- */
-export interface Country {
-  /**
-   * ISO 3166-1 alpha-2, e.g. DE. Cannot be changed.
-   */
-  id: string;
-  name?: string | null;
-  region?: ('africa' | 'northern-america' | 'latin-america-caribbean' | 'asia' | 'europe' | 'oceania') | null;
-  subregion?:
-    | (
-        | 'northern-africa'
-        | 'eastern-africa'
-        | 'middle-africa'
-        | 'southern-africa'
-        | 'western-africa'
-        | 'caribbean'
-        | 'central-america'
-        | 'south-america'
-        | 'central-asia'
-        | 'eastern-asia'
-        | 'south-eastern-asia'
-        | 'southern-asia'
-        | 'western-asia'
-        | 'eastern-europe'
-        | 'northern-europe'
-        | 'southern-europe'
-        | 'western-europe'
-        | 'australia-new-zealand'
-        | 'melanesia'
-        | 'micronesia'
-        | 'polynesia'
-      )
-    | null;
-  /**
-   * Empty for XK and TW.
-   */
-  m49Code?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -909,6 +1011,49 @@ export interface Term {
    * Lower numbers come first in lists and filters.
    */
   sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Suggestions from the "Suggest a listing" form, newest first. A suggested position goes straight into the review queue as a candidate: decide it there, and the suggestion follows. Events, funding, papers, news, resources and other suggestions are not in the review queue yet: they wait here as New until their milestones; check them by hand and set them to Decided. The email address is stored only with the person's consent; it is deleted with the link and the note 90 days after the decision (D34). To answer a data request, filter by Email, then delete.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "submissions".
+ */
+export interface Submission {
+  id: number;
+  url: string;
+  kind: 'position' | 'event' | 'funding' | 'paper' | 'news' | 'resource' | 'other';
+  /**
+   * From the person who suggested it. Deleted 90 days after the decision.
+   */
+  note?: string | null;
+  /**
+   * Only to tell them the outcome, and only with their consent. Deleted 90 days after the decision.
+   */
+  email?: string | null;
+  consentToContact?: boolean | null;
+  locale: 'en' | 'tr';
+  /**
+   * A suggested position follows its candidate. Other kinds wait as New until their milestones; set them to Decided once handled by hand.
+   */
+  status: 'new' | 'queued' | 'decided';
+  /**
+   * Its entry in the review queue.
+   */
+  candidate?: (number | null) | Candidate;
+  /**
+   * When its candidate was decided, or it was set to Decided.
+   */
+  decidedAt?: string | null;
+  /**
+   * The email address, link and note are deleted 90 days after the decision (D34, from M4.7).
+   */
+  emailPurgeAt?: string | null;
+  /**
+   * When the person was told the outcome (from M4.7).
+   */
+  notifiedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1063,6 +1208,14 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
+        relationTo: 'candidates';
+        value: number | Candidate;
+      } | null)
+    | ({
+        relationTo: 'submissions';
+        value: number | Submission;
+      } | null)
+    | ({
         relationTo: 'jobs';
         value: number | Job;
       } | null)
@@ -1149,6 +1302,50 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "candidates_select".
+ */
+export interface CandidatesSelect<T extends boolean = true> {
+  rawUrl?: T;
+  rawTitle?: T;
+  institution?: T;
+  possibleDuplicates?: T;
+  possibleDuplicateCandidates?: T;
+  snippet?: T;
+  extracted?: T;
+  canonicalUrl?: T;
+  fingerprint?: T;
+  status?: T;
+  decisionReason?: T;
+  duplicateOf?: T;
+  decisionNote?: T;
+  decidedAt?: T;
+  publishedRef?: T;
+  submission?: T;
+  kind?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "submissions_select".
+ */
+export interface SubmissionsSelect<T extends boolean = true> {
+  url?: T;
+  kind?: T;
+  note?: T;
+  email?: T;
+  consentToContact?: T;
+  locale?: T;
+  status?: T;
+  candidate?: T;
+  decidedAt?: T;
+  emailPurgeAt?: T;
+  notifiedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "jobs_select".
  */
 export interface JobsSelect<T extends boolean = true> {
@@ -1198,6 +1395,7 @@ export interface JobsSelect<T extends boolean = true> {
   withdrawnAt?: T;
   linkStatus?: T;
   lastCheckedAt?: T;
+  submission?: T;
   aiAssisted?: T;
   updatedAt?: T;
   createdAt?: T;

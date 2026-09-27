@@ -29,7 +29,8 @@ import {
   statusTimes,
 } from '@/lib/jobs/status'
 import { TIME_ZONES, isTimeZone, timeZoneLabel } from '@/lib/jobs/time-zones'
-import { canonicalUrl, isHttpUrl } from '@/lib/jobs/url'
+import { addressProblem, canonicalUrl } from '@/lib/jobs/url'
+import { idOf } from '@/lib/relationship'
 import { SHORT_ID_PATTERN, newShortId } from '@/lib/short-id'
 import { slugify } from '@/lib/slug'
 import type { Vocabulary } from '@/lib/taxonomy'
@@ -55,12 +56,6 @@ export const FAKE_DATA = Symbol.for('gliagora.fake-jobs')
 
 export const isFakeData = (context: RequestContext | undefined) =>
   context?.fakeData === FAKE_DATA && process.env.PAYLOAD_JOBS_AUTORUN !== 'true'
-
-// A relationship value is an ID, or a populated document when read with depth > 0.
-const idOf = (value: unknown): number | string | undefined => {
-  const raw = typeof value === 'object' && value !== null && 'id' in value ? value.id : value
-  return typeof raw === 'number' || (typeof raw === 'string' && raw !== '') ? raw : undefined
-}
 
 const termIds = (value: unknown): number[] =>
   (Array.isArray(value) ? value : value == null ? [] : [value])
@@ -207,6 +202,22 @@ const keepPublished: CollectionBeforeDeleteHook = async ({ id, req, context }) =
   if (job.status !== 'draft') {
     throw new APIError(
       'Only drafts can be deleted. Set the status back to Draft first.',
+      403,
+      null,
+      true,
+    )
+  }
+  // The review queue points at this draft: the candidate it was made from ("Job created", and
+  // accepted is final) or candidates marked as its duplicates. Deleting it would leave those
+  // decisions without their job, and nothing could repair them (PLAN §5.1, §6.3).
+  const { totalDocs } = await req.payload.count({
+    collection: 'candidates',
+    where: { or: [{ publishedRef: { equals: id } }, { duplicateOf: { equals: id } }] },
+    req,
+  })
+  if (totalDocs > 0) {
+    throw new APIError(
+      'This draft is linked from the review queue (made from an accepted candidate, or the job a candidate repeats), so it is kept. Edit it instead.',
       403,
       null,
       true,
@@ -496,8 +507,10 @@ const NEVER_PUBLISHED_DRAFT: Where = {
   and: [{ status: { equals: 'draft' } }, { publishedAt: { exists: false } }],
 }
 
-// The short ID ends the job's address, so it never changes, also when a version is restored.
-const shortIdFixed = fixedFieldHooks('jobs', ['shortId'])
+// The short ID ends the job's address, so it never changes, also when a version is restored. The
+// suggestion a job came from is set when its candidate is accepted (src/collections/Candidates.ts)
+// and stays with it.
+const fixedFields = fixedFieldHooks('jobs', ['shortId', 'submission'])
 
 // PLAN §5.1, §6: a position at an employer, published as facts, our own summary and a link to the
 // employer's own page. Editors save drafts freely; review and publication need the facts, and
@@ -525,8 +538,8 @@ export const Jobs: CollectionConfig = {
   // Every change and every status transition is kept (PLAN §5.2).
   versions: { maxPerDoc: 100 },
   hooks: {
-    beforeValidate: [...shortIdFixed.beforeValidate, prepare],
-    beforeChange: shortIdFixed.beforeChange,
+    beforeValidate: [...fixedFields.beforeValidate, prepare],
+    beforeChange: fixedFields.beforeChange,
     beforeDelete: [keepPublished],
   },
   fields: [
@@ -666,12 +679,8 @@ export const Jobs: CollectionConfig = {
           return (
             !facts(options.data) || "Add the address of the posting on the employer's own website."
           )
-        if (!isHttpUrl(value)) return 'Enter a full address, e.g. https://www.example.org/jobs/123.'
-        // The canonical address is indexed, and percent-encoding can make it much longer than the
-        // address as typed (a character outside ASCII takes up to 12).
-        if ((canonicalUrl(value)?.length ?? 0) > 2000) return 'This address is too long.'
         // Payload's own text check applies maxLength.
-        return validations.text(value, options as never)
+        return addressProblem(value) ?? validations.text(value, options as never)
       },
       admin: {
         description:
@@ -923,6 +932,19 @@ export const Jobs: CollectionConfig = {
         position: 'sidebar',
         readOnly: true,
         date: { pickerAppearance: 'dayAndTime', displayFormat: 'd MMM yyyy, HH:mm' },
+      },
+    },
+    {
+      name: 'submission',
+      label: 'From suggestion',
+      type: 'relationship',
+      relationTo: 'submissions',
+      // Set only when a candidate from a suggestion is accepted (src/collections/Candidates.ts).
+      access: { create: () => false, update: () => false },
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'The "Suggest a listing" suggestion this job came from, if any.',
       },
     },
     {

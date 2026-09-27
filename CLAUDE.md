@@ -86,7 +86,7 @@ Fill these in as the project grows.
 - `pnpm test:e2e` — Playwright + axe tests against a running app (`pnpm build && pnpm start`); every new page template goes into `tests/e2e/pages.ts`
 - `pnpm migrate:create <name>`, then `pnpm generate:types` — after changing a collection; commit the migration and types with it
 - `pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip` — load 20 test institutions (21 ROR records, one withdrawn and skipped; the e2e tests need them); without a file it downloads and imports the latest ROR release (about 15 minutes the first time)
-- `pnpm fake:jobs` — replace the fake jobs at the test institutions (run it after `pnpm ror:import`): about 60 generated ones plus the fixed ones the e2e tests use (`src/scripts/fake-jobs-fixed.ts`: open, closing soon, rolling, closed recently, gone, withdrawn, draft). It refuses to run where `PAYLOAD_JOBS_AUTORUN` is `true` (production)
+- `pnpm fake:jobs` — replace the fake jobs at the test institutions (run it after `pnpm ror:import`): about 60 generated ones plus the fixed ones the e2e tests use (`src/scripts/fake-jobs-fixed.ts`: open, closing soon, rolling, closed recently, gone, withdrawn, draft), then fake review-queue suggestions and candidates in every state (`src/scripts/fake-queue-data.ts`). It refuses to run where `PAYLOAD_JOBS_AUTORUN` is `true` (production)
 
 ## Target repository layout
 

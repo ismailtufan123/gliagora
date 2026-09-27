@@ -5,6 +5,7 @@ import * as migration_20260927_140459_geography from './20260927_140459_geograph
 import * as migration_20260927_141000_seed_geography from './20260927_141000_seed_geography';
 import * as migration_20260927_142000_institutions from './20260927_142000_institutions';
 import * as migration_20260927_200239_jobs from './20260927_200239_jobs';
+import * as migration_20260927_221038_review_queue from './20260927_221038_review_queue';
 
 export const migrations = [
   {
@@ -41,5 +42,10 @@ export const migrations = [
     up: migration_20260927_200239_jobs.up,
     down: migration_20260927_200239_jobs.down,
     name: '20260927_200239_jobs',
+  },
+  {
+    up: migration_20260927_221038_review_queue.up,
+    down: migration_20260927_221038_review_queue.down,
+    name: '20260927_221038_review_queue',
   },
 ];

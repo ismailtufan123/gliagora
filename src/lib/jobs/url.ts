@@ -12,6 +12,20 @@ export function isHttpUrl(value: unknown): value is string {
   }
 }
 
+/** The longest address stored, as typed and in its canonical form (which is indexed). */
+export const MAX_URL_LENGTH = 2000
+
+/**
+ * Why an address cannot be stored as the address of a posting, or null. The canonical form is
+ * checked too, because percent-encoding can make it much longer than the address as typed (a
+ * character outside ASCII takes up to 12). The length as typed is the field's `maxLength`.
+ */
+export function addressProblem(value: string): string | null {
+  if (!isHttpUrl(value)) return 'Enter a full address, e.g. https://www.example.org/jobs/123.'
+  if ((canonicalUrl(value)?.length ?? 0) > MAX_URL_LENGTH) return 'This address is too long.'
+  return null
+}
+
 /** Query parameters that only track where a visitor came from. */
 const TRACKING = new Set([
   'fbclid',
