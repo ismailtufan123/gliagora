@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     users: User;
     terms: Term;
+    countries: Country;
+    'country-sets': CountrySet;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +80,8 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     terms: TermsSelect<false> | TermsSelect<true>;
+    countries: CountriesSelect<false> | CountriesSelect<true>;
+    'country-sets': CountrySetsSelect<false> | CountrySetsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -210,6 +214,72 @@ export interface Term {
   createdAt: string;
 }
 /**
+ * Countries and areas with their UN M49 regions (PLAN §4.6). Kosovo (XK) and Taiwan (TW) are included although M49 does not list them, because ROR and funders use them.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "countries".
+ */
+export interface Country {
+  /**
+   * ISO 3166-1 alpha-2, e.g. DE. Cannot be changed.
+   */
+  id: string;
+  name?: string | null;
+  region?: ('africa' | 'northern-america' | 'latin-america-caribbean' | 'asia' | 'europe' | 'oceania') | null;
+  subregion?:
+    | (
+        | 'northern-africa'
+        | 'eastern-africa'
+        | 'middle-africa'
+        | 'southern-africa'
+        | 'western-africa'
+        | 'caribbean'
+        | 'central-america'
+        | 'south-america'
+        | 'central-asia'
+        | 'eastern-asia'
+        | 'south-eastern-asia'
+        | 'southern-asia'
+        | 'western-asia'
+        | 'eastern-europe'
+        | 'northern-europe'
+        | 'southern-europe'
+        | 'western-europe'
+        | 'australia-new-zealand'
+        | 'melanesia'
+        | 'micronesia'
+        | 'polynesia'
+      )
+    | null;
+  /**
+   * Empty for XK and TW.
+   */
+  m49Code?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Groups of countries used in funding eligibility (PLAN §4.6). When you change a list, update the source, the date you checked it and the note.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "country-sets".
+ */
+export interface CountrySet {
+  id: number;
+  slug: string;
+  label?: string | null;
+  description?: string | null;
+  countries: (string | Country)[];
+  sourceUrl: string;
+  lastVerifiedAt: string;
+  /**
+   * The version or date of the source, and anything left out on purpose.
+   */
+  verificationNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -240,6 +310,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'terms';
         value: number | Term;
+      } | null)
+    | ({
+        relationTo: 'countries';
+        value: string | Country;
+      } | null)
+    | ({
+        relationTo: 'country-sets';
+        value: number | CountrySet;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -327,6 +405,34 @@ export interface TermsSelect<T extends boolean = true> {
   hubIntro?: T;
   isActive?: T;
   sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "countries_select".
+ */
+export interface CountriesSelect<T extends boolean = true> {
+  id?: T;
+  name?: T;
+  region?: T;
+  subregion?: T;
+  m49Code?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "country-sets_select".
+ */
+export interface CountrySetsSelect<T extends boolean = true> {
+  slug?: T;
+  label?: T;
+  description?: T;
+  countries?: T;
+  sourceUrl?: T;
+  lastVerifiedAt?: T;
+  verificationNote?: T;
   updatedAt?: T;
   createdAt?: T;
 }
