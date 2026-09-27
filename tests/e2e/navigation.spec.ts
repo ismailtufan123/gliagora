@@ -57,9 +57,12 @@ test.describe('desktop navigation', () => {
     await page.keyboard.press('Tab')
     await page.keyboard.press('Escape')
     expect(await page.evaluate(() => window.scrollY)).toBe(300)
+    // Focusing a link in the content may scroll to it; moving back into the header must not.
     await page.locator('main a').first().focus()
+    const beforeShiftTab = await page.evaluate(() => window.scrollY)
     await page.keyboard.press('Shift+Tab')
-    expect(await page.evaluate(() => window.scrollY)).toBe(300)
+    await expect(page.locator(':focus')).toHaveText('Get the monthly digest')
+    expect(await page.evaluate(() => window.scrollY)).toBe(beforeShiftTab)
   })
 
   test('the current page is marked in the navigation', async ({ page }) => {
