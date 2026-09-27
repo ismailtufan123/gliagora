@@ -69,6 +69,14 @@
   /* Layout */
   --container: 1280px;
   --gutter: var(--space-4);
+  --header-height: 4rem;
+
+  /* Stacking (PLAN §7.4) */
+  --z-header: 100;
+  --z-dropdown: 200;
+  --z-sheet: 300;
+  --z-dialog: 400;
+  --z-skip-link: 500;
 }
 
 @media (min-width: 768px) {

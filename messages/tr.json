@@ -13,7 +13,17 @@
     "skipLink": "Ana içeriğe geç"
   },
   "footer": {
-    "contact": "İletişim ve yasal bilgiler"
+    "contact": "İletişim ve yasal bilgiler",
+    "sitemap": "Site haritası",
+    "windows": "Bölümler",
+    "learn": "Öğrenin",
+    "learnBasics": "Sinirbilimin temelleri",
+    "about": "Hakkında",
+    "follow": "Gliagora sosyal medyada",
+    "social": {
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn"
+    }
   },
   "home": {
     "comingSoon": "Yakında: sinirbilim alanındaki pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları özenle seçip bir araya getiren, İngilizce öncelikli bir merkez.",
@@ -37,5 +47,65 @@
     "papers": "Makaleler",
     "news": "Haberler",
     "resources": "Kaynaklar"
+  },
+  "header": {
+    "navLabel": "Ana menü",
+    "menuFor": "{window} menüsü",
+    "digest": "Aylık bülteni alın",
+    "menu": "Menü"
+  },
+  "locale": {
+    "heading": "Dil",
+    "button": "Dil: {name} ({code})",
+    "moreComing": "Başka diller yakında",
+    "names": {
+      "en": "English",
+      "tr": "Türkçe"
+    },
+    "short": {
+      "en": "EN",
+      "tr": "TR"
+    }
+  },
+  "menus": {
+    "jobs": {
+      "all": "Tüm pozisyonlar",
+      "msc": "Yüksek lisans",
+      "phd": "Doktora",
+      "postdoc": "Doktora sonrası",
+      "researchStaff": "Araştırma personeli",
+      "facultyPi": "Öğretim üyesi ve grup lideri",
+      "industry": "Özel sektör",
+      "closingSoon": "Son başvurusu yaklaşanlar",
+      "map": "Haritayı keşfedin",
+      "suggest": "İlan önerin"
+    },
+    "events": {
+      "all": "Tüm etkinlikler",
+      "conferences": "Kongreler",
+      "schools": "Yaz ve kış okulları, kurslar",
+      "seminars": "Çevrim içi seminerler",
+      "month": "Aylık görünüm"
+    },
+    "resources": {
+      "datasets": "Veri setleri",
+      "tools": "Araçlar ve yazılımlar",
+      "atlases": "Atlaslar",
+      "statistics": "İstatistik rehberleri",
+      "learn": "Öğrenin: temel bilgiler",
+      "benchToBedside": "Bench to Bedside"
+    }
+  },
+  "sections": {
+    "map": "Harita",
+    "suggest": "İlan önerin",
+    "learn": "Öğrenin",
+    "benchToBedside": "Bench to Bedside",
+    "newsletter": "Glia Notes"
+  },
+  "placeholder": {
+    "text": "Gliagora'nın bu bölümü hazırlanıyor ve yakında burada açılacak.",
+    "contact": "Soru ve önerileriniz için bize <email>hello@gliagora.com</email> adresinden ulaşabilirsiniz.",
+    "home": "Ana sayfaya git"
   }
 }

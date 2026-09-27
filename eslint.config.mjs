@@ -40,8 +40,12 @@ export default defineConfig([
           message: TEXT_IN_MESSAGES,
         },
         {
+          selector: `JSXAttribute[name.name=${VISIBLE_ATTRIBUTES}] > JSXExpressionContainer > :matches(ConditionalExpression, LogicalExpression) > Literal[value=/\\S/]`,
+          message: TEXT_IN_MESSAGES,
+        },
+        {
           selector:
-            'JSXExpressionContainer > :matches(ConditionalExpression, LogicalExpression) > Literal[value=/[A-Za-z]/]',
+            ':matches(JSXElement, JSXFragment) > JSXExpressionContainer > :matches(ConditionalExpression, LogicalExpression) > Literal[value=/[A-Za-z]/]',
           message: TEXT_IN_MESSAGES,
         },
       ],

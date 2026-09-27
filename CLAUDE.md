@@ -47,7 +47,7 @@ The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RA
 
 - Colour tokens: ink `#1E2152`, magenta `#B8286E`, link blue `#146992`, paper `#EEF0F4`, night `#161942`; dark-mode tints `#F06AAE` and `#5CC8EC`. Keep WCAG AA contrast.
 - Type: Commissioner (display) and Atkinson Hyperlegible Next (body and UI), both self-hosted.
-- Logo: concept 6b "Calcium wave with astrocyte" (D12). Files in `public/brand/`: `gliagora-mark.svg` (light backgrounds), `gliagora-mark-dark.svg` (dark), `gliagora-mark-mono.svg`, `gliagora-mark-small.svg` (24–32 px) and `favicon.svg` (16 px, D24). Use them as given; do not redraw them.
+- Logo: concept 6b "Calcium wave with astrocyte" (D12). Files in `public/brand/`: `gliagora-mark.svg` (light backgrounds), `gliagora-mark-dark.svg` (dark), `gliagora-mark-mono.svg`, `gliagora-mark-small.svg` (24–32 px), `gliagora-mark-small-dark.svg` (the small mark in the dark-mode colours of `gliagora-mark-dark.svg`, added in M1) and `favicon.svg` (16 px, D24). Use them as given; do not redraw them.
 - Accessibility: semantic HTML, full keyboard use, visible focus, `prefers-reduced-motion` respected; target 0 critical axe issues.
 - Performance: Core Web Vitals "good", no layout shift, JavaScript only where it is needed.
 
@@ -69,6 +69,8 @@ The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RA
 - User-visible text lives only in `messages/{locale}.json` (next-intl, PLAN §12). Lint rejects literal text in JSX: element text, conditionals and attributes people read or hear (`alt`, `title`, `aria-label`, `placeholder`, …). It cannot see text passed to your own components' props (e.g. `Lockup name=…`) or built in metadata, so take those from `t()` too. Both locales must have the same keys, placeholders and tags (a test checks this).
 - Colours, type sizes, radii and shadows come only from the design tokens (`src/app/(frontend)/tokens.css`, exposed as Tailwind utilities). A test rejects raw colour values anywhere else; the only exception is the browser theme colour in `src/lib/metadata.ts`, which the test checks against the `--bg` tokens.
 - Each locale is a static folder: `src/app/(frontend)/en/…` and `src/app/(frontend)/tr/…`. URLs always end with a slash. Pages that exist only in English link there from other locales (`paths` in `src/lib/site.ts`).
+- Navigation lives in `src/lib/site.ts` (windows, sections, paths) and `src/lib/navigation.ts` (mega-menus). Every link in the header and footer must lead to a page (an end-to-end test checks this): a section that is not built yet gets a `PlaceholderPage` (`noindex`) until its milestone.
+- Header menus are `<details>` disclosures that work without JavaScript; `DisclosureEnhancer` adds Esc, outside click and the mobile menu's inert background.
 - Do not call `notFound()` inside a page: in Next.js 16.3 its 404 content renders only with JavaScript. Unknown public URLs, including unknown paths under `/en/` and `/tr/`, already get the server-rendered global 404 (`src/app/global-not-found.tsx`); `/admin` and `/api` answer their own 404s (Payload). Detail pages (M4) need a decision on how to answer 404 and 410 on the server.
 
 ## Commands

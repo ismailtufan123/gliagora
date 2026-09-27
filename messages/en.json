@@ -13,7 +13,17 @@
     "skipLink": "Skip to main content"
   },
   "footer": {
-    "contact": "Contact and legal notice"
+    "contact": "Contact and legal notice",
+    "sitemap": "Site map",
+    "windows": "Windows",
+    "learn": "Learn",
+    "learnBasics": "Neuroscience basics",
+    "about": "About",
+    "follow": "Gliagora on social media",
+    "social": {
+      "instagram": "Instagram",
+      "linkedin": "LinkedIn"
+    }
   },
   "home": {
     "comingSoon": "Coming soon: a curated, English-first hub for neuroscience positions, events, funding, papers, news and resources.",
@@ -37,5 +47,65 @@
     "papers": "Papers",
     "news": "News",
     "resources": "Resources"
+  },
+  "header": {
+    "navLabel": "Main",
+    "menuFor": "{window} menu",
+    "digest": "Get the monthly digest",
+    "menu": "Menu"
+  },
+  "locale": {
+    "heading": "Language",
+    "button": "Language: {name} ({code})",
+    "moreComing": "More languages coming",
+    "names": {
+      "en": "English",
+      "tr": "Türkçe"
+    },
+    "short": {
+      "en": "EN",
+      "tr": "TR"
+    }
+  },
+  "menus": {
+    "jobs": {
+      "all": "All positions",
+      "msc": "MSc",
+      "phd": "PhD",
+      "postdoc": "Postdoc",
+      "researchStaff": "Research staff",
+      "facultyPi": "Faculty and PI",
+      "industry": "Industry",
+      "closingSoon": "Closing soon",
+      "map": "Explore the map",
+      "suggest": "Suggest a listing"
+    },
+    "events": {
+      "all": "All events",
+      "conferences": "Conferences",
+      "schools": "Schools and courses",
+      "seminars": "Online seminars",
+      "month": "Month view"
+    },
+    "resources": {
+      "datasets": "Datasets",
+      "tools": "Tools and software",
+      "atlases": "Atlases",
+      "statistics": "Statistics guides",
+      "learn": "Learn: basics",
+      "benchToBedside": "Bench to Bedside"
+    }
+  },
+  "sections": {
+    "map": "Map",
+    "suggest": "Suggest a listing",
+    "learn": "Learn",
+    "benchToBedside": "Bench to Bedside",
+    "newsletter": "Glia Notes"
+  },
+  "placeholder": {
+    "text": "This part of Gliagora is being built and will open here soon.",
+    "contact": "Questions or suggestions? Write to us at <email>hello@gliagora.com</email>.",
+    "home": "Go to the home page"
   }
 }
