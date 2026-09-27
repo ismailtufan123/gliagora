@@ -122,7 +122,7 @@ Glia Notes is the monthly Gliagora newsletter. It is free, and every subscriber 
 - Every issue has a one-click unsubscribe link, and unsubscribing takes effect at once. Members can also switch the newsletter off in their settings.
 - We do not track whether you open Glia Notes or which links you personally click. We only count, in total and without cookies, how many visits to Gliagora come from the newsletter.
 
-How we handle your email address is explained in the [privacy policy](/en/legal/privacy/). In Turkish: the [{tr: KVKK aydınlatma metni}](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice under Turkish data protection law) and the {tr: açık rıza metni} (consent text for the newsletter).
+How we handle your email address is explained in the [privacy policy](/en/legal/privacy/). In Turkish: the [{tr: KVKK aydınlatma metni}](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice under Turkish data protection law) and the [{tr: açık rıza metni}](/tr/legal/acik-riza-metni/) (consent text for the newsletter).
 
 ## Using our forms
 
@@ -193,7 +193,7 @@ Most items on Gliagora link to other websites, such as employers' job postings. 
 
 - Every item has a "Report a problem" link. Use it to tell us about a wrong fact, a broken link or a position that has closed.
 - Employers can ask us to update or remove their listings.
-- If something on Gliagora harms your personal rights, for example your privacy or your reputation, you can ask us to remove it (Turkish Law No. 5651, Article 9). Use the Notice and takedown page or write to hello@gliagora.com.
+- If something on Gliagora harms your personal rights, for example your privacy or your reputation, you can ask us to remove it (Turkish Law No. 5651, Article 9). Use the [Notice and takedown](/en/legal/takedown/) page or write to hello@gliagora.com.
 - When you send a removal request, we reply within 24 hours to confirm that we have received it. We usually decide within 72 hours. [TO DECIDE: B2 – legal deadline for a reply or a decision]
 - When we remove an item, we take its page down at once. If a correction is enough, we correct the item instead.
 - If you disagree with our decision, reply to our answer and tell us why. The Notice and takedown page explains how.
@@ -204,10 +204,10 @@ Most items on Gliagora link to other websites, such as employers' job postings. 
 We collect as little personal data as we can. What we collect, why, how long we keep it and what rights you have are explained in:
 
 - the [privacy policy](/en/legal/privacy/);
-- the cookies and storage page;
+- the [cookies and storage page](/en/legal/cookies/);
 - the [{tr: KVKK aydınlatma metni}](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice, in Turkish).
 
-To see, correct, download or delete your data, use your account settings or the Data requests page.
+To see, correct, download or delete your data, use your account settings or the [Data requests](/en/legal/data-requests/) page.
 
 ## Liability
 
@@ -243,8 +243,8 @@ If we ever add sponsorship, we will label sponsored content clearly and update t
 
 - Email: hello@gliagora.com for questions, and privacy@gliagora.com for data requests.
 - [Contact and legal notice](/en/contact/)
-- Notice and takedown
-- Data requests
+- [Notice and takedown](/en/legal/takedown/)
+- [Data requests](/en/legal/data-requests/)
 
 ## Version history
 

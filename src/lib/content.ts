@@ -9,7 +9,16 @@ import type { Locale } from '@/i18n/routing'
 
 type ContentPageInfo = {
   locale: Locale
-  messages: 'about' | 'privacy' | 'kvkk' | 'terms' | 'contact'
+  messages:
+    | 'about'
+    | 'contact'
+    | 'privacy'
+    | 'kvkk'
+    | 'acikRiza'
+    | 'cookies'
+    | 'terms'
+    | 'takedown'
+    | 'dataRequests'
   path: string
   file: string
   updated: string
@@ -25,7 +34,8 @@ export const CONTENT_PAGES = {
     updated: '2026-09-27',
     draft: false,
   },
-  // Legal texts (PLAN §15.4): drafts written in M1 for the operator's review.
+  // Legal texts (PLAN §15.4): drafts for the operator's review, written in M1 and, for the
+  // açık rıza metni, cookies, takedown and data requests, before the lawyer review (D32).
   contact: {
     locale: 'en',
     messages: 'contact',
@@ -58,11 +68,43 @@ export const CONTENT_PAGES = {
     updated: '2026-09-27',
     draft: true,
   },
+  acikRiza: {
+    locale: 'tr',
+    messages: 'acikRiza',
+    path: '/tr/legal/acik-riza-metni/',
+    file: 'tr/legal/acik-riza-metni.md',
+    updated: '2026-09-27',
+    draft: true,
+  },
+  cookies: {
+    locale: 'en',
+    messages: 'cookies',
+    path: '/en/legal/cookies/',
+    file: 'en/legal/cookies.md',
+    updated: '2026-09-27',
+    draft: true,
+  },
   terms: {
     locale: 'en',
     messages: 'terms',
     path: '/en/legal/terms/',
     file: 'en/legal/terms.md',
+    updated: '2026-09-27',
+    draft: true,
+  },
+  takedown: {
+    locale: 'en',
+    messages: 'takedown',
+    path: '/en/legal/takedown/',
+    file: 'en/legal/takedown.md',
+    updated: '2026-09-27',
+    draft: true,
+  },
+  dataRequests: {
+    locale: 'en',
+    messages: 'dataRequests',
+    path: '/en/legal/data-requests/',
+    file: 'en/legal/data-requests.md',
     updated: '2026-09-27',
     draft: true,
   },

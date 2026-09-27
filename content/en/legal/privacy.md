@@ -2,7 +2,7 @@ This privacy policy explains what personal data Gliagora | Neuroscience (gliagor
 
 Version 1.0. It applies from its date of publication, shown under "Version history" at the end of this page.
 
-This privacy policy is also available in Turkish as the [KVKK information notice ({tr: aydınlatma metni})](/tr/legal/kvkk-aydinlatma-metni/). Your consent to the newsletter is set out in Turkish in a separate consent text ({tr: açık rıza metni}).
+This privacy policy is also available in Turkish as the [KVKK information notice ({tr: aydınlatma metni})](/tr/legal/kvkk-aydinlatma-metni/). Your consent to the newsletter is set out in Turkish in a separate [consent text ({tr: açık rıza metni})](/tr/legal/acik-riza-metni/).
 
 ## In short
 
@@ -19,7 +19,7 @@ This privacy policy is also available in Turkish as the [KVKK information notice
 The data controller is **Nuray Sancar**, a private individual resident in Türkiye. Under the Turkish Personal Data Protection Law (KVKK) she is the {tr: veri sorumlusu}; under the EU General Data Protection Regulation (GDPR) she is the "controller". She runs Gliagora in her own name. There is no company behind it. In this privacy policy, "we" and "us" mean her.
 
 - **Email:** privacy@gliagora.com. Use it for all privacy questions and requests. For anything else, write to hello@gliagora.com.
-- **Web form:** the data-request page.
+- **Web form:** the [data-request page](/en/legal/data-requests/).
 - **Postal address:** we do not publish one.
 - **Data protection officer:** none is appointed.
 - **EU representative:** none is appointed (see below).
@@ -152,14 +152,14 @@ On the [Suggest a listing](/en/suggest/) page, you can point us to a position or
 ### Data requests
 
 - **What:** the type of request, your email address, the details you give us, the date we received it, the date our answer is due, the date we closed it, its status and our email correspondence with you.
-- **Where it comes from:** you, through the data-request page, by email or through your account settings.
+- **Where it comes from:** you, through the [data-request page](/en/legal/data-requests/), by email or through your account settings.
 - **Why:** to handle your request and to be able to show that we did.
 - **Legal basis:** our legal duty to answer. Under KVKK: Art. 5(2)(ç), because KVKK Art. 13 requires an answer. Under the GDPR: Art. 6(1)(c), because GDPR Arts. 12 to 22 require an answer.
 - **How long:** 2 years after the request is closed, in our database and our mailbox. [TO DECIDE: B11 – 2-year period]
 
 ### Removal requests, corrections and "Report a problem"
 
-Every item on Gliagora has a "Report a problem" link. It opens a short form with the item already filled in. [TO DECIDE: M4 – which fields the Report a problem form collects, and whether it asks for an email address] You can also ask us to correct or remove content on the notice and takedown page. Turkish Law No. 5651 (Art. 9) lets people ask for online content to be removed if it violates their personal rights, for example their privacy or reputation.
+Every item on Gliagora has a "Report a problem" link. It opens a short form with the item already filled in. [TO DECIDE: M4 – which fields the Report a problem form collects, and whether it asks for an email address] You can also ask us to correct or remove content on the [notice and takedown page](/en/legal/takedown/). Turkish Law No. 5651 (Art. 9) lets people ask for online content to be removed if it violates their personal rights, for example their privacy or reputation.
 
 - **What:** the item concerned, the reason, your email address, the details you give us, the dates we received the request and must answer it, its status and what we did.
 - **Where it comes from:** you, through these forms or by email.
@@ -246,7 +246,7 @@ We find positions, events and funding on employers' and funders' pages, on job b
   - Mailing-list messages in the project mailbox: deleted 30 days after they arrive.
   - AI drafting: if it is switched on (it is currently switched off), names, email addresses and phone numbers are replaced with placeholders before any text is sent to the AI service (see "Transfers outside Türkiye"). We keep a copy of the text that was sent, so we can check later exactly what left our server, and delete it 30 days after we decide on the item.
 
-If you are named and want something corrected or removed, use the notice and takedown page.
+If you are named and want something corrected or removed, use the [notice and takedown page](/en/legal/takedown/).
 
 ### Backups
 
@@ -351,11 +351,11 @@ You can ask for a copy of the safeguard we use for each transfer by writing to p
 
 ## Cookies and browser storage
 
-We use only what is strictly necessary for the site to work, so there is no cookie banner. Details will be on the cookies and storage page, which we publish before member accounts open.
+We use only what is strictly necessary for the site to work, so there is no cookie banner. The [cookies and storage page](/en/legal/cookies/) lists each item and how long it is kept.
 
 - **Member session cookie:** keeps you signed in. It lasts 30 days.
-- **Sign-in security cookies:** short-lived cookies that protect sign-in with Google, ORCID or an email link against misuse. Their names and lifetimes will be listed on the cookies and storage page before accounts open.
-- **Editor session cookie:** only for editors of Gliagora. It cannot be read by scripts, is sent only over encrypted connections and is not sent when you arrive from another site (HttpOnly, Secure, SameSite=Strict). Its lifetime will be listed on the cookies and storage page.
+- **Sign-in security cookies:** short-lived cookies that protect sign-in with Google, ORCID or an email link against misuse. Their names and lifetimes are listed on the cookies and storage page.
+- **Editor session cookie:** only for editors of Gliagora. It cannot be read by scripts, is sent only over encrypted connections and is not sent when you arrive from another site (HttpOnly, Secure, SameSite=Strict). Its lifetime is listed on the cookies and storage page.
 
 [TO DECIDE: when ALTCHA and the translated-version notice are built – whether they store anything in your browser; this list is completed then]
 
@@ -382,7 +382,7 @@ No decision that has legal or similarly significant effects on you is made by a 
 
 ### Your right to object
 
-**Where we rely on our legitimate interest (marked "Legitimate interest" in the summary table), you can object at any time, for reasons relating to your situation. Write to privacy@gliagora.com or use the data-request page. We then stop, unless we have compelling legitimate grounds or need the data to establish, exercise or defend legal claims.**
+**Where we rely on our legitimate interest (marked "Legitimate interest" in the summary table), you can object at any time, for reasons relating to your situation. Write to privacy@gliagora.com or use the [data-request page](/en/legal/data-requests/). We then stop, unless we have compelling legitimate grounds or need the data to establish, exercise or defend legal claims.**
 
 This right comes from GDPR Art. 21. [TO DECIDE: B10 – whether people outside the EU can object in the same way; the Turkish notice does not list this right]
 
@@ -422,9 +422,9 @@ You can do many things yourself, straight away:
 - **Download your data:** members get a JSON file (a common file format) from their settings.
 - **Delete your account:** a button in your settings. Your account, saved items, settings and newsletter subscription are deleted at once, and you receive one confirmation email. Consent records are unlinked from you, and copies in backups disappear later (see "Backups").
 
-If you are not a member, you can ask for deletion on the data-request page. We send a verification link to your email address. When you click it, we automatically delete your newsletter subscription and the email address on any suggestion you sent, unlink your consent records and send you a confirmation. We keep a record of the request itself, as described under "Data requests".
+If you are not a member, you can ask for deletion on the [data-request page](/en/legal/data-requests/). We send a verification link to your email address. When you click it, we automatically delete your newsletter subscription and the email address on any suggestion you sent, unlink your consent records and send you a confirmation. We keep a record of the request itself, as described under "Data requests".
 
-For access, correction or objection, use the data-request page or write to privacy@gliagora.com. To have content about you removed from a listing, use the notice and takedown page. If you use one of these forms, you get an automatic acknowledgement at once. We answer free of charge within 30 days under KVKK, or within one month under the GDPR.
+For access, correction or objection, use the data-request page or write to privacy@gliagora.com. To have content about you removed from a listing, use the [notice and takedown page](/en/legal/takedown/). If you use one of these forms, you get an automatic acknowledgement at once. We answer free of charge within 30 days under KVKK, or within one month under the GDPR.
 
 [TO DECIDE: B5 – KVKK application channels without a postal address]
 

@@ -8,7 +8,11 @@ const DRAFTS = [
   '/tr/iletisim/',
   '/en/legal/privacy/',
   '/tr/legal/kvkk-aydinlatma-metni/',
+  '/tr/legal/acik-riza-metni/',
+  '/en/legal/cookies/',
   '/en/legal/terms/',
+  '/en/legal/takedown/',
+  '/en/legal/data-requests/',
 ]
 const CONTENT = ['/en/about/', ...DRAFTS]
 

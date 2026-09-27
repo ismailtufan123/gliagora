@@ -130,9 +130,25 @@
       "title": "KVKK notice (in Turkish)",
       "description": "The information notice under the Turkish Personal Data Protection Law (KVKK), in Turkish."
     },
+    "acikRiza": {
+      "title": "Glia Notes consent text (in Turkish)",
+      "description": "The separate consent text for the Glia Notes newsletter under the Turkish Personal Data Protection Law (KVKK), in Turkish."
+    },
+    "cookies": {
+      "title": "Cookies and storage",
+      "description": "What Gliagora stores in your browser, why and for how long: only what is strictly necessary, with no analytics or third-party cookies."
+    },
     "terms": {
       "title": "Terms of use",
       "description": "The rules for using Gliagora | Neuroscience, its member accounts, forms and newsletter."
+    },
+    "takedown": {
+      "title": "Notice and takedown",
+      "description": "How to ask Gliagora | Neuroscience to correct or remove an item, what to include, how quickly we act, and what happens to a removed listing."
+    },
+    "dataRequests": {
+      "title": "Data requests",
+      "description": "How to see, download, correct or delete the personal data Gliagora holds about you, how we check that a request is yours and how quickly we answer."
     }
   },
   "institution": {

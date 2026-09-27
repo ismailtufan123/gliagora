@@ -41,7 +41,7 @@ For now, this page gives email addresses only. Before Gliagora earns any income,
 Tell us if something we published is wrong or out of date, or if it affects your personal rights (for example, your privacy or your reputation). You can:
 
 - use the **Report a problem** link on the listing or page;
-- fill in the form on our notice and takedown page, our page for correction and removal requests;
+- fill in the form on our [notice and takedown page](/en/legal/takedown/), our page for correction and removal requests;
 - email [hello@gliagora.com](mailto:hello@gliagora.com).
 
 The **Report a problem** link and the notice and takedown form open step by step, as we build Gliagora. Until they are open, email [hello@gliagora.com](mailto:hello@gliagora.com).
@@ -58,7 +58,7 @@ You can ask to see your personal data, get a copy of it, correct it or delete it
 
 - **If you have a Gliagora account:** download your data or delete your account at any time in your account settings.
 - **If you receive Glia Notes:** unsubscribe with one click from any Glia Notes email.
-- **For any other request, or if you have no account:** use the data-request page or email [privacy@gliagora.com](mailto:privacy@gliagora.com).
+- **For any other request, or if you have no account:** use the [data-request page](/en/legal/data-requests/) or email [privacy@gliagora.com](mailto:privacy@gliagora.com).
 
 Accounts and the data-request page open step by step, as we build Gliagora. Until the data-request page is open, email [privacy@gliagora.com](mailto:privacy@gliagora.com).
 
@@ -70,8 +70,8 @@ The [privacy policy](/en/legal/privacy/) explains how we handle personal data. U
 
 - [Terms of use](/en/legal/terms/)
 - [Privacy policy](/en/legal/privacy/)
-- Cookies and storage
-- Notice and takedown (corrections and removals)
-- Data requests
+- [Cookies and storage](/en/legal/cookies/)
+- [Notice and takedown](/en/legal/takedown/) (corrections and removals)
+- [Data requests](/en/legal/data-requests/)
 - Accessibility statement
-- In Turkish: [information notice under KVKK](/tr/legal/kvkk-aydinlatma-metni/) ({tr: KVKK aydınlatma metni}), newsletter consent text ({tr: açık rıza metni}) and [contact page](/tr/iletisim/) ({tr: İletişim})
+- In Turkish: [information notice under KVKK](/tr/legal/kvkk-aydinlatma-metni/) ({tr: KVKK aydınlatma metni}), [newsletter consent text](/tr/legal/acik-riza-metni/) ({tr: açık rıza metni}) and [contact page](/tr/iletisim/) ({tr: İletişim})
