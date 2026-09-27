@@ -23,7 +23,7 @@ export async function OrganizationJsonLd() {
         url: `${SITE_ORIGIN}/`,
         email: CONTACT_EMAIL,
         logo: `${SITE_ORIGIN}/brand/gliagora-mark.svg`,
-        sameAs: SOCIAL_LINKS.map((link) => link.href),
+        ...(SOCIAL_LINKS.length > 0 ? { sameAs: SOCIAL_LINKS.map((link) => link.href) } : {}),
       }}
     />
   )
