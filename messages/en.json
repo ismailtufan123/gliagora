@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "homeTitle": "Gliagora | Neuroscience – Where neuroscience meets",
+    "titleTemplate": "{title} – Gliagora | Neuroscience",
+    "description": "A curated, English-first hub for neuroscience positions, events, funding, papers, news and resources."
+  },
+  "brand": {
+    "name": "Gliagora",
+    "descriptor": "Neuroscience",
+    "tagline": "Where neuroscience meets"
+  },
+  "a11y": {
+    "skipLink": "Skip to main content"
+  },
+  "footer": {
+    "contact": "Contact and legal notice"
+  },
+  "home": {
+    "comingSoon": "Coming soon: a curated, English-first hub for neuroscience positions, events, funding, papers, news and resources.",
+    "writeToUs": "Write to us at <email>hello@gliagora.com</email>."
+  },
+  "contact": {
+    "title": "Contact and legal notice",
+    "inPreparation": "Gliagora | Neuroscience is in preparation. The full legal notice will be published on this page before the site opens.",
+    "contactHeading": "Contact",
+    "email": "Email: <email>hello@gliagora.com</email>"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "This page does not exist or has moved. These are the main parts of Gliagora:",
+    "home": "Go to the home page"
+  },
+  "windows": {
+    "jobs": "Jobs",
+    "events": "Events",
+    "funding": "Funding",
+    "papers": "Papers",
+    "news": "News",
+    "resources": "Resources"
+  }
+}

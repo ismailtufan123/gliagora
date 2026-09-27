@@ -1,5 +1,8 @@
 type LockupProps = {
   size: 'large' | 'small'
+  /** "Gliagora" and "Neuroscience" (brand.name, brand.descriptor in the messages). */
+  name: string
+  descriptor: string
   /** Link target; the large lockup on the home page is not a link. */
   href?: string
 }
@@ -17,29 +20,29 @@ function Mark({ size }: { size: number }) {
   )
 }
 
-function Content({ size }: { size: LockupProps['size'] }) {
+function Content({ size, name, descriptor }: Omit<LockupProps, 'href'>) {
   return (
     <>
       <Mark size={markSize[size]} />
-      <span>Gliagora</span>
+      <span>{name}</span>
       <span className="my-[0.2em] w-0.5 self-stretch bg-line-strong" aria-hidden="true" />
-      <span className="font-semibold">Neuroscience</span>
+      <span className="font-semibold">{descriptor}</span>
     </>
   )
 }
 
-export function Lockup({ size, href }: LockupProps) {
+export function Lockup({ size, name, descriptor, href }: LockupProps) {
   const className = `flex items-center gap-3 font-display font-bold text-text no-underline ${textSize[size]}`
   if (href) {
     return (
       <a className={className} href={href}>
-        <Content size={size} />
+        <Content size={size} name={name} descriptor={descriptor} />
       </a>
     )
   }
   return (
     <span className={className}>
-      <Content size={size} />
+      <Content size={size} name={name} descriptor={descriptor} />
     </span>
   )
 }

@@ -11,7 +11,10 @@ One TypeScript app: Next.js (App Router) with Payload CMS 3 inside it, on Postgr
 
 | Path                      | What it is                                                      |
 | ------------------------- | --------------------------------------------------------------- |
-| `src/app/(frontend)/`     | Public site: coming-soon page `/en/`, contact `/en/contact/`    |
+| `src/app/(frontend)/`     | Public site, one folder per locale: `en/` (`/en/`, `/en/contact/`), `tr/` (`/tr/iletisim/`) |
+| `src/app/global-not-found.tsx` | The 404 page for unknown public URLs (not /admin, /api) |
+| `messages/`               | All user-visible text, per locale (`en.json`, `tr.json`)        |
+| `src/i18n/`               | Locale settings for next-intl                                   |
 | `src/app/(frontend)/tokens.css` | Design tokens (PLAN §7): colours, type, spacing, motion   |
 | `src/components/`         | Shared React components                                         |
 | `src/fonts/`              | Self-hosted WOFF2 fonts and their licences (`tools/fonts/`)     |
