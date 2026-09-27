@@ -317,6 +317,17 @@
     text-decoration: none;
   }
 
+  /* Shown on legal texts that are not yet approved (src/lib/content.ts). */
+  .draft-notice {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--warning);
+    border-inline-start-width: 4px;
+    border-radius: var(--corner-control);
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 700;
+  }
+
   /* Long-form text: legal pages, About. */
   .prose {
     display: grid;
@@ -331,5 +342,52 @@
   .prose h2 {
     margin-top: var(--space-6);
     font-size: var(--step-2);
+  }
+
+  .prose h3 {
+    margin-top: var(--space-2);
+    font-size: var(--step-1);
+  }
+
+  .prose ul,
+  .prose ol {
+    display: grid;
+    gap: var(--space-2);
+    padding-inline-start: var(--space-6);
+  }
+
+  .prose ul {
+    list-style: disc;
+  }
+
+  .prose ol {
+    list-style: decimal;
+  }
+
+  .prose strong {
+    font-weight: 700;
+  }
+
+  /* Wide tables scroll inside their own box on small screens (see src/lib/markdown.ts). */
+  .prose .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .prose table {
+    border-collapse: collapse;
+    font-size: var(--step--1);
+  }
+
+  .prose th,
+  .prose td {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--line-strong);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .prose th {
+    font-weight: 700;
   }
 }

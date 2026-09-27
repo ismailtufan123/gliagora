@@ -23,7 +23,7 @@ function withWindowLink({ label, href, menu = [] }: MenuWindowLinks) {
 }
 
 // PLAN §2.3, §7.5: below the `xl` breakpoint, a full-height panel with the six windows
-// (expandable), the map, Learn, the digest button and, on small screens, the languages.
+// (expandable), the map, Learn, About, the digest button and, on small screens, the languages.
 // DisclosureEnhancer makes the page behind it inert while it is open.
 export async function MobileMenu({
   locale,
@@ -69,7 +69,7 @@ export async function MobileMenu({
                 )}
               </li>
             ))}
-            {(['map', 'learn'] as const).map((key) => (
+            {(['map', 'learn', 'about'] as const).map((key) => (
               <li key={key} className="border-b border-line">
                 <NavLink href={paths.section(key)} className="mobile-row">
                   {t(`sections.${key}`)}

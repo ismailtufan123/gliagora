@@ -101,11 +101,20 @@
     "suggest": "Suggest a listing",
     "learn": "Learn",
     "benchToBedside": "Bench to Bedside",
-    "newsletter": "Glia Notes"
+    "newsletter": "Glia Notes",
+    "about": "About"
   },
   "placeholder": {
     "text": "This part of Gliagora is being built and will open here soon.",
     "contact": "Questions or suggestions? Write to us at <email>hello@gliagora.com</email>.",
     "home": "Go to the home page"
+  },
+  "pages": {
+    "draftNotice": "Draft: this text is being prepared and reviewed. It is not yet in force.",
+    "updated": "Last updated: {date}",
+    "about": {
+      "title": "About Gliagora",
+      "description": "Why Gliagora exists, where its name comes from, how entries are chosen and checked, and who runs it."
+    }
   }
 }

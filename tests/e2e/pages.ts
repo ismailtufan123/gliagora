@@ -3,6 +3,7 @@ export const PAGES = [
   { path: '/en/', name: 'home' },
   { path: '/en/contact/', name: 'contact (en)' },
   { path: '/tr/iletisim/', name: 'contact (tr)' },
+  { path: '/en/about/', name: 'about' },
   { path: '/en/jobs/', name: 'placeholder (window)' },
   { path: '/en/learn/bench-to-bedside/', name: 'placeholder (section)' },
   { path: '/this-page-does-not-exist/', name: '404', status: 404 },

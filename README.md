@@ -14,6 +14,7 @@ One TypeScript app: Next.js (App Router) with Payload CMS 3 inside it, on Postgr
 | `src/app/(frontend)/`     | Public site, one folder per locale: `en/` (`/en/`, `/en/contact/`), `tr/` (`/tr/iletisim/`) |
 | `src/app/global-not-found.tsx` | The 404 page for unknown public URLs (not /admin, /api) |
 | `messages/`               | All user-visible text, per locale (`en.json`, `tr.json`)        |
+| `content/`                | Long-form pages in Markdown (About, legal texts); see `src/lib/content.ts` |
 | `src/i18n/`               | Locale settings for next-intl                                   |
 | `src/app/(frontend)/tokens.css` | Design tokens (PLAN §7): colours, type, spacing, motion   |
 | `src/components/`         | Shared React components; `header/` holds the header, menus and language switcher |
