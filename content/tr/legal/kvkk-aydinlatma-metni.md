@@ -78,7 +78,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - ORCID ile giriş yaptıysanız ORCID iD'niz;
   - giriş sağlayıcısındaki hesap kimliğiniz (sağlayıcının verdiği teknik bir numara);
   - kaydettiğiniz ilanlar, etkinlikler ve programlar;
-  - tercihleriniz: bültenin açık veya kapalı olması ve tercih ettiğiniz alt alanlar. Tercih ettiğiniz alt alanların tek işlevi, oturumunuz açıkken iş ilanları listesindeki varsayılan alt alan filtresini belirlemektir. Glia Notes'u etkilemez; bülten tüm aboneler için aynıdır. Bu tercihten hakkınızda bir profil oluşturmayız;
+  - tercihleriniz: bültenin açık veya kapalı olması ve tercih ettiğiniz alt alanlar. Tercih ettiğiniz alt alanların tek işlevi, oturumunuz açıkken iş ilanları listesindeki varsayılan alt alan filtresini belirlemektir. Bu tercih Glia Notes'u etkilemez; bülten tüm aboneler için aynıdır. Bu tercihten hakkınızda bir profil oluşturmayız;
   - hesabın oluşturulma tarihi, hesabı son kullandığınız tarih ve uzun süre kullanılmama uyarısının gönderildiği tarih;
   - oturum kayıtları ve tek kullanımlık e-posta giriş bağlantıları.
 - **Nereden ve nasıl:** Sizden ve seçtiğiniz giriş yönteminden:
@@ -202,7 +202,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Amaç:** Hangi sayfaların kullanıldığını ve sitenin ne kadar hızlı çalıştığını gösteren toplu istatistikler üretmek. Bültende yalnızca Gliagora'nın kendi sayfalarına giden bağlantılara kampanya etiketi (UTM) ekleriz.
 - **Hukuki sebep:** Veriler kişisel veri sayılırsa, meşru menfaatimiz (m.5/2 (f)), yani hizmeti iyileştirmek.
 - **Saklama:** Tek tek ziyaret kayıtları 12 ay saklanır, sonra silinir. Toplu istatistikler süresiz saklanır.
-- İstatistik paneline yalnızca biz erişebiliriz.
+- İstatistik paneline yalnızca biz ve teknik yöneticimiz erişebiliriz.
 
 ### Yedekler
 

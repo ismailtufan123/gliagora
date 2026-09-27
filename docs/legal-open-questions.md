@@ -18,9 +18,9 @@ The operator decided all five on 2026-09-27; they are recorded in PLAN §22.3 (D
 
 ### C1. When the texts go public: approved
 
-**Decided.** The whole site stays private until M2. Order: server setup (S), then the one-time lawyer review, then M2. At M2, hello@ moves to the Turkish mail host, and the two contact pages, the privacy policy, the KVKK aydınlatma metni and the açık rıza metni go live together with the newsletter signup. The terms and the other legal pages go live by M6. Until M2, hello@ keeps its current forwarding (Cloudflare Email Routing). (D32)
+**Decided.** The whole site stays private until M2. Order: server setup (S), then the one-time lawyer review, then M2. At M2, hello@ moves to the Turkish mail host, and the two contact pages, the privacy policy, the KVKK aydınlatma metni and the açık rıza metni go live together with the newsletter signup. The terms and the other legal pages go live by M6. Until M2, hello@ keeps its current forwarding (Cloudflare Email Routing). (D32) As recommended, the remaining legal texts (açık rıza metni, notice and takedown, data requests, cookies and storage) are drafted before the review, so that the one review covers them all.
 
-**In the drafts.** Nothing is public before M2, so no text describes the interim forwarding, the interim mailbox or a transfer abroad for it. The drafts read as they will be true at M2. This also settles part (3) of B12.
+**In the drafts.** Nothing is public before M2, so no text describes the interim forwarding, the interim mailbox or a transfer abroad for it. Each draft reads as it will be true when it goes live: at M2, or by M6 for the terms. This also settles part (3) of B12.
 
 Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/terms.md`
 
@@ -124,7 +124,7 @@ Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md
 
 The form has an optional email field with an unticked checkbox. The address is used only to tell the submitter the outcome and is deleted 90 days after the decision. Under KVKK, is the basis açık rıza (m.5/1), which would need its own separate consent text, or meşru menfaat (m.5/2(f)) with the checkbox worded as a request to be contacted? Under the GDPR, is Art. 6(1)(a) with withdrawal by email right?
 
-**Why it matters.** If the answer is açık rıza, a second açık rıza metni must be written and approved before the form opens in M4.
+**Why it matters.** If the answer is açık rıza, a second açık rıza metni must be written and approved before the form goes live (it is built in M4).
 
 Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
 
@@ -146,7 +146,7 @@ Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/priv
 
 ### B11. Retention periods and proof of consent
 
-(1) Are these periods appropriate under KVKK and the GDPR, given proof duties and limitation periods? Consent records: for the subscription plus 3 years. Records of data requests, Law 5651 removal requests and corrections: 2 years after closure, in the database and the mailbox. (2) On unsubscribing, the address is deleted at once, and the consent record keeps only a random ID, the event, the text version, the time and the form. Is that still adequate proof of consent, or must more be kept? (3) Please also look over the whole retention table, including the periods the operator sets (C3).
+(1) Are these periods appropriate under KVKK and the GDPR, given proof duties and limitation periods? Consent records: for the subscription plus 3 years. Records of data requests, Law 5651 removal requests and corrections: 2 years after closure, in the database and the mailbox. (2) On unsubscribing, the address is deleted at once, and the consent record keeps only a random ID, the event, the text version, the time and the form. Is that still adequate proof of consent, or must more be kept? (3) Please also look over the whole retention table, including the periods the operator set in C3.
 
 **Why it matters.** The retention table is a required part of the privacy policy. PLAN marks both periods [U]. If more proof must be kept, the rule 'deleted at once on unsubscribe' changes.
 
@@ -202,9 +202,9 @@ Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md
 
 ### B18. The data processing agreement with the technical administrator
 
-Besides the controller, one natural person, the technical administrator, maintains the server and the software and has access to the server, the admin panel and the databases. We treat this person as our processor (veri işleyen). The draft agreement, one page in Turkish, is `docs/legal/veri-isleme-sozlesmesi-taslak.md`. (1) Does it meet KVKK m.12 and GDPR Art. 28(3), and is anything missing? (2) Is processor the right role for this person under both laws?
+Besides the controller, one natural person, the technical administrator, maintains the server and the software and has access to the server, the admin panel and the databases. We treat this person as our processor (veri işleyen). The draft agreement, one page in Turkish, is `docs/legal/veri-isleme-sozlesmesi-taslak.md`. (1) Does it meet KVKK m.12 and GDPR Art. 28(3), and is anything missing? (2) Is processor the right role for this person under both laws? (3) The technical administrator works on the server from S, which comes before this review, and has access to the data entered from then on. Should the agreement be signed at S and amended after the review if needed?
 
-**Why it matters.** The agreement must be signed before the texts go live at M2. Both notices describe this role as a processor under a written agreement, without naming the person (C2, D33); if the role is different, those passages change.
+**Why it matters.** The agreement must be signed before the texts go live at M2 at the latest. Both notices describe this role as a processor under a written agreement, without naming the person (C2, D33); if the role is different, those passages change.
 
 Texts: `docs/legal/veri-isleme-sozlesmesi-taslak.md`; the role is described in `content/en/legal/privacy.md` and `content/tr/legal/kvkk-aydinlatma-metni.md`
 
@@ -213,7 +213,7 @@ Texts: `docs/legal/veri-isleme-sozlesmesi-taslak.md`; the role is described in `
 Settled in the drafts by a default, mostly following PLAN; change any of them by telling me.
 
 - **Minimum age.** One rule in every text: 16 for the newsletter, member accounts and the optional email on the suggestion form, until the lawyer answers B7. (Source: en-terms Q4 (moved from c to B7); PLAN §3.2, §15.4 (privacy policy: minimum age 16), §22.1 (7).)
-- **The 'what Gliagora is' paragraph on the contact pages.** Worded so that it stays true as sections open, on both contact pages ('We are building one place for neuroscience positions, events, funding, papers, news and resources. We open sections step by step. The menu lists every section, and a section that is not open yet says so on its page'), instead of a list of what is live. This avoids a new approval at every phase, which matters if the contact pages go public at M2 (C1). (Source: en-contact Q14; PLAN §15.4 (contact page: what Gliagora is), §3.1, D28.)
+- **The 'what Gliagora is' paragraph on the contact pages.** Worded so that it stays true as sections open, on both contact pages ('We are building one place for neuroscience positions, events, funding, papers, news and resources. We open sections step by step. The menu lists every section, and a section that is not open yet says so on its page'), instead of a list of what is live. This avoids a new approval at every phase, which matters because the contact pages go live at M2 (C1). (Source: en-contact Q14; PLAN §15.4 (contact page: what Gliagora is), §3.1, D28.)
 - **Texts published at M2 describe later features.** The privacy texts published at M2 already describe accounts, the suggestion form and 'Report a problem' as they will work ('if you create an account…'). Each description is checked against the built feature at M4 and M4b, and a new approval is needed only if the wording must change. (Source: C1; PLAN §20 (M2, M4, M4b), D28.)
 - **Licence of our summaries.** The terms keep 'quote with attribution and a link'. No CC BY licence is offered, and the terms say nothing about bulk or automated reuse (including the jobs feed) unless a problem arises. (Source: en-terms Q5; PLAN §15.4 (terms: licence of our summaries), §2.2.)
 - **Language of messages and requests.** Both contact pages and the KVKK aydınlatma metni say that people may write in Turkish or English. (Source: tr-iletisim Q8; PLAN §1, §12, §15.4, D10.)

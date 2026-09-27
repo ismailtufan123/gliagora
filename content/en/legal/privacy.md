@@ -213,7 +213,7 @@ The website and the other programs on our server write technical logs while they
 
 ### Visitor statistics
 
-We count visits with Umami, which runs on our own server. It sets no cookies and sends nothing to anyone else. Only we can see the statistics. It also records how fast pages load (Core Web Vitals), so we can fix slow pages.
+We count visits with Umami, which runs on our own server. It sets no cookies and sends nothing to anyone else. Only we and our technical administrator can see the statistics. It also records how fast pages load (Core Web Vitals), so we can fix slow pages.
 
 - **What:** [TO DECIDE: B14 – fields of a raw Umami event, and whether they are personal data]
 - **Where it comes from:** automatically, by electronic means, when you view a page.
