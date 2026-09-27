@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    jobs: Job;
     terms: Term;
     countries: Country;
     'country-sets': CountrySet;
@@ -81,6 +82,7 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    jobs: JobsSelect<false> | JobsSelect<true>;
     terms: TermsSelect<false> | TermsSelect<true>;
     countries: CountriesSelect<false> | CountriesSelect<true>;
     'country-sets': CountrySetsSelect<false> | CountrySetsSelect<true>;
@@ -164,6 +166,687 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Positions from employers' own pages (PLAN §6). Save a draft at any time; to publish, fill in the facts and tick the checklist. Published jobs are never deleted: set them to Expired or Withdrawn. Every change is kept under Versions.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "jobs".
+ */
+export interface Job {
+  id: number;
+  /**
+   * The title exactly as the employer posted it, in its language.
+   */
+  title: string;
+  /**
+   * The employer. Search by name or ROR ID.
+   */
+  institution: number | Institution;
+  /**
+   * Only for a position at another site, such as a field station or a partner campus. Leave empty otherwise.
+   */
+  locationOverride?: {
+    city?: string | null;
+    country?: (string | null) | Country;
+  };
+  positionType?: (number | null) | Term;
+  careerStages?: (number | Term)[] | null;
+  subfields?: (number | Term)[] | null;
+  methods?: (number | Term)[] | null;
+  modelSystems?: (number | Term)[] | null;
+  deadlineKind: 'fixed' | 'rolling' | 'until-filled';
+  /**
+   * The last day to apply.
+   */
+  deadlineDate?: string | null;
+  /**
+   * The institution's time zone, or the one the posting names if it names another. Leave empty only if it is unknown: the day then ends Anywhere on Earth (UTC−12).
+   */
+  deadlineTz?:
+    | (
+        | 'Africa/Abidjan'
+        | 'Africa/Accra'
+        | 'Africa/Addis_Ababa'
+        | 'Africa/Algiers'
+        | 'Africa/Asmara'
+        | 'Africa/Bamako'
+        | 'Africa/Bangui'
+        | 'Africa/Banjul'
+        | 'Africa/Bissau'
+        | 'Africa/Blantyre'
+        | 'Africa/Brazzaville'
+        | 'Africa/Bujumbura'
+        | 'Africa/Cairo'
+        | 'Africa/Casablanca'
+        | 'Africa/Ceuta'
+        | 'Africa/Conakry'
+        | 'Africa/Dakar'
+        | 'Africa/Dar_es_Salaam'
+        | 'Africa/Djibouti'
+        | 'Africa/Douala'
+        | 'Africa/El_Aaiun'
+        | 'Africa/Freetown'
+        | 'Africa/Gaborone'
+        | 'Africa/Harare'
+        | 'Africa/Johannesburg'
+        | 'Africa/Juba'
+        | 'Africa/Kampala'
+        | 'Africa/Khartoum'
+        | 'Africa/Kigali'
+        | 'Africa/Kinshasa'
+        | 'Africa/Lagos'
+        | 'Africa/Libreville'
+        | 'Africa/Lome'
+        | 'Africa/Luanda'
+        | 'Africa/Lubumbashi'
+        | 'Africa/Lusaka'
+        | 'Africa/Malabo'
+        | 'Africa/Maputo'
+        | 'Africa/Maseru'
+        | 'Africa/Mbabane'
+        | 'Africa/Mogadishu'
+        | 'Africa/Monrovia'
+        | 'Africa/Nairobi'
+        | 'Africa/Ndjamena'
+        | 'Africa/Niamey'
+        | 'Africa/Nouakchott'
+        | 'Africa/Ouagadougou'
+        | 'Africa/Porto-Novo'
+        | 'Africa/Sao_Tome'
+        | 'Africa/Tripoli'
+        | 'Africa/Tunis'
+        | 'Africa/Windhoek'
+        | 'America/Adak'
+        | 'America/Anchorage'
+        | 'America/Anguilla'
+        | 'America/Antigua'
+        | 'America/Araguaina'
+        | 'America/Argentina/Buenos_Aires'
+        | 'America/Argentina/Catamarca'
+        | 'America/Argentina/Cordoba'
+        | 'America/Argentina/Jujuy'
+        | 'America/Argentina/La_Rioja'
+        | 'America/Argentina/Mendoza'
+        | 'America/Argentina/Rio_Gallegos'
+        | 'America/Argentina/Salta'
+        | 'America/Argentina/San_Juan'
+        | 'America/Argentina/San_Luis'
+        | 'America/Argentina/Tucuman'
+        | 'America/Argentina/Ushuaia'
+        | 'America/Aruba'
+        | 'America/Asuncion'
+        | 'America/Atikokan'
+        | 'America/Bahia'
+        | 'America/Bahia_Banderas'
+        | 'America/Barbados'
+        | 'America/Belem'
+        | 'America/Belize'
+        | 'America/Blanc-Sablon'
+        | 'America/Boa_Vista'
+        | 'America/Bogota'
+        | 'America/Boise'
+        | 'America/Cambridge_Bay'
+        | 'America/Campo_Grande'
+        | 'America/Cancun'
+        | 'America/Caracas'
+        | 'America/Cayenne'
+        | 'America/Cayman'
+        | 'America/Chicago'
+        | 'America/Chihuahua'
+        | 'America/Ciudad_Juarez'
+        | 'America/Costa_Rica'
+        | 'America/Coyhaique'
+        | 'America/Creston'
+        | 'America/Cuiaba'
+        | 'America/Curacao'
+        | 'America/Danmarkshavn'
+        | 'America/Dawson'
+        | 'America/Dawson_Creek'
+        | 'America/Denver'
+        | 'America/Detroit'
+        | 'America/Dominica'
+        | 'America/Edmonton'
+        | 'America/Eirunepe'
+        | 'America/El_Salvador'
+        | 'America/Fort_Nelson'
+        | 'America/Fortaleza'
+        | 'America/Glace_Bay'
+        | 'America/Goose_Bay'
+        | 'America/Grand_Turk'
+        | 'America/Grenada'
+        | 'America/Guadeloupe'
+        | 'America/Guatemala'
+        | 'America/Guayaquil'
+        | 'America/Guyana'
+        | 'America/Halifax'
+        | 'America/Havana'
+        | 'America/Hermosillo'
+        | 'America/Indiana/Indianapolis'
+        | 'America/Indiana/Knox'
+        | 'America/Indiana/Marengo'
+        | 'America/Indiana/Petersburg'
+        | 'America/Indiana/Tell_City'
+        | 'America/Indiana/Vevay'
+        | 'America/Indiana/Vincennes'
+        | 'America/Indiana/Winamac'
+        | 'America/Inuvik'
+        | 'America/Iqaluit'
+        | 'America/Jamaica'
+        | 'America/Juneau'
+        | 'America/Kentucky/Louisville'
+        | 'America/Kentucky/Monticello'
+        | 'America/Kralendijk'
+        | 'America/La_Paz'
+        | 'America/Lima'
+        | 'America/Los_Angeles'
+        | 'America/Lower_Princes'
+        | 'America/Maceio'
+        | 'America/Managua'
+        | 'America/Manaus'
+        | 'America/Marigot'
+        | 'America/Martinique'
+        | 'America/Matamoros'
+        | 'America/Mazatlan'
+        | 'America/Menominee'
+        | 'America/Merida'
+        | 'America/Metlakatla'
+        | 'America/Mexico_City'
+        | 'America/Miquelon'
+        | 'America/Moncton'
+        | 'America/Monterrey'
+        | 'America/Montevideo'
+        | 'America/Montserrat'
+        | 'America/Nassau'
+        | 'America/New_York'
+        | 'America/Nome'
+        | 'America/Noronha'
+        | 'America/North_Dakota/Beulah'
+        | 'America/North_Dakota/Center'
+        | 'America/North_Dakota/New_Salem'
+        | 'America/Nuuk'
+        | 'America/Ojinaga'
+        | 'America/Panama'
+        | 'America/Paramaribo'
+        | 'America/Phoenix'
+        | 'America/Port-au-Prince'
+        | 'America/Port_of_Spain'
+        | 'America/Porto_Velho'
+        | 'America/Puerto_Rico'
+        | 'America/Punta_Arenas'
+        | 'America/Rankin_Inlet'
+        | 'America/Recife'
+        | 'America/Regina'
+        | 'America/Resolute'
+        | 'America/Rio_Branco'
+        | 'America/Santarem'
+        | 'America/Santiago'
+        | 'America/Santo_Domingo'
+        | 'America/Sao_Paulo'
+        | 'America/Scoresbysund'
+        | 'America/Sitka'
+        | 'America/St_Barthelemy'
+        | 'America/St_Johns'
+        | 'America/St_Kitts'
+        | 'America/St_Lucia'
+        | 'America/St_Thomas'
+        | 'America/St_Vincent'
+        | 'America/Swift_Current'
+        | 'America/Tegucigalpa'
+        | 'America/Thule'
+        | 'America/Tijuana'
+        | 'America/Toronto'
+        | 'America/Tortola'
+        | 'America/Vancouver'
+        | 'America/Whitehorse'
+        | 'America/Winnipeg'
+        | 'America/Yakutat'
+        | 'Antarctica/Casey'
+        | 'Antarctica/Davis'
+        | 'Antarctica/DumontDUrville'
+        | 'Antarctica/Macquarie'
+        | 'Antarctica/Mawson'
+        | 'Antarctica/McMurdo'
+        | 'Antarctica/Palmer'
+        | 'Antarctica/Rothera'
+        | 'Antarctica/Syowa'
+        | 'Antarctica/Troll'
+        | 'Antarctica/Vostok'
+        | 'Arctic/Longyearbyen'
+        | 'Asia/Aden'
+        | 'Asia/Almaty'
+        | 'Asia/Amman'
+        | 'Asia/Anadyr'
+        | 'Asia/Aqtau'
+        | 'Asia/Aqtobe'
+        | 'Asia/Ashgabat'
+        | 'Asia/Atyrau'
+        | 'Asia/Baghdad'
+        | 'Asia/Bahrain'
+        | 'Asia/Baku'
+        | 'Asia/Bangkok'
+        | 'Asia/Barnaul'
+        | 'Asia/Beirut'
+        | 'Asia/Bishkek'
+        | 'Asia/Brunei'
+        | 'Asia/Chita'
+        | 'Asia/Colombo'
+        | 'Asia/Damascus'
+        | 'Asia/Dhaka'
+        | 'Asia/Dili'
+        | 'Asia/Dubai'
+        | 'Asia/Dushanbe'
+        | 'Asia/Famagusta'
+        | 'Asia/Gaza'
+        | 'Asia/Hebron'
+        | 'Asia/Ho_Chi_Minh'
+        | 'Asia/Hong_Kong'
+        | 'Asia/Hovd'
+        | 'Asia/Irkutsk'
+        | 'Asia/Jakarta'
+        | 'Asia/Jayapura'
+        | 'Asia/Jerusalem'
+        | 'Asia/Kabul'
+        | 'Asia/Kamchatka'
+        | 'Asia/Karachi'
+        | 'Asia/Kathmandu'
+        | 'Asia/Khandyga'
+        | 'Asia/Kolkata'
+        | 'Asia/Krasnoyarsk'
+        | 'Asia/Kuala_Lumpur'
+        | 'Asia/Kuching'
+        | 'Asia/Kuwait'
+        | 'Asia/Macau'
+        | 'Asia/Magadan'
+        | 'Asia/Makassar'
+        | 'Asia/Manila'
+        | 'Asia/Muscat'
+        | 'Asia/Nicosia'
+        | 'Asia/Novokuznetsk'
+        | 'Asia/Novosibirsk'
+        | 'Asia/Omsk'
+        | 'Asia/Oral'
+        | 'Asia/Phnom_Penh'
+        | 'Asia/Pontianak'
+        | 'Asia/Pyongyang'
+        | 'Asia/Qatar'
+        | 'Asia/Qostanay'
+        | 'Asia/Qyzylorda'
+        | 'Asia/Riyadh'
+        | 'Asia/Sakhalin'
+        | 'Asia/Samarkand'
+        | 'Asia/Seoul'
+        | 'Asia/Shanghai'
+        | 'Asia/Singapore'
+        | 'Asia/Srednekolymsk'
+        | 'Asia/Taipei'
+        | 'Asia/Tashkent'
+        | 'Asia/Tbilisi'
+        | 'Asia/Tehran'
+        | 'Asia/Thimphu'
+        | 'Asia/Tokyo'
+        | 'Asia/Tomsk'
+        | 'Asia/Ulaanbaatar'
+        | 'Asia/Urumqi'
+        | 'Asia/Ust-Nera'
+        | 'Asia/Vientiane'
+        | 'Asia/Vladivostok'
+        | 'Asia/Yakutsk'
+        | 'Asia/Yangon'
+        | 'Asia/Yekaterinburg'
+        | 'Asia/Yerevan'
+        | 'Atlantic/Azores'
+        | 'Atlantic/Bermuda'
+        | 'Atlantic/Canary'
+        | 'Atlantic/Cape_Verde'
+        | 'Atlantic/Faroe'
+        | 'Atlantic/Madeira'
+        | 'Atlantic/Reykjavik'
+        | 'Atlantic/South_Georgia'
+        | 'Atlantic/St_Helena'
+        | 'Atlantic/Stanley'
+        | 'Australia/Adelaide'
+        | 'Australia/Brisbane'
+        | 'Australia/Broken_Hill'
+        | 'Australia/Darwin'
+        | 'Australia/Eucla'
+        | 'Australia/Hobart'
+        | 'Australia/Lindeman'
+        | 'Australia/Lord_Howe'
+        | 'Australia/Melbourne'
+        | 'Australia/Perth'
+        | 'Australia/Sydney'
+        | 'Europe/Amsterdam'
+        | 'Europe/Andorra'
+        | 'Europe/Astrakhan'
+        | 'Europe/Athens'
+        | 'Europe/Belgrade'
+        | 'Europe/Berlin'
+        | 'Europe/Bratislava'
+        | 'Europe/Brussels'
+        | 'Europe/Bucharest'
+        | 'Europe/Budapest'
+        | 'Europe/Busingen'
+        | 'Europe/Chisinau'
+        | 'Europe/Copenhagen'
+        | 'Europe/Dublin'
+        | 'Europe/Gibraltar'
+        | 'Europe/Guernsey'
+        | 'Europe/Helsinki'
+        | 'Europe/Isle_of_Man'
+        | 'Europe/Istanbul'
+        | 'Europe/Jersey'
+        | 'Europe/Kaliningrad'
+        | 'Europe/Kirov'
+        | 'Europe/Kyiv'
+        | 'Europe/Lisbon'
+        | 'Europe/Ljubljana'
+        | 'Europe/London'
+        | 'Europe/Luxembourg'
+        | 'Europe/Madrid'
+        | 'Europe/Malta'
+        | 'Europe/Mariehamn'
+        | 'Europe/Minsk'
+        | 'Europe/Monaco'
+        | 'Europe/Moscow'
+        | 'Europe/Oslo'
+        | 'Europe/Paris'
+        | 'Europe/Podgorica'
+        | 'Europe/Prague'
+        | 'Europe/Riga'
+        | 'Europe/Rome'
+        | 'Europe/Samara'
+        | 'Europe/San_Marino'
+        | 'Europe/Sarajevo'
+        | 'Europe/Saratov'
+        | 'Europe/Simferopol'
+        | 'Europe/Skopje'
+        | 'Europe/Sofia'
+        | 'Europe/Stockholm'
+        | 'Europe/Tallinn'
+        | 'Europe/Tirane'
+        | 'Europe/Ulyanovsk'
+        | 'Europe/Vaduz'
+        | 'Europe/Vatican'
+        | 'Europe/Vienna'
+        | 'Europe/Vilnius'
+        | 'Europe/Volgograd'
+        | 'Europe/Warsaw'
+        | 'Europe/Zagreb'
+        | 'Europe/Zurich'
+        | 'Indian/Antananarivo'
+        | 'Indian/Chagos'
+        | 'Indian/Christmas'
+        | 'Indian/Cocos'
+        | 'Indian/Comoro'
+        | 'Indian/Kerguelen'
+        | 'Indian/Mahe'
+        | 'Indian/Maldives'
+        | 'Indian/Mauritius'
+        | 'Indian/Mayotte'
+        | 'Indian/Reunion'
+        | 'Pacific/Apia'
+        | 'Pacific/Auckland'
+        | 'Pacific/Bougainville'
+        | 'Pacific/Chatham'
+        | 'Pacific/Chuuk'
+        | 'Pacific/Easter'
+        | 'Pacific/Efate'
+        | 'Pacific/Fakaofo'
+        | 'Pacific/Fiji'
+        | 'Pacific/Funafuti'
+        | 'Pacific/Galapagos'
+        | 'Pacific/Gambier'
+        | 'Pacific/Guadalcanal'
+        | 'Pacific/Guam'
+        | 'Pacific/Honolulu'
+        | 'Pacific/Kanton'
+        | 'Pacific/Kiritimati'
+        | 'Pacific/Kosrae'
+        | 'Pacific/Kwajalein'
+        | 'Pacific/Majuro'
+        | 'Pacific/Marquesas'
+        | 'Pacific/Midway'
+        | 'Pacific/Nauru'
+        | 'Pacific/Niue'
+        | 'Pacific/Norfolk'
+        | 'Pacific/Noumea'
+        | 'Pacific/Pago_Pago'
+        | 'Pacific/Palau'
+        | 'Pacific/Pitcairn'
+        | 'Pacific/Pohnpei'
+        | 'Pacific/Port_Moresby'
+        | 'Pacific/Rarotonga'
+        | 'Pacific/Saipan'
+        | 'Pacific/Tahiti'
+        | 'Pacific/Tarawa'
+        | 'Pacific/Tongatapu'
+        | 'Pacific/Wake'
+        | 'Pacific/Wallis'
+        | 'UTC'
+      )
+    | null;
+  /**
+   * As stated in the posting, e.g. "January 2027" or "as soon as possible".
+   */
+  startText?: string | null;
+  /**
+   * One or two sentences in English, in your own words (at most 280 characters). Never copy sentences from the posting.
+   */
+  summary?: string | null;
+  /**
+   * The posting on the employer's own website, never a job board (PLAN §6.1). Readers are sent there to apply.
+   */
+  originalUrl?: string | null;
+  originalLanguage:
+    | 'en'
+    | 'sq'
+    | 'ar'
+    | 'bg'
+    | 'ca'
+    | 'zh'
+    | 'hr'
+    | 'cs'
+    | 'da'
+    | 'nl'
+    | 'et'
+    | 'fi'
+    | 'fr'
+    | 'de'
+    | 'el'
+    | 'he'
+    | 'hi'
+    | 'hu'
+    | 'is'
+    | 'id'
+    | 'it'
+    | 'ja'
+    | 'ko'
+    | 'lv'
+    | 'lt'
+    | 'ms'
+    | 'no'
+    | 'fa'
+    | 'pl'
+    | 'pt'
+    | 'ro'
+    | 'ru'
+    | 'sr'
+    | 'sk'
+    | 'sl'
+    | 'es'
+    | 'sv'
+    | 'th'
+    | 'tr'
+    | 'uk'
+    | 'vi';
+  /**
+   * Tick each box after checking it on the original page (PLAN §6.4). All are needed to publish.
+   */
+  checks?: {
+    employerOrigin?: boolean | null;
+    positionOpen?: boolean | null;
+    deadlineConfirmed?: boolean | null;
+    ownWords?: boolean | null;
+    noPersonalContacts?: boolean | null;
+  };
+  /**
+   * For editors only; never shown on the site.
+   */
+  internalNotes?: string | null;
+  /**
+   * The original address as https, without tracking parameters and fragments, for finding the same posting twice.
+   */
+  canonicalUrl?: string | null;
+  /**
+   * The title in lower case without accents or punctuation, for comparing titles.
+   */
+  fingerprint?: string | null;
+  /**
+   * Review and publishing need the facts; publishing also needs the checklist. Withdrawn: the address answers "410 Gone" at once.
+   */
+  status: 'draft' | 'in_review' | 'published' | 'expired' | 'withdrawn';
+  /**
+   * The day you last checked the facts on the employer's page. Shown on the site.
+   */
+  verifiedAt?: string | null;
+  /**
+   * Ends the address of the job and never changes.
+   */
+  shortId?: string | null;
+  /**
+   * Made from the title. When the title changes, the old address redirects.
+   */
+  slug?: string | null;
+  /**
+   * From the location above, or else the institution's.
+   */
+  country?: (string | null) | Country;
+  city?: string | null;
+  /**
+   * When the deadline day ends in its time zone, shown in your time zone.
+   */
+  deadlineAt?: string | null;
+  /**
+   * The job this one repeats. A duplicate is not published.
+   */
+  duplicateOf?: (number | null) | Job;
+  /**
+   * Tick when the warning names a different position. Applies to this save; the check runs again when the title, address, institution or deadline change.
+   */
+  confirmNotDuplicate?: boolean | null;
+  publishedAt?: string | null;
+  expiredAt?: string | null;
+  withdrawnAt?: string | null;
+  /**
+   * Set by the weekly link check (M7).
+   */
+  linkStatus: 'unchecked' | 'ok' | 'redirect' | 'broken' | 'gone';
+  lastCheckedAt?: string | null;
+  /**
+   * Tick if the summary or tags started from an AI draft (PLAN §6.6).
+   */
+  aiAssisted?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Institutions from ROR are imported and kept up to date automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "institutions".
+ */
+export interface Institution {
+  id: number;
+  name: string;
+  /**
+   * e.g. 05dxps055 (https://ror.org/05dxps055)
+   */
+  rorId?: string | null;
+  origin: 'ror' | 'manual';
+  status: 'active' | 'inactive' | 'withdrawn';
+  /**
+   * Made from the name; the ID at the end of the URL keeps old links working.
+   */
+  slug: string;
+  /**
+   * Ends the URL of an institution without a ROR ID.
+   */
+  shortId?: string | null;
+  /**
+   * Other names, acronyms and names in other languages, for search.
+   */
+  aliases?: string[] | null;
+  types?:
+    | (
+        | 'education'
+        | 'healthcare'
+        | 'company'
+        | 'archive'
+        | 'nonprofit'
+        | 'government'
+        | 'facility'
+        | 'funder'
+        | 'other'
+      )[]
+    | null;
+  country?: (string | null) | Country;
+  city?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  website?: string | null;
+  /**
+   * The ROR data release this record last came from.
+   */
+  rorRelease?: string | null;
+  rorLastModified?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Countries and areas with their UN M49 regions (PLAN §4.6). Kosovo (XK) and Taiwan (TW) are included although M49 does not list them, because ROR and funders use them.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "countries".
+ */
+export interface Country {
+  /**
+   * ISO 3166-1 alpha-2, e.g. DE. Cannot be changed.
+   */
+  id: string;
+  name?: string | null;
+  region?: ('africa' | 'northern-america' | 'latin-america-caribbean' | 'asia' | 'europe' | 'oceania') | null;
+  subregion?:
+    | (
+        | 'northern-africa'
+        | 'eastern-africa'
+        | 'middle-africa'
+        | 'southern-africa'
+        | 'western-africa'
+        | 'caribbean'
+        | 'central-america'
+        | 'south-america'
+        | 'central-asia'
+        | 'eastern-asia'
+        | 'south-eastern-asia'
+        | 'southern-asia'
+        | 'western-asia'
+        | 'eastern-europe'
+        | 'northern-europe'
+        | 'southern-europe'
+        | 'western-europe'
+        | 'australia-new-zealand'
+        | 'melanesia'
+        | 'micronesia'
+        | 'polynesia'
+      )
+    | null;
+  /**
+   * Empty for XK and TW.
+   */
+  m49Code?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Tags shared by every content type (PLAN §4). A slug cannot change once saved; deactivate a term instead of deleting it. Every change is kept under Versions.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -230,51 +913,6 @@ export interface Term {
   createdAt: string;
 }
 /**
- * Countries and areas with their UN M49 regions (PLAN §4.6). Kosovo (XK) and Taiwan (TW) are included although M49 does not list them, because ROR and funders use them.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "countries".
- */
-export interface Country {
-  /**
-   * ISO 3166-1 alpha-2, e.g. DE. Cannot be changed.
-   */
-  id: string;
-  name?: string | null;
-  region?: ('africa' | 'northern-america' | 'latin-america-caribbean' | 'asia' | 'europe' | 'oceania') | null;
-  subregion?:
-    | (
-        | 'northern-africa'
-        | 'eastern-africa'
-        | 'middle-africa'
-        | 'southern-africa'
-        | 'western-africa'
-        | 'caribbean'
-        | 'central-america'
-        | 'south-america'
-        | 'central-asia'
-        | 'eastern-asia'
-        | 'south-eastern-asia'
-        | 'southern-asia'
-        | 'western-asia'
-        | 'eastern-europe'
-        | 'northern-europe'
-        | 'southern-europe'
-        | 'western-europe'
-        | 'australia-new-zealand'
-        | 'melanesia'
-        | 'micronesia'
-        | 'polynesia'
-      )
-    | null;
-  /**
-   * Empty for XK and TW.
-   */
-  m49Code?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Groups of countries used in funding eligibility (PLAN §4.6). When you change a list, update the source, the date you checked it and the note.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -292,59 +930,6 @@ export interface CountrySet {
    * The version or date of the source, and anything left out on purpose.
    */
   verificationNote?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Institutions from ROR are imported and kept up to date automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "institutions".
- */
-export interface Institution {
-  id: number;
-  name: string;
-  /**
-   * e.g. 05dxps055 (https://ror.org/05dxps055)
-   */
-  rorId?: string | null;
-  origin: 'ror' | 'manual';
-  status: 'active' | 'inactive' | 'withdrawn';
-  /**
-   * Made from the name; the ID at the end of the URL keeps old links working.
-   */
-  slug: string;
-  /**
-   * Ends the URL of an institution without a ROR ID.
-   */
-  shortId?: string | null;
-  /**
-   * Other names, acronyms and names in other languages, for search.
-   */
-  aliases?: string[] | null;
-  types?:
-    | (
-        | 'education'
-        | 'healthcare'
-        | 'company'
-        | 'archive'
-        | 'nonprofit'
-        | 'government'
-        | 'facility'
-        | 'funder'
-        | 'other'
-      )[]
-    | null;
-  country?: (string | null) | Country;
-  city?: string | null;
-  lat?: number | null;
-  lng?: number | null;
-  website?: string | null;
-  /**
-   * The ROR data release this record last came from.
-   */
-  rorRelease?: string | null;
-  rorLastModified?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -478,6 +1063,10 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
+        relationTo: 'jobs';
+        value: number | Job;
+      } | null)
+    | ({
         relationTo: 'terms';
         value: number | Term;
       } | null)
@@ -557,6 +1146,61 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "jobs_select".
+ */
+export interface JobsSelect<T extends boolean = true> {
+  title?: T;
+  institution?: T;
+  locationOverride?:
+    | T
+    | {
+        city?: T;
+        country?: T;
+      };
+  positionType?: T;
+  careerStages?: T;
+  subfields?: T;
+  methods?: T;
+  modelSystems?: T;
+  deadlineKind?: T;
+  deadlineDate?: T;
+  deadlineTz?: T;
+  startText?: T;
+  summary?: T;
+  originalUrl?: T;
+  originalLanguage?: T;
+  checks?:
+    | T
+    | {
+        employerOrigin?: T;
+        positionOpen?: T;
+        deadlineConfirmed?: T;
+        ownWords?: T;
+        noPersonalContacts?: T;
+      };
+  internalNotes?: T;
+  canonicalUrl?: T;
+  fingerprint?: T;
+  status?: T;
+  verifiedAt?: T;
+  shortId?: T;
+  slug?: T;
+  country?: T;
+  city?: T;
+  deadlineAt?: T;
+  duplicateOf?: T;
+  confirmNotDuplicate?: T;
+  publishedAt?: T;
+  expiredAt?: T;
+  withdrawnAt?: T;
+  linkStatus?: T;
+  lastCheckedAt?: T;
+  aiAssisted?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

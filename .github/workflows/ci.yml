@@ -94,8 +94,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Institutions for the institution pages: 21 records from a ROR release (CC0), imported with
       # the same code as the nightly import. The taxonomy and countries come with the migrations.
+      # Then fake jobs at those institutions, including the fixed ones the jobs tests rely on
+      # (src/scripts/fake-jobs-fixed.ts).
       - name: Load test data
-        run: pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip
+        run: |
+          pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip
+          pnpm fake:jobs
         env:
           DATABASE_URL: postgres://gliagora:smoke-test-only@localhost:5432/gliagora
           PAYLOAD_SECRET: test-data-only

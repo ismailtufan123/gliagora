@@ -73,6 +73,7 @@ The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RA
 - Navigation lives in `src/lib/site.ts` (windows, sections, paths) and `src/lib/navigation.ts` (mega-menus). Every link in the header and footer must lead to a page (an end-to-end test checks this): a section that is not built yet gets a `PlaceholderPage` (`noindex`) until its milestone.
 - Header menus are `<details>` disclosures that work without JavaScript; `DisclosureEnhancer` adds Esc, outside click and the mobile menu's inert background.
 - Do not call `notFound()` inside a page: in Next.js 16.3 its 404 content renders only with JavaScript. Unknown public URLs, including unknown paths under `/en/` and `/tr/`, already get the server-rendered global 404 (`src/app/global-not-found.tsx`); `/admin` and `/api` answer their own 404s (Payload). Removed URLs answer 410: `src/proxy.ts` checks `isGone()` in `src/lib/gone.ts` and shows the removed-page with status 410; M4 connects it to closed and withdrawn listings. Pages that show a database record (institutions, subfield hubs; jobs and events from M4) are resolved in the proxy before rendering (`src/lib/detail-routes.ts`, with the database lookup in `src/lib/detail-lookup.ts`): unknown record → 404, outdated slug → 308, retired → 410. Add each new detail route there, and give its page `export const dynamic = 'force-dynamic'` (the build has no database).
+- Calendar days (a job's deadline day, "Last verified") are Payload date fields stored at noon UTC, so their UTC date is the day in every time zone; read them with `calendarDay()` and get instants with `deadlineEnd()` in `src/lib/jobs/deadline.ts` (a deadline day ends at midnight in `deadlineTz`, the institution's time zone unless the posting names another, or Anywhere on Earth when the zone is unknown), never with the server's or the browser's time zone.
 
 ## Commands
 
@@ -85,6 +86,7 @@ Fill these in as the project grows.
 - `pnpm test:e2e` — Playwright + axe tests against a running app (`pnpm build && pnpm start`); every new page template goes into `tests/e2e/pages.ts`
 - `pnpm migrate:create <name>`, then `pnpm generate:types` — after changing a collection; commit the migration and types with it
 - `pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip` — load 20 test institutions (21 ROR records, one withdrawn and skipped; the e2e tests need them); without a file it downloads and imports the latest ROR release (about 15 minutes the first time)
+- `pnpm fake:jobs` — replace the fake jobs at the test institutions (run it after `pnpm ror:import`): about 60 generated ones plus the fixed ones the e2e tests use (`src/scripts/fake-jobs-fixed.ts`: open, closing soon, rolling, closed recently, gone, withdrawn, draft). It refuses to run where `PAYLOAD_JOBS_AUTORUN` is `true` (production)
 
 ## Target repository layout
 

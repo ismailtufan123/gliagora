@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { Institutions, ROR_IMPORT_CONTEXT, SHORT_ID_PATTERN, newShortId } from './Institutions'
+import { SHORT_ID_PATTERN } from '@/lib/short-id'
+
+import { Institutions, ROR_IMPORT_CONTEXT } from './Institutions'
 
 const [prepare] = Institutions.hooks?.beforeValidate ?? []
 const run = (
@@ -133,16 +135,32 @@ describe('Institutions', () => {
     expect(lat.validate(null, { data: { origin: 'ror' } })).toBe(true)
   })
 
-  it('lets only institutions added by hand be deleted', () => {
-    const remove = Institutions.access?.delete as () => unknown
-    expect(remove()).toEqual({ origin: { equals: 'manual' } })
+  it('lets signed-in editors delete only institutions added by hand', () => {
+    const remove = Institutions.access?.delete as (args: { req: { user: unknown } }) => unknown
+    expect(remove({ req: { user: { id: 1 } } })).toEqual({ origin: { equals: 'manual' } })
+    expect(remove({ req: { user: null } })).toBe(false)
+  })
+
+  it('keeps an institution that jobs or job versions refer to, also for code that bypasses access control', async () => {
+    const [keepReferenced] = Institutions.hooks?.beforeDelete ?? []
+    const remove = (totalDocs: number, versions = 0) => {
+      const count = vi.fn(async () => ({ totalDocs }))
+      const countVersions = vi.fn(async () => ({ totalDocs: versions }))
+      return keepReferenced?.({
+        id: 5,
+        req: { payload: { count, countVersions } },
+        context: {},
+      } as never)
+    }
+    await expect(remove(2)).rejects.toThrow('2 jobs refer to this institution')
+    await expect(remove(1)).rejects.toThrow('A job refers to this institution')
+    await expect(remove(0, 1)).rejects.toThrow(
+      'Earlier versions of a job refer to this institution',
+    )
+    await expect(remove(0)).resolves.toBeUndefined()
   })
 
   it('offers no Duplicate action, since a copy would repeat the ROR ID or short ID', () => {
     expect(Institutions.disableDuplicate).toBe(true)
-  })
-
-  it('makes short IDs from the ROR alphabet', () => {
-    for (let i = 0; i < 200; i++) expect(newShortId()).toMatch(SHORT_ID_PATTERN)
   })
 })

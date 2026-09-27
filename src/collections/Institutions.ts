@@ -1,21 +1,16 @@
-import { randomInt } from 'node:crypto'
-import type { CollectionBeforeValidateHook, CollectionConfig } from 'payload'
-import { ValidationError } from 'payload'
+import type {
+  CollectionBeforeDeleteHook,
+  CollectionBeforeValidateHook,
+  CollectionConfig,
+} from 'payload'
+import { APIError, ValidationError } from 'payload'
 
 import { fetchRorInstitution } from '@/lib/ror/api'
 import { ROR_STATUSES, ROR_TYPES } from '@/lib/ror/record'
 import { isRorId, parseRorId } from '@/lib/ror/ror-id'
+import { newShortId } from '@/lib/short-id'
 import { slugify } from '@/lib/slug'
 import type { Institution } from '@/payload-types'
-
-const SHORT_ID_ALPHABET = '0123456789abcdefghjkmnpqrstvwxyz'
-
-/** A short stable ID for institutions without a ROR ID, used at the end of their URL (PLAN §2.1). */
-export function newShortId(): string {
-  return Array.from({ length: 5 }, () => SHORT_ID_ALPHABET[randomInt(32)]).join('')
-}
-
-export const SHORT_ID_PATTERN = /^[0-9a-hjkmnp-tv-z]{5}$/
 
 type InstitutionData = Partial<Institution>
 
@@ -87,6 +82,39 @@ const inRange =
     return data.origin !== 'manual' || `Enter the ${name}.`
   }
 
+// Jobs refer to their institution (PLAN §5.1), so an institution is kept while a job or a job
+// version refers to it. Versions are the jobs' history (PLAN §5.2) and need their institution
+// (the database refuses to clear it). This also holds for code that bypasses access control.
+const keepReferenced: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  const { totalDocs } = await req.payload.count({
+    collection: 'jobs',
+    where: { institution: { equals: id } },
+    req,
+  })
+  if (totalDocs > 0) {
+    const jobs = totalDocs === 1 ? 'A job refers' : `${totalDocs} jobs refer`
+    throw new APIError(
+      `${jobs} to this institution. Give ${totalDocs === 1 ? 'it' : 'them'} another institution before deleting this one.`,
+      400,
+      null,
+      true,
+    )
+  }
+  const { totalDocs: versions } = await req.payload.countVersions({
+    collection: 'jobs',
+    where: { 'version.institution': { equals: id } },
+    req,
+  })
+  if (versions > 0) {
+    throw new APIError(
+      'Earlier versions of a job refer to this institution, so it is kept for their history.',
+      400,
+      null,
+      true,
+    )
+  }
+}
+
 // PLAN §5.1: institutions come from ROR (CC0, monthly import); organizations without a ROR ID,
 // such as small companies, are added by hand with coordinates.
 export const Institutions: CollectionConfig = {
@@ -101,11 +129,12 @@ export const Institutions: CollectionConfig = {
       'Institutions from ROR are imported and kept up to date automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.',
   },
   access: {
-    // Content will refer to institutions (M4), and the import would add a deleted ROR
-    // institution again, so only institutions added by hand can be deleted.
-    delete: () => ({ origin: { equals: 'manual' } }),
+    // Signed-in editors only (a function replaces Payload's default, so it checks the user
+    // itself). The import would add a deleted ROR institution again, so only institutions added
+    // by hand can be deleted, and only while no job or job version refers to them (keepReferenced).
+    delete: ({ req }) => (req.user ? { origin: { equals: 'manual' } } : false),
   },
-  hooks: { beforeValidate: [prepare] },
+  hooks: { beforeValidate: [prepare], beforeDelete: [keepReferenced] },
   // A copy would repeat the ROR ID or short ID, which must be unique.
   disableDuplicate: true,
   fields: [

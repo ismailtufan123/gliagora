@@ -13,17 +13,24 @@ const SPECIAL: Record<string, string> = {
 }
 
 /**
+ * Lower case with accents removed, the same in every locale: `İstanbul Üniversitesi` →
+ * `istanbul universitesi` (the Turkish İ and ı both become i). Other scripts are kept.
+ */
+export function foldAccents(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[ßæœøđðħıłþ]/g, (char) => SPECIAL[char] ?? char)
+}
+
+/**
  * A URL slug from a name (PLAN §2.1): lowercase ASCII words joined by hyphens, accents removed
  * (`İstanbul Üniversitesi` → `istanbul-universitesi`), at most `maxLength` characters, cut at a
  * word boundary. Names without Latin letters or digits give `fallback`.
  */
 export function slugify(text: string, { maxLength = 80, fallback = 'item' } = {}): string {
-  const ascii = text
-    .toLocaleLowerCase('en')
-    .normalize('NFKD')
-    .replace(/\p{M}/gu, '')
-    .replace(/[ßæœøđðħıłþ]/g, (char) => SPECIAL[char] ?? char)
-    .replace(/&/g, ' and ')
+  const ascii = foldAccents(text).replace(/&/g, ' and ')
   const words = ascii.split(/[^a-z0-9]+/).filter(Boolean)
   let slug = ''
   for (const word of words) {

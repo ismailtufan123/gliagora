@@ -6,6 +6,7 @@ import { buildConfig } from 'payload'
 import { Countries } from './collections/Countries'
 import { CountrySets } from './collections/CountrySets'
 import { Institutions } from './collections/Institutions'
+import { Jobs } from './collections/Jobs'
 import { Terms } from './collections/Terms'
 import { Users } from './collections/Users'
 import { RorImport } from './globals/RorImport'
@@ -26,7 +27,7 @@ export default buildConfig({
       titleSuffix: ' – Gliagora admin',
     },
   },
-  collections: [Users, Terms, Countries, CountrySets, Institutions],
+  collections: [Users, Jobs, Terms, Countries, CountrySets, Institutions],
   globals: [RorImport],
   jobs: {
     tasks: [RorImportTask],
