@@ -19,6 +19,7 @@
     "learn": "Learn",
     "learnBasics": "Neuroscience basics",
     "about": "About",
+    "legal": "Legal",
     "follow": "Gliagora on social media",
     "social": {
       "instagram": "Instagram",
@@ -28,12 +29,6 @@
   "home": {
     "comingSoon": "Coming soon: a curated, English-first hub for neuroscience positions, events, funding, papers, news and resources.",
     "writeToUs": "Write to us at <email>hello@gliagora.com</email>."
-  },
-  "contact": {
-    "title": "Contact and legal notice",
-    "inPreparation": "Gliagora | Neuroscience is in preparation. The full legal notice will be published on this page before the site opens.",
-    "contactHeading": "Contact",
-    "email": "Email: <email>hello@gliagora.com</email>"
   },
   "notFound": {
     "title": "Page not found",
@@ -120,6 +115,22 @@
     "about": {
       "title": "About Gliagora",
       "description": "Why Gliagora exists, where its name comes from, how entries are chosen and checked, and who runs it."
+    },
+    "contact": {
+      "title": "Contact and legal notice",
+      "description": "How to contact Gliagora | Neuroscience, who is responsible for its content, and how to ask for a correction, a removal or your personal data."
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "description": "What personal data Gliagora processes, why, on what legal basis, for how long, and what rights you have."
+    },
+    "kvkk": {
+      "title": "KVKK notice (in Turkish)",
+      "description": "The information notice under the Turkish Personal Data Protection Law (KVKK), in Turkish."
+    },
+    "terms": {
+      "title": "Terms of use",
+      "description": "The rules for using Gliagora | Neuroscience, its member accounts, forms and newsletter."
     }
   }
 }

@@ -55,6 +55,37 @@ describe('renderMarkdown', () => {
     expect(html).toContain('&lt;script&gt;')
   })
 
+  it('highlights open points in draft texts', () => {
+    const html = renderMarkdown(
+      'Text [TO DECIDE: the *date*] and [KARAR VERİLECEK: adres]. A [link](/en/about/).',
+    )
+    expect(html).toContain('<mark class="open-point">[TO DECIDE: the <em>date</em>]</mark>')
+    expect(html).toContain('<mark class="open-point">[KARAR VERİLECEK: adres]</mark>')
+    expect(html).toContain('<a href="/en/about/">link</a>')
+  })
+
+  it('keeps links and brackets inside open points', () => {
+    const html = renderMarkdown(
+      '[TO DECIDE: see [privacy](/en/legal/privacy/) first] and [TO DECIDE: [a] b]',
+    )
+    expect(html).toContain(
+      '<mark class="open-point">[TO DECIDE: see <a href="/en/legal/privacy/">privacy</a> first]</mark>',
+    )
+    expect(html).toContain('<mark class="open-point">[TO DECIDE: [a] b]</mark>')
+  })
+
+  it('marks phrases in another language', () => {
+    const html = renderMarkdown(
+      'Use ["{en: Suggest a listing}"](/en/suggest/) as the *{tr: veri sorumlusu}*. {de: nein}',
+    )
+    expect(html).toContain(
+      '<a href="/en/suggest/">&quot;<span lang="en">Suggest a listing</span>&quot;</a>',
+    )
+    expect(html).toContain('<em><span lang="tr">veri sorumlusu</span></em>')
+    // Only the site's locales.
+    expect(html).toContain('{de: nein}')
+  })
+
   it('renders tables, lists and links', () => {
     const html = renderMarkdown(
       '| A | B |\n|---|---|\n| 1 | 2 |\n\n1. one\n2. two\n\n[Contact](/en/contact/)',

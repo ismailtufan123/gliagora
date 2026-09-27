@@ -19,6 +19,7 @@
     "learn": "Öğrenin",
     "learnBasics": "Sinirbilimin temelleri",
     "about": "Hakkında",
+    "legal": "Yasal",
     "follow": "Gliagora sosyal medyada",
     "social": {
       "instagram": "Instagram",
@@ -28,12 +29,6 @@
   "home": {
     "comingSoon": "Yakında: sinirbilim alanındaki pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları özenle seçip bir araya getiren, İngilizce öncelikli bir merkez.",
     "writeToUs": "Bize <email>hello@gliagora.com</email> adresinden ulaşabilirsiniz."
-  },
-  "contact": {
-    "title": "İletişim ve yasal bilgiler",
-    "inPreparation": "Gliagora | Neuroscience hazırlık aşamasındadır. Yasal bilgilerin tamamı site açılmadan önce bu sayfada yayımlanacaktır.",
-    "contactHeading": "İletişim",
-    "email": "E-posta: <email>hello@gliagora.com</email>"
   },
   "notFound": {
     "title": "Sayfa bulunamadı",
@@ -120,6 +115,22 @@
     "about": {
       "title": "Gliagora hakkında",
       "description": "Gliagora'nın neden var olduğu, adının nereden geldiği, içeriklerin nasıl seçilip doğrulandığı ve siteyi kimin yürüttüğü."
+    },
+    "contact": {
+      "title": "İletişim ve yasal bilgiler",
+      "description": "Gliagora | Neuroscience ile nasıl iletişim kurabileceğiniz, içerikten kimin sorumlu olduğu ve düzeltme, kaldırma ya da kişisel veri talebinde nasıl bulunabileceğiniz."
+    },
+    "privacy": {
+      "title": "Gizlilik politikası (İngilizce)",
+      "description": "Gliagora'nın hangi kişisel verileri, neden, hangi hukuki sebeple ve ne kadar süreyle işlediği ve haklarınız (İngilizce)."
+    },
+    "kvkk": {
+      "title": "KVKK aydınlatma metni",
+      "description": "6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında Gliagora | Neuroscience aydınlatma metni."
+    },
+    "terms": {
+      "title": "Kullanım koşulları (İngilizce)",
+      "description": "Gliagora | Neuroscience'ın, üye hesaplarının, formların ve bültenin kullanım kuralları (İngilizce)."
     }
   }
 }

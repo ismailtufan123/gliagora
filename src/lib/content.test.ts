@@ -16,7 +16,7 @@ describe('content pages', () => {
       expect(page.path.startsWith(`/${page.locale}/`)).toBe(true)
       expect(page.path.endsWith('/')).toBe(true)
       expect(page.updated).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-      expect(Object.keys(en.pages)).toContain(key)
+      expect(Object.keys(en.pages)).toContain(page.messages)
     })
   }
 

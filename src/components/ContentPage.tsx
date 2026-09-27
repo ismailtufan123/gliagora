@@ -13,8 +13,8 @@ export async function contentMetadata(key: ContentKey): Promise<Metadata> {
   const page = CONTENT_PAGES[key]
   const t = await getTranslations({ locale: page.locale })
   return {
-    title: t(`pages.${key}.title`),
-    description: t(`pages.${key}.description`),
+    title: t(`pages.${page.messages}.title`),
+    description: t(`pages.${page.messages}.description`),
     alternates: alternatesFor(page.path),
     ...(page.draft ? { robots: { index: false } } : {}),
   }
@@ -28,7 +28,7 @@ export async function ContentPage({ pageKey, intro }: { pageKey: ContentKey; int
   return (
     <main id="main" className="page-frame flex-1 py-12">
       <article className="prose">
-        <h1>{t(`pages.${pageKey}.title`)}</h1>
+        <h1>{t(`pages.${page.messages}.title`)}</h1>
         {page.draft && (
           <p className="draft-notice" role="note">
             {t('pages.draftNotice')}
