@@ -7,13 +7,13 @@ Instructions for Claude Code in this repository. Read this file first, then `PLA
 Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, events, funding, papers, news, resources, a world map and a monthly newsletter, **Glia Notes**. Tagline: "Where neuroscience meets".
 
 - Data controller and editor: Nuray Sancar (natural person, Türkiye). The team has no professional web-development background: explain choices briefly and prefer boring, well-documented tools.
-- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D31). If a task conflicts with `PLAN.md`, stop and ask.
+- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D38). If a task conflicts with `PLAN.md`, stop and ask.
 
 ## Current milestone
 
-M3 Taxonomy and institutions is done. Next is **S, the one-time server setup**, which starts only when the operator says so (PLAN §20). Milestone order: M0 → M1 → M3 → S (one-time server setup) → M2 → M4 → … (D23).
+**M4 Jobs**, built and tested locally with fake data only (D38). Content entry waits for the server; parts that need production (scheduled jobs, emails) are built and tested locally but not deployed. Milestone order: M0 → M1 → M3 → M4 (local) → S (one-time server setup) → one-time lawyer review → M2 → M4b → … (PLAN §20, D32, D38). The whole site stays private until M2 (D32).
 
-The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM) is bought but not set up. Server setup is postponed until just before M4: do not work on the server until the operator says so. Work locally only; nothing may depend on a live server. The server files in `deploy/` are prepared but have never been run.
+The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM) is bought but not set up. Server setup (S) is postponed: do not work on the server until the operator says so. Work locally only; nothing may depend on a live server. The server files in `deploy/` are prepared but have never been run.
 
 ## Stack (PLAN §11)
 

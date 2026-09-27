@@ -7,60 +7,56 @@ After M1 the drafts had 111 open questions, plus one open point that was only ma
 | Group | What happens | Count |
 |---|---|---|
 | (a) Answerable from PLAN.md | The answer is now written into the draft and its marker is gone. | 49 questions |
-| (b) Needs a lawyer | One review by a lawyer before the texts go live (pre-launch checklist, PLAN §20). | 47 questions, merged into **17** (B1–B17) |
-| (c) Only the operator can decide | Your decision; each has a recommended answer. | 13 questions, merged into **5** (C1–C5) |
+| (b) Needs a lawyer | One review by a lawyer between S and M2, before the texts go live (pre-launch checklist, PLAN §20, D32). | 47 questions, merged into **17** (B1–B17), plus **B18** added on 2026-09-27 (C2): **18** in all |
+| (c) Only the operator can decide | Decided by the operator on 2026-09-27 (PLAN D32–D36). The decisions are written into the drafts and their markers are gone. | 13 questions, merged into **5** (C1–C5) |
 
-Five more questions were settled by a default (listed below, with the other defaults the drafts follow). Two questions were split between groups (privacy policy 22 and terms 3), so the tables at the end have 114 rows for 112 questions. In the drafts every remaining marker names its item, for example `[TO DECIDE: B4 – …]` or `[KARAR VERİLECEK: C3 – …]`. A few markers name a milestone or a step instead ("S and M4b", "M4", "before publication", "when ALTCHA … are built"): they are facts to fill in at that point, not questions.
+Five more questions were settled by a default (listed below, with the other defaults the drafts follow). Two questions were split between groups (privacy policy 22 and terms 3), so the tables at the end have 114 rows for 112 questions. In the drafts every remaining marker names its item, for example `[TO DECIDE: B4 – …]` or `[KARAR VERİLECEK: B7 – …]`. A few markers name a milestone or a step instead ("S and M4b", "M4", "before publication", "when ALTCHA … are built", and "before signing" in the processing agreement): they are facts to fill in at that point, not questions.
 
-## (c) Decisions for the operator
+## (c) Decisions for the operator — decided 2026-09-27
 
-### C1
+The operator decided all five on 2026-09-27; they are recorded in PLAN §22.3 (D32–D36). Each decision is written into the drafts and its markers are gone.
 
-**Decision.** When do the legal texts go public, and so when is the one lawyer review? PLAN opens newsletter signups at M2, and signups need the privacy policy, the KVKK aydınlatma metni and the açık rıza metni. PLAN leaves open whether anything goes public earlier, at the server setup (S). There is also a fact only you know: which mailbox, and which provider, does Cloudflare forward hello@ mail to today?
+### C1. When the texts go public: approved
 
-**Recommendation.** Keep the site private until hello@ has moved to the Turkish mail host at the start of M2. Hold the one lawyer review between S and M2, and have the remaining legal texts (açık rıza metni, notice and takedown, data requests, cookies and storage) drafted before it, so that one review covers them all. Publish the two contact pages, the privacy policy, the KVKK aydınlatma metni and the açık rıza metni with the signup form at M2. Publish the terms and the other pages by M6. If hello@ currently forwards to a Gmail or other foreign mailbox, tell me: PLAN §11.4 rules that out, and the Turkish mailbox can be opened early.
+**Decided.** The whole site stays private until M2. Order: server setup (S), then the one-time lawyer review, then M2. At M2, hello@ moves to the Turkish mail host, and the two contact pages, the privacy policy, the KVKK aydınlatma metni and the açık rıza metni go live together with the newsletter signup. The terms and the other legal pages go live by M6. Until M2, hello@ keeps its current forwarding (Cloudflare Email Routing). (D32)
 
-**Why.** Then no text has to describe the interim transfer abroad, which also removes part of a lawyer question (B12). The texts that collect data at M2 are also reviewed before they go live (§20 M2, §11.4, D28). Drafting the remaining texts early is a small change to the PLAN §20 M1 notes.
+**In the drafts.** Nothing is public before M2, so no text describes the interim forwarding, the interim mailbox or a transfer abroad for it. The drafts read as they will be true at M2. This also settles part (3) of B12.
 
 Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/terms.md`
 
-### C2
+### C2. Access by anyone other than the controller: yes
 
-**Decision.** Does anyone other than you have access to the server, the admin panel or the databases, for example someone who sets up or maintains the site?
-
-**Recommendation.** If yes, sign a short written controller–processor agreement with that person before any text goes live. The notices then describe the role without a name: 'A person who maintains our server and software on our instructions, under a written agreement, and sees personal data only when that work requires it.' If no, the item is deleted.
-
-**Why.** D10 and KVKK Art. 12 (§15.1 Processors) require the agreement, and leaving the name out protects the helper's privacy.
+**Decided.** Besides the controller, a technical administrator has access to the server, the admin panel and the databases. This person is our processor (veri işleyen; KVKK m.12, GDPR Art. 28) under a one-page written agreement. The draft, in Turkish, is `docs/legal/veri-isleme-sozlesmesi-taslak.md`; the lawyer reviews it (B18). The privacy policy and the KVKK aydınlatma metni describe the role without naming the person. (D33)
 
 Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
 
-### C3
+### C3. Retention periods: approved as proposed
 
-**Decision.** Approve retention periods for the data that PLAN gives no period for.
+**Decided.** The periods for the data that PLAN gave no period for (D34):
 
-**Recommendation.** Hashed IP addresses for the suggestion-form limit: kept only in the app database on our server, deleted after 24 hours. Bounce records: deleted together with the address. Suggestion link and note: deleted with the email, 90 days after the decision. Ordinary email to hello@: 2 years after the last message. Admin audit log: 1 year. Container and application logs: 14 days, like the server logs. Mailing-list messages in the project mailbox: 30 days after they arrive. Listings that have gone offline: the full record for 12 months, then only the web address and ID, so that the page keeps answering 410. AI audit copy (only once AI drafting is on): 30 days after the decision.
+- Hashed IP addresses for the suggestion-form limit: kept only in the app database on our server, deleted after 24 hours.
+- Bounce records: deleted together with the address.
+- Suggestion link and note: deleted with the email, 90 days after the decision.
+- Ordinary email to hello@: 2 years after the last message.
+- Admin audit log: 1 year.
+- Container and application logs: 14 days, like the server logs.
+- Mailing-list messages in the project mailbox: 30 days after they arrive.
+- Listings that have gone offline: the full record for 12 months, then only the web address and ID, so that the page keeps answering 410.
+- AI audit copy (only once AI drafting is on): 30 days after the decision.
 
-**Why.** Each period except the 24 hours for hashed IP addresses reuses one PLAN already has (14 days, 30 days, 90 days, 12 months, 2 years), and none keeps data longer than its purpose needs. The lawyer sees the final table in B11.
+The lawyer sees the final table in B11.
 
 Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
 
-### C4
+### C4. Preferred subfields at launch: approved as proposed
 
-**Decision.** PLAN keeps 'preferred subfields' in the member settings at launch (D7, M4b), but Glia Notes is the same issue for everyone until Phase 2. What should this setting do at launch?
-
-**Recommendation.** At launch it only sets your default subfield filter on the jobs list while you are signed in. Glia Notes stays the same for everyone until Phase 2, and all three texts then say exactly that. The alternative is to leave the setting out until Phase 2, but that changes D7 and M4b.
-
-**Why.** It keeps your D7 decision, gives the setting one visible use and involves no profiling, so 'we do not build a profile' stays true.
+**Decided.** At launch, a member's preferred subfields only set the default subfield filter on the jobs list while the member is signed in. Glia Notes is the same issue for everyone until Phase 2, and no profile is built. (D35)
 
 Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/terms.md`
 
-### C5
+### C5. Telling people about changes: approved as proposed
 
-**Decision.** How are members and subscribers told about important changes to the privacy texts and the terms?
-
-**Recommendation.** Important changes are a new purpose, a new recipient, a transfer abroad or new duties for members. For these, email members, show a dated notice on the page 30 days before the change applies, and mention it in the next Glia Notes. Smaller edits only get a new date on the page.
-
-**Why.** There are few members and it costs nothing. Advance notice also makes the terms' change clause fairer (B16) and builds trust. PLAN has no such email yet (§13).
+**Decided.** Important changes (a new purpose, a new recipient, a transfer abroad or new duties for members) are emailed to members, shown as a dated notice on the page 30 days before they apply, and mentioned in the next Glia Notes. Smaller edits only get a new date on the page. (D36) The lawyer still checks the terms' change clause in B16.
 
 Texts: `content/en/legal/terms.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
 
@@ -158,11 +154,11 @@ Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md
 
 ### B12. Cloudflare DNS and server access from abroad (transfers under KVKK m.9)
 
-(1) Cloudflare (outside Türkiye) is our registrar and DNS provider. All web records are DNS-only, so no visitor traffic passes through Cloudflare. Is this a transfer abroad under KVKK m.9, and must the notices mention it? (2) If the controller logs in to the Istanbul server from abroad (for example while travelling), is that a transfer under m.9? (3) Only if a text goes public before M2: mail to hello@ passes through Cloudflare Email Routing abroad. Which m.9 route and GDPR Chapter V basis would cover that?
+(1) Cloudflare (outside Türkiye) is our registrar and DNS provider. All web records are DNS-only, so no visitor traffic passes through Cloudflare. Is this a transfer abroad under KVKK m.9, and must the notices mention it? (2) If the controller, or the technical administrator (C2, B18), logs in to the Istanbul server from abroad (for example while travelling), is that a transfer under m.9? (3) Settled by C1, no answer needed: the site stays private until M2, when hello@ moves to the Turkish mail host, so no text describes the interim forwarding through Cloudflare Email Routing.
 
-**Why it matters.** Decides whether the notices can say there are no transfers abroad apart from the listed exceptions. Part (3) falls away if C1 is accepted.
+**Why it matters.** Decides whether the notices can say there are no transfers abroad apart from the listed exceptions.
 
-Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `docs/legal/veri-isleme-sozlesmesi-taslak.md`
 
 ### B13. Sign-in with Google or ORCID, and delivery of our emails
 
@@ -203,6 +199,14 @@ AI drafting is off at launch; it may be switched on in M7. Listing texts and ope
 **Why it matters.** AI drafting stays off until this is answered. It is asked in the same review so that no second review is needed.
 
 Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+
+### B18. The data processing agreement with the technical administrator
+
+Besides the controller, one natural person, the technical administrator, maintains the server and the software and has access to the server, the admin panel and the databases. We treat this person as our processor (veri işleyen). The draft agreement, one page in Turkish, is `docs/legal/veri-isleme-sozlesmesi-taslak.md`. (1) Does it meet KVKK m.12 and GDPR Art. 28(3), and is anything missing? (2) Is processor the right role for this person under both laws?
+
+**Why it matters.** The agreement must be signed before the texts go live at M2. Both notices describe this role as a processor under a written agreement, without naming the person (C2, D33); if the role is different, those passages change.
+
+Texts: `docs/legal/veri-isleme-sozlesmesi-taslak.md`; the role is described in `content/en/legal/privacy.md` and `content/tr/legal/kvkk-aydinlatma-metni.md`
 
 ## Defaults applied
 
