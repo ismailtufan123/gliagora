@@ -1,14 +1,12 @@
 ## About these terms
 
-These terms apply when you use gliagora.com ("Gliagora | Neuroscience"), including member accounts and the Glia Notes newsletter. By using the site, you agree to them. When you create a member account, you confirm that you accept them.
+These terms apply when you use gliagora.com ("Gliagora | Neuroscience"), including member accounts and the Glia Notes newsletter. By using the site, you agree to them. When you create a member account, you confirm that you accept them. [TO DECIDE: B9 – whether visitors are bound, and how members accept the terms at sign-in]
 
-Gliagora is run by Nuray Sancar, a private individual who lives in Türkiye. She is the editor and is responsible for what Gliagora publishes. In these terms, "we", "us" and "our" mean Gliagora and its editor. "You" means anyone who uses the site.
+Gliagora is run by Nuray Sancar, a private individual who lives in Türkiye. She is the editor and is responsible for what Gliagora publishes. [TO DECIDE: B1 – content provider role] In these terms, "we", "us" and "our" mean Gliagora and its editor. "You" means anyone who uses the site.
 
 Gliagora is free to use.
 
-These terms apply from the date shown under "Version history" at the end of this page.
-
-The section "We are a publisher, not an employment agency" is also published in Turkish. [TO DECIDE: whether the full terms are published in Turkish (for example at /tr/legal/kullanim-kosullari/) or only that section, where the Turkish text appears, and which version applies if the two differ.]
+This version applies from the date shown under "Version history" at the end of this page.
 
 ## What Gliagora is
 
@@ -24,7 +22,7 @@ Gliagora currently offers:
 - a form to suggest a listing;
 - search.
 
-We are adding the other sections one step at a time.
+We are adding the other sections one step at a time. [TO DECIDE: C1 – when the terms go public; this text describes Gliagora at launch (M6), after privacy@gliagora.com has moved to the Turkish mail host (M2)]
 
 We call each thing we publish an "item", for example a job listing. Every item has:
 
@@ -33,7 +31,7 @@ We call each thing we publish an "item", for example a job listing. Every item h
 - a short summary in our own words;
 - a "Last verified" date.
 
-Our editor approves every item before it is published. Software, including AI tools, may help us draft summaries, but a person always checks the facts against the original posting. Our sources and editorial policy explains how we work.
+Our editor approves every item before it is published and checks the facts against the original posting. Our sources and editorial policy explains how we work.
 
 No one pays to appear on Gliagora. We do not publish paid placements.
 
@@ -59,7 +57,7 @@ We work to keep Gliagora online and correct. We cannot promise that it will alwa
 
 Gliagora is a publisher. It is not an employment agency, a recruiter or an intermediary between employers and job seekers.
 
-Turkish Law No. 4904 says that anyone who acts as an intermediary in job placement, including online, needs permission from İŞKUR, the Turkish Employment Agency. The same law forbids publishing job ads from intermediaries that do not have this permission. Gliagora does not act as an intermediary. That is why Gliagora:
+Turkish Law No. 4904 says that anyone who acts as an intermediary in job placement, including online, needs permission from İŞKUR, the Turkish Employment Agency. The same law forbids publishing job ads from intermediaries that do not have this permission. [TO DECIDE: B3 – Law No. 4904 wording] Gliagora does not act as an intermediary. That is why Gliagora:
 
 - publishes only listings that come from employers themselves, such as universities, institutes and companies;
 - does not publish listings placed by recruitment agencies;
@@ -72,13 +70,11 @@ Every listing links to the employer's own page. You apply there, under the emplo
 
 If you are an employer and want a listing updated or removed, see "Corrections, removal and problems" below.
 
-[TO DECIDE: link to the Turkish version of this section once its page is fixed.]
+A statement of this position in Turkish is on the [{tr: İletişim ve yasal bilgiler}](/tr/iletisim/) page. [TO DECIDE: B3 – the Turkish statement is shorter than this section; whether it must match it, and which language applies if the two differ]
 
 ## Minimum age
 
-You must be at least 16 to subscribe to Glia Notes.
-
-[TO DECIDE: whether the minimum age of 16 also applies to member accounts and the "Suggest a listing" form.]
+You must be at least 16 to subscribe to Glia Notes, to have a member account or to give your email address on the "Suggest a listing" form. [TO DECIDE: B7 – minimum age]
 
 ## Member accounts
 
@@ -87,7 +83,7 @@ You must be at least 16 to subscribe to Glia Notes.
 You can use Gliagora without an account. With a free account you can:
 
 - save positions, and later also events and funding programmes;
-- switch the newsletter on or off and choose your preferred subfields [TO DECIDE: what preferred subfields change at launch];
+- switch the newsletter on or off and choose your preferred subfields [TO DECIDE: C4 – what preferred subfields do at launch];
 - download your data or delete your account at any time.
 
 Your account has no public profile. Other visitors and members cannot see your saved items.
@@ -113,9 +109,9 @@ When you sign in with Google or ORCID, their own terms also apply to your accoun
 
 - Before you delete your account, you can download your data with "Download my data". You get one file in JSON, a common format that other programs can read.
 - You can delete your account at any time with "Delete my account" in your account settings. We delete your account, saved items, preferences and newsletter subscription straight away, and send you one email to confirm.
-- Copies in our encrypted backups disappear as the backups age out, within 6 months. [TO DECIDE: confirm that the 6-month backup ageing also covers deleted member accounts.] The [privacy policy](/en/legal/privacy/) explains what we keep and for how long.
+- Copies in our encrypted backups disappear as the backups age out, within 6 months. The [privacy policy](/en/legal/privacy/) explains what we keep and for how long.
 - If you have not used Gliagora while signed in for 24 months, we email you a warning. If you do not sign in within 30 days of that email, we delete your account.
-- We may suspend or delete an account that breaks these terms. When we can, we tell you why.
+- We may suspend or delete an account that breaks these terms. When we can, we tell you why. [TO DECIDE: B16 – suspension]
 
 ## Glia Notes newsletter
 
@@ -135,7 +131,7 @@ Gliagora has these public forms:
 - sign-in by email link;
 - "Suggest a listing";
 - "Report a problem", linked from every item;
-- Removal and correction requests;
+- Notice and takedown (corrections and removals);
 - Data requests.
 
 Please use each form only for its purpose.
@@ -149,7 +145,7 @@ Please use each form only for its purpose.
 - Nothing you send is published automatically, and we do not publish your note.
 - We may decide not to publish a suggestion.
 
-By sending a suggestion, you confirm that you have the right to share the link and your note with us.
+By sending a suggestion, you confirm that you have the right to share the link and your note with us. [TO DECIDE: B16 – submitter's confirmation]
 
 ### What is not allowed
 
@@ -175,9 +171,7 @@ You may quote our summaries if you:
 - name "Gliagora | Neuroscience" as the source; and
 - link to the page on gliagora.com where the summary appears.
 
-[TO DECIDE: whether to offer a formal licence for our summaries, such as Creative Commons Attribution (CC BY), instead of this permission.]
-
-You may use the name Gliagora to refer to us. You may not use our name or logo in any other way, for example to suggest that we endorse you.
+You may use the name Gliagora to refer to us. You may not use our name or logo in any other way, for example to suggest that we endorse you. [TO DECIDE: B16 – use of the name and logo]
 
 ### Material from others
 
@@ -193,16 +187,15 @@ Most items on Gliagora link to other websites, such as employers' job postings. 
 - A link is not an endorsement. By linking, we do not recommend any employer, organisation or product.
 - We are not responsible for what linked websites say, unless we clearly present it as our own (Turkish Law No. 5651, Article 4(2)). We are responsible for what we write ourselves, and we correct it when it is wrong.
 - Links to employers go straight to their page, without tracking codes. At most, the other website can see that you came from gliagora.com, not which page you were on.
-- Our Instagram and LinkedIn profiles are plain links. If you follow them, those platforms' terms apply.
 
 ## Corrections, removal and problems
 
 - Every item has a "Report a problem" link. Use it to tell us about a wrong fact, a broken link or a position that has closed.
 - Employers can ask us to update or remove their listings.
-- If something on Gliagora harms your personal rights, for example your privacy or your reputation, you can ask us to remove it (Turkish Law No. 5651, Article 9). Use the Removal and correction requests page or write to hello@gliagora.com.
-- When you send a removal request, we reply within 24 hours to confirm that we have received it. We usually decide within 72 hours. [TO DECIDE: confirm the current deadline under Law No. 5651, Article 9, and whether it requires a reply with a decision (not only a confirmation) within 24 hours for personal-rights requests. If it does, change "usually decide within 72 hours" for those requests.]
+- If something on Gliagora harms your personal rights, for example your privacy or your reputation, you can ask us to remove it (Turkish Law No. 5651, Article 9). Use the Notice and takedown page or write to hello@gliagora.com.
+- When you send a removal request, we reply within 24 hours to confirm that we have received it. We usually decide within 72 hours. [TO DECIDE: B2 – legal deadline for a reply or a decision]
 - When we remove an item, we take its page down at once. If a correction is enough, we correct the item instead.
-- If you disagree with our decision, reply to our answer and tell us why. The Removal and correction requests page explains how.
+- If you disagree with our decision, reply to our answer and tell us why. The Notice and takedown page explains how.
 - We keep a log of corrections.
 
 ## Your personal data
@@ -224,13 +217,11 @@ Gliagora is a free information service. As far as the law allows, we are not lia
 - the content or availability of websites we link to;
 - technical interruptions or errors, or the loss of saved items or settings.
 
-These limits never cover harm we cause on purpose or through gross negligence (serious carelessness). The law does not let us limit some other kinds of liability either, and these limits do not apply to them. [TO DECIDE: legal check of this liability clause under Turkish law and EU consumer rules.]
+These limits never cover harm we cause on purpose or through gross negligence (serious carelessness). The law does not let us limit some other kinds of liability either, and these limits do not apply to them. [TO DECIDE: B16 – liability clause]
 
 ## Law and disputes
 
-Turkish law applies to these terms and to your use of Gliagora. If you live outside Türkiye, you also keep any consumer rights that your country's law gives you and that no agreement can take away. [TO DECIDE: legal check of this clause, which PLAN §15.4 marks as unverified.]
-
-[TO DECIDE: which courts are competent for disputes.]
+Turkish law applies to these terms and to your use of Gliagora. If you live outside Türkiye, you also keep any consumer rights that your country's law gives you and that no agreement can take away. [TO DECIDE: B16 – governing law and competent courts]
 
 If you have a complaint, please write to hello@gliagora.com first. We will try to solve it with you.
 
@@ -239,22 +230,22 @@ If you have a complaint, please write to hello@gliagora.com first. We will try t
 We may change these terms, for example when we add new sections or features. When we do:
 
 - we publish the new version on this page with its date, and list the change under "Version history";
-- for important changes, we tell members in advance [TO DECIDE: whether by email or by a notice on the site, and how many days in advance];
+- for important changes, we tell members in advance [TO DECIDE: C5 – how and how far in advance members are told];
 - if you do not agree, you can stop using Gliagora and delete your account at any time.
 
-If you keep using Gliagora after a change takes effect, the new version applies to you.
+If you keep using Gliagora after a change takes effect, the new version applies to you. [TO DECIDE: B16 – change clause]
 
 If we ever add sponsorship, we will label sponsored content clearly and update these terms first.
 
 ## Contact
 
-- Email: hello@gliagora.com, for all questions, including privacy requests. [TO DECIDE: privacy@gliagora.com once the Turkish mailbox exists, M2]
+- Email: hello@gliagora.com for questions, and privacy@gliagora.com for data requests. [TO DECIDE: C1 – privacy@gliagora.com moves to the Turkish mail host at M2]
 - [Contact and legal notice](/en/contact/)
-- Removal and correction requests
+- Notice and takedown
 - Data requests
 
 ## Version history
 
 | Version | Date | Change |
 |---|---|---|
-| [TO DECIDE: version number] | [TO DECIDE: effective date] | First version |
+| 1.0 | Written when the text is approved | First version |
