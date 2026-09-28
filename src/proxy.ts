@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { type Resolution, matchDetailRoute, resolveDetailRoute } from '@/lib/detail-routes'
+import { errorSummary } from '@/lib/errors'
 import { canonicalListPath } from '@/lib/filters/canonical'
 import { GONE_PAGE, isGone } from '@/lib/gone'
 import { parseSitemapFileName } from '@/lib/seo/sitemap'
@@ -53,7 +54,7 @@ export async function proxy(request: NextRequest) {
       resolution = await resolveDetailRoute(route, await detailLookup(), new Date())
     } catch (error) {
       // The database is unreachable: a temporary state, so say so rather than answer 500.
-      console.error('Record lookup failed:', error instanceof Error ? error.message : error)
+      console.error('Record lookup failed:', errorSummary(error))
       return unavailableResponse()
     }
     switch (resolution.action) {

@@ -64,7 +64,9 @@ describe('fake review queue', () => {
   it('refers to test institutions and fixed jobs that exist', () => {
     const rorIds = new Set<string>([
       ...FAKE_INSTITUTIONS.map(({ rorId }) => rorId),
-      ...Object.values(FIXED_JOBS).map((job) => job.institutionRorId),
+      ...Object.values(FIXED_JOBS).flatMap((job) =>
+        'institutionRorId' in job ? [job.institutionRorId] : [],
+      ),
     ])
     for (const rorId of FAKE_QUEUE_INSTITUTIONS) expect(rorIds.has(rorId)).toBe(true)
     const shortIds = new Set<string>(Object.values(FIXED_JOBS).map((job) => job.shortId))

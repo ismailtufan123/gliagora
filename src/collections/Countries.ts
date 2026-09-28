@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { nobody, signedIn } from '@/lib/access'
 import { COUNTRY_CODE_PATTERN, REGIONS, SUBREGIONS } from '@/lib/geography'
 import { requiredInEnglish } from '@/lib/localized'
 
@@ -19,9 +20,13 @@ export const Countries: CollectionConfig = {
       'Countries and areas with their UN M49 regions (PLAN §4.6). Kosovo (XK) and Taiwan (TW) are included although M49 does not list them, because ROR and funders use them.',
   },
   defaultSort: 'id',
+  // Signed-in editors; the pages read countries through the local API.
   access: {
+    read: signedIn,
+    create: signedIn,
+    update: signedIn,
     // Institutions and country sets refer to countries by code.
-    delete: () => false,
+    delete: nobody,
   },
   // A copy would repeat the code.
   disableDuplicate: true,

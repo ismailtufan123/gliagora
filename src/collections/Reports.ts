@@ -1,6 +1,7 @@
 import type { CollectionBeforeValidateHook, CollectionConfig, Field, PayloadRequest } from 'payload'
 import { validations } from 'payload'
 
+import { nobody, signedIn } from '@/lib/access'
 import { fixedFieldHooks } from '@/lib/fixed-fields'
 import { keepOutOfLists } from '@/lib/private-fields'
 import {
@@ -114,11 +115,13 @@ export const Reports: CollectionConfig = {
   },
   defaultSort: '-createdAt',
   access: {
+    // Personal data: signed-in editors only.
+    read: signedIn,
     // Created only by the form, through the local API; never through the API or the admin.
-    create: () => false,
-    // Signed-in editors, to answer data requests (PLAN §3.2, §18.1). A function replaces
-    // Payload's default, so it checks the user itself.
-    delete: ({ req }) => Boolean(req.user),
+    create: nobody,
+    update: signedIn,
+    // Signed-in editors, to answer data requests (PLAN §3.2, §18.1).
+    delete: signedIn,
   },
   disableDuplicate: true,
   hooks: {

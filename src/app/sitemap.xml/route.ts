@@ -1,3 +1,4 @@
+import { errorSummary } from '@/lib/errors'
 import { xmlResponse } from '@/lib/seo/responses'
 import { SITEMAP_TYPES, sitemapIndexXml, splitSitemap } from '@/lib/seo/sitemap'
 import { sitemapSource } from '@/lib/seo/sitemap-data'
@@ -17,7 +18,7 @@ export async function GET() {
     )
     return xmlResponse(sitemapIndexXml(files.flat()))
   } catch (error) {
-    console.error('Sitemap index failed:', error instanceof Error ? error.message : error)
+    console.error('Sitemap index failed:', errorSummary(error))
     return unavailableResponse()
   }
 }

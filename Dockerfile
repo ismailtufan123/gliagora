@@ -24,10 +24,14 @@ COPY . .
 RUN pnpm build
 
 # 3. Runtime: only the standalone server, static files and public assets.
+# NEXT_TRAILING_SLASH: withPayload sets it only while next.config.ts runs, which the standalone
+# server does not; Payload's own links (password-reset emails, sign-in redirects) then end with
+# the slash every address has (trailingSlash) instead of being redirected.
 FROM base AS runtime
 ENV NODE_ENV=production \
     PORT=3000 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    NEXT_TRAILING_SLASH=true
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public

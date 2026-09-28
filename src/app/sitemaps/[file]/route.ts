@@ -1,3 +1,4 @@
+import { errorSummary } from '@/lib/errors'
 import { notFoundResponse, xmlResponse } from '@/lib/seo/responses'
 import {
   parseSitemapFileName,
@@ -25,7 +26,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ fil
   try {
     files = splitSitemap(key.type, await sitemapSource(new Date())[key.type]())
   } catch (error) {
-    console.error('Sitemap failed:', error instanceof Error ? error.message : error)
+    console.error('Sitemap failed:', errorSummary(error))
     return unavailableResponse()
   }
   const entries = sitemapFileEntries(files, key)

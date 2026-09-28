@@ -35,6 +35,9 @@ services:
     environment:
       DATABASE_URL: postgres://gliagora:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}@db:5432/gliagora
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET in .env}
+      # The site's address: only its own pages may use an editor's session cookie (Payload's CSRF
+      # check), and Payload's emails (a password reset) link to it.
+      SERVER_URL: https://${SITE_DOMAIN:?Set SITE_DOMAIN in .env}
       # Spam check of the public forms (ALTCHA, on this server only).
       ALTCHA_HMAC_KEY: ${ALTCHA_HMAC_KEY:?Set ALTCHA_HMAC_KEY in .env}
       # Runs scheduled jobs: the nightly check for a new ROR release (PLAN §6.2), the hourly expiry

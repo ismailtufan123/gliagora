@@ -9,6 +9,7 @@ import { JobsListEnhancer } from '@/components/jobs/list/JobsListEnhancer'
 import { ListError } from '@/components/jobs/list/ListError'
 import { FILTER_FORM_ID, RESULTS_HEADING_ID, RESULTS_ID } from '@/components/jobs/list/ids'
 import { Pagination } from '@/components/Pagination'
+import { errorSummary } from '@/lib/errors'
 import { JOB_FILTERS, invalidDeadlineRange, parseJobFilters } from '@/lib/filters/jobs'
 import {
   activeFilters,
@@ -72,7 +73,8 @@ export default async function Page({ searchParams }: Props) {
     // drawn only in the browser). A page cannot set its status in Next.js, so this answers 200:
     // never stored (the page is dynamic) and kept out of search engines.
     const reference = crypto.randomUUID().slice(0, 8)
-    console.error(`Jobs list failed (reference ${reference}):`, error)
+    // Class and code only: a failed query's message quotes its parameters, the words searched for.
+    console.error(`Jobs list failed (reference ${reference}):`, errorSummary(error))
     return (
       <>
         <meta name="robots" content="noindex" />

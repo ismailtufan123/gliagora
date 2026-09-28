@@ -17,7 +17,8 @@
 }
 
 # Access logs: IP addresses masked (IPv4 to /24, IPv6 to /48), no cookies or credentials, no
-# admin query strings or referrer queries, one file per day, deleted after 14 days (PLAN §18.1).
+# admin or API query strings, reset tokens, or queries in referrers and redirect targets, one file
+# per day, deleted after 14 days (PLAN §18.1).
 (access_log) {
 	log {
 		output file /var/log/caddy/access.log {
@@ -27,13 +28,30 @@
 		format filter {
 			request>remote_ip ip_mask 24 48
 			request>client_ip ip_mask 24 48
-			# Admin list filters put what an editor types (e.g. an email address for a data request) in the query.
-			request>uri regexp ^(/admin[^?]*)\?.*$ ${1}?[removed]
-			request>headers>Referer regexp \?.*$ ?[removed]
+			# Password-reset links carry a one-time token in the path (/admin/reset/<token>): a credential.
+			# Admin list filters and the admin's searches put what an editor types (e.g. an email address
+			# for a data request) in the query of /admin and /api addresses.
+			request>uri multi_regexp {
+				regexp ^/admin/reset/[^/?]+ /admin/reset/[removed]
+				regexp ^(/(?:admin|api)[^?]*)\?.*$ ${1}?[removed]
+			}
+			request>headers>Referer multi_regexp {
+				regexp /admin/reset/[^/?]+ /admin/reset/[removed]
+				regexp \?.*$ ?[removed]
+			}
 			request>headers>Cookie delete
 			request>headers>Authorization delete
 			request>headers>X-Forwarded-For delete
 			resp_headers>Set-Cookie delete
+			# Next.js's trailing-slash redirect (308) repeats the request address in Location and Refresh.
+			resp_headers>Location multi_regexp {
+				regexp /admin/reset/[^/?]+ /admin/reset/[removed]
+				regexp \?.*$ ?[removed]
+			}
+			resp_headers>Refresh multi_regexp {
+				regexp /admin/reset/[^/?]+ /admin/reset/[removed]
+				regexp \?.*$ ?[removed]
+			}
 		}
 	}
 }
@@ -43,14 +61,34 @@
 	import access_log
 	encode zstd gzip
 
-	# The admin panel is behind a second password (admin-auth.caddy) until it has two factors.
-	@admin path /admin /admin/*
+	# The health check stays open for the uptime monitor (PLAN §18.2). It answers only
+	# {"status":"ok"} or {"status":"error"}. Only this one path: anything below it would reach the
+	# site's 404 page, with its navigation, without the password.
+	@health path /health /health/
+	handle @health {
+		rewrite * /health/
+		reverse_proxy app:3000
+	}
+
+	# The admin panel and Payload's API are behind a second password (admin-auth.caddy) until the
+	# admin has two factors (PLAN §18.2). The API needs it as much as the panel: its sign-in and
+	# password-reset routes would otherwise skip the second password, and while no account exists
+	# (the first deploy, a restore onto a new server) /api/users/first-register makes one for
+	# anybody. The public site never calls /api (its forms post to their own pages); a public API
+	# route (the map, M5) gets its own handle above this one. The admin's own /api requests reuse
+	# the password the browser keeps for this site.
+	@admin path /admin /admin/* /api /api/*
 	handle @admin {
 		import /etc/caddy/admin-auth.caddy
 		reverse_proxy app:3000
 	}
 
+	# Private until M2 (D32): every other page asks for the same password, so nothing is public or
+	# indexed before the privacy texts are live. At M2 only the coming-soon page, the newsletter
+	# signup and the legal pages open here; the rest stays behind the password until the launch
+	# gate (PLAN §18.2).
 	handle {
+		import /etc/caddy/admin-auth.caddy
 		reverse_proxy app:3000
 	}
 }

@@ -1,16 +1,18 @@
 // Adds fake jobs for local development and CI (D38): pnpm fake:jobs
 // About 60 generated jobs over the test institutions, plus the fixed jobs the end-to-end tests
-// rely on (src/scripts/fake-jobs-fixed.ts) and the address of one retired job, then a handful of
-// suggestions, candidates and reports for the review queue (src/scripts/fake-queue-data.ts).
+// rely on (src/scripts/fake-jobs-fixed.ts), an institution added by hand and the address of one
+// retired job, then a handful of suggestions, candidates and reports for the review queue
+// (src/scripts/fake-queue-data.ts).
 // Earlier fake data is removed first, so the script can run again at any time. Needs the test
 // institutions: pnpm ror:import tests/fixtures/ror/…-sample.zip
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
 import { FAKE_DATA } from '@/collections/Jobs'
+import { slugify } from '@/lib/slug'
 
 import { FAKE_INSTITUTIONS, FAKE_NOTE, fakeJobs } from './fake-jobs-data'
-import { FIXED_JOBS, RETIRED_JOB } from './fake-jobs-fixed'
+import { FIXED_JOBS, MANUAL_INSTITUTION, RETIRED_JOB } from './fake-jobs-fixed'
 import { addFakeQueue, removeFakeQueue } from './fake-queue'
 import { FAKE_QUEUE_INSTITUTIONS } from './fake-queue-data'
 
@@ -42,7 +44,9 @@ try {
   const rorIds = [
     ...new Set([
       ...FAKE_INSTITUTIONS.map(({ rorId }) => rorId),
-      ...Object.values(FIXED_JOBS).map((job) => job.institutionRorId),
+      ...Object.values(FIXED_JOBS).flatMap((job) =>
+        'institutionRorId' in job ? [job.institutionRorId] : [],
+      ),
       ...FAKE_QUEUE_INSTITUTIONS,
     ]),
   ]
@@ -60,6 +64,29 @@ try {
       `Test institutions are missing (${missing.join(', ')}). Load them first: pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip`,
     )
   }
+  // The institution added by hand, which the draft job refers to: added once, never removed.
+  const manual = await payload.find({
+    collection: 'institutions',
+    where: { shortId: { equals: MANUAL_INSTITUTION.shortId } },
+    select: { shortId: true },
+    depth: 0,
+    limit: 1,
+  })
+  const manualId =
+    manual.docs[0]?.id ??
+    (
+      await payload.create({
+        collection: 'institutions',
+        data: {
+          ...MANUAL_INSTITUTION,
+          slug: slugify(MANUAL_INSTITUTION.name, { fallback: 'institution' }),
+          origin: 'manual',
+          status: 'active',
+        },
+        depth: 0,
+      })
+    ).id
+  institutionId.set(MANUAL_INSTITUTION.shortId, manualId)
 
   const terms = await payload.find({
     collection: 'terms',
@@ -83,14 +110,14 @@ try {
   const jobs = fakeJobs(new Date())
   const counts: Record<string, number> = {}
   const jobId = new Map<string, number>()
-  for (const { institutionRorId, deadlineTz, ...job } of jobs) {
+  for (const { institution, deadlineTz, ...job } of jobs) {
     const created = await payload.create({
       collection: 'jobs',
       data: {
         ...job,
         // Left out, the job takes its institution's zone (D40); null keeps it unknown (AoE).
         ...(deadlineTz === undefined ? {} : { deadlineTz: deadlineTz as never }),
-        institution: institutionId.get(institutionRorId) as number,
+        institution: institutionId.get(institution) as number,
         positionType: ids('position-type', [job.positionType])[0],
         careerStages: ids('career-stage', job.careerStages),
         subfields: ids('subfield', job.subfields),

@@ -1,5 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
+import { nobody, signedIn } from '@/lib/access'
+
 // The state of the ROR import, shown read-only in the admin: which release is in the database,
 // when the import last looked for a new one, and what the last run changed.
 export const RorImport: GlobalConfig = {
@@ -11,8 +13,9 @@ export const RorImport: GlobalConfig = {
       'The institutions are updated from the ROR data dump on Zenodo. The server checks for a new release every night and imports it (PLAN §6.2).',
   },
   access: {
+    read: signedIn,
     // Written only by the import job.
-    update: () => false,
+    update: nobody,
   },
   fields: [
     {

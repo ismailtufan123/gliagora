@@ -5,6 +5,7 @@ import type {
 } from 'payload'
 import { APIError, ValidationError } from 'payload'
 
+import { signedIn } from '@/lib/access'
 import { institutionTimeZone } from '@/lib/jobs/time-zone-at'
 import { TIME_ZONES, timeZoneLabel } from '@/lib/jobs/time-zones'
 import { idOf } from '@/lib/relationship'
@@ -149,7 +150,11 @@ export const Institutions: CollectionConfig = {
     description:
       'Institutions from ROR are imported and kept up to date automatically. To add one before the next import, enter only its ROR ID and save. Add others by hand with their coordinates.',
   },
+  // Signed-in editors; the pages read institutions through the local API.
   access: {
+    read: signedIn,
+    create: signedIn,
+    update: signedIn,
     // Signed-in editors only (a function replaces Payload's default, so it checks the user
     // itself). The import would add a deleted ROR institution again, so only institutions added
     // by hand can be deleted, and only while no job or job version refers to them (keepReferenced).

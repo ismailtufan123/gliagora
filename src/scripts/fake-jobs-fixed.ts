@@ -13,14 +13,38 @@ export type FixedJob = {
   /** Days from the run to the deadline day; negative for a deadline in the past. */
   deadlineInDays?: number
   deadlineTz?: string
-  /** From the ROR test data that CI loads (tests/fixtures/ror). */
-  institutionRorId: string
   positionType: string
   subfields: string[]
   methods?: string[]
   modelSystems?: string[]
   careerStages?: string[]
-}
+} & (
+  | {
+      /** From the ROR test data that CI loads (tests/fixtures/ror). */
+      institutionRorId: string
+    }
+  | {
+      /** The institution added by hand (MANUAL_INSTITUTION), by its short ID. */
+      institutionShortId: string
+    }
+)
+
+/**
+ * An institution added by hand, without a ROR ID, as editors add small companies (PLAN §5.1).
+ * Editors may delete only these, so tests/e2e/access.spec.ts needs one to check that a signed-out
+ * request cannot. `pnpm fake:jobs` adds it if it is missing and never removes it; the draft job
+ * refers to it, so it cannot be deleted while that job exists (keepReferenced,
+ * src/collections/Institutions.ts). Its coordinates give it a time zone (Europe/Amsterdam), which
+ * the collection fills in as for any institution (D40); the draft job keeps its own (unknown) zone.
+ */
+export const MANUAL_INSTITUTION = {
+  shortId: 'test9',
+  name: 'Example Brain Devices Company',
+  country: 'NL',
+  city: 'Eindhoven',
+  lat: 51.4416,
+  lng: 5.4697,
+} as const
 
 export const jobPath = (job: Pick<FixedJob, 'slug' | 'shortId'>) =>
   `/en/jobs/${job.slug}-${job.shortId}/`
@@ -118,7 +142,7 @@ export const FIXED_JOBS = {
     modelSystems: ['cell-culture'],
     careerStages: ['research-staff'],
   },
-  /** Never published: its address is unknown (404). */
+  /** Never published: its address is unknown (404). At the institution added by hand. */
   draft: {
     shortId: 'test7',
     title: 'Group leader in developmental neurobiology',
@@ -126,7 +150,7 @@ export const FIXED_JOBS = {
     status: 'draft',
     deadlineKind: 'fixed',
     deadlineInDays: 90,
-    institutionRorId: '03g001n57',
+    institutionShortId: MANUAL_INSTITUTION.shortId,
     positionType: 'faculty-pi',
     subfields: ['developmental'],
     careerStages: ['independent'],
