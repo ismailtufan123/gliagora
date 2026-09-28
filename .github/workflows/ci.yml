@@ -74,6 +74,7 @@ jobs:
           docker run -d --name app --network smoke -p 3000:3000 \
             -e DATABASE_URL=postgres://gliagora:smoke-test-only@db:5432/gliagora \
             -e PAYLOAD_SECRET="$(openssl rand -hex 32)" \
+            -e ALTCHA_HMAC_KEY="$(openssl rand -hex 32)" \
             gliagora:ci
           for i in $(seq 1 60); do curl -fsS http://localhost:3000/health/ && break; sleep 2; done
           echo

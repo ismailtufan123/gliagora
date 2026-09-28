@@ -34,6 +34,21 @@ describe('connectOnStart', () => {
     expect(releaseInterruptedImports).toHaveBeenCalledWith(payload)
   })
 
+  it('starts without ALTCHA_HMAC_KEY, warning that the suggestion form is unavailable', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('ALTCHA_HMAC_KEY', '')
+    getPayload.mockResolvedValue({})
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    await connectOnStart()
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('ALTCHA_HMAC_KEY'))
+    expect(getPayload).toHaveBeenLastCalledWith({ config: {}, cron: true })
+
+    warn.mockClear()
+    vi.stubEnv('ALTCHA_HMAC_KEY', 'a'.repeat(64))
+    await connectOnStart()
+    expect(warn).not.toHaveBeenCalled()
+  })
+
   it('exits so Docker restarts the app when the database is unavailable', async () => {
     vi.stubEnv('NODE_ENV', 'production')
     getPayload.mockRejectedValue(new Error('cannot connect to Postgres'))

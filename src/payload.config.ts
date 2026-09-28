@@ -6,6 +6,7 @@ import { buildConfig } from 'payload'
 import { Candidates } from './collections/Candidates'
 import { Countries } from './collections/Countries'
 import { CountrySets } from './collections/CountrySets'
+import { FormLimits } from './collections/FormLimits'
 import { Institutions } from './collections/Institutions'
 import { Jobs } from './collections/Jobs'
 import { Submissions } from './collections/Submissions'
@@ -33,8 +34,18 @@ export default buildConfig({
       beforeDashboard: ['/admin/ReviewDashboard#ReviewDashboard'],
     },
   },
-  // The order of the admin menu: the daily work first (PLAN §6.5).
-  collections: [Users, Candidates, Submissions, Jobs, Terms, Countries, CountrySets, Institutions],
+  // The order of the admin menu: the daily work first (PLAN §6.5). FormLimits is hidden.
+  collections: [
+    Users,
+    Candidates,
+    Submissions,
+    Jobs,
+    Terms,
+    Countries,
+    CountrySets,
+    Institutions,
+    FormLimits,
+  ],
   globals: [RorImport],
   jobs: {
     tasks: [RorImportTask],

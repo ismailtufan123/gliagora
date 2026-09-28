@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 
 import { CONTENT_PAGES } from '@/lib/content'
 import { alternatesFor } from '@/lib/metadata'
-import { SITE_ORIGIN } from '@/lib/site'
+import { SITE_ORIGIN, paths } from '@/lib/site'
 
 // /sitemap.xml (PLAN §16): only pages meant to be indexed, so no placeholders and no draft
 // texts; hreflang alternates as on the pages themselves (alternatesFor). From M4, when listings
@@ -10,6 +10,7 @@ import { SITE_ORIGIN } from '@/lib/site'
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages: { path: string; lastModified?: string }[] = [
     { path: '/en/' },
+    { path: paths.section('suggest') },
     ...Object.values(CONTENT_PAGES)
       .filter((page) => !page.draft)
       .map((page) => ({ path: page.path, lastModified: page.updated })),

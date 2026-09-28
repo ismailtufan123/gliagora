@@ -83,8 +83,9 @@ The image applies pending migrations when it starts (`src/lib/startup.ts`). If t
 unreachable or a migration fails, it exits and Docker restarts it. `/health/` returns 200 when the
 database is reachable.
 
-To build and run the image locally: `docker build -t gliagora .`, then run it with `DATABASE_URL`
-and `PAYLOAD_SECRET` set.
+To build and run the image locally: `docker build -t gliagora .`, then run it with `DATABASE_URL`,
+`PAYLOAD_SECRET` and `ALTCHA_HMAC_KEY` set (without the last, the suggestion form says it is
+temporarily unavailable).
 
 ## Changing the data model
 

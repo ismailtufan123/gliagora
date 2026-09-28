@@ -6,6 +6,9 @@ export const SITE_ORIGIN = 'https://gliagora.com'
 
 export const CONTACT_EMAIL = 'hello@gliagora.com'
 
+/** For requests about personal data (D9, PLAN §11.6), as the privacy policy says. */
+export const PRIVACY_EMAIL = 'privacy@gliagora.com'
+
 /** The six windows (PLAN §2.3), in navigation order. */
 export const WINDOWS = ['jobs', 'events', 'funding', 'papers', 'news', 'resources'] as const
 export type WindowKey = (typeof WINDOWS)[number]

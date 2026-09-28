@@ -59,7 +59,8 @@ test.describe('content pages', () => {
     const xml = await (await request.get('/sitemap.xml')).text()
     expect(xml).toContain('<loc>https://gliagora.com/en/</loc>')
     expect(xml).toContain('<loc>https://gliagora.com/en/about/</loc>')
-    for (const path of [...DRAFTS, '/en/jobs/', '/en/gone/']) {
+    expect(xml).toContain('<loc>https://gliagora.com/en/suggest/</loc>')
+    for (const path of [...DRAFTS, '/en/jobs/', '/en/gone/', '/en/suggest/sent/']) {
       expect(xml).not.toContain(`<loc>https://gliagora.com${path}</loc>`)
     }
   })

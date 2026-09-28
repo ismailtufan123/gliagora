@@ -535,6 +535,100 @@
     }
   }
 
+  /*
+   * Forms (PLAN §7.5, §9.10): one column; label, hint, error and control stacked. A field with a
+   * problem gets a bar at its start and a thicker border, besides the message (not colour alone).
+   */
+  .field {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .field:has(.field-error:not([aria-hidden])) {
+    padding-inline-start: var(--space-4);
+    border-inline-start: 4px solid var(--danger);
+  }
+
+  .field-label {
+    font-weight: 700;
+  }
+
+  .field-hint {
+    color: var(--text-muted);
+  }
+
+  .field-error {
+    color: var(--danger);
+    font-weight: 700;
+    /* A long example address may break rather than widen the page (WCAG 1.4.10, 1.4.12). */
+    overflow-wrap: anywhere;
+  }
+
+  .input {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--corner-control);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  textarea.input {
+    resize: vertical;
+  }
+
+  .input[aria-invalid='true'] {
+    border: 2px solid var(--danger);
+  }
+
+  /* Radio buttons and checkboxes: the control, then its label; large enough to tap (WCAG 2.5.8). */
+  .choice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .choice > input {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-block-start: 0.05rem;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .choice > label {
+    cursor: pointer;
+  }
+
+  .choice-hint {
+    padding-inline-start: calc(1.5rem + var(--space-3));
+  }
+
+  /* At the top of a form that was sent with problems; focus moves here (SuggestForm.tsx). */
+  .error-summary {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 2px solid var(--danger);
+    border-inline-start-width: 6px;
+    background: var(--surface);
+    /* As for .field-error; its links inherit it. */
+    overflow-wrap: anywhere;
+  }
+
+  .error-summary ul {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .error-summary a {
+    color: var(--danger);
+    font-weight: 700;
+  }
+
   /* A notice about the state of an item, such as a closed position. */
   .notice {
     display: grid;

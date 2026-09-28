@@ -309,5 +309,77 @@
   },
   "unavailable": {
     "text": "Gliagora şu anda geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra yeniden deneyin."
+  },
+  "suggest": {
+    "title": "İlan önerin",
+    "description": "İşverenin kendi sayfasındaki bir sinirbilim pozisyonunun ya da bir etkinlik, fon çağrısı veya kaynağın bağlantısını bize gönderin. Her öneriyi bir editör inceler; hiçbir şey otomatik olarak yayımlanmaz.",
+    "intro": "Gliagora'da henüz yer almayan bir sinirbilim pozisyonu mu biliyorsunuz? Asıl ilanın bağlantısını bize gönderin; bir editör inceleyecektir.",
+    "employers": "Üniversitelerdeki, araştırma enstitülerindeki ve şirketlerdeki pozisyonları, işverenin kendi sayfasından yayımlarız. İşe alım ajanslarının verdiği ilanları yayımlamayız.",
+    "otherKinds": "Etkinlik, fon, makale, haber ve kaynak da önerebilirsiniz. Bunları saklar, Gliagora'nın ilgili bölümleri açıldığında ekleriz.",
+    "unavailable": "Form geçici olarak kullanılamıyor. Lütfen bağlantıyı <email>hello@gliagora.com</email> adresine e-postayla gönderin.",
+    "noscript": "Bu formdaki spam kontrolü JavaScript gerektirir. JavaScript kapalıysa bağlantıyı <email>hello@gliagora.com</email> adresine e-postayla da gönderebilirsiniz.",
+    "url": {
+      "label": "Asıl sayfanın adresi",
+      "hint": "İşverenin veya düzenleyenin kendi sayfası; https:// veya http:// ile başlar."
+    },
+    "kind": {
+      "legend": "Ne öneriyorsunuz?",
+      "position": "Bir pozisyon",
+      "event": "Bir etkinlik",
+      "funding": "Fon",
+      "paper": "Bir makale",
+      "news": "Haber",
+      "resource": "Veri seti veya araç gibi bir kaynak",
+      "other": "Başka bir şey"
+    },
+    "note": {
+      "label": "Not (isteğe bağlı)",
+      "hint": "İncelememize yardımcı olacak her şey, örneğin son başvuru tarihi. Düz metin, en fazla 500 karakter. Lütfen kimsenin kişisel bilgilerini yazmayın.",
+      "left": "Kalan karakter: {count}",
+      "over": "Sınırı aşan karakter: {count}"
+    },
+    "email": {
+      "label": "E-posta adresiniz (isteğe bağlı)",
+      "hint": "Yalnızca sonucu size bildirmemizi istiyorsanız."
+    },
+    "consent": {
+      "label": "Bu önerinin sonucunu bana e-postayla bildirin",
+      "hint": "E-posta adresinizi yalnızca bunun için kullanır ve kararımızdan 90 gün sonra sileriz. En az 16 yaşında olmanız gerekir. Ayrıntılar için <privacy>gizlilik politikasına</privacy> (İngilizce) ve <kvkk>KVKK aydınlatma metnine</kvkk> bakın."
+    },
+    "honeypot": "Bu alanı boş bırakın",
+    "spamNote": "Spam programlarını engellemek için tarayıcınız form gönderilmeden önce küçük bir bulmaca çözer; formun ne sıklıkla gönderilebileceğini sınırlamak için de IP adresinizin karma (hash) değerini 24 saat saklarız. <link>Formu nasıl koruduğumuz</link>",
+    "submit": "Öneriyi gönder",
+    "sending": "Öneriniz gönderiliyor…",
+    "errors": {
+      "title": "Bir sorun var",
+      "prefix": "Hata:",
+      "urlMissing": "Sayfanın adresini girin.",
+      "urlInvalid": "Bir web sayfasının tam adresini girin, örneğin https://www.example.org/jobs/123.",
+      "urlScheme": "https:// veya http:// ile başlayan bir adres girin.",
+      "urlCredentials": "Adresi, içinde kullanıcı adı veya parola olmadan girin.",
+      "urlTooLong": "En fazla 2.000 karakterlik bir adres girin.",
+      "kindMissing": "Ne önerdiğinizi seçin.",
+      "noteTooLong": "Notu en fazla 500 karaktere kısaltın.",
+      "emailInvalid": "E-posta adresini doğru biçimde girin, örneğin ad@example.org.",
+      "emailTooLong": "En fazla 254 karakterlik bir e-posta adresi girin.",
+      "emailMissing": "E-posta adresinizi girin ya da sonucu e-postayla bildirmemizi istemiyorsanız kutunun işaretini kaldırın.",
+      "consentMissing": "Sonucu e-postayla bildirmemizi istiyorsanız kutuyu işaretleyin; istemiyorsanız e-posta alanını boş bırakın.",
+      "needsJs": "Spam kontrolü çalışmadı: sayfa henüz tam yüklenmemişti ya da tarayıcınızda JavaScript kapalı veya engellenmiş. Sayfanın yüklenmesini bekleyip formu yeniden gönderin ya da bağlantıyı hello@gliagora.com adresine e-postayla gönderin.",
+      "spamCheck": "Spam kontrolünün süresi doldu veya kontrol tamamlanamadı. Lütfen formu yeniden gönderin.",
+      "rateLimited": "Son bir saat içinde birkaç öneri gönderdiniz. Lütfen daha sonra yeniden deneyin.",
+      "unavailable": "Form geçici olarak kullanılamıyor. Lütfen bağlantıyı hello@gliagora.com adresine e-postayla gönderin.",
+      "failed": "Bir sorun oluştu ve öneriniz kaydedilemedi. Lütfen daha sonra yeniden deneyin ya da bağlantıyı hello@gliagora.com adresine e-postayla gönderip {reference} referans kodunu belirtin."
+    },
+    "sent": {
+      "title": "Öneriniz için teşekkür ederiz",
+      "metaTitle": "Öneri gönderildi",
+      "next": "Bundan sonra ne olacak?",
+      "check": "Bir editör asıl sayfayı açar ve Gliagora'ya uygun olup olmadığını kontrol eder.",
+      "publish": "Uygunsa, asıl sayfaya bağlantı veren kendi kısa özetimizi yayımlarız. Hiçbir şey otomatik olarak yayımlanmaz.",
+      "outcome": "E-posta adresinizi verdiyseniz sonucu size bildirir, adresi kararımızdan 90 gün sonra sileriz.",
+      "changedMind": "E-posta konusunda fikrinizi mi değiştirdiniz? <email>privacy@gliagora.com</email> adresine yazın, adresinizi silelim.",
+      "another": "Başka bir ilan önerin",
+      "jobs": "Pozisyonlara göz atın"
+    }
   }
 }

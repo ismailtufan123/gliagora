@@ -75,6 +75,7 @@ export interface Config {
     countries: Country;
     'country-sets': CountrySet;
     institutions: Institution;
+    'form-limits': FormLimit;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
@@ -91,6 +92,7 @@ export interface Config {
     countries: CountriesSelect<false> | CountriesSelect<true>;
     'country-sets': CountrySetsSelect<false> | CountrySetsSelect<true>;
     institutions: InstitutionsSelect<false> | InstitutionsSelect<true>;
+    'form-limits': FormLimitsSelect<false> | FormLimitsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -1080,6 +1082,16 @@ export interface CountrySet {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "form-limits".
+ */
+export interface FormLimit {
+  id: number;
+  key: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -1234,6 +1246,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'institutions';
         value: number | Institution;
+      } | null)
+    | ({
+        relationTo: 'form-limits';
+        value: number | FormLimit;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -1472,6 +1488,15 @@ export interface InstitutionsSelect<T extends boolean = true> {
   website?: T;
   rorRelease?: T;
   rorLastModified?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "form-limits_select".
+ */
+export interface FormLimitsSelect<T extends boolean = true> {
+  key?: T;
   updatedAt?: T;
   createdAt?: T;
 }
