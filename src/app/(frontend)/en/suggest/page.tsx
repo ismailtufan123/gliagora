@@ -3,8 +3,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
 import { SuggestForm } from '@/components/suggest/SuggestForm'
-import { altchaKey, newChallenge } from '@/lib/forms/altcha'
-import { EMPTY_VALUES, SUGGEST_LEGAL_LINKS, type SuggestState } from '@/lib/forms/suggest'
+import { altchaKey } from '@/lib/forms/altcha'
+import { initialFormState } from '@/lib/forms/public-form'
+import { EMPTY_VALUES, SUGGEST_LEGAL_LINKS } from '@/lib/forms/suggest'
 import { SUBMISSION_KINDS } from '@/lib/review/status'
 import { CONTACT_EMAIL, paths } from '@/lib/site'
 
@@ -30,14 +31,7 @@ export default async function Page() {
 
   let form: ReactNode
   if (key) {
-    const initial: SuggestState = {
-      values: EMPTY_VALUES,
-      fieldErrors: {},
-      formError: null,
-      status: 200,
-      challenge: await newChallenge(key),
-      attempt: 0,
-    }
+    const initial = await initialFormState(EMPTY_VALUES, key)
     form = (
       <>
         {/* Without JavaScript the spam check cannot run; the server then says so too. */}

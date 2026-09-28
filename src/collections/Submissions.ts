@@ -8,6 +8,7 @@ import type {
 import { validations } from 'payload'
 
 import { addressProblem } from '@/lib/jobs/url'
+import { keepOutOfLists } from '@/lib/private-fields'
 import { idOf } from '@/lib/relationship'
 import {
   CANDIDATE_KIND_OF,
@@ -119,6 +120,9 @@ const sidebarDate = (name: string, label: string, description: string): Field =>
   },
 })
 
+/** Personal data: never a list column, and never loaded by the list. */
+const PRIVATE_FIELDS = ['email', 'note'] as const
+
 // PLAN §3.2, §5.1: suggestions from the public "Suggest a listing" form (M4.5). Nothing is
 // published from here: a suggested position becomes a candidate in the review queue.
 export const Submissions: CollectionConfig = {
@@ -128,8 +132,9 @@ export const Submissions: CollectionConfig = {
     group: 'Review queue',
     useAsTitle: 'url',
     // Never a column for the email address or the note: they are personal data. The list loads
-    // only its columns (Payload's select API, experimental in 3.90), so they are not sent to the
-    // list page either; an editor sees them only by opening a suggestion.
+    // only its columns (Payload's select API, experimental in 3.90), and the keepOutOfLists hook
+    // drops these fields from any column list, also one from ?columns= or a saved preference, so
+    // they are not sent to the list page either; an editor sees them only by opening a suggestion.
     enableListViewSelectAPI: true,
     defaultColumns: ['url', 'kind', 'status', 'createdAt'],
     listSearchableFields: ['url'],
@@ -146,6 +151,7 @@ export const Submissions: CollectionConfig = {
   },
   disableDuplicate: true,
   hooks: {
+    beforeOperation: [keepOutOfLists(PRIVATE_FIELDS)],
     beforeValidate: [prepare],
     afterChange: [queue],
   },

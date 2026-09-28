@@ -12,6 +12,7 @@ const summary = (overrides: Partial<ReviewSummary> = {}): ReviewSummary => ({
   candidates: { new: 3, triaged: 1 },
   jobsInReview: 1,
   suggestions: { waiting: 4, notQueued: 2 },
+  reports: { new: 3, personalRightsDue: 2, personalRightsOverdue: 1 },
   closing: {
     total: 11,
     next: [
@@ -59,6 +60,21 @@ describe('ReviewDashboardView', () => {
     expect(html).toMatch(/<a href="[^"]*">All 11 jobs closing within 14 days<\/a>/)
   })
 
+  it('counts new reports and the personal-rights requests due within 24 hours', () => {
+    const html = render(summary())
+    expect(text(html)).toContain('Reports: 3 new')
+    expect(text(html)).toContain('Personal-rights requests due within 24 hours: 2 (1 overdue)')
+    expect(html).toContain(
+      'href="/admin/collections/reports?where={&quot;status&quot;:{&quot;equals&quot;:&quot;new&quot;}}"',
+    )
+    const calm = render(
+      summary({ reports: { new: 0, personalRightsDue: 0, personalRightsOverdue: 0 } }),
+    )
+    expect(text(calm)).toContain('Reports: 0 new')
+    expect(text(calm)).toContain('Personal-rights requests due within 24 hours: 0')
+    expect(text(calm)).not.toContain('overdue')
+  })
+
   it('has a heading for the section and one for the deadline tracker', () => {
     const html = render(summary())
     expect(html).toMatch(/<section[^>]*aria-labelledby="review-dashboard-title"/)
@@ -98,6 +114,10 @@ describe('ReviewDashboard', () => {
     )
     expect(html).toMatch(
       /href="\/admin\/collections\/jobs\?where\[and\]\[0\]\[status\]\[equals\]=published[^"]*">All 11 jobs/,
+    )
+    expect(html).toContain('href="/admin/collections/reports?where[status][equals]=new"')
+    expect(html).toMatch(
+      /href="\/admin\/collections\/reports\?where\[and\]\[0\]\[kind\]\[equals\]=personal-rights&amp;where\[and\]\[1\]\[status\]\[equals\]=new&amp;where\[and\]\[2\]\[respondBy\]\[less_than_equal\]=[^"]+"/,
     )
     // Payload saves a list URL's sort as the editor's preference for that list.
     expect(html).not.toContain('sort=')

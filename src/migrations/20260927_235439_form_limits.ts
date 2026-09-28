@@ -21,7 +21,7 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   await db.execute(sql`
    ALTER TABLE "form_limits" DISABLE ROW LEVEL SECURITY;
   DROP TABLE "form_limits" CASCADE;
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_form_limits_fk";
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_form_limits_fk";
   
   DROP INDEX "payload_locked_documents_rels_form_limits_id_idx";
   ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "form_limits_id";`)

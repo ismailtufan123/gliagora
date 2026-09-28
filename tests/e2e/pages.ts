@@ -16,6 +16,8 @@ export const PAGES = [
   { path: '/en/events/', name: 'placeholder (window)' },
   { path: '/en/suggest/', name: 'suggest a listing' },
   { path: '/en/suggest/sent/', name: 'suggestion sent' },
+  { path: '/en/report/', name: 'report a problem' },
+  { path: '/en/report/sent/', name: 'report sent' },
   { path: '/en/learn/bench-to-bedside/', name: 'placeholder (section)' },
   { path: '/en/subfields/', name: 'subfield index' },
   { path: '/en/subfields/glia/', name: 'subfield hub' },

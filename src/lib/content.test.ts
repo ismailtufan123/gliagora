@@ -27,6 +27,21 @@ describe('content pages', () => {
     }
   })
 
+  it('describes no form on the notice and takedown page, which links to the report form (M4.6)', () => {
+    const read = (file: string) => readFileSync(path.join(process.cwd(), 'content', file), 'utf8')
+    const separateForm = [
+      /form on (?:our|the) \[?notice and takedown page/i,
+      /notice and takedown form/i,
+      /\{en: Notice and takedown\}(?:\]\([^)]*\))? sayfasındaki form/,
+      // As its own entry in the list of public forms (terms of use).
+      /^- Notice and takedown \(corrections and removals\);$/m,
+    ]
+    for (const page of Object.values(CONTENT_PAGES)) {
+      for (const pattern of separateForm) expect(read(page.file), page.file).not.toMatch(pattern)
+    }
+    expect(read(CONTENT_PAGES.takedown.file)).not.toMatch(/form on this page/i)
+  })
+
   it('formats dates without ambiguity', () => {
     expect(formatDate('2026-09-27', 'en')).toBe('27 September 2026')
     expect(formatDate('2026-09-27', 'tr')).toBe('27 Eylül 2026')

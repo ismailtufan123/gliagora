@@ -7,9 +7,12 @@ import type { Payload } from 'payload'
 import { FAKE_DATA } from '@/collections/Jobs'
 import { idOf } from '@/lib/relationship'
 
+import { reportItem } from '@/lib/reports/item'
+
 import {
   FAKE_CANDIDATES,
   FAKE_QUEUE_NOTE,
+  FAKE_REPORTS,
   FAKE_SUBMISSIONS,
   type FakeReview,
   type FakeSubmission,
@@ -22,10 +25,16 @@ const ids = (values: unknown[]) =>
   values.map((value) => idOf(value)).filter((id): id is number => typeof id === 'number')
 
 /**
- * Removes the fake suggestions and candidates of an earlier run, and the draft jobs made by
- * accepting them. Returns how many suggestions and candidates it removed.
+ * Removes the fake suggestions, candidates and reports of an earlier run (including the reports
+ * the end-to-end tests sent), and the draft jobs made by accepting candidates. Returns how many
+ * suggestions, candidates and reports it removed.
  */
 export async function removeFakeQueue(payload: Payload) {
+  const reports = await payload.delete({
+    collection: 'reports',
+    where: { details: { contains: FAKE_QUEUE_NOTE } },
+    depth: 0,
+  })
   const submissions = await payload.find({
     collection: 'submissions',
     where: { note: { contains: FAKE_QUEUE_NOTE } },
@@ -67,7 +76,11 @@ export async function removeFakeQueue(payload: Payload) {
       context,
     })
   }
-  return { submissions: submissions.docs.length, candidates: candidates.docs.length }
+  return {
+    submissions: submissions.docs.length,
+    candidates: candidates.docs.length,
+    reports: reports.docs.length,
+  }
 }
 
 type Lookups = {
@@ -153,5 +166,49 @@ export async function addFakeQueue(payload: Payload, { institutionId, jobId }: L
     const status = reviewed?.status ?? 'new'
     counts[status] = (counts[status] ?? 0) + 1
   }
-  return { submissions: FAKE_SUBMISSIONS.length, candidates: counts }
+  // Reports as the form stores them, then handled as an editor would: In progress, then Closed.
+  const now = new Date()
+  for (const { job, status, action, actionNote, ...report } of FAKE_REPORTS) {
+    const jobDoc =
+      job === undefined
+        ? null
+        : (
+            await payload.find({
+              collection: 'jobs',
+              where: { shortId: { equals: job } },
+              depth: 0,
+              limit: 1,
+            })
+          ).docs[0]
+    if (job !== undefined && !jobDoc) throw new Error(`Fake job missing: ${job}`)
+    // The address of a public job's page, as the form records it.
+    const item = jobDoc ? reportItem(jobDoc, now) : null
+    const created = await payload.create({
+      collection: 'reports',
+      data: {
+        ...report,
+        locale: 'en',
+        job: jobDoc?.id ?? null,
+        itemUrl: item?.path ?? null,
+        status: 'new',
+      },
+      depth: 0,
+    })
+    if (status === 'new') continue
+    await payload.update({
+      collection: 'reports',
+      id: created.id,
+      data: { status: 'in-progress', actionNote: actionNote ?? null },
+      depth: 0,
+    })
+    if (status === 'closed') {
+      await payload.update({
+        collection: 'reports',
+        id: created.id,
+        data: { status: 'closed', action: action ?? null },
+        depth: 0,
+      })
+    }
+  }
+  return { submissions: FAKE_SUBMISSIONS.length, candidates: counts, reports: FAKE_REPORTS.length }
 }

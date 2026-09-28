@@ -276,7 +276,6 @@
     "authoritative": "Esas kaynak işverenin sayfasıdır.",
     "lastVerified": "Son doğrulama: {date}",
     "reportProblem": "Sorun bildir",
-    "reportSubject": "İlanla ilgili sorun: {id}",
     "closedTitle": "Bu pozisyon kapandı",
     "closedText": "Artık başvuru kabul edilmiyor. Hâlâ açık olan benzer pozisyonlar aşağıda.",
     "summary": "Özetimiz",
@@ -388,6 +387,83 @@
       "outcome": "E-posta adresinizi verdiyseniz sonucu size bildirir, adresi kararımızdan 90 gün sonra sileriz.",
       "changedMind": "E-posta konusunda fikrinizi mi değiştirdiniz? <email>privacy@gliagora.com</email> adresine yazın, adresinizi silelim.",
       "another": "Başka bir ilan önerin",
+      "jobs": "Pozisyonlara göz atın"
+    }
+  },
+  "report": {
+    "title": "Sorun bildirin",
+    "description": "Gliagora'daki yanlış bir bilgiyi, kapanmış bir pozisyonu veya çalışmayan bir bağlantıyı bize bildirin ya da sizinle ilgili bir içeriğin düzeltilmesini veya kaldırılmasını isteyin.",
+    "intro": "Gliagora'da yanlış olan ya da yer almaması gereken bir şey varsa bize bildirin. Her bildirimi bir editör asıl ilanla karşılaştırarak inceler.",
+    "takedown": "Düzeltme ve kaldırma taleplerini nasıl ele aldığımız ve ne kadar sürede harekete geçtiğimiz <link>kaldırma ve düzeltme sayfasında</link> (İngilizce) anlatılır.",
+    "about": "<strong>İlgili içerik:</strong> <link>{title}</link>",
+    "unavailable": "Form geçici olarak kullanılamıyor. Lütfen bildiriminizi <email>hello@gliagora.com</email> adresine e-postayla gönderin.",
+    "noscript": "Bu formdaki spam kontrolü JavaScript gerektirir. JavaScript kapalıysa bildiriminizi <email>hello@gliagora.com</email> adresine e-postayla da gönderebilirsiniz.",
+    "kind": {
+      "legend": "Sorun nedir?",
+      "wrong-fact": {
+        "label": "Bir bilgi yanlış",
+        "hint": "Örneğin son başvuru tarihi, kurum veya pozisyon türü asıl ilandakinden farklı."
+      },
+      "closed": {
+        "label": "Pozisyon kapandı",
+        "hint": "İşveren pozisyonu doldurdu veya geri çekti ya da artık başvuru kabul etmiyor."
+      },
+      "broken-link": {
+        "label": "Bir bağlantı çalışmıyor",
+        "hint": "Asıl ilanın bağlantısı veya başka bir bağlantı bir hata sayfasına ya da yanlış bir sayfaya gidiyor."
+      },
+      "not-employer": {
+        "label": "İlan işverenden gelmiyor",
+        "hint": "İlanı bir işe alım ajansı vermiş ya da bağlantı işverenin kendi sayfasına gitmiyor."
+      },
+      "personal-rights": {
+        "label": "İçerik sizinle ilgili ve haklarınızı ihlal ediyor",
+        "hint": "Örneğin adınız veya sizinle ilgili başka bir bilgi yanlış ya da orada yer almamalı. 5651 sayılı Kanunun 9. maddesi, bu içeriğin düzeltilmesini veya kaldırılmasını bizden istemenize olanak tanır. Size yanıt verebilmemiz için e-posta adresinize ihtiyacımız var."
+      },
+      "other": {
+        "label": "Başka bir şey",
+        "hint": "İncelememiz gereken başka herhangi bir şey."
+      }
+    },
+    "details": {
+      "label": "Ayrıntılar",
+      "hint": "Yanlış olan nedir, doğrusu ne olmalı? Bildiriminiz Gliagora'daki başka bir sayfayla ilgiliyse o sayfanın adresini de yazın. Düz metin, en fazla 2.000 karakter. Lütfen sağlık bilgileriniz gibi hassas veriler göndermeyin.",
+      "left": "Kalan karakter: {count}",
+      "over": "Sınırı aşan karakter: {count}"
+    },
+    "email": {
+      "label": "E-posta adresiniz",
+      "hint": "Kişilik haklarınızla ilgili bir talepte size yanıt verebilmemiz için gereklidir. Diğer bildirimlerde isteğe bağlıdır: yanıt almak istiyorsanız yazın. Adresinizi yalnızca bu bildirimle ilgili olarak size yanıt vermek için kullanır ve bildirimle birlikte, talep kapandıktan sonra 2 yıl saklarız. Ayrıntılar için <privacy>gizlilik politikasına</privacy> (İngilizce) ve <kvkk>KVKK aydınlatma metnine</kvkk> bakın."
+    },
+    "honeypot": "Bu alanı boş bırakın",
+    "spamNote": "Spam programlarını engellemek için tarayıcınız form gönderilmeden önce küçük bir bulmaca çözer; formun ne sıklıkla gönderilebileceğini sınırlamak için de IP adresinizin karma (hash) değerini 24 saat saklarız. <link>Formu nasıl koruduğumuz</link>",
+    "submit": "Bildirimi gönder",
+    "sending": "Bildiriminiz gönderiliyor…",
+    "errors": {
+      "title": "Bir sorun var",
+      "prefix": "Hata:",
+      "kindMissing": "Sorunun ne olduğunu seçin.",
+      "detailsMissing": "Neyin yanlış olduğunu yazın.",
+      "detailsTooLong": "Ayrıntıları en fazla 2.000 karaktere kısaltın.",
+      "emailInvalid": "E-posta adresini doğru biçimde girin, örneğin ad@example.org.",
+      "emailTooLong": "En fazla 254 karakterlik bir e-posta adresi girin.",
+      "emailRequired": "E-posta adresinizi girin: kişilik haklarınızla ilgili bir talebe yanıt verebilmemiz için gereklidir.",
+      "needsJs": "Spam kontrolü çalışmadı: sayfa henüz tam yüklenmemişti ya da tarayıcınızda JavaScript kapalı veya engellenmiş. Sayfanın yüklenmesini bekleyip formu yeniden gönderin ya da bildiriminizi hello@gliagora.com adresine e-postayla gönderin.",
+      "spamCheck": "Spam kontrolünün süresi doldu veya kontrol tamamlanamadı. Lütfen formu yeniden gönderin.",
+      "rateLimited": "Son bir saat içinde birkaç bildirim gönderdiniz. Lütfen daha sonra yeniden deneyin ya da bildiriminizi hello@gliagora.com adresine e-postayla gönderin.",
+      "unavailable": "Form geçici olarak kullanılamıyor. Lütfen bildiriminizi hello@gliagora.com adresine e-postayla gönderin.",
+      "failed": "Bir sorun oluştu ve bildiriminiz kaydedilemedi. Lütfen daha sonra yeniden deneyin ya da bildiriminizi hello@gliagora.com adresine e-postayla gönderip {reference} referans kodunu belirtin."
+    },
+    "sent": {
+      "title": "Bildiriminiz için teşekkür ederiz",
+      "metaTitle": "Bildirim gönderildi",
+      "next": "Bundan sonra ne olacak?",
+      "personalRightsTitle": "Kişilik haklarınızla ilgili bir talep",
+      "personalRights": "Talebinizi aldığımızı 24 saat içinde size bildiririz ve genellikle 72 saat içinde karar veririz. Bir içeriği kaldırmaya karar verirsek içerik hemen yayından kalkar.",
+      "otherTitle": "Diğer bildirimler",
+      "other": "İçeriği asıl ilanla karşılaştırır, ardından düzeltir ya da Gliagora'da yer almaması gerekiyorsa kaldırırız. Yalnızca e-posta adresinizi verdiyseniz size yanıt veririz.",
+      "takedown": "Bildirimleri ve talepleri nasıl ele aldığımız <link>kaldırma ve düzeltme sayfasında</link> (İngilizce) anlatılır.",
+      "another": "Başka bir sorun bildirin",
       "jobs": "Pozisyonlara göz atın"
     }
   }

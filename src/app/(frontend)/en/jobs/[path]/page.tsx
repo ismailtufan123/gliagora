@@ -15,7 +15,7 @@ import { textDirection } from '@/lib/jobs/languages'
 import { jobsHref } from '@/lib/filters/jobs'
 import { type TermRef, subfieldHubPath } from '@/lib/jobs/view'
 import { jobByShortId, openJobsAtInstitution, requestTime, similarOpenJobs } from '@/lib/records'
-import { CONTACT_EMAIL } from '@/lib/site'
+import { reportHref } from '@/lib/reports/item'
 
 // A job (PLAN §3.2 "Job detail", §9.5): facts only, our own summary and the way to the employer's
 // posting. No JobPosting markup (§16.2). Indexed while open; once closed (the deadline day has
@@ -99,9 +99,8 @@ export default async function Page({ params }: Props) {
   // A closed position has no way to apply (PLAN §2.5).
   const postingUrl = open ? job.originalUrl : null
   const allJobsLink = (chunks: ReactNode) => <a href={jobsHref()}>{chunks}</a>
-  const report = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
-    t('job.reportSubject', { id: job.shortId }),
-  )}`
+  // "Report a problem" (PLAN §7.5) opens the form with this job filled in, also once it closed.
+  const report = reportHref({ type: 'job', shortId: job.shortId })
 
   const atInstitution = institution
     ? await openJobsAtInstitution(institution.id, 'en', MORE_AT_INSTITUTION, job.id)

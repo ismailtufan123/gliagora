@@ -144,7 +144,7 @@ On the [Suggest a listing](/en/suggest/) page, you can point us to a position or
 
 - **ALTCHA:** before a form is sent, your browser solves a small puzzle. This shows that a person, not a spam program, is sending the form. ALTCHA comes from our own server and is checked there; no outside service is involved.
 - **Hidden field:** forms contain a field that people do not see and spam programs often fill in.
-- **Rate limits:** the suggestion form accepts at most 5 suggestions an hour from the same IP address. Your IP address is the number that identifies your internet connection. For this limit we store a scrambled code made from your IP address (a hash). This code still counts as personal data. Sign-in and the other forms are limited too. [TO DECIDE: S and M4b – what these limits use to identify requests; the hashed IP address is decided only for the suggestion form, and the sentence on IP addresses under "Server logs" depends on this]
+- **Rate limits:** the suggestion form accepts at most 5 suggestions an hour from the same IP address, and the "Report a problem" form at most 5 reports an hour. Your IP address is the number that identifies your internet connection. For this limit we store a scrambled code made from your IP address (a hash). This code still counts as personal data. Sign-in and the other forms are limited too. [TO DECIDE: S and M4b – what these limits use to identify requests; the hashed IP address is decided only for the suggestion and "Report a problem" forms, and the sentence on IP addresses under "Server logs" depends on this]
 - **Where it comes from:** automatically, by electronic means, when your browser sends a form.
 - **Legal basis:** our legitimate interest in protecting the forms from abuse (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
 - **How long:** the hashed IP address is kept only in the website's database on our server and deleted after 24 hours.
@@ -159,9 +159,9 @@ On the [Suggest a listing](/en/suggest/) page, you can point us to a position or
 
 ### Removal requests, corrections and "Report a problem"
 
-Every item on Gliagora has a "Report a problem" link. It opens a short form with the item already filled in. [TO DECIDE: M4 – which fields the Report a problem form collects, and whether it asks for an email address] You can also ask us to correct or remove content on the [notice and takedown page](/en/legal/takedown/). Turkish Law No. 5651 (Art. 9) lets people ask for online content to be removed if it violates their personal rights, for example their privacy or reputation.
+Every item on Gliagora has a "Report a problem" link. It opens a short form with the item already filled in. The form asks what is wrong (for example a wrong fact, a closed position or a request about your personal rights), for the details, up to 2,000 characters, and for your email address. Your email address is optional, except for a request about your personal rights: we need it to answer you. You can also ask us to correct or remove content on the [notice and takedown page](/en/legal/takedown/). Turkish Law No. 5651 (Art. 9) lets people ask for online content to be removed if it violates their personal rights, for example their privacy or reputation.
 
-- **What:** the item concerned, the reason, your email address, the details you give us, the dates we received the request and must answer it, its status and what we did.
+- **What:** the item concerned, the reason, your email address (if you give it), the details you give us, the language of the page you used, the dates we received the request and must answer it, its status and what we did.
 - **Where it comes from:** you, through these forms or by email.
 - **Why:** to correct or remove content and to answer you.
 - **Legal basis:**
@@ -281,7 +281,7 @@ We send you only emails you asked for, or emails your account or request needs:
 | Final deletion email | Confirm the deletion | Legal obligation (5(2)(ç)) | Legal obligation (c) | Sent once |
 | Suggestion: link and note | Review the suggestion | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 90 days after the decision |
 | Suggestion: your email (optional) | Tell you the outcome | Consent (5(1)) or Legitimate interest (5(2)(f)) [TO DECIDE: B8 – KVKK basis] | Consent (a) | 90 days after the decision, or earlier if you withdraw consent |
-| Hashed IP address | Protect the suggestion form from abuse | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 24 hours |
+| Hashed IP address | Protect the suggestion and "Report a problem" forms from abuse | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 24 hours |
 | Data requests | Handle your request | Legal obligation (5(2)(ç)) | Legal obligation (c) | 2 years after closure |
 | Removal requests (Law No. 5651) | Handle your request | Legal obligation and Protecting a right (5(2)(ç), (e)) | Legitimate interests (f) | 2 years after closure |
 | Corrections and problem reports | Keep listings accurate | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 2 years after closure |

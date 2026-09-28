@@ -9,6 +9,7 @@ import { CountrySets } from './collections/CountrySets'
 import { FormLimits } from './collections/FormLimits'
 import { Institutions } from './collections/Institutions'
 import { Jobs } from './collections/Jobs'
+import { Reports } from './collections/Reports'
 import { Submissions } from './collections/Submissions'
 import { Terms } from './collections/Terms'
 import { Users } from './collections/Users'
@@ -39,6 +40,7 @@ export default buildConfig({
     Users,
     Candidates,
     Submissions,
+    Reports,
     Jobs,
     Terms,
     Countries,

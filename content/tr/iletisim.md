@@ -47,17 +47,17 @@ Bir içerik nedeniyle kişilik haklarınızın ihlal edildiğini düşünüyorsa
 
 Hatalı bir bilgiyi ya da kapanmış veya geri çekilmiş bir ilanı bildirmek için de bize yazabilirsiniz. İşverenler kendi ilanlarının güncellenmesini ya da kaldırılmasını isteyebilir.
 
-Talebinizi İngilizce [{en: Notice and takedown}](/en/legal/takedown/) sayfasındaki formla ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine gönderebilirsiniz. Talebinizde şunları belirtin:
+Talebinizi İngilizce [{en: Report a problem}](/en/report/) (Sorun bildirin) formuyla ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine gönderebilirsiniz. Bu forma [{en: Notice and takedown}](/en/legal/takedown/) sayfasından da ulaşılır. Talebinizde şunları belirtin:
 
 - ilgili sayfanın bağlantısı;
 - sorunun ne olduğu;
 - ne yapılmasını istediğiniz (yayından çıkarma ya da düzeltme).
 
-Sitedeki her içerikte bir "{en: Report a problem}" (Sorun bildirin) bağlantısı da bulunur. Sürecin ayrıntıları da aynı sayfada yer alır.
+Sitedeki her içerikte bir "{en: Report a problem}" (Sorun bildirin) bağlantısı da bulunur. Sürecin ayrıntıları {en: Notice and takedown} sayfasında yer alır.
 
-"{en: Report a problem}" bağlantısı ve {en: Notice and takedown} sayfasındaki form, Gliagora'yı geliştirdikçe adım adım açılacaktır. Bunlar açılana kadar [hello@gliagora.com](mailto:hello@gliagora.com) adresine yazabilirsiniz.
+"{en: Report a problem}" bağlantısı ve formu, Gliagora'yı geliştirdikçe adım adım açılacaktır. Bunlar açılana kadar [hello@gliagora.com](mailto:hello@gliagora.com) adresine yazabilirsiniz.
 
-{en: Notice and takedown} sayfasındaki formu kullanırsanız, talebiniz bize ulaştığı anda size otomatik bir e-posta gönderilir.
+Bu formu kullanır ve e-posta adresinizi verirseniz, talebiniz bize ulaştığı anda size otomatik bir e-posta gönderilir.
 
 **Süreler:**
 

@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { TRACKER_LIMIT, closingWhere, reviewSummary, whereQuery } from './dashboard'
+import {
+  TRACKER_LIMIT,
+  closingWhere,
+  personalRightsDueWhere,
+  personalRightsOverdueWhere,
+  reviewSummary,
+  whereQuery,
+} from './dashboard'
 
 const now = new Date('2026-09-28T09:00:00.000Z')
 const user = { id: 1, email: 'editor@example.com', collection: 'users' }
@@ -12,6 +19,9 @@ const fakePayload = () => {
     'jobs:in_review': 1,
     'submissions:new,queued': 5,
     'submissions:new': 2,
+    'reports:new': 4,
+    'reports:personal-rights-due': 2,
+    'reports:personal-rights-overdue': 1,
   }
   const count = vi.fn(
     async ({
@@ -19,9 +29,13 @@ const fakePayload = () => {
       where,
     }: {
       collection: string
-      where: { status: Record<string, unknown> }
+      where: { status?: Record<string, unknown>; and?: Record<string, Record<string, unknown>>[] }
     }) => {
-      const status = where.status.equals ?? (where.status.in as string[]).join(',')
+      if (where.and) {
+        const late = where.and.some((part) => part.respondBy?.less_than !== undefined)
+        return { totalDocs: totals[`${collection}:personal-rights-${late ? 'overdue' : 'due'}`] }
+      }
+      const status = where.status!.equals ?? (where.status!.in as string[]).join(',')
       return { totalDocs: totals[`${collection}:${status}`] ?? 0 }
     },
   )
@@ -46,6 +60,7 @@ describe('reviewSummary', () => {
       candidates: { new: 3, triaged: 2 },
       jobsInReview: 1,
       suggestions: { waiting: 5, notQueued: 2 },
+      reports: { new: 4, personalRightsDue: 2, personalRightsOverdue: 1 },
       closing: {
         total: 12,
         next: [{ id: 7, title: 'Postdoc in glia', shortId: 'k3f9a', day: '2026-10-02' }],
@@ -58,7 +73,9 @@ describe('reviewSummary', () => {
     await reviewSummary(payload as never, user as never, now)
     for (const [args] of payload.count.mock.calls) {
       expect(args).toMatchObject({ overrideAccess: false, user })
-      expect(Object.keys(args.where)).toEqual(['status'])
+      // Counts only (never a list), on indexed fields.
+      const fields = (args.where.and ?? [args.where]).flatMap((part) => Object.keys(part))
+      for (const field of fields) expect(['status', 'kind', 'respondBy']).toContain(field)
     }
     expect(payload.find).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -80,6 +97,25 @@ describe('reviewSummary', () => {
         { status: { equals: 'published' } },
         { deadlineAt: { greater_than: '2026-09-28T09:00:00.000Z' } },
         { deadlineAt: { less_than_equal: '2026-10-12T09:00:00.000Z' } },
+      ],
+    })
+  })
+})
+
+describe('personal-rights requests on the dashboard', () => {
+  it('are the unanswered ones due within 24 hours, overdue ones included', () => {
+    expect(personalRightsDueWhere(now)).toEqual({
+      and: [
+        { kind: { equals: 'personal-rights' } },
+        { status: { equals: 'new' } },
+        { respondBy: { less_than_equal: '2026-09-29T09:00:00.000Z' } },
+      ],
+    })
+    expect(personalRightsOverdueWhere(now)).toEqual({
+      and: [
+        { kind: { equals: 'personal-rights' } },
+        { status: { equals: 'new' } },
+        { respondBy: { less_than: '2026-09-28T09:00:00.000Z' } },
       ],
     })
   })

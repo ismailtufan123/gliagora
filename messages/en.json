@@ -276,7 +276,6 @@
     "authoritative": "The employer’s page is the authoritative source.",
     "lastVerified": "Last verified {date}",
     "reportProblem": "Report a problem",
-    "reportSubject": "Problem with job {id}",
     "closedTitle": "This position has closed",
     "closedText": "It no longer takes applications. Similar positions that are still open are listed below.",
     "summary": "Our summary",
@@ -388,6 +387,83 @@
       "outcome": "If you gave us your email address, we tell you the outcome and delete the address 90 days after our decision.",
       "changedMind": "Changed your mind about the email? Write to <email>privacy@gliagora.com</email>, and we delete your address.",
       "another": "Suggest another listing",
+      "jobs": "Browse positions"
+    }
+  },
+  "report": {
+    "title": "Report a problem",
+    "description": "Tell us about a wrong fact, a closed position or a broken link on Gliagora, or ask us to correct or remove content about you.",
+    "intro": "Tell us if something on Gliagora is wrong or should not be there. An editor checks every report against the original posting.",
+    "takedown": "How we handle corrections and removal requests, and how quickly we act, is explained on the <link>notice and takedown page</link>.",
+    "about": "<strong>About:</strong> <link>{title}</link>",
+    "unavailable": "The form is temporarily unavailable. Please email your report to <email>hello@gliagora.com</email> instead.",
+    "noscript": "The spam check on this form needs JavaScript. If JavaScript is turned off, you can email your report to <email>hello@gliagora.com</email> instead.",
+    "kind": {
+      "legend": "What is wrong?",
+      "wrong-fact": {
+        "label": "A fact is wrong",
+        "hint": "For example, the deadline, the institution or the type of position differs from the original posting."
+      },
+      "closed": {
+        "label": "The position has closed",
+        "hint": "The employer has filled or withdrawn it, or no longer accepts applications."
+      },
+      "broken-link": {
+        "label": "A link does not work",
+        "hint": "The link to the original posting, or another link, leads to an error or to the wrong page."
+      },
+      "not-employer": {
+        "label": "It does not come from the employer",
+        "hint": "A recruitment agency placed it, or the link does not lead to the employer’s own page."
+      },
+      "personal-rights": {
+        "label": "It is about you and harms your rights",
+        "hint": "For example, your name or other information about you is wrong, or should not be there. Turkish law (Law No. 5651, Article 9) lets you ask us to correct or remove it. We need your email address to answer you."
+      },
+      "other": {
+        "label": "Something else",
+        "hint": "Anything else we should check."
+      }
+    },
+    "details": {
+      "label": "Details",
+      "hint": "What is wrong, and what should it say instead? If your report is about another page on Gliagora, include its address. Plain text, up to 2,000 characters. Please do not send sensitive data, such as information about your health.",
+      "left": "Characters left: {count}",
+      "over": "Characters over the limit: {count}"
+    },
+    "email": {
+      "label": "Your email address",
+      "hint": "Needed for a request about your personal rights, so that we can answer you. Optional for other reports: give it if you would like a reply. We use it only to answer you about this report, and keep it with the report for 2 years after we close it. See the <privacy>privacy policy</privacy> and the <kvkk>KVKK information notice</kvkk> (in Turkish)."
+    },
+    "honeypot": "Leave this field empty",
+    "spamNote": "To keep out spam programs, your browser solves a small puzzle before the form is sent, and we keep a scrambled form of your IP address for 24 hours to limit how often the form can be sent. <link>How we protect the form</link>",
+    "submit": "Send report",
+    "sending": "Sending your report…",
+    "errors": {
+      "title": "There is a problem",
+      "prefix": "Error:",
+      "kindMissing": "Choose what is wrong.",
+      "detailsMissing": "Tell us what is wrong.",
+      "detailsTooLong": "Shorten the details to 2,000 characters or fewer.",
+      "emailInvalid": "Enter an email address in the correct format, such as name@example.org.",
+      "emailTooLong": "Enter an email address of 254 characters or fewer.",
+      "emailRequired": "Enter your email address: we need it to answer a request about your personal rights.",
+      "needsJs": "The spam check did not run: the page had not finished loading, or JavaScript is turned off or blocked in your browser. Wait until the page has loaded and send the form again, or email your report to hello@gliagora.com.",
+      "spamCheck": "The spam check has expired or did not work. Please send the form again.",
+      "rateLimited": "You have sent several reports in the last hour. Please try again later, or email your report to hello@gliagora.com.",
+      "unavailable": "The form is temporarily unavailable. Please email your report to hello@gliagora.com instead.",
+      "failed": "Something went wrong and your report was not saved. Please try again later, or email it to hello@gliagora.com and mention reference {reference}."
+    },
+    "sent": {
+      "title": "Thank you for your report",
+      "metaTitle": "Report sent",
+      "next": "What happens next",
+      "personalRightsTitle": "A request about your personal rights",
+      "personalRights": "We confirm within 24 hours that we have received your request, and usually decide within 72 hours. If we decide to remove an item, it goes offline at once.",
+      "otherTitle": "Other reports",
+      "other": "We check the item against the original posting, then correct it, or remove it if it should not be on Gliagora. We reply only if you gave us your email address.",
+      "takedown": "The <link>notice and takedown page</link> explains how we handle reports and requests.",
+      "another": "Report another problem",
       "jobs": "Browse positions"
     }
   }

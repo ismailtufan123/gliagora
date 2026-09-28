@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     candidates: Candidate;
     submissions: Submission;
+    reports: Report;
     jobs: Job;
     terms: Term;
     countries: Country;
@@ -87,6 +88,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     candidates: CandidatesSelect<false> | CandidatesSelect<true>;
     submissions: SubmissionsSelect<false> | SubmissionsSelect<true>;
+    reports: ReportsSelect<false> | ReportsSelect<true>;
     jobs: JobsSelect<false> | JobsSelect<true>;
     terms: TermsSelect<false> | TermsSelect<true>;
     countries: CountriesSelect<false> | CountriesSelect<true>;
@@ -1060,6 +1062,69 @@ export interface Submission {
   createdAt: string;
 }
 /**
+ * Reports from the "Report a problem" form, newest first. Requests about personal rights (Law 5651 Art. 9) are answered within 24 hours and usually decided within 72 hours (the notice and takedown page); other reports within 30 days. Set a report to In progress once you have answered the person or started checking (a personal-rights request only once you have answered the person: until then the dashboard counts it as waiting for its 24-hour answer), and close it with what you did: to remove a listing, withdraw the job itself. The email address and details are deleted with the report 2 years after it is closed (from M4.7). To answer a data request, filter by Email, then delete.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reports".
+ */
+export interface Report {
+  id: number;
+  /**
+   * As the person chose it on the form.
+   */
+  kind: 'wrong-fact' | 'closed' | 'broken-link' | 'not-employer' | 'personal-rights' | 'other';
+  /**
+   * The job the report is about, when it was sent from a job page.
+   */
+  job?: (number | null) | Job;
+  /**
+   * The address of that page when the report was sent.
+   */
+  itemUrl?: string | null;
+  /**
+   * From the person who sent it. Deleted with the report 2 years after it is closed.
+   */
+  details: string;
+  /**
+   * Only to answer the person about this report. Required for personal-rights requests. Deleted with the report 2 years after it is closed.
+   */
+  email?: string | null;
+  locale: 'en' | 'tr';
+  /**
+   * For editors only; never shown on the site or sent to the person. Say what you checked and what you answered.
+   */
+  actionNote?: string | null;
+  /**
+   * New: nobody has answered or looked at it yet. In progress: you have answered the person or started checking; a personal-rights request stays New until you have answered the person, so the dashboard keeps it in the 24-hour count. Closed: decided, with what you did.
+   */
+  status: 'new' | 'in-progress' | 'closed';
+  /**
+   * Required to close the report.
+   */
+  action?: ('none' | 'corrected' | 'removed' | 'refused' | 'not-applicable') | null;
+  /**
+   * When the report arrived; the answer is due from then.
+   */
+  createdAt: string;
+  /**
+   * 24 hours after it was received for a personal-rights request, 30 days for other reports.
+   */
+  respondBy?: string | null;
+  /**
+   * When the automatic acknowledgement was emailed to the person (from M4.7).
+   */
+  ackSentAt?: string | null;
+  /**
+   * When the report was closed.
+   */
+  closedAt?: string | null;
+  /**
+   * The report, with the email address and details, is deleted 2 years after it was closed (PLAN §18.1; from M4.7).
+   */
+  purgeAt?: string | null;
+  updatedAt: string;
+}
+/**
  * Groups of countries used in funding eligibility (PLAN §4.6). When you change a list, update the source, the date you checked it and the note.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1228,6 +1293,10 @@ export interface PayloadLockedDocument {
         value: number | Submission;
       } | null)
     | ({
+        relationTo: 'reports';
+        value: number | Report;
+      } | null)
+    | ({
         relationTo: 'jobs';
         value: number | Job;
       } | null)
@@ -1359,6 +1428,27 @@ export interface SubmissionsSelect<T extends boolean = true> {
   notifiedAt?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reports_select".
+ */
+export interface ReportsSelect<T extends boolean = true> {
+  kind?: T;
+  job?: T;
+  itemUrl?: T;
+  details?: T;
+  email?: T;
+  locale?: T;
+  actionNote?: T;
+  status?: T;
+  action?: T;
+  createdAt?: T;
+  respondBy?: T;
+  ackSentAt?: T;
+  closedAt?: T;
+  purgeAt?: T;
+  updatedAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -84,7 +84,7 @@ test.describe('job page', () => {
     )
     await expect(page.getByRole('link', { name: 'Report a problem' })).toHaveAttribute(
       'href',
-      `mailto:hello@gliagora.com?subject=Problem%20with%20job%20${FIXED_JOBS.open.shortId}`,
+      `/en/report/?item=job:${FIXED_JOBS.open.shortId}`,
     )
   })
 
