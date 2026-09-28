@@ -55,12 +55,19 @@ test.describe('content pages', () => {
     expect(robots).toContain('Sitemap: https://gliagora.com/sitemap.xml')
   })
 
-  test('the sitemap lists no draft or placeholder', async ({ request }) => {
-    const xml = await (await request.get('/sitemap.xml')).text()
+  test('the sitemaps list no draft or placeholder', async ({ request }) => {
+    // /sitemap.xml is an index of the files under /sitemaps/ (tests/e2e/seo.spec.ts).
+    const index = await (await request.get('/sitemap.xml')).text()
+    const files = [...index.matchAll(/<loc>https:\/\/gliagora\.com([^<]+)<\/loc>/g)].map(
+      (match) => match[1]!,
+    )
+    expect(files).toContain('/sitemaps/pages.xml')
+    let xml = ''
+    for (const file of files) xml += await (await request.get(file)).text()
     expect(xml).toContain('<loc>https://gliagora.com/en/</loc>')
     expect(xml).toContain('<loc>https://gliagora.com/en/about/</loc>')
     expect(xml).toContain('<loc>https://gliagora.com/en/suggest/</loc>')
-    for (const path of [...DRAFTS, '/en/jobs/', '/en/gone/', '/en/suggest/sent/']) {
+    for (const path of [...DRAFTS, '/en/events/', '/en/gone/', '/en/suggest/sent/']) {
       expect(xml).not.toContain(`<loc>https://gliagora.com${path}</loc>`)
     }
   })

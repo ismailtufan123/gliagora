@@ -248,6 +248,15 @@
       "text": "Something went wrong on our side. Please try again in a moment.",
       "retry": "Try again",
       "reference": "Reference: {digest}"
+    },
+    "feed": {
+      "title": "Latest neuroscience positions",
+      "description": "The open positions most recently published on Gliagora: the facts, our own summary and a link to the employer’s own posting.",
+      "institution": "Institution: {name}.",
+      "location": "Location: {place}.",
+      "deadline": "Deadline: {date}.",
+      "rolling": "Rolling deadline.",
+      "untilFilled": "Open until filled."
     }
   },
   "job": {

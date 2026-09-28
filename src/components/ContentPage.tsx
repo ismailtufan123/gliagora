@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
 import { CONTENT_PAGES, type ContentKey, formatDate } from '@/lib/content'
+import { contentPageIndexed } from '@/lib/indexing'
 import { renderContentFile } from '@/lib/markdown'
 import { alternatesFor } from '@/lib/metadata'
 
@@ -16,7 +17,8 @@ export async function contentMetadata(key: ContentKey): Promise<Metadata> {
     title: t(`pages.${page.messages}.title`),
     description: t(`pages.${page.messages}.description`),
     alternates: alternatesFor(page.path),
-    ...(page.draft ? { robots: { index: false } } : {}),
+    // A draft is not indexed and not in the sitemaps (D28).
+    ...(contentPageIndexed(page) ? {} : { robots: { index: false } }),
   }
 }
 

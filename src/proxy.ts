@@ -3,8 +3,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { type Resolution, matchDetailRoute, resolveDetailRoute } from '@/lib/detail-routes'
 import { canonicalListPath } from '@/lib/filters/canonical'
 import { GONE_PAGE, isGone } from '@/lib/gone'
-
-import messages from '../messages/en.json'
+import { parseSitemapFileName } from '@/lib/seo/sitemap'
+import { unavailableResponse } from '@/lib/unavailable'
 
 // Answers about records depend on the database and the time, which change (the nightly ROR
 // import adds institutions; a retired subfield can be reactivated; a withdrawn job can be published
@@ -17,7 +17,9 @@ const NOT_STORED = { 'Cache-Control': 'private, no-store' }
 // write some filter differently, a stored redirect cannot point back and forth for long.
 const LIST_REDIRECT_CACHE = 'public, max-age=86400'
 
-// Runs before the pages under /en/ and /tr/ (Next.js "proxy", formerly middleware).
+// Runs before the pages under /en/ and /tr/ and the sitemap files (Next.js "proxy", formerly
+// middleware). A name under /sitemaps/ that no sitemap file can have gets the 404 page, like any
+// unknown URL; the sitemap route answers the names of files that do not exist now.
 // Removed URLs get the removed-page with status 410 (PLAN §2.5); the removed-page itself is not
 // a page of its own, so a direct request to it gets the 404 page. Pages that show a database
 // record (institutions, subfield hubs, jobs) are checked here first, so an unknown record gets a
@@ -27,6 +29,14 @@ const LIST_REDIRECT_CACHE = 'public, max-age=86400'
 // repeated parameters of the filter form without JavaScript, gets a permanent redirect to it.
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
+  if (pathname.startsWith('/sitemaps/')) {
+    return parseSitemapFileName(pathname.slice('/sitemaps/'.length))
+      ? NextResponse.next()
+      : NextResponse.rewrite(new URL('/_not-found', request.url), {
+          status: 404,
+          headers: NOT_STORED,
+        })
+  }
   if (request.method === 'GET' || request.method === 'HEAD') {
     const canonical = canonicalListPath(pathname, searchParams)
     if (canonical) {
@@ -44,14 +54,7 @@ export async function proxy(request: NextRequest) {
     } catch (error) {
       // The database is unreachable: a temporary state, so say so rather than answer 500.
       console.error('Record lookup failed:', error instanceof Error ? error.message : error)
-      return new NextResponse(messages.unavailable.text, {
-        status: 503,
-        headers: {
-          ...NOT_STORED,
-          'Retry-After': '120',
-          'Content-Type': 'text/plain; charset=utf-8',
-        },
-      })
+      return unavailableResponse()
     }
     switch (resolution.action) {
       case 'notFound':
@@ -85,5 +88,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/en/:path*', '/tr/:path*'],
+  matcher: ['/en/:path*', '/tr/:path*', '/sitemaps/:path*'],
 }

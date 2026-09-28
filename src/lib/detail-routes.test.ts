@@ -54,8 +54,7 @@ describe('matchDetailRoute', () => {
     '/en/subfields/wp-login.php',
     '/en/subfields/astrology.html',
     '/en/institutions/caltech-05dxps055.html',
-    // Not reserved yet: the jobs feed (M4.8) adds it to JOBS_RESERVED_SEGMENTS.
-    '/en/jobs/feed.xml',
+    '/en/jobs/rss.xml',
   ])('marks %s, which Next.js leaves without a trailing slash, as naming no record', (path) => {
     expect(matchDetailRoute(path)).toEqual({ kind: 'invalid' })
   })
@@ -73,15 +72,10 @@ describe('matchDetailRoute', () => {
     expect(matchDetailRoute(path)).toBeNull()
   })
 
-  it('leaves the reserved names under /en/jobs/ to their own routes', () => {
-    const reserved = JOBS_RESERVED_SEGMENTS as Set<string>
-    reserved.add('feed.xml')
-    try {
-      expect(matchDetailRoute('/en/jobs/feed.xml')).toBeNull()
-      expect(matchDetailRoute('/en/jobs/feed.xml/')).toBeNull()
-    } finally {
-      reserved.delete('feed.xml')
-    }
+  it('leaves the reserved names under /en/jobs/ to their own routes: the jobs feed', () => {
+    expect(JOBS_RESERVED_SEGMENTS.has('feed.xml')).toBe(true)
+    expect(matchDetailRoute('/en/jobs/feed.xml')).toBeNull()
+    expect(matchDetailRoute('/en/jobs/feed.xml/')).toBeNull()
   })
 })
 
