@@ -128,10 +128,31 @@ const prepare: CollectionBeforeValidateHook<Job> = async ({
   const originalUrl = value('originalUrl')
   data.canonicalUrl = originalUrl ? canonicalUrl(originalUrl) : null
 
-  if ((value('deadlineKind') ?? 'fixed') === 'fixed') {
+  const fixed = (value('deadlineKind') ?? 'fixed') === 'fixed'
+  // D40: a job created without a deadline time zone (candidate accept, the fake data, the local
+  // API) takes its institution's. An empty value given on purpose stays empty (Anywhere on Earth),
+  // and saves of an existing job never change it: a published deadline must not move. (Payload
+  // sets a field that the data leaves out to undefined before this hook runs.)
+  const zoneFromInstitution = operation === 'create' && fixed && data.deadlineTz === undefined
+  const override = value('locationOverride')
+  const institutionId = idOf(value('institution'))
+  const institution =
+    institutionId === undefined || (override?.city && override.country && !zoneFromInstitution)
+      ? null
+      : await req.payload.findByID({
+          collection: 'institutions',
+          id: institutionId,
+          select: { city: true, country: true, timeZone: true },
+          depth: 0,
+          req,
+          disableErrors: true,
+        })
+  Object.assign(data, jobLocation(override, institution))
+
+  if (fixed) {
     const day = calendarDay(value('deadlineDate'))
     if (day) data.deadlineDate = storedDay(day)
-    const timeZone = value('deadlineTz') || null
+    const timeZone = (zoneFromInstitution ? institution?.timeZone : value('deadlineTz')) || null
     data.deadlineTz = timeZone
     data.deadlineAt =
       day && (timeZone === null || isTimeZone(timeZone))
@@ -144,21 +165,6 @@ const prepare: CollectionBeforeValidateHook<Job> = async ({
   }
   const verified = calendarDay(value('verifiedAt'))
   if (verified) data.verifiedAt = storedDay(verified)
-
-  const override = value('locationOverride')
-  const institutionId = idOf(value('institution'))
-  const institution =
-    institutionId === undefined || (override?.city && override.country)
-      ? null
-      : await req.payload.findByID({
-          collection: 'institutions',
-          id: institutionId,
-          select: { city: true, country: true },
-          depth: 0,
-          req,
-          disableErrors: true,
-        })
-  Object.assign(data, jobLocation(override, institution))
 
   const status = (value('status') ?? 'draft') as JobStatus
   // Closing a job clears the two checks that describe the open position, so publishing it again
@@ -692,7 +698,9 @@ export const Jobs: CollectionConfig = {
           admin: {
             condition: (data) => (data?.deadlineKind ?? 'fixed') === 'fixed',
             description:
-              "The institution's time zone, or the one the posting names if it names another. Leave empty only if it is unknown: the day then ends Anywhere on Earth (UTC−12).",
+              "The institution's time zone, filled in when you choose the institution, or the one the posting names if it names another. Leave empty only if it is unknown: the day then ends Anywhere on Earth (UTC−12).",
+            // Payload's select, which follows the institution until the editor chooses a zone.
+            components: { Field: '/admin/DeadlineTimeZoneField#DeadlineTimeZoneField' },
           },
         },
       ],

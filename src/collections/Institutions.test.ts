@@ -74,8 +74,72 @@ describe('Institutions', () => {
       city: 'Pasadena',
       origin: 'ror',
       rorLastModified: '2025-05-05',
+      // From the coordinates the ROR API gave (D40).
+      timeZone: 'America/Los_Angeles',
     })
     expect(data.shortId).toBeUndefined()
+  })
+
+  it('fills the time zone from the coordinates, also for the import (D40)', async () => {
+    expect(await run({ name: 'Example Lab', lat: 41.0082, lng: 28.9784 })).toMatchObject({
+      timeZone: 'Europe/Istanbul',
+    })
+    const imported = await run(
+      { rorId: '05dxps055', name: 'Caltech', lat: 34.14778, lng: -118.14452 },
+      { context: { [ROR_IMPORT_CONTEXT]: true } },
+    )
+    expect(imported.timeZone).toBe('America/Los_Angeles')
+    expect((await run({ name: 'Example Lab' })).timeZone).toBeNull()
+  })
+
+  it("keeps an editor's time zone until the coordinates change (D40)", async () => {
+    const originalDoc = {
+      name: 'Example Lab',
+      origin: 'manual',
+      shortId: 'k3f9a',
+      lat: 38.8794,
+      lng: -6.9707,
+      timeZone: 'Europe/Madrid',
+    }
+    const update = (data: Record<string, unknown>, saved: Record<string, unknown> = originalDoc) =>
+      run({ ...saved, ...data }, { operation: 'update', originalDoc: saved })
+    // The editor corrects it; later saves keep the correction.
+    const corrected = await update({ timeZone: 'Europe/Lisbon' })
+    expect(corrected.timeZone).toBe('Europe/Lisbon')
+    const saved = { ...originalDoc, timeZone: 'Europe/Lisbon' }
+    expect((await update({ name: 'Example Laboratory' }, saved)).timeZone).toBe('Europe/Lisbon')
+    // New coordinates (an import that moved it, or an editor): the zone follows them.
+    expect((await update({ lat: 52.52, lng: 13.405 }, saved)).timeZone).toBe('Europe/Berlin')
+    // An emptied zone is filled in again.
+    expect((await update({ timeZone: null }, saved)).timeZone).toBe('Europe/Madrid')
+  })
+
+  it('checks the time zone against the country, also a saved one (D40)', async () => {
+    const pagoPago = { name: 'Example Lab', lat: -14.27806, lng: -170.7025 }
+    // The borders alone give Samoa's zone, a day ahead of American Samoa's.
+    // (The hook fills in the data it is given, so each call gets its own copy.)
+    expect((await run({ ...pagoPago })).timeZone).toBe('Pacific/Apia')
+    expect((await run({ ...pagoPago, country: 'AS' })).timeZone).toBe('Pacific/Pago_Pago')
+    expect((await run({ ...pagoPago, country: { id: 'AS' } })).timeZone).toBe('Pacific/Pago_Pago')
+    // A corrected country counts as a move: the zone follows it.
+    const saved = {
+      ...pagoPago,
+      origin: 'manual',
+      shortId: 'k3f9a',
+      country: 'WS',
+      timeZone: 'Pacific/Apia',
+    }
+    const corrected = await run(
+      { ...saved, country: 'AS' },
+      { operation: 'update', originalDoc: saved },
+    )
+    expect(corrected.timeZone).toBe('Pacific/Pago_Pago')
+    // The country is read from the saved institution when the save leaves it out.
+    const renamed = await run(
+      { name: 'Example Laboratory', timeZone: null },
+      { operation: 'update', originalDoc: { ...saved, country: 'AS', timeZone: null } },
+    )
+    expect(renamed.timeZone).toBe('Pacific/Pago_Pago')
   })
 
   it('does not call the ROR API during the import, which brings its own data', async () => {

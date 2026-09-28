@@ -233,6 +233,69 @@ describe('Jobs: values filled in on save', () => {
     expect(berlin.deadlineAt).toBe('2026-12-01T23:00:00.000Z')
   })
 
+  describe("takes the institution's time zone for a new job without one (D40)", () => {
+    const findByID = () =>
+      vi.fn(async () => ({ id: 7, city: 'Stockholm', country: 'SE', timeZone: 'Europe/Stockholm' }))
+
+    it('when the data leaves it out (Payload sets it to undefined)', async () => {
+      const data = await run(
+        { title: 'X', institution: 7, deadlineDate: '2026-12-01', deadlineTz: undefined },
+        { payload: { findByID: findByID() } },
+      )
+      expect(data.deadlineTz).toBe('Europe/Stockholm')
+      // The deadline ends at midnight in Stockholm (UTC+1 in December).
+      expect(data.deadlineAt).toBe('2026-12-01T23:00:00.000Z')
+    })
+
+    it('also for a job away from the institution, which gives its own location', async () => {
+      const lookup = findByID()
+      const data = await run(
+        {
+          title: 'X',
+          institution: 7,
+          locationOverride: { city: 'Uppsala', country: 'SE' },
+          deadlineTz: undefined,
+        },
+        { payload: { findByID: lookup } },
+      )
+      expect(lookup).toHaveBeenCalled()
+      expect(data).toMatchObject({ deadlineTz: 'Europe/Stockholm', city: 'Uppsala' })
+    })
+
+    it('but keeps a zone or an empty value given on purpose', async () => {
+      const given = await run(
+        { title: 'X', institution: 7, deadlineTz: 'Europe/London' },
+        { payload: { findByID: findByID() } },
+      )
+      expect(given.deadlineTz).toBe('Europe/London')
+      for (const empty of [null, '']) {
+        const data = await run(
+          { title: 'X', institution: 7, deadlineDate: '2026-12-01', deadlineTz: empty },
+          { payload: { findByID: findByID() } },
+        )
+        expect(data.deadlineTz).toBeNull()
+        expect(data.deadlineAt).toBe('2026-12-02T12:00:00.000Z')
+      }
+    })
+
+    it('and never changes the zone of a saved job', async () => {
+      const originalDoc = { title: 'X', institution: 7, deadlineKind: 'fixed', deadlineTz: null }
+      const data = await run(
+        { ...originalDoc, deadlineTz: undefined },
+        { operation: 'update', originalDoc, payload: { findByID: findByID() } },
+      )
+      expect(data.deadlineTz).toBeNull()
+    })
+
+    it('or of a job without a fixed deadline', async () => {
+      const data = await run(
+        { title: 'X', institution: 7, deadlineKind: 'rolling', deadlineTz: undefined },
+        { payload: { findByID: findByID() } },
+      )
+      expect(data.deadlineTz).toBeNull()
+    })
+  })
+
   it('clears the deadline day and time zone for rolling and until-filled positions', async () => {
     const data = await run({
       title: 'X',

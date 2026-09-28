@@ -5,6 +5,9 @@ import type {
 } from 'payload'
 import { APIError, ValidationError } from 'payload'
 
+import { institutionTimeZone } from '@/lib/jobs/time-zone-at'
+import { TIME_ZONES, timeZoneLabel } from '@/lib/jobs/time-zones'
+import { idOf } from '@/lib/relationship'
 import { fetchRorInstitution } from '@/lib/ror/api'
 import { ROR_STATUSES, ROR_TYPES } from '@/lib/ror/record'
 import { isRorId, parseRorId } from '@/lib/ror/ror-id'
@@ -18,7 +21,9 @@ type InstitutionData = Partial<Institution>
 export const ROR_IMPORT_CONTEXT = 'rorImport'
 
 // Fills in what editors should not type by hand: the ROR ID in its short form, the data of a new
-// ROR institution from the ROR API, the URL slug and, for other institutions, a short ID.
+// ROR institution from the ROR API, the URL slug and, for other institutions, a short ID; and the
+// time zone from the coordinates and the country, unless an editor chose one (institutionTimeZone). The ROR import
+// saves through this hook too, so imported institutions get their zone the same way.
 const prepare: CollectionBeforeValidateHook<Institution> = async ({
   data,
   originalDoc,
@@ -70,6 +75,20 @@ const prepare: CollectionBeforeValidateHook<Institution> = async ({
   if (!rorId && !saved.shortId && !data.shortId) data.shortId = newShortId()
   if (rorId && !saved.rorId) data.origin = 'ror'
   else if (!data.origin && !saved.origin) data.origin = 'manual'
+
+  const country = (value: unknown) => {
+    const code = idOf(value)
+    return code === undefined ? null : String(code)
+  }
+  data.timeZone = institutionTimeZone(
+    {
+      lat: 'lat' in data ? data.lat : saved.lat,
+      lng: 'lng' in data ? data.lng : saved.lng,
+      country: country('country' in data ? data.country : saved.country),
+      timeZone: 'timeZone' in data ? data.timeZone : saved.timeZone,
+    },
+    operation === 'update' ? { ...saved, country: country(saved.country) } : undefined,
+  ) as Institution['timeZone']
   return data
 }
 
@@ -255,6 +274,17 @@ export const Institutions: CollectionConfig = {
           validate: inRange(180, 'longitude'),
         },
       ],
+    },
+    {
+      // D40: new jobs here take this zone for their deadline (src/collections/Jobs.ts).
+      name: 'timeZone',
+      label: 'Time zone',
+      type: 'select',
+      options: TIME_ZONES.map((zone) => ({ value: zone, label: timeZoneLabel(zone) })),
+      admin: {
+        description:
+          'Filled in from the coordinates, and left empty when the zone found there does not fit the country: then choose it. Correct it if it is wrong: your choice stays until the coordinates or the country change. New jobs here take it as the time zone of their deadline.',
+      },
     },
     {
       name: 'website',
