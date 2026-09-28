@@ -19,6 +19,10 @@ import { useEffect } from 'react'
 // - when the window crosses the desktop breakpoint, menus that are no longer shown close, and
 //   focus inside them moves to what is shown instead of getting lost;
 // - <html data-js> tells CSS that JavaScript runs, for controls that need it.
+// It also opens the search dialog (PLAN §2.3, §7.5; SearchDialog.tsx) from Ctrl+K (⌘K on Apple
+// devices, <html data-apple>) and from the header's Search link, which leads to the search page
+// without JavaScript. Only the opening is here: the rest of the dialog's code loads on first use
+// (search-dialog.ts), so every page carries a few hundred bytes for search (PLAN §17.3).
 
 const SELECTOR = 'details[data-disclosure]'
 const MODAL = 'details[data-modal]'
@@ -28,6 +32,14 @@ function openMenus() {
 }
 
 const summaryOf = (menu: Element) => menu.querySelector<HTMLElement>(':scope > summary')
+
+function openSearch(from: Element | null) {
+  const dialog = document.getElementById('search-dialog')
+  if (!(dialog instanceof HTMLDialogElement) || dialog.open) return
+  // Focuses the search field, its first control; Esc closes it and the browser returns focus.
+  dialog.showModal()
+  void import('./search-dialog').then((module) => module.enhance(dialog, from))
+}
 
 function close(menu: HTMLDetailsElement, returnFocus: boolean) {
   menu.open = false
@@ -79,12 +91,25 @@ function setModal(menu: HTMLDetailsElement, on: boolean) {
     if (on) panel?.setAttribute('aria-modal', 'true')
     else panel?.removeAttribute('aria-modal')
   }
-  if (on) menu.querySelector<HTMLElement>(':scope > :not(summary) :is(a, summary, button)')?.focus()
+  // Its first item that is shown (the menu's search link shows only on the narrowest screens).
+  if (on) {
+    const items = [
+      ...menu.querySelectorAll<HTMLElement>(':scope > :not(summary) :is(a, summary, button)'),
+    ]
+    items.find((item) => item.getClientRects().length)?.focus()
+  }
 }
 
 export function DisclosureEnhancer({ desktopQuery }: { desktopQuery: string }) {
   useEffect(() => {
     document.documentElement.dataset.js = ''
+    // ⌘ on Apple devices, where Ctrl+K edits text; Ctrl elsewhere.
+    const apple = /Mac|iPhone|iPad|iPod/.test(navigator.platform)
+    if (apple) document.documentElement.dataset.apple = ''
+    for (const link of document.querySelectorAll('[data-search-open]')) {
+      link.setAttribute('aria-haspopup', 'dialog')
+      link.setAttribute('aria-keyshortcuts', apple ? 'Meta+K' : 'Control+K')
+    }
 
     const onToggle = (event: Event) => {
       const menu = event.target
@@ -110,7 +135,18 @@ export function DisclosureEnhancer({ desktopQuery }: { desktopQuery: string }) {
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
+      if (
+        (event.key === 'k' || event.key === 'K') &&
+        (apple ? event.metaKey : event.ctrlKey) &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
+        event.preventDefault()
+        openSearch(document.activeElement)
+        return
+      }
+      // An open dialog closes itself on Esc.
+      if (event.key !== 'Escape' || document.querySelector('dialog[open]')) return
       const menus = openMenus()
       const active = document.activeElement
       const innermost =
@@ -126,6 +162,10 @@ export function DisclosureEnhancer({ desktopQuery }: { desktopQuery: string }) {
     const onOutside = (event: Event) => {
       const target = event.target
       if (!(target instanceof Node)) return
+      // The search dialog opens over the page: menus under it stay open, so that the browser can
+      // return focus to the item that opened it when it closes (a press on its backdrop targets
+      // the dialog too).
+      if (target instanceof Element && target.closest('dialog[open]')) return
       for (const menu of openMenus()) {
         if (
           menu.contains(target) ||
@@ -139,9 +179,19 @@ export function DisclosureEnhancer({ desktopQuery }: { desktopQuery: string }) {
     }
 
     const onClick = (event: MouseEvent) => {
-      const button =
-        event.target instanceof Element && event.target.closest('[data-disclosure-close]')
-      const menu = button && button.closest<HTMLDetailsElement>(SELECTOR)
+      const target = event.target instanceof Element ? event.target : null
+      const search = target?.closest('[data-search-open]')
+      // A plain click; with a modifier the link opens the search page in a new tab or window.
+      if (
+        search &&
+        !event.button &&
+        !(event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)
+      ) {
+        event.preventDefault()
+        openSearch(search)
+        return
+      }
+      const menu = target?.closest('[data-disclosure-close]')?.closest<HTMLDetailsElement>(SELECTOR)
       if (menu) close(menu, true)
     }
 

@@ -3,7 +3,8 @@ import { type Where, getPayload } from 'payload'
 import { cache } from 'react'
 
 import type { Locale } from '@/i18n/routing'
-import { type JobFilters, TERM_PARAMS } from '@/lib/filters/jobs'
+import { institutionPath, subfieldPath } from '@/lib/detail-routes'
+import { type JobFilters, TERM_PARAMS, jobsHref } from '@/lib/filters/jobs'
 import type { Region } from '@/lib/geography'
 import { intlLocale } from '@/lib/jobs/format'
 import {
@@ -20,6 +21,7 @@ import {
 } from '@/lib/jobs/query'
 import { type JobCard, type JobDoc, toJobCard, toJobDetail } from '@/lib/jobs/view'
 import type { FeedJob } from '@/lib/seo/feed'
+import { matchingJobIds, prepareSearch, searchRows } from '@/lib/search/database'
 import type { MethodGroup } from '@/lib/taxonomy'
 
 // Reads for the pages that show database records. The proxy has already checked that the record
@@ -332,55 +334,58 @@ export async function jobsList(filters: JobFilters, locale: Locale): Promise<Job
   const open = openJobsWhere(now)
   const rorIds = filters.institution.filter((id) => id.length === 9)
   const shortIds = filters.institution.filter((id) => id.length !== 9)
-  const [terms, openCountries, openCount, institutions, chosenCountries] = await Promise.all([
-    payload.find({
-      collection: 'terms',
-      where: {
-        vocabulary: { in: Object.values(TERM_PARAMS) },
-        // Unset counts as active, as in src/lib/detail-lookup.ts.
-        isActive: { not_equals: false },
-      },
-      select: { vocabulary: true, slug: true, label: true, parent: true, group: true },
-      sort: ['sortOrder', 'id'],
-      locale,
-      pagination: false,
-      depth: 0,
-    }),
-    payload.findDistinct({
-      collection: 'jobs',
-      field: 'country',
-      where: open,
-      locale,
-      depth: 1,
-      populate: { countries: { name: true, region: true } },
-    }),
-    payload.count({ collection: 'jobs', where: open }),
-    filters.institution.length > 0
-      ? payload.find({
-          collection: 'institutions',
-          where: {
-            or: [
-              ...(rorIds.length > 0 ? [{ rorId: { in: rorIds } }] : []),
-              ...(shortIds.length > 0 ? [{ shortId: { in: shortIds } }] : []),
-            ],
-          },
-          select: { name: true, rorId: true, shortId: true },
-          locale,
-          pagination: false,
-          depth: 0,
-        })
-      : null,
-    filters.country.length > 0
-      ? payload.find({
-          collection: 'countries',
-          where: { id: { in: filters.country } },
-          select: { name: true, region: true },
-          locale,
-          pagination: false,
-          depth: 0,
-        })
-      : null,
-  ])
+  const [terms, openCountries, openCount, institutions, chosenCountries, search] =
+    await Promise.all([
+      payload.find({
+        collection: 'terms',
+        where: {
+          vocabulary: { in: Object.values(TERM_PARAMS) },
+          // Unset counts as active, as in src/lib/detail-lookup.ts.
+          isActive: { not_equals: false },
+        },
+        select: { vocabulary: true, slug: true, label: true, parent: true, group: true },
+        sort: ['sortOrder', 'id'],
+        locale,
+        pagination: false,
+        depth: 0,
+      }),
+      payload.findDistinct({
+        collection: 'jobs',
+        field: 'country',
+        where: open,
+        locale,
+        depth: 1,
+        populate: { countries: { name: true, region: true } },
+      }),
+      payload.count({ collection: 'jobs', where: open }),
+      filters.institution.length > 0
+        ? payload.find({
+            collection: 'institutions',
+            where: {
+              or: [
+                ...(rorIds.length > 0 ? [{ rorId: { in: rorIds } }] : []),
+                ...(shortIds.length > 0 ? [{ shortId: { in: shortIds } }] : []),
+              ],
+            },
+            select: { name: true, rorId: true, shortId: true },
+            locale,
+            pagination: false,
+            depth: 0,
+          })
+        : null,
+      filters.country.length > 0
+        ? payload.find({
+            collection: 'countries',
+            where: { id: { in: filters.country } },
+            select: { name: true, region: true },
+            locale,
+            pagination: false,
+            depth: 0,
+          })
+        : null,
+      // Free text: the open positions the site search finds (src/lib/search), by ID.
+      filters.q ? matchingJobIds(filters.q, now) : null,
+    ])
 
   const filterTerms: FilterTerm[] = terms.docs.map((term) => ({
     id: term.id,
@@ -416,6 +421,7 @@ export async function jobsList(filters: JobFilters, locale: Locale): Promise<Job
       terms: termIds(filters, filterTerms),
       countries: locationCodes(filters, withOpenJobs),
       institutions: institutions ? institutions.docs.map((doc) => doc.id) : null,
+      search,
     },
     now,
   )
@@ -433,8 +439,8 @@ export async function jobsList(filters: JobFilters, locale: Locale): Promise<Job
       })
     : null
   // A page past the end has no rows, and then Payload's Postgres adapter reports 0 matches when
-  // the query joins another table (the terms a job has several of, or `q` on the institution's
-  // name), so such a page counts them separately.
+  // the query joins another table (the terms a job has several of), so such a page counts them
+  // separately.
   const matches =
     where && found && found.docs.length === 0 && filters.page > 1
       ? (await payload.count({ collection: 'jobs', where, locale })).totalDocs
@@ -456,5 +462,92 @@ export async function jobsList(filters: JobFilters, locale: Locale): Promise<Job
         id && filters.institution.includes(id) ? [{ id, name: doc.name }] : [],
       ),
     ),
+  }
+}
+
+/** Job rows for these IDs, in the same order (the search's ranking). */
+async function jobCardsByIds(ids: number[], locale: Locale): Promise<JobCard[]> {
+  if (ids.length === 0) return []
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'jobs',
+    where: { id: { in: ids } },
+    select: JOB_CARD_SELECT,
+    populate: JOB_POPULATE,
+    locale,
+    limit: ids.length,
+    pagination: false,
+    depth: 1,
+  })
+  const cards = new Map(
+    docs.flatMap((doc) => {
+      const card = toJobCard(doc as JobDoc)
+      return card ? [[card.id, card] as const] : []
+    }),
+  )
+  return ids.flatMap((id) => cards.get(id) ?? [])
+}
+
+export type InstitutionHit = {
+  id: number
+  name: string
+  href: string
+  city: string | null
+  country: string | null
+  openJobs: number
+  /** The jobs list filtered to this institution. */
+  jobsHref: string
+}
+
+export type SubfieldHit = { slug: string; label: string; description: string | null; href: string }
+
+/** The search page's groups (PLAN §3.2): each with its best results and the number of matches. */
+export type SiteSearch = {
+  /** The query as searched (trimmed, at most 100 characters). */
+  q: string
+  positions: { jobs: JobCard[]; total: number }
+  institutions: { items: InstitutionHit[]; total: number }
+  subfields: { items: SubfieldHit[]; total: number }
+}
+
+/**
+ * The site search (PLAN §3.2, "basic" in Phase 1a): open positions, institutions and subfields;
+ * the other windows join as they are built (1d). Null when the query has no letter or digit.
+ */
+export async function siteSearch(q: string, locale: Locale): Promise<SiteSearch | null> {
+  const search = await prepareSearch(q)
+  if (!search) return null
+  const rows = await searchRows(search, requestTime(), locale)
+  return {
+    q: search.text,
+    positions: { jobs: await jobCardsByIds(rows.jobs.ids, locale), total: rows.jobs.total },
+    institutions: {
+      items: rows.institutions.rows.flatMap((row) => {
+        const urlId = row.ror_id ?? row.short_id
+        return urlId
+          ? [
+              {
+                id: row.id,
+                name: row.name,
+                href: institutionPath(row.slug, urlId),
+                city: row.city,
+                country: row.country,
+                openJobs: row.open_jobs,
+                jobsHref: jobsHref({ institution: [urlId] }),
+              },
+            ]
+          : []
+      }),
+      total: rows.institutions.total,
+    },
+    subfields: {
+      items: rows.subfields.rows.map((row) => ({
+        slug: row.slug,
+        label: row.label || row.slug,
+        description: row.description,
+        href: subfieldPath(row.slug),
+      })),
+      total: rows.subfields.total,
+    },
   }
 }

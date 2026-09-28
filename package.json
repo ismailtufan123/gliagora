@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "typecheck": "cross-env NEXT_TELEMETRY_DISABLED=1 next typegen && tsc --noEmit",
     "test": "vitest run",
+    "test:db": "vitest run --config vitest.db.config.mts",
     "payload": "payload",
     "migrate": "payload migrate",
     "migrate:create": "payload migrate:create",

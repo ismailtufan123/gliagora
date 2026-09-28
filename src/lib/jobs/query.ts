@@ -105,13 +105,19 @@ export function locationCodes(
   return [...codes].sort()
 }
 
-/** What the database found for the filters that name records. */
+/** What the database found for the filters that name records, and for the free text. */
 export type ResolvedJobFilters = {
   terms: Partial<Record<TermParam, number[]>>
   /** Null without location filters. */
   countries: string[] | null
   /** Institution IDs; null without an institution filter. */
   institutions: number[] | null
+  /**
+   * The open jobs that match the free text (`q`), by the site search (src/lib/search): every word
+   * in the title, the summary or the institution's name, folded for case, accents and Turkish
+   * İ/ı, the last word also as the start of a longer one. Null without free text.
+   */
+  search: number[] | null
 }
 
 const startOfDay = (day: string) => `${day}T00:00:00.000Z`
@@ -155,29 +161,10 @@ export function deadlineWhere(value: string, now: Date): Where | null {
   }
 }
 
-/** Words of a search, with LIKE's own characters (`%`, `_`, `\`) taken literally. */
-const MAX_WORDS = 8
-const likeLiteral = (word: string) => word.replace(/[\\%_]/g, '\\$&')
-
-/**
- * Free text: every word appears, in any case, in the title, the summary or the institution's
- * name. A simple match until M4.9 brings full-text search.
- */
-export function searchWhere(q: string): Where | null {
-  const words = [...new Set(q.split(' ').filter(Boolean))].slice(0, MAX_WORDS)
-  if (words.length === 0) return null
-  return {
-    and: words.map((word) => ({
-      or: ['title', 'summary', 'institution.name'].map((field) => ({
-        [field]: { contains: likeLiteral(word) },
-      })),
-    })),
-  }
-}
-
 /**
  * The query for the open jobs that match the filters, or null when nothing can match (a filter
- * whose values are all unknown), so the list is empty without asking the database.
+ * whose values are all unknown, or free text that matches no position), so the list is empty
+ * without asking the database again.
  */
 export function jobsWhere(
   filters: JobFilters,
@@ -202,8 +189,12 @@ export function jobsWhere(
     if (!deadline) return null
     conditions.push(deadline)
   }
-  const search = searchWhere(filters.q)
-  if (search) conditions.push(search)
+  // The search's matches as a list of IDs, so the other filters, the order, the pages and the
+  // counts stay Payload's own.
+  if (resolved.search !== null) {
+    if (resolved.search.length === 0) return null
+    conditions.push({ id: { in: resolved.search } })
+  }
   return { and: conditions }
 }
 

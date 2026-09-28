@@ -1,4 +1,4 @@
-import { ChevronDown, Menu } from 'lucide-react'
+import { ChevronDown, Menu, Search } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import type { Locale } from '@/i18n/routing'
@@ -23,7 +23,8 @@ function withWindowLink({ label, href, menu = [] }: MenuWindowLinks) {
 }
 
 // PLAN §2.3, §7.5: below the `xl` breakpoint, a full-height panel with the six windows
-// (expandable), the map, Learn, About, the digest button and, on small screens, the languages.
+// (expandable), the map, Learn, About, the digest button and, on small screens, the languages
+// (and, below 360px, search).
 // DisclosureEnhancer makes the page behind it inert while it is open.
 export async function MobileMenu({
   locale,
@@ -42,6 +43,16 @@ export async function MobileMenu({
         <span className="sr-only sm:not-sr-only">{t('header.menu')}</span>
       </summary>
       <div className="mobile-panel">
+        {/* Below 360px the header has no room for its search link (SiteHeader), so it is here. */}
+        <a
+          href={paths.search()}
+          hrefLang={locale === 'en' ? undefined : 'en'}
+          className="mobile-row justify-start gap-2 border-b border-line min-[22.5rem]:hidden"
+          data-search-open
+        >
+          <Search aria-hidden="true" size={20} />
+          {t('search.trigger')}
+        </a>
         <nav aria-label={t('header.navLabel')}>
           <ul role="list" className="grid">
             {windows.map((window) => (

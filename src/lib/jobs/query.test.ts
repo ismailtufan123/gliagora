@@ -14,7 +14,6 @@ import {
   jobsWhere,
   locationCodes,
   openJobsWhere,
-  searchWhere,
   termIds,
 } from './query'
 
@@ -157,31 +156,6 @@ describe('deadlineWhere', () => {
   })
 })
 
-describe('searchWhere', () => {
-  it('needs every word in the title, the summary or the institution name', () => {
-    expect(searchWhere('calcium imaging')).toEqual({
-      and: ['calcium', 'imaging'].map((word) => ({
-        or: [
-          { title: { contains: word } },
-          { summary: { contains: word } },
-          { 'institution.name': { contains: word } },
-        ],
-      })),
-    })
-  })
-
-  it('takes LIKE wildcards literally, and ignores repeated words', () => {
-    const where = searchWhere('100% neuro_ neuro_')
-    expect(and(where)).toHaveLength(2)
-    expect(JSON.stringify(where)).toContain('"100\\\\%"')
-    expect(JSON.stringify(where)).toContain('"neuro\\\\_"')
-  })
-
-  it('is null without text', () => {
-    expect(searchWhere('')).toBeNull()
-  })
-})
-
 describe('jobsWhere', () => {
   const resolve = (query: string) => {
     const filters = parse(query)
@@ -191,6 +165,7 @@ describe('jobsWhere', () => {
         terms: termIds(filters, TERMS),
         countries: locationCodes(filters, COUNTRIES),
         institutions: filters.institution.length > 0 ? [7] : null,
+        search: filters.q ? [3, 5] : null,
       },
       NOW,
     )
@@ -213,19 +188,30 @@ describe('jobsWhere', () => {
     })
   })
 
-  it('adds the deadline and the search', () => {
+  it("adds the deadline, and the search's matches as IDs", () => {
     const where = resolve('deadline=7d&q=glia&subfield=glia')
     expect(and(where)).toHaveLength(4)
     expect(and(where)[1]).toEqual({ subfields: { in: [10] } })
     expect(and(where)[2]).toEqual(deadlineWhere('7d', NOW))
-    expect(and(where)[3]).toEqual(searchWhere('glia'))
+    expect(and(where)[3]).toEqual({ id: { in: [3, 5] } })
+  })
+
+  it('matches nothing (null) when the search found no position', () => {
+    const filters = parse('q=nothing&type=phd')
+    const resolved = { terms: termIds(filters, TERMS), countries: null, institutions: null }
+    expect(jobsWhere(filters, { ...resolved, search: [] }, NOW)).toBeNull()
+    expect(jobsWhere(filters, { ...resolved, search: [4] }, NOW)).not.toBeNull()
   })
 
   it('matches nothing (null) when a filter names nothing that exists', () => {
     expect(resolve('type=astronaut')).toBeNull()
     expect(resolve('region=oceania')).toBeNull()
     expect(
-      jobsWhere(parse('institution=k3f9a'), { terms: {}, countries: null, institutions: [] }, NOW),
+      jobsWhere(
+        parse('institution=k3f9a'),
+        { terms: {}, countries: null, institutions: [], search: null },
+        NOW,
+      ),
     ).toBeNull()
   })
 
