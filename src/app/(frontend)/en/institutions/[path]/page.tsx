@@ -6,7 +6,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { JobList } from '@/components/jobs/JobList'
 import { NotFoundContent } from '@/components/NotFoundContent'
 import { institutionPath, matchDetailRoute } from '@/lib/detail-routes'
-import { jobsListPath } from '@/lib/jobs/view'
+import { jobsHref } from '@/lib/filters/jobs'
 import { institutionByUrlId, openJobsAtInstitution, requestTime } from '@/lib/records'
 import { rorUrl } from '@/lib/ror/ror-id'
 import { paths } from '@/lib/site'
@@ -105,7 +105,7 @@ export default async function Page({ params }: Props) {
             />
             {positions.total > POSITIONS && (
               <p>
-                <a href={jobsListPath({ institution: urlId(institution) })}>
+                <a href={jobsHref({ institution: [urlId(institution)] })}>
                   {t('allPositions', { count: positions.total, name: institution.name })}
                 </a>
               </p>

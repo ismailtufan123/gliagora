@@ -14,6 +14,12 @@
     "skipLink": "Ana içeriğe geç",
     "breadcrumb": "İçerik yolu"
   },
+  "pagination": {
+    "label": "Sayfalar",
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "page": "Sayfa {page}"
+  },
   "footer": {
     "contact": "İletişim ve yasal bilgiler",
     "sitemap": "Site haritası",
@@ -168,7 +174,81 @@
     "moreTopics": "+{count}",
     "moreTopicsLabel": "{count, plural, one {# konu daha} other {# konu daha}}",
     "viewOriginal": "Asıl ilanı görüntüle",
-    "opensEmployerSite": "(işverenin web sitesini açar)"
+    "opensEmployerSite": "(işverenin web sitesini açar)",
+    "list": {
+      "title": "Sinirbilim pozisyonları",
+      "titlePage": "Sinirbilim pozisyonları, sayfa {page}",
+      "description": "Dünyanın dört bir yanından açık sinirbilim pozisyonları: yüksek lisans ve doktoradan öğretim üyeliğine ve özel sektöre kadar, her biri işverenin kendi ilanına bağlantıyla.",
+      "open": "{count, plural, one {# açık pozisyon} other {# açık pozisyon}}",
+      "matches": "{count, plural, =0 {Eşleşen pozisyon yok} one {# pozisyon eşleşiyor} other {# pozisyon eşleşiyor}}",
+      "emptyText": "Bir filtreyi kaldırmayı ya da hepsini temizlemeyi deneyin. Burada olmayan bir pozisyon biliyorsanız bize bildirin.",
+      "removeLast": "Son filtreyi kaldır ({label})",
+      "removeUnknown": "Artık var olmayan filtreleri kaldır",
+      "clearAll": "Tüm filtreleri temizle",
+      "suggest": "İlan önerin",
+      "pastEnd": "Bu listede {pages, plural, one {yalnızca # sayfa} other {# sayfa}} var.",
+      "firstPage": "İlk sayfaya git"
+    },
+    "filters": {
+      "label": "Pozisyonları filtrele",
+      "title": "Filtreler",
+      "open": "{count, plural, =0 {Filtreler} other {Filtreler (#)}}",
+      "close": "Filtreleri kapat",
+      "apply": "Uygula",
+      "button": "{label} ({count})",
+      "show": "{count, plural, one {# pozisyonu göster} other {# pozisyonu göster}}",
+      "clearAll": "Tümünü temizle",
+      "search": "Pozisyonlarda ara",
+      "searchButton": "Ara",
+      "searchInList": "Bu listede ara",
+      "type": "Pozisyon türü",
+      "subfield": "Alt alan",
+      "method": "Yöntem",
+      "model": "Model sistem",
+      "country": "Ülke",
+      "region": "Bölge",
+      "deadline": "Son başvuru",
+      "more": "Diğer",
+      "stage": "Kariyer aşaması",
+      "methodGroups": {
+        "recording-imaging": "Kayıt ve görüntüleme",
+        "manipulation": "Müdahale",
+        "molecular": "Moleküler",
+        "behaviour-clinical": "Davranış ve klinik",
+        "computational": "Hesaplamalı",
+        "engineering": "Mühendislik"
+      },
+      "otherMethods": "Diğer yöntemler",
+      "regions": {
+        "africa": "Afrika",
+        "northern-america": "Kuzey Amerika",
+        "latin-america-caribbean": "Latin Amerika ve Karayipler",
+        "asia": "Asya",
+        "europe": "Avrupa",
+        "oceania": "Okyanusya"
+      },
+      "deadlineAny": "Son başvuru tarihi fark etmez",
+      "within": "{days, plural, one {# gün içinde kapananlar} other {# gün içinde kapananlar}}",
+      "thisMonth": "Bu ay kapananlar",
+      "between": "Bu tarihler arasında kapananlar",
+      "from": "Başlangıç",
+      "to": "Bitiş",
+      "rangeHint": "Bu seçeneği işaretleyip iki tarihi de girin.",
+      "rangeError": "İki tarihi de girin; ilki ikincisinden sonra olmasın.",
+      "sort": "Sıralama",
+      "sortDeadline": "Son başvuru tarihi",
+      "sortNewest": "Önce en yeniler",
+      "chips": "Etkin filtreler",
+      "removeFilter": "Filtreyi kaldır: {label}",
+      "chipRange": "{from} – {to} arasında kapananlar",
+      "chipSearch": "Arama: {q}"
+    },
+    "error": {
+      "title": "Pozisyonlar yüklenemedi",
+      "text": "Bizim tarafımızda bir sorun oluştu. Lütfen biraz sonra yeniden deneyin.",
+      "retry": "Yeniden dene",
+      "reference": "Hata kodu: {digest}"
+    }
   },
   "job": {
     "description": "{institution} bünyesinde {title}: temel bilgiler, özetimiz ve işverenin kendi ilanına bağlantı.",

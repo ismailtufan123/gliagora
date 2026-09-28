@@ -5,6 +5,9 @@ const withoutSlash = (path: string) => path.replace(/\/+$/, '')
 
 export type LinkState = 'page' | 'section' | undefined
 
+/** Sent on `window` when a page changes its own address without loading (the jobs list filters). */
+export const LOCATION_CHANGE = 'gliagora:locationchange'
+
 /**
  * A link is the current page when its path and query string both match the address, e.g. "PhD"
  * (/en/jobs/?type=phd) on /en/jobs/?type=phd. A link without a query string to the same path

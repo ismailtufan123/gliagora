@@ -6,7 +6,7 @@ import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { JobList } from '@/components/jobs/JobList'
 import { NotFoundContent } from '@/components/NotFoundContent'
 import { SUBFIELDS_PATH, subfieldPath } from '@/lib/detail-routes'
-import { jobsListPath } from '@/lib/jobs/view'
+import { jobsHref } from '@/lib/filters/jobs'
 import { activeSubfields, openJobsInSubfield, requestTime, subfieldBySlug } from '@/lib/records'
 import { paths } from '@/lib/site'
 
@@ -71,7 +71,7 @@ export default async function Page({ params }: Props) {
             <JobList jobs={positions.jobs} now={requestTime()} locale="en" headingLevel={3} />
             {positions.total > POSITIONS && (
               <p>
-                <a href={jobsListPath({ subfield: slug })}>
+                <a href={jobsHref({ subfield: [slug] })}>
                   {t('subfields.allPositions', { count: positions.total, subfield: label })}
                 </a>
               </p>

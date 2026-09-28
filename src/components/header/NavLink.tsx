@@ -4,14 +4,22 @@ import { usePathname } from 'next/navigation'
 import type { ComponentProps } from 'react'
 import { useSyncExternalStore } from 'react'
 
-import { linkState } from '@/lib/link-state'
+import { LOCATION_CHANGE, linkState } from '@/lib/link-state'
 
 // The query string is read after hydration: pages are static, so the server always renders
-// them without one.
-const noSubscription = () => () => {}
+// them without one. It changes without a page load when the jobs list applies a filter
+// (JobsListEnhancer sends LOCATION_CHANGE) and on Back and Forward.
+const subscribe = (onChange: () => void) => {
+  window.addEventListener(LOCATION_CHANGE, onChange)
+  window.addEventListener('popstate', onChange)
+  return () => {
+    window.removeEventListener(LOCATION_CHANGE, onChange)
+    window.removeEventListener('popstate', onChange)
+  }
+}
 const useSearch = () =>
   useSyncExternalStore(
-    noSubscription,
+    subscribe,
     () => window.location.search,
     () => '',
   )
