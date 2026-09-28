@@ -146,7 +146,10 @@ test.describe('suggest a listing', () => {
       await expect(summary(page)).toContainText('https://www.example.org/jobs/123')
       const overflow = () =>
         page.evaluate(
-          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          () =>
+            // Against the layout's width: clientWidth includes the space scrollbar-gutter keeps.
+            document.documentElement.scrollWidth -
+            Math.round(document.documentElement.getBoundingClientRect().width),
         )
       expect(await overflow()).toBeLessThanOrEqual(0)
       // page.addStyleTag waits for a script to run, which never happens without JavaScript.

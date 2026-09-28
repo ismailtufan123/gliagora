@@ -219,7 +219,10 @@ for (const width of [320, 1280]) {
       await page.goto(path)
       await page.addStyleTag({ content: TEXT_SPACING })
       const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        () =>
+          // Against the layout's width: clientWidth includes the space scrollbar-gutter keeps.
+          document.documentElement.scrollWidth -
+          Math.round(document.documentElement.getBoundingClientRect().width),
       )
       expect(overflow).toBeLessThanOrEqual(0)
     })

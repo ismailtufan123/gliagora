@@ -16,7 +16,9 @@ export default async function ComingSoonPage() {
     <main id="main" className="page-frame grid flex-1 content-center gap-8 py-16">
       <OrganizationJsonLd />
       <WebSiteJsonLd />
-      <h1 className="max-w-[14ch] text-hero leading-[1.02]">{t('brand.tagline')}</h1>
+      {/* 9.3em is 14ch of Commissioner Bold: ch is the width of "0" in the font in use, so a width
+          in ch re-wrapped the heading when the web font replaced its fallback. */}
+      <h1 className="max-w-[9.3em] text-hero leading-[1.02]">{t('brand.tagline')}</h1>
       <div className="grid max-w-measure gap-4 text-card">
         <p>{t('home.comingSoon')}</p>
         <p>
