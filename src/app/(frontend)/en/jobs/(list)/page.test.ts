@@ -9,7 +9,11 @@ import Page from './page'
 
 vi.mock('@/lib/records', () => ({
   jobsList: async () => {
-    throw new Error('connection refused')
+    // As Drizzle reports a failed query: the message quotes the parameters, what was searched for.
+    const timeout = Object.assign(new Error('canceling statement due to statement timeout'), {
+      code: '57014',
+    })
+    throw new Error('Failed query: select … params: someone’s name', { cause: timeout })
   },
   requestTime: () => new Date('2026-09-27T10:00:00Z'),
 }))
@@ -37,11 +41,9 @@ describe('the jobs list when the database fails', () => {
     expect(html).toContain('<h1>The positions could not be loaded</h1>')
     const reference = html.match(/Reference: ([0-9a-f]{8})</)?.[1]
     expect(reference).toBeDefined()
-    // The same reference is in the server's log, with the error.
-    expect(log).toHaveBeenCalledWith(
-      `Jobs list failed (reference ${reference}):`,
-      expect.objectContaining({ message: 'connection refused' }),
-    )
+    // The same reference is in the server's log, with the error's class and code only: never its
+    // message, which quotes what the visitor searched for.
+    expect(log).toHaveBeenCalledWith(`Jobs list failed (reference ${reference}):`, 'Error 57014')
     // A plain link to the same list, so trying again needs no JavaScript.
     expect(html).toContain('<a href="/en/jobs/?type=msc,phd" class="button button-primary">')
     expect(html).toContain('<meta name="robots" content="noindex"/>')

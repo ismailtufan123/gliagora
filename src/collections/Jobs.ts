@@ -9,6 +9,7 @@ import type {
 } from 'payload'
 import { APIError, validations } from 'payload'
 
+import { signedIn } from '@/lib/access'
 import { fixedFieldHooks } from '@/lib/fixed-fields'
 import {
   DEADLINE_KINDS,
@@ -584,10 +585,16 @@ export const Jobs: CollectionConfig = {
     pagination: { defaultLimit: 50 },
   },
   defaultSort: '-updatedAt',
+  // Signed-in editors. The pages show published jobs through the local API, with their own
+  // queries; drafts and jobs in review are never public.
   access: {
+    read: signedIn,
+    create: signedIn,
+    update: signedIn,
     // Signed-in editors, and only drafts that were never published (keepPublished covers code
     // that bypasses this). A function replaces Payload's default, so it checks the user itself.
     delete: ({ req }) => (req.user ? NEVER_PUBLISHED_DRAFT : false),
+    readVersions: signedIn,
   },
   // A copy would repeat the short ID, and a copied posting is the duplicate the checks look for.
   disableDuplicate: true,

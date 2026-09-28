@@ -10,6 +10,10 @@ describe('Users (admin accounts)', () => {
     })
   })
 
+  it('sends at most one password-reset email per account every 15 minutes', () => {
+    expect(Users.auth).toMatchObject({ forgotPassword: { minRequestInterval: 15 * 60 * 1000 } })
+  })
+
   it('uses SameSite=Strict session cookies', () => {
     expect(Users.auth).toMatchObject({ cookies: { sameSite: 'Strict' } })
   })

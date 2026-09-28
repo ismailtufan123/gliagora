@@ -6,6 +6,7 @@ import { JobList } from '@/components/jobs/JobList'
 import { ListError } from '@/components/jobs/list/ListError'
 import { SearchForm } from '@/components/search/SearchForm'
 import { SUBFIELDS_PATH } from '@/lib/detail-routes'
+import { errorSummary } from '@/lib/errors'
 import { jobsHref } from '@/lib/filters/jobs'
 import { type SiteSearch, requestTime, siteSearch } from '@/lib/records'
 import { normaliseQuery } from '@/lib/search/parse'
@@ -50,7 +51,8 @@ export default async function Page({ searchParams }: Props) {
       // Drawn on the server, so it shows without JavaScript; as on the jobs list, the page answers
       // 200 and is neither stored nor indexed.
       const reference = crypto.randomUUID().slice(0, 8)
-      console.error(`Search failed (reference ${reference}):`, error)
+      // Class and code only: a failed query's message quotes its parameters, the words searched for.
+      console.error(`Search failed (reference ${reference}):`, errorSummary(error))
       return (
         <ListError
           title={t('search.error.title')}

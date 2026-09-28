@@ -8,8 +8,8 @@ Everything the production server runs is described in this folder (PLAN §11.5),
 | --- | --- |
 | `setup-server.sh` | One-time hardening of a fresh Ubuntu 24.04 server |
 | `compose.prod.yml` | The stack: Caddy, the app, PostgreSQL 18 |
-| `Caddyfile` | HTTPS, security headers, `/admin` password, masked access logs |
-| `admin-auth.caddy.example` | Template for the second password in front of `/admin` |
+| `Caddyfile` | HTTPS, security headers, the second password (`/admin` and `/api`; until M2 the whole site), masked access logs |
+| `admin-auth.caddy.example` | Template for the second password in front of `/admin` and `/api` (and, until M2, the whole site) |
 | `postgres/init/10-app-database.sh` | Creates the app's own database user on first start |
 | `.env.example` | Template for the server's `.env` (domain, image, secrets) |
 | `update.sh` | Backup, then restart with the new image and wait until healthy |
@@ -24,7 +24,7 @@ On the server, everything lives in `/opt/gliagora`:
 | --- | --- |
 | `/opt/gliagora/.env` | Secrets and the deployed image `APP_IMAGE` (mode 600, never committed) |
 | `/opt/gliagora/.env.previous` | `.env` before the last deploy, for a quick rollback |
-| `/opt/gliagora/admin-auth.caddy` | `/admin` password hash (mode 600, never committed) |
+| `/opt/gliagora/admin-auth.caddy` | Second password hash (mode 600, never committed) |
 | Docker volume `gliagora_db-data` | The database |
 | Docker volume `gliagora_caddy-data` | TLS certificates |
 | Docker volume `gliagora_caddy-logs` | Access logs with masked IPs, kept 14 days |
@@ -93,7 +93,7 @@ cp .env.example .env && chmod 600 .env
 openssl rand -hex 32          # run four times; paste into POSTGRES_PASSWORD, APP_DB_PASSWORD, PAYLOAD_SECRET, ALTCHA_HMAC_KEY
 nano .env
 
-docker run --rm -it caddy:2.11.4-alpine caddy hash-password    # choose the /admin password
+docker run --rm -it caddy:2.11.4-alpine caddy hash-password    # choose the second password
 cp admin-auth.caddy.example admin-auth.caddy && chmod 600 admin-auth.caddy
 nano admin-auth.caddy         # paste the hash; keep or change the user name
 ```
@@ -163,9 +163,9 @@ With environments available:
 ## 5. First deploy (once)
 
 1. GitHub: **Actions → Deploy → Run workflow**, tag `main`. The log ends with "Deployed ghcr.io/…:main".
-2. Check https://gliagora.com/ (redirects to `/en/`) and https://gliagora.com/health/ (`{"status":"ok"}`).
+2. Check https://gliagora.com/health/ (`{"status":"ok"}`, without a password) and https://gliagora.com/ (asks for the second password, then redirects to `/en/`): the whole site stays private until M2 (D32, PLAN §18.2). Signed out, `curl -s -o /dev/null -w '%{http_code}\n' -X POST https://gliagora.com/api/users/login/` must answer `401` (from Caddy, before the app).
    If the server has IPv6, check that Caddy sees the real address of IPv6 visitors (the form rate limit and the access log depend on it; `compose.prod.yml` enables IPv6 on the stack's network for this). From a computer with IPv6, run `curl -6 --resolve gliagora.com:443:[<server IPv6>] https://gliagora.com/health/`; then, on the server in `/opt/gliagora`, `docker compose -f compose.prod.yml exec caddy tail -n 1 /var/log/caddy/access.log` must show your own IPv6 address, masked to its first 48 bits, as `remote_ip`, not a `172.x` address. Publish the `AAAA` records only once this passes; until then the site is reached over IPv4 only.
-3. Open https://gliagora.com/admin/, enter the `/admin` password, and create the first editor account.
+3. Open https://gliagora.com/admin/, enter the second password, and create the first editor account. The page must say "Create first user"; if it shows the sign-in form instead, an account exists that you did not make: stop, change the second password (`admin-auth.caddy`, then restart Caddy), delete the database with `docker compose -f compose.prod.yml down` and `docker volume rm gliagora_db-data` (it holds nothing else yet), and deploy again. Then sign in, open Suggestions (empty for now), then a country (e.g. Türkiye), type a letter into its name and delete it again, and save: the admin's own requests to `/api` must work without asking for the second password again (the browser reuses it).
 4. On the server, take the first backup, test it and switch on the timers:
 
    ```sh
@@ -201,7 +201,7 @@ sudo ./restore.sh config latest /root/restored  # get the backed-up .env and set
 3. Copy the repository back to `/var/backups/gliagora/restic` (from your computer's copy or the second VDS). In `/opt/gliagora/backup`, create `backup.env` from `backup.env.example` and put the password in `restic-password` (both mode 600).
 4. Recover `.env` and `admin-auth.caddy` with `sudo ./restore.sh config latest /root/restored` and copy them to `/opt/gliagora` (mode 600).
 5. Run the Deploy workflow with the last good `sha-` tag: it starts the stack with an empty database.
-6. Restore the data with `sudo ./restore.sh database latest`, then switch on the timers (step 5).
+6. Restore the data with `sudo ./restore.sh database latest` (it replaces the empty database, with any account made in between), then switch on the timers (step 5). Until then the database has no editor account; the second password keeps its first-account route closed.
 
 ## Useful commands
 
@@ -217,7 +217,7 @@ sudo fail2ban-client status sshd                    # blocked SSH addresses
 
 - Staging (`staging.gliagora.com`): the same images with their own database, basic auth and `noindex`, or none.
 - Automatic rollback when an update fails its health checks. Until then, `update.sh` stops and explains how to roll back by hand.
-- Rate limits in Caddy, which need a plugin and a custom Caddy build. Until then, the admin is protected by the second password and Payload's lockout (5 attempts, 15 minutes).
+- Rate limits in Caddy, which need a plugin and a custom Caddy build. Until then, the second password guards `/admin` and `/api` (so also Payload's sign-in, password-reset and first-account routes), Payload locks an account for 15 minutes after 5 failed sign-ins, and sends at most one reset email per account every 15 minutes.
 - Backup alerts (success and failure emails).
 - Protection of the deploy secrets: a GitHub environment limited to `main` with a required reviewer (needs a public repository or a paid GitHub plan; see step 4).
 

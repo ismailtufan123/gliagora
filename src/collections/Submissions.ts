@@ -7,6 +7,7 @@ import type {
 } from 'payload'
 import { validations } from 'payload'
 
+import { nobody, signedIn } from '@/lib/access'
 import { addressProblem } from '@/lib/jobs/url'
 import { keepOutOfLists } from '@/lib/private-fields'
 import { idOf } from '@/lib/relationship'
@@ -143,11 +144,13 @@ export const Submissions: CollectionConfig = {
   },
   defaultSort: '-createdAt',
   access: {
+    // Personal data: signed-in editors only.
+    read: signedIn,
     // Created only by the form (M4.5), through the local API; never through the API or the admin.
-    create: () => false,
-    // Signed-in editors, to answer data requests (PLAN §3.2, §18.1). A function replaces
-    // Payload's default, so it checks the user itself.
-    delete: ({ req }) => Boolean(req.user),
+    create: nobody,
+    update: signedIn,
+    // Signed-in editors, to answer data requests (PLAN §3.2, §18.1).
+    delete: signedIn,
   },
   disableDuplicate: true,
   hooks: {
@@ -228,8 +231,10 @@ export const Submissions: CollectionConfig = {
       defaultValue: 'new',
       index: true,
       options: SUBMISSION_STATUSES.map(({ value, label }) => ({ value, label })),
-      // Editors set it only for suggestions without a candidate; the others follow the queue.
-      access: { update: ({ doc }) => idOf(doc?.candidate) === undefined },
+      // Editors set it only for suggestions without a candidate; the others follow the queue. It
+      // checks the user itself: Payload's permission routes (/api/access/) run it for signed-out
+      // requests too, which would otherwise learn which suggestions have a candidate.
+      access: { update: ({ req, doc }) => Boolean(req.user) && idOf(doc?.candidate) === undefined },
       validate: (value: string | null | undefined, options: Options) =>
         value === 'queued' && idOf(options.data.candidate) === undefined
           ? 'Only a suggestion with a candidate is in the review queue. Set it to New or Decided.'

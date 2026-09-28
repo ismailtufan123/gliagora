@@ -5,6 +5,7 @@ import type {
 } from 'payload'
 import { APIError } from 'payload'
 
+import { nobody, signedIn } from '@/lib/access'
 import { OFFLINE_RECORD_MONTHS } from '@/lib/retention/rules'
 
 /** The kinds of listing kept here. Events join in M8. */
@@ -47,10 +48,10 @@ export const RetiredListings: CollectionConfig = {
   access: {
     // Signed-in editors read them; nobody adds, changes or deletes one (the task writes through
     // the local API, and the hooks above refuse the rest).
-    read: ({ req }) => Boolean(req.user),
-    create: () => false,
-    update: () => false,
-    delete: () => false,
+    read: signedIn,
+    create: nobody,
+    update: nobody,
+    delete: nobody,
   },
   disableDuplicate: true,
   hooks: {

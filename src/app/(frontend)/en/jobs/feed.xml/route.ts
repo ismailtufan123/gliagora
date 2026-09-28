@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 
+import { errorSummary } from '@/lib/errors'
 import { JOB_FILTERS } from '@/lib/filters/jobs'
 import { latestOpenJobs } from '@/lib/records'
 import { FEED_PATH, FEED_SIZE, type FeedTexts, feedItem, feedJobs, rssXml } from '@/lib/seo/feed'
@@ -19,7 +20,7 @@ export async function GET() {
   try {
     jobs = feedJobs(await latestOpenJobs(now, FEED_SIZE, 'en'), now)
   } catch (error) {
-    console.error('Jobs feed failed:', error instanceof Error ? error.message : error)
+    console.error('Jobs feed failed:', errorSummary(error))
     return unavailableResponse()
   }
   const t = await getTranslations({ locale: 'en' })

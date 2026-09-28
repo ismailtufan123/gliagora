@@ -8,7 +8,10 @@ type DataField = Field & {
   validate?: (value: unknown, options: Record<string, unknown>) => unknown
   access?: {
     create?: () => boolean
-    update?: (args: { doc?: Record<string, unknown> }) => boolean
+    update?: (args: {
+      req?: { user: Record<string, unknown> | null }
+      doc?: Record<string, unknown>
+    }) => boolean
   }
   admin?: { disableListColumn?: boolean; readOnly?: boolean }
 }
@@ -149,9 +152,12 @@ describe('Submissions: status', () => {
 
   it('is set by editors only while there is no candidate', () => {
     const update = field('status').access!.update!
-    expect(update({ doc: { candidate: null } })).toBe(true)
-    expect(update({ doc: { candidate: 4 } })).toBe(false)
-    expect(update({ doc: { candidate: { id: 4 } } })).toBe(false)
+    const req = { user: { id: 1 } }
+    expect(update({ req, doc: { candidate: null } })).toBe(true)
+    expect(update({ req, doc: { candidate: 4 } })).toBe(false)
+    expect(update({ req, doc: { candidate: { id: 4 } } })).toBe(false)
+    // Signed out, the rule tells nothing (Payload's permission routes run it for anyone).
+    expect(update({ req: { user: null }, doc: { candidate: null } })).toBe(false)
   })
 
   it('without a candidate, is new until an editor decides it', async () => {

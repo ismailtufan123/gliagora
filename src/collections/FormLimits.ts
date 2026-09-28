@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { nobody } from '@/lib/access'
+
 // Short-lived rows behind the limits on public forms (src/lib/forms/rate-limit.ts): the HMAC of a
 // client's IP address for each suggestion or report it sent, and a hash of each spam-check answer
 // used.
@@ -12,12 +14,12 @@ export const FormLimits: CollectionConfig = {
   admin: { hidden: true },
   // Every function refuses, whoever asks: the rows are the form's own records.
   access: {
-    read: () => false,
-    create: () => false,
-    update: () => false,
-    delete: () => false,
-    readVersions: () => false,
-    unlock: () => false,
+    read: nobody,
+    create: nobody,
+    update: nobody,
+    delete: nobody,
+    readVersions: nobody,
+    unlock: nobody,
   },
   graphQL: false,
   disableDuplicate: true,

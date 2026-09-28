@@ -9,8 +9,8 @@ import { type DedupeFacts, likelyDuplicate, normaliseTitle } from '@/lib/jobs/si
 import { FIXED_JOBS, type FixedJob } from './fake-jobs-fixed'
 
 /** The address of a fake posting, on the reserved example.org domain. */
-export const postingUrl = (rorId: string, id: string) =>
-  `https://careers.example.org/${rorId}/positions/${id}`
+export const postingUrl = (institution: string, id: string) =>
+  `https://careers.example.org/${institution}/positions/${id}`
 
 /** Marks every fake job (in `internalNotes`), so the next run can remove them first. */
 export const FAKE_NOTE = 'Fake data (pnpm fake:jobs)'
@@ -44,13 +44,17 @@ export const FAKE_INSTITUTIONS = [
   { rorId: '03m6ee736', timeZone: 'America/New_York' },
 ] as const
 
-/** The zone a fake job's deadline ends in once stored: its own, or else its institution's. */
+/**
+ * The zone a fake job's deadline ends in once stored: its own, or else its institution's. (Only
+ * generated jobs take their institution's zone, and they are all at FAKE_INSTITUTIONS; the fixed
+ * jobs, the one at the institution added by hand included, give their own.)
+ */
 export function storedZone(
-  job: Pick<FakeJob, 'deadlineKind' | 'deadlineTz' | 'institutionRorId'>,
+  job: Pick<FakeJob, 'deadlineKind' | 'deadlineTz' | 'institution'>,
 ): string | null {
   if (job.deadlineKind !== 'fixed') return null
   if (job.deadlineTz !== undefined) return job.deadlineTz
-  return FAKE_INSTITUTIONS.find(({ rorId }) => rorId === job.institutionRorId)?.timeZone ?? null
+  return FAKE_INSTITUTIONS.find(({ rorId }) => rorId === job.institution)?.timeZone ?? null
 }
 
 /** A site away from the institution, for the first random job at these institutions. */
@@ -167,11 +171,14 @@ export function seededRandom(seed: number): () => number {
   }
 }
 
-/** A fake job, with terms named by slug and institutions by ROR ID. */
+/**
+ * A fake job, with terms named by slug and its institution by ROR ID (or, for the institution added
+ * by hand, MANUAL_INSTITUTION in fake-jobs-fixed.ts, by short ID).
+ */
 export type FakeJob = {
   shortId: string
   title: string
-  institutionRorId: string
+  institution: string
   locationOverride?: { city: string; country?: string }
   status: 'draft' | 'in_review' | 'published' | 'expired' | 'withdrawn'
   deadlineKind: 'fixed' | 'rolling' | 'until-filled'
@@ -267,7 +274,7 @@ function lifecycle(
 
 const facts = (job: FakeJob): DedupeFacts => ({
   canonicalUrl: job.originalUrl,
-  institution: job.institutionRorId,
+  institution: job.institution,
   deadlineKind: job.deadlineKind,
   deadlineDay: calendarDay(job.deadlineDate),
   fingerprint: normaliseTitle(job.title),
@@ -287,10 +294,12 @@ export function fakeJobs(now: Date, seed = SEED): FakeJob[] {
     const topic = fixed.title.replace(/^.* (in|on|for) /, '')
     const methods = [...(fixed.methods ?? [])]
     const modelSystems = [...(fixed.modelSystems ?? [])]
+    const institution =
+      'institutionRorId' in fixed ? fixed.institutionRorId : fixed.institutionShortId
     jobs.push({
       shortId: fixed.shortId,
       title: fixed.title,
-      institutionRorId: fixed.institutionRorId,
+      institution,
       status: fixed.status,
       deadlineKind: fixed.deadlineKind,
       deadlineDate: day ? storedDay(day) : null,
@@ -301,7 +310,7 @@ export function fakeJobs(now: Date, seed = SEED): FakeJob[] {
       modelSystems,
       careerStages: [...(fixed.careerStages ?? [])],
       summary: summaryOf(random, fixed.positionType, topic, methods, modelSystems),
-      originalUrl: postingUrl(fixed.institutionRorId, fixed.shortId),
+      originalUrl: postingUrl(institution, fixed.shortId),
       startText: 'By agreement',
       checks: allChecks(fixed.status !== 'draft'),
       ...lifecycle({ ...fixed, day, timeZone }, nowMs, random),
@@ -342,7 +351,7 @@ export function fakeJobs(now: Date, seed = SEED): FakeJob[] {
     const job: FakeJob = {
       shortId,
       title: pick(random, TITLES[positionType] as string[]).replace('{topic}', topic),
-      institutionRorId: institution.rorId,
+      institution: institution.rorId,
       status,
       deadlineKind,
       deadlineDate: day ? storedDay(day) : null,

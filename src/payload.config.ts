@@ -3,18 +3,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildConfig } from 'payload'
 
-import { Candidates } from './collections/Candidates'
-import { Countries } from './collections/Countries'
-import { CountrySets } from './collections/CountrySets'
-import { FormLimits } from './collections/FormLimits'
-import { Institutions } from './collections/Institutions'
-import { Jobs } from './collections/Jobs'
-import { Reports } from './collections/Reports'
-import { RetiredListings } from './collections/RetiredListings'
-import { Submissions } from './collections/Submissions'
-import { Terms } from './collections/Terms'
+import { COLLECTIONS } from './collections'
 import { Users } from './collections/Users'
-import { RorImport } from './globals/RorImport'
+import { GLOBALS } from './globals'
 import { autoRunCrons } from './jobs/autorun'
 import { MAINTENANCE_TASKS } from './jobs/maintenance'
 import { RorImportTask } from './jobs/rorImport'
@@ -39,27 +30,19 @@ export default buildConfig({
       beforeDashboard: ['/admin/ReviewDashboard#ReviewDashboard'],
     },
   },
-  // The order of the admin menu: the daily work first (PLAN §6.5). FormLimits is hidden.
-  collections: [
-    Users,
-    Candidates,
-    Submissions,
-    Reports,
-    Jobs,
-    RetiredListings,
-    Terms,
-    Countries,
-    CountrySets,
-    Institutions,
-    FormLimits,
-  ],
-  globals: [RorImport],
+  // Each collection and global states who may do what through the API (src/lib/access.ts);
+  // signed out, nothing (tests/e2e/access.spec.ts).
+  collections: COLLECTIONS,
+  globals: GLOBALS,
   jobs: {
     tasks: [RorImportTask, ...MAINTENANCE_TASKS],
     // Scheduled jobs run only where PAYLOAD_JOBS_AUTORUN is "true": on the production server
     // (deploy/compose.prod.yml), never in CI or local development (there: `pnpm jobs:run`). The
     // ticks and their queues are in src/jobs/autorun.ts.
     autoRun: () => autoRunCrons(),
+    // The scheduler and `pnpm jobs:run` run the tasks through the local API; nobody runs them
+    // through /api/payload-jobs/run or /handle-schedules (Payload's default: any signed-in user).
+    access: { run: () => false },
   },
   // Outgoing email through the SMTP server in SMTP_HOST (from M2 the Turkish mailbox's; Mailpit
   // locally); without it nothing is sent and no address is logged (src/lib/email/adapter.ts).
@@ -85,6 +68,15 @@ export default buildConfig({
     fallback: true,
   },
   secret: process.env.PAYLOAD_SECRET ?? '',
+  // The site's own address in production (https://gliagora.com, from SITE_DOMAIN in
+  // deploy/compose.prod.yml): the only origin whose requests may use an editor's session cookie
+  // (Payload adds it to its CSRF list), and the start of the links in Payload's own emails (a
+  // password reset). Empty locally and in CI, so the app works on any port.
+  serverURL: process.env.SERVER_URL ?? '',
+  // No GraphQL: the admin and the site use REST and the local API only. Off, and without its two
+  // route files, /api/graphql/ answers 404 without reading a query, so it cannot be used to guess
+  // field names, to send many sign-ins in one request or to fill the log with errors.
+  graphQL: { disable: true },
   // No usage data sent to Payload.
   telemetry: false,
   typescript: {

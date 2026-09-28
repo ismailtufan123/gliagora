@@ -1,4 +1,5 @@
-# Second password in front of /admin (PLAN §18.2), until the admin has a second factor.
+# Second password in front of /admin and /api (PLAN §18.2), until the admin has a second factor,
+# and until M2 in front of the whole site except /health (D32).
 # Copy to /opt/gliagora/admin-auth.caddy and replace the hash. Create a hash with:
 #   docker run --rm -it caddy:2.11.4-alpine caddy hash-password
 # (it asks for the password, so it does not end up in the shell history).

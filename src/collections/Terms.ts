@@ -4,6 +4,7 @@ import type {
   TextFieldManyValidation,
 } from 'payload'
 
+import { nobody, signedIn } from '@/lib/access'
 import { fixedFieldHooks } from '@/lib/fixed-fields'
 import { HUB_INTRO_MIN_WORDS } from '@/lib/indexing'
 import { requiredInEnglish } from '@/lib/localized'
@@ -81,9 +82,14 @@ export const Terms: CollectionConfig = {
     pagination: { defaultLimit: 50 },
   },
   defaultSort: ['vocabulary', 'sortOrder'],
+  // Signed-in editors; the pages read terms through the local API.
   access: {
+    read: signedIn,
+    create: signedIn,
+    update: signedIn,
     // Content refers to terms by ID, and published slugs never change (PLAN §4.1).
-    delete: () => false,
+    delete: nobody,
+    readVersions: signedIn,
   },
   // A copy would repeat the slug, which must be unique in its vocabulary.
   disableDuplicate: true,

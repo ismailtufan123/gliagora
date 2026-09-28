@@ -34,6 +34,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # src/payload-types.ts must match the collections and globals: the types are checked against
+      # it, and tests/e2e/access.spec.ts reads the collections and globals to test from it.
+      - name: Generated Payload types are up to date
+        run: pnpm generate:types && git diff --exit-code -- src/payload-types.ts
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

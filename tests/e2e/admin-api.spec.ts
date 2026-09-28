@@ -1,30 +1,22 @@
-import { type APIRequestContext, type APIResponse, type Page, expect, test } from '@playwright/test'
+import { type APIResponse, type Page, expect, test } from '@playwright/test'
 
 import { E2E_EDITOR_EMAIL } from '../../src/scripts/e2e-editor-account'
 import { FIXED_JOBS } from '../../src/scripts/fake-jobs-fixed'
 import { FAKE_QUEUE_NOTE } from '../../src/scripts/fake-queue-data'
+
+import { editorHeaders, editorPassword } from './editor'
 
 // What the admin gets back from the REST API when a save is refused. It shows each rule's message
 // at its field only when the error lists the fields (`errors[0].data.errors`); otherwise editors
 // see a toast that names the fields without saying what is wrong. The production build lost that
 // list while Payload was bundled into the server more than once (see next.config.ts).
 //
-// Signs in as the test editor from `pnpm e2e:editor` (src/scripts/e2e-editor.ts), with the password
-// in E2E_EDITOR_PASSWORD. CI always has it; a local run without it skips the test. The admin's own
-// behaviour that needs the editor (the deadline time zone of the job form) is tested here too, so
-// that no two tests sign in at the same moment.
-const password = process.env.E2E_EDITOR_PASSWORD
+// As the test editor from `pnpm e2e:editor` (src/scripts/e2e-editor.ts), with the password in
+// E2E_EDITOR_PASSWORD (tests/e2e/editor.ts). CI always has it; a local run without it skips the test.
+// The admin's own behaviour that needs the editor (the deadline time zone of the job form) is
+// tested here too.
 
 type FieldError = { path: string; message: string }
-
-async function signIn(request: APIRequestContext) {
-  const response = await request.post('/api/users/login/', {
-    data: { email: E2E_EDITOR_EMAIL, password },
-  })
-  expect(response.status(), 'sign-in as the test editor (pnpm e2e:editor)').toBe(200)
-  const { token } = (await response.json()) as { token: string }
-  return { Authorization: `JWT ${token}` }
-}
 
 /** Chooses `name` in the admin form's select or relationship field `path`, by typing it. */
 async function choose(page: Page, path: string, name: string) {
@@ -43,16 +35,12 @@ async function fieldErrors(response: APIResponse): Promise<FieldError[] | undefi
 test.describe('admin API', () => {
   test.skip(({ isMobile }) => isMobile, 'the API does not depend on the device')
   test.skip(
-    !password && !process.env.CI,
+    !editorPassword && !process.env.CI,
     'needs the test editor: E2E_EDITOR_PASSWORD=… pnpm e2e:editor',
   )
 
-  // One sign-in per test, and the tests one after another: Payload keeps the sessions in the user
-  // record, so parallel sign-ins as the same user can drop each other's session.
-  test.describe.configure({ mode: 'serial' })
-
   test('a refused save gets each message at its field', async ({ request }) => {
-    const headers = await signIn(request)
+    const headers = editorHeaders()
 
     await test.step('a job published without its facts: every missing fact', async () => {
       // Refused, so nothing is created.
@@ -138,8 +126,7 @@ test.describe('admin API', () => {
   // D40: the job form fills in the deadline's time zone from the institution the editor chooses,
   // and keeps a zone the editor chose. The form is left without saving, so nothing is stored.
   test("the job form takes the deadline's time zone from the institution", async ({ page }) => {
-    const headers = await signIn(page.request)
-    await page.context().setExtraHTTPHeaders(headers)
+    await page.context().setExtraHTTPHeaders(editorHeaders())
     await page.goto('/admin/collections/jobs/create/')
     const zone = page.locator('#field-deadlineTz')
     const shown = zone.locator('.rs__single-value')
@@ -208,7 +195,7 @@ test.describe('admin API', () => {
   test('the review lists never load personal data, even when a link asks for it', async ({
     request,
   }) => {
-    const headers = await signIn(request)
+    const headers = editorHeaders()
     const lists = [
       {
         collection: 'reports',

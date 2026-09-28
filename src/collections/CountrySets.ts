@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { nobody, signedIn } from '@/lib/access'
 import { fixedFieldHooks } from '@/lib/fixed-fields'
 import { requiredInEnglish } from '@/lib/localized'
 import { isValidSlug } from '@/lib/taxonomy'
@@ -18,8 +19,13 @@ export const CountrySets: CollectionConfig = {
     description:
       'Groups of countries used in funding eligibility (PLAN §4.6). When you change a list, update the source, the date you checked it and the note.',
   },
+  // Signed-in editors; sets are not deleted.
   access: {
-    delete: () => false,
+    read: signedIn,
+    create: signedIn,
+    update: signedIn,
+    delete: nobody,
+    readVersions: signedIn,
   },
   // A copy would repeat the slug.
   disableDuplicate: true,

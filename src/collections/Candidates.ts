@@ -10,6 +10,7 @@ import type {
 } from 'payload'
 import { APIError, validations } from 'payload'
 
+import { nobody, signedIn } from '@/lib/access'
 import { calendarDay } from '@/lib/jobs/deadline'
 import { DUPLICATE_SIMILARITY, normaliseTitle, similarity } from '@/lib/jobs/similarity'
 import type { JobStatus } from '@/lib/jobs/status'
@@ -390,9 +391,14 @@ export const Candidates: CollectionConfig = {
     pagination: { defaultLimit: 50 },
   },
   defaultSort: '-createdAt',
+  // Signed-in editors; they add candidates by hand too (the form adds them through the local API).
   access: {
+    read: signedIn,
+    create: signedIn,
+    update: signedIn,
     // Never, also not through the API (keepCandidates covers code that bypasses this).
-    delete: () => false,
+    delete: nobody,
+    readVersions: signedIn,
   },
   // A copy would be the duplicate the queue looks for.
   disableDuplicate: true,

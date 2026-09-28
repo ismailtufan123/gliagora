@@ -5,6 +5,8 @@ import { defineConfig, devices } from '@playwright/test'
 // server from `pnpm build && pnpm start` (with the database from compose.yaml running).
 export default defineConfig({
   testDir: './tests/e2e',
+  // Signs in once as the test editor, for the tests that need it (tests/e2e/editor.ts).
+  globalSetup: './tests/e2e/editor.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,

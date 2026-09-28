@@ -16,7 +16,7 @@ import {
   seededRandom,
   storedZone,
 } from './fake-jobs-data'
-import { FIXED_JOBS } from './fake-jobs-fixed'
+import { FIXED_JOBS, MANUAL_INSTITUTION } from './fake-jobs-fixed'
 
 const now = new Date('2026-09-28T09:00:00Z')
 const jobs = fakeJobs(now)
@@ -91,7 +91,7 @@ describe('fake jobs', () => {
     expect([...kinds].sort()).toEqual(['fixed', 'rolling', 'until-filled'])
     expect(jobs.filter((job) => storedZone(job)).length).toBeGreaterThan(40)
     expect(jobs.filter((job) => job.locationOverride).length).toBe(3)
-    const institutions = new Set(jobs.map((job) => job.institutionRorId))
+    const institutions = new Set(jobs.map((job) => job.institution))
     expect(institutions.size).toBeGreaterThan(FAKE_INSTITUTIONS.length / 2)
   })
 
@@ -131,12 +131,16 @@ describe('fake jobs', () => {
       expect(place, rorId).toBeDefined()
       expect(timeZoneAt(place?.lat, place?.lng, place?.countryCode), rorId).toBe(timeZone)
     }
+    // The institution added by hand gets its zone from its coordinates too; the draft job there
+    // keeps its own (unknown) zone, as every fixed job does.
+    const { lat, lng, country } = MANUAL_INSTITUTION
+    expect(timeZoneAt(lat, lng, country)).toBe('Europe/Amsterdam')
   })
 
   it('never look like the same position twice', () => {
     const facts = (job: FakeJob) => ({
       canonicalUrl: job.originalUrl,
-      institution: job.institutionRorId,
+      institution: job.institution,
       deadlineKind: job.deadlineKind,
       deadlineDay: calendarDay(job.deadlineDate),
       fingerprint: normaliseTitle(job.title),

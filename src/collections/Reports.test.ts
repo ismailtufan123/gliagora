@@ -81,9 +81,11 @@ describe('Reports: access', () => {
     expect(Reports.access?.delete?.({ req: { user: null } } as never)).toBe(false)
   })
 
-  it('leaves reading and handling to signed-in editors (Payload’s default)', () => {
-    expect(Reports.access?.read).toBeUndefined()
-    expect(Reports.access?.update).toBeUndefined()
+  it('leaves reading and handling to signed-in editors', () => {
+    for (const rule of [Reports.access?.read, Reports.access?.update]) {
+      expect(rule?.({ req: { user: { id: 1 } } } as never)).toBe(true)
+      expect(rule?.({ req: { user: null } } as never)).toBe(false)
+    }
   })
 
   it('keeps what the person sent unchanged by editors', () => {
