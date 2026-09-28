@@ -11,6 +11,7 @@ import * as migration_20260928_020440_reports from './20260928_020440_reports';
 import * as migration_20260928_033903_maintenance from './20260928_033903_maintenance';
 import * as migration_20260928_052700_retention_safeguards from './20260928_052700_retention_safeguards';
 import * as migration_20260928_100000_search from './20260928_100000_search';
+import * as migration_20260928_135840_report_institution from './20260928_135840_report_institution';
 
 export const migrations = [
   {
@@ -77,5 +78,10 @@ export const migrations = [
     up: migration_20260928_100000_search.up,
     down: migration_20260928_100000_search.down,
     name: '20260928_100000_search',
+  },
+  {
+    up: migration_20260928_135840_report_institution.up,
+    down: migration_20260928_135840_report_institution.down,
+    name: '20260928_135840_report_institution'
   },
 ];

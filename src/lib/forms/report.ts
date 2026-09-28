@@ -1,4 +1,4 @@
-import { type ReportItem, type ReportableJob, reportItem } from '@/lib/reports/item'
+import { type ItemLookup, type ReportItem, findReportItem } from '@/lib/reports/item'
 import type { ReportKind } from '@/lib/reports/status'
 
 import {
@@ -56,29 +56,30 @@ export type ReportRecord = {
   email: string | null
   locale: ReportData['locale']
   job: number | null
+  institution: number | null
   itemUrl: string | null
   status: 'new'
 }
 
 /**
- * The record of a report. The item named by the form is looked up again, since the job may have
- * changed since the form was shown: a report names only a public job (reportItem), with the
- * address its page had, and is kept without the item otherwise.
+ * The record of a report. The item named by the form is looked up again, since it may have
+ * changed since the form was shown: a report names only a public job or an existing institution
+ * (findReportItem), with the address its page had, and is kept without the item otherwise. What
+ * it finds is always of the type the form named, so the kind still fits it (report-schema.ts).
  */
 export async function reportRecord(
   data: ReportData,
-  findJob: (shortId: string) => Promise<ReportableJob | null>,
+  lookup: ItemLookup,
   now: Date,
 ): Promise<ReportRecord> {
-  const item: ReportItem | null = data.item
-    ? reportItem(await findJob(data.item.shortId), now)
-    : null
+  const item = await findReportItem(data.item, lookup, now)
   return {
     kind: data.kind,
     details: data.details,
     email: data.email,
     locale: data.locale,
-    job: item?.jobId ?? null,
+    job: item?.type === 'job' ? item.id : null,
+    institution: item?.type === 'institution' ? item.id : null,
     itemUrl: item?.path ?? null,
     status: 'new',
   }

@@ -1087,6 +1087,10 @@ export interface Report {
    */
   job?: (number | null) | Job;
   /**
+   * The institution the report is about, when it was sent from an institution page.
+   */
+  institution?: (number | null) | Institution;
+  /**
    * The address of that page when the report was sent.
    */
   itemUrl?: string | null;
@@ -1490,6 +1494,7 @@ export interface SubmissionsSelect<T extends boolean = true> {
 export interface ReportsSelect<T extends boolean = true> {
   kind?: T;
   job?: T;
+  institution?: T;
   itemUrl?: T;
   details?: T;
   email?: T;

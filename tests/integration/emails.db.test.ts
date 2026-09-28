@@ -284,6 +284,35 @@ describe.skipIf(!docker)('automatic emails through Mailpit', () => {
     expect(await mailpit.to(rightsTo)).toHaveLength(1)
   })
 
+  it('names the institution page a report is about (D40)', async () => {
+    const place = await institution(payload)
+    const itemUrl = `/en/institutions/${place.slug}-${place.shortId}/`
+    const to = `${unique('ack-institution')}@example.org`
+    await payload.create({
+      collection: 'reports',
+      data: {
+        kind: 'broken-link',
+        institution: place.id,
+        itemUrl,
+        details: 'Fake data (integration test). The website link is broken.',
+        email: to,
+        locale: 'en',
+        status: 'new',
+      },
+      overrideAccess: true,
+      depth: 0,
+    })
+    expect((await acknowledgeReports(payload, new Date())).sent).toBeGreaterThanOrEqual(1)
+    const [ack] = await mailpit.to(to)
+    expect(ack?.Subject).toBe('We have received your report')
+    expect(ack?.Text).toContain('It is about this page:')
+    expect(ack?.Text).toContain(`https://gliagora.com${itemUrl}`)
+    // Checked against the institution's website and ROR record: it has no posting.
+    expect(ack?.Text).toContain('We check the institution’s details against its own website')
+    expect(ack?.Text).not.toContain('original posting')
+    expect(ack?.Text).not.toContain('The website link is broken')
+  })
+
   it('does not acknowledge a report twice when an editor saves it while the email goes out', async () => {
     const to = `${unique('ack-saved')}@example.org`
     const report = await payload.create({

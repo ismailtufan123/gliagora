@@ -2,6 +2,8 @@
 // what a report is about, how it is handled and how long it is kept. Kept apart from the
 // collection (src/collections/Reports.ts) so the form, the admin dashboard and the tests share it.
 
+import type { ItemType } from './item'
+
 /** What is wrong, as the person chose it on the form. */
 export const REPORT_KINDS = [
   { value: 'wrong-fact', label: 'A fact is wrong' },
@@ -18,6 +20,21 @@ export const REPORT_KINDS = [
 export type ReportKind = (typeof REPORT_KINDS)[number]['value']
 
 export const PERSONAL_RIGHTS: ReportKind = 'personal-rights'
+
+/**
+ * Kinds that only a job can have: a position closes, and a posting comes from the employer or
+ * not. A report about an institution offers the others (D40).
+ */
+export const JOB_ONLY_KINDS: readonly ReportKind[] = ['closed', 'not-employer']
+
+/**
+ * The kinds the form offers, in its order: all of them for a report about a job and for a
+ * general report (no item), the others without the job-only ones.
+ */
+export function kindsFor(itemType: ItemType | null | undefined): ReportKind[] {
+  const all = REPORT_KINDS.map(({ value }) => value)
+  return itemType && itemType !== 'job' ? all.filter((kind) => !JOB_ONLY_KINDS.includes(kind)) : all
+}
 
 export const REPORT_STATUSES = [
   { value: 'new', label: 'New' },

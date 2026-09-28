@@ -17,6 +17,7 @@ type DataField = Field & {
     disableListColumn?: boolean
     readOnly?: boolean
     position?: string
+    condition?: (data: Record<string, unknown>) => boolean
   }
 }
 
@@ -86,7 +87,7 @@ describe('Reports: access', () => {
   })
 
   it('keeps what the person sent unchanged by editors', () => {
-    for (const name of ['kind', 'job', 'itemUrl', 'details', 'email', 'locale']) {
+    for (const name of ['kind', 'job', 'institution', 'itemUrl', 'details', 'email', 'locale']) {
       expect(field(name).access?.update?.({}), name).toBe(false)
       expect(field(name).admin?.readOnly, name).toBe(true)
     }
@@ -115,6 +116,7 @@ describe('Reports: personal data in the admin', () => {
       'status',
       'respondBy',
       'job',
+      'institution',
       'createdAt',
     ])
     for (const name of ['email', 'details', 'actionNote']) {
@@ -144,6 +146,48 @@ describe('Reports: personal data in the admin', () => {
   it('sits with the review queue under its own name', () => {
     expect(Reports.admin?.group).toBe('Review queue')
     expect(Reports.labels?.plural).toBe('Reports and requests')
+  })
+})
+
+describe('Reports: the item', () => {
+  it('links a job or an institution, which the database clears when it is deleted', () => {
+    expect(field('job')).toMatchObject({ type: 'relationship', relationTo: 'jobs' })
+    expect(field('institution')).toMatchObject({
+      type: 'relationship',
+      relationTo: 'institutions',
+    })
+    // Neither is required, so ON DELETE SET NULL can clear it; the page's address stays.
+    expect((field('job') as { required?: boolean }).required).toBeFalsy()
+    expect((field('institution') as { required?: boolean }).required).toBeFalsy()
+  })
+
+  it('shows the one the report names in the same place: the job, or the institution', () => {
+    const shown = (name: string, data: Record<string, unknown>) =>
+      field(name).admin?.condition?.(data) ?? true
+    expect(shown('job', { job: 7 })).toBe(true)
+    expect(shown('institution', { job: 7 })).toBe(false)
+    expect(shown('job', { institution: 12 })).toBe(false)
+    expect(shown('institution', { institution: 12 })).toBe(true)
+    // Other reports show the job field, empty, as before.
+    expect(shown('job', {})).toBe(true)
+    expect(shown('institution', {})).toBe(false)
+  })
+
+  it('refuses a kind that only a job can have for an institution, as the form does', async () => {
+    const validate = field('kind').validate!
+    const { options, required } = field('kind') as { options?: unknown; required?: boolean }
+    const run = (value: string, data: Record<string, unknown>) =>
+      validate(value, { options, required, hasMany: false, data, req: request() })
+    for (const kind of ['closed', 'not-employer']) {
+      expect(await run(kind, { institution: 12 }), kind).toBe(
+        'This kind is for reports about a job only, not about an institution.',
+      )
+      expect(await run(kind, { job: 7 }), kind).toBe(true)
+      expect(await run(kind, {}), kind).toBe(true)
+    }
+    for (const kind of ['wrong-fact', 'broken-link', 'personal-rights', 'other']) {
+      expect(await run(kind, { institution: 12 }), kind).toBe(true)
+    }
   })
 })
 

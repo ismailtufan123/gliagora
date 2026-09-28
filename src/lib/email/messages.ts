@@ -2,6 +2,7 @@ import { createTranslator } from 'next-intl'
 
 import { type Locale, defaultLocale, locales } from '@/i18n/routing'
 import { CONTENT_PAGES } from '@/lib/content'
+import { matchDetailRoute } from '@/lib/detail-routes'
 import type { ReportKind } from '@/lib/reports/status'
 import type { RejectionReason } from '@/lib/review/status'
 import { CONTACT_EMAIL, SITE_ORIGIN } from '@/lib/site'
@@ -94,7 +95,14 @@ export function reportAcknowledgement({
 }): EmailText {
   const t = translator(locale)
   const rights = kind === 'personal-rights'
-  const item = itemPath?.startsWith('/') ? `${t('report.item')}\n${siteUrl(itemPath)}` : null
+  const onSite = itemPath?.startsWith('/') ? itemPath : null
+  const item = onSite ? `${t('report.item')}\n${siteUrl(onSite)}` : null
+  // An institution has no posting to check against (D40); a job and a general report do.
+  const next = rights
+    ? 'report.nextPersonalRights'
+    : onSite && matchDetailRoute(onSite)?.kind === 'institution'
+      ? 'report.nextInstitution'
+      : 'report.next'
   return {
     locale,
     subject: t(rights ? 'report.subjectPersonalRights' : 'report.subject'),
@@ -102,7 +110,7 @@ export function reportAcknowledgement({
       t('greeting'),
       t(rights ? 'report.introPersonalRights' : 'report.intro'),
       item,
-      t(rights ? 'report.nextPersonalRights' : 'report.next'),
+      t(next),
       t(rights ? 'report.retentionPersonalRights' : 'report.retention', {
         privacyUrl: privacyUrl(locale),
       }),

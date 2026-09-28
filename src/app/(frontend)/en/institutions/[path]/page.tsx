@@ -9,11 +9,13 @@ import { institutionPath, matchDetailRoute } from '@/lib/detail-routes'
 import { jobsHref } from '@/lib/filters/jobs'
 import { institutionIndexed } from '@/lib/indexing'
 import { institutionByUrlId, openJobsAtInstitution, requestTime } from '@/lib/records'
+import { reportHref } from '@/lib/reports/item'
 import { rorUrl } from '@/lib/ror/ror-id'
 import { paths } from '@/lib/site'
 
 // An institution (PLAN §3.2 "Institution page", §9.6): ROR name, city, country, website, ROR
-// link, open positions and upcoming events. Events arrive with M8 and the mini map with M5.
+// link, "Report a problem" (D40), open positions and upcoming events. Events arrive with M8 and
+// the mini map with M5.
 // Breadcrumbs (Home › institution; there is no institution index) give the BreadcrumbList data
 // every deep page has (§16.2).
 // Indexed only while it has open positions (PLAN §2.5; events count too from M8). No
@@ -94,6 +96,13 @@ export default async function Page({ params }: Props) {
             {t('otherNames', { names: (institution.aliases ?? []).slice(0, 6).join(', ') })}
           </p>
         )}
+        {/* As on a job page: after the facts, the form with this institution filled in, named by
+            the ID its address ends with. */}
+        <p>
+          <a href={reportHref({ type: 'institution', id: urlId(institution) })}>
+            {t('reportProblem')}
+          </a>
+        </p>
 
         <h2>{t('positions')}</h2>
         {positions.jobs.length > 0 ? (

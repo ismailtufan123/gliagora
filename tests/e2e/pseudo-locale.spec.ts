@@ -52,6 +52,8 @@ async function expectLayoutHolds(
 const FILTERED_LIST =
   '/en/jobs/?type=faculty-pi,industry,msc,phd,postdoc&region=europe,northern-america'
 const INSTITUTION = PAGES.find((template) => template.name === 'institution')!.path
+/** The ROR ID its address ends with, as its "Report a problem" link names it. */
+const INSTITUTION_ID = /-(0[0-9a-z]{8})\/$/.exec(INSTITUTION)![1]
 
 const filterButton = (page: Page, name: string) =>
   page.locator('summary.filter-button', { hasText: name })
@@ -125,6 +127,14 @@ for (const viewport of [
       await page.getByRole('button', { name: 'Send report' }).click()
       await expect(summary(page)).toBeFocused()
       await expectLayoutHolds(page, testInfo, 'report a problem, errors')
+    })
+
+    test('report a problem about an institution, with errors', async ({ page }, testInfo) => {
+      await page.setExtraHTTPHeaders({ 'X-Forwarded-For': clientAddress() })
+      await page.goto(`/en/report/?item=institution:${INSTITUTION_ID}`)
+      await page.getByRole('button', { name: 'Send report' }).click()
+      await expect(summary(page)).toBeFocused()
+      await expectLayoutHolds(page, testInfo, 'report a problem about an institution, errors')
     })
 
     test('search results', async ({ page }, testInfo) => {

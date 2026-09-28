@@ -11,7 +11,7 @@ import { altchaKey } from '@/lib/forms/altcha'
 import { stateAfter } from '@/lib/forms/public-form'
 import { postgresLimitStore } from '@/lib/forms/rate-limit'
 import { REPORT_SENT_PATH, type ReportState, handleReport, reportRecord } from '@/lib/forms/report'
-import { jobForReport } from '@/lib/records'
+import { reportItemLookup } from '@/lib/records'
 
 // The Server Action behind "Report a problem" (src/lib/forms/report.ts does the work). With
 // JavaScript the form calls it through React; without, the browser posts the form and Next.js
@@ -27,12 +27,13 @@ export async function sendReport(previous: ReportState, form: FormData): Promise
     now,
     limits: async () => postgresLimitStore(await getPayload({ config })),
     // Reports are created only here, through the local API: `create` is refused to everyone else
-    // (src/collections/Reports.ts). The item is checked again: only a public job is linked.
+    // (src/collections/Reports.ts). The item is checked again: only a public job or an existing
+    // institution is linked.
     save: async (data) => {
       const payload = await getPayload({ config })
       await payload.create({
         collection: 'reports',
-        data: await reportRecord(data, jobForReport, now),
+        data: await reportRecord(data, reportItemLookup, now),
         overrideAccess: true,
         depth: 0,
       })

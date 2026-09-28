@@ -15,6 +15,25 @@ const FORM = '/en/report/'
 const SENT = '/en/report/sent/'
 const { open } = FIXED_JOBS
 const formFor = (shortId: string) => `${FORM}?item=job:${shortId}`
+/** From the ROR test data (tests/e2e/pages.ts, "institution"). */
+const INSTITUTION = {
+  name: 'California Institute of Technology',
+  path: '/en/institutions/california-institute-of-technology-05dxps055/',
+  ref: 'institution:05dxps055',
+}
+const INSTITUTION_FORM = `${FORM}?item=${INSTITUTION.ref}`
+/** The form's introduction: what an editor checks a report against. */
+const INTRO = {
+  general: /checks every report against the original posting/,
+  institution: /checks every report against the institution’s own website/,
+}
+/** The kinds a report about an institution offers, in the form's order (D40). */
+const INSTITUTION_KINDS = [
+  'A fact is wrong',
+  'A link does not work',
+  'It is about you and harms your rights',
+  'Something else',
+]
 
 async function openForm(
   browser: Browser,
@@ -31,6 +50,7 @@ async function openForm(
 }
 
 const details = (page: Page) => page.getByLabel('Details', { exact: true })
+const kinds = (page: Page) => page.getByRole('group', { name: 'What is wrong?' }).getByRole('radio')
 const email = (page: Page) => page.getByLabel('Your email address')
 const send = (page: Page) => page.getByRole('button', { name: 'Send report' }).click()
 /** The line that names the item the report is about. */
@@ -42,7 +62,7 @@ test.describe('report a problem', () => {
     isMobile,
   }) => {
     test.skip(isMobile, 'the answers do not depend on the device')
-    for (const path of [FORM, formFor(open.shortId), SENT]) {
+    for (const path of [FORM, formFor(open.shortId), INSTITUTION_FORM, SENT]) {
       const html = await (await request.get(path)).text()
       expect(html, path).toContain('<meta name="robots" content="noindex"')
     }
@@ -67,6 +87,57 @@ test.describe('report a problem', () => {
       jobPath(open),
     )
     await expect(page.locator('input[name="item"]')).toHaveValue(`job:${open.shortId}`)
+  })
+
+  test('opens from an institution page with the institution filled in, and only the kinds that fit', async ({
+    page,
+  }) => {
+    await page.goto(INSTITUTION.path)
+    await page.getByRole('link', { name: 'Report a problem' }).click()
+    await expect(page).toHaveURL(INSTITUTION_FORM)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Report a problem')
+    await expect(about(page)).toHaveText(`About: ${INSTITUTION.name}`)
+    await expect(about(page).getByRole('link', { name: INSTITUTION.name })).toHaveAttribute(
+      'href',
+      INSTITUTION.path,
+    )
+    await expect(page.locator('input[name="item"]')).toHaveValue(INSTITUTION.ref)
+    // An institution has no posting to check a report against.
+    await expect(page.getByText(INTRO.institution)).toBeVisible()
+    await expect(page.getByText(INTRO.general)).toHaveCount(0)
+    // A position closes, and a posting comes from the employer or not: not offered here.
+    const labels = await kinds(page).evaluateAll((radios) =>
+      radios.map((radio) => (radio as HTMLInputElement).labels?.[0]?.textContent ?? ''),
+    )
+    expect(labels).toEqual(INSTITUTION_KINDS)
+    await expect(page.getByLabel('A fact is wrong')).toHaveAccessibleDescription(
+      'For example, the institution’s name, city, country or website is wrong.',
+    )
+    // A job and a general report keep every kind, and the posting's wording.
+    for (const path of [formFor(open.shortId), FORM]) {
+      await page.goto(path)
+      await expect(kinds(page), path).toHaveCount(6)
+      await expect(page.getByText(INTRO.general), path).toBeVisible()
+    }
+  })
+
+  test('ignores an institution that does not exist, and offers every kind', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'the form does not depend on the device')
+    for (const path of [
+      `${FORM}?item=institution:zzzzz`,
+      `${FORM}?item=institution:000000000`,
+      `${FORM}?item=institution:05DXPS055`,
+    ]) {
+      await page.goto(path)
+      await expect(page.getByRole('heading', { level: 1 }), path).toHaveText('Report a problem')
+      await expect(about(page), path).toHaveCount(0)
+      await expect(page.locator('input[name="item"]'), path).toHaveCount(0)
+      await expect(kinds(page), path).toHaveCount(6)
+      await expect(page.getByText(INTRO.general), path).toBeVisible()
+    }
   })
 
   test('names a closed job too, but never one that is gone, unknown or malformed', async ({
@@ -124,6 +195,58 @@ test.describe('report a problem', () => {
     await page.context().close()
   })
 
+  test('sends a report about an institution', async ({ browser, isMobile }) => {
+    test.skip(isMobile, 'reports are sent from the desktop project only')
+    const page = await openForm(browser, INSTITUTION_FORM)
+    await page.getByLabel('A link does not work').check()
+    await details(page).fill(`${FAKE_QUEUE_NOTE} The website link leads to an error page.`)
+    await send(page)
+    await page.waitForURL(SENT)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Thank you for your report')
+    await page.context().close()
+  })
+
+  test('refuses, at the field, a kind posted for an institution that only a job can have', async ({
+    browser,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'reports are sent from the desktop project only')
+    const page = await openForm(browser, INSTITUTION_FORM)
+    const text = `${FAKE_QUEUE_NOTE} Sent as closed, about an institution.`
+    await details(page).fill(text)
+    // The form does not offer it; a changed page or a program could send it all the same. Changed
+    // last, once the spam check is solved: React sets a radio's value again after its change
+    // event and whenever the form re-renders.
+    await expect(page.locator('input[name="altcha"]')).not.toHaveValue('')
+    const first = page.getByLabel('A fact is wrong')
+    await first.check()
+    await first.evaluate((radio) => ((radio as HTMLInputElement).value = 'closed'))
+    await send(page)
+
+    const errors = summary(page)
+    await expect(errors).toBeFocused()
+    const message =
+      'Choose what is wrong from the options listed: that choice is for positions only.'
+    await expect(errors.getByRole('link')).toHaveText([message])
+    await expect(page.getByRole('group', { name: 'What is wrong?' })).toHaveAccessibleDescription(
+      `Error: ${message}`,
+    )
+    // Nothing was stored: the form is shown again with the item and what was typed.
+    await expect(page).toHaveURL(INSTITUTION_FORM)
+    await expect(about(page)).toHaveText(`About: ${INSTITUTION.name}`)
+    await expect(details(page)).toHaveValue(text)
+    await expect(kinds(page)).toHaveCount(4)
+    await expectNoSeriousAxeIssues(page)
+
+    // The summary's link leads to the choices; one that fits goes through.
+    await errors.getByRole('link').click()
+    await expect(page.getByLabel('A fact is wrong')).toBeFocused()
+    await page.getByLabel('Something else').check()
+    await send(page)
+    await page.waitForURL(SENT)
+    await page.context().close()
+  })
+
   test('asks for an email address for a personal-rights request, at the field', async ({
     browser,
     isMobile,
@@ -175,6 +298,11 @@ test.describe('report a problem', () => {
 
   test('has no serious accessibility issues with a job filled in', async ({ page }) => {
     await page.goto(formFor(open.shortId))
+    await expectNoSeriousAxeIssues(page)
+  })
+
+  test('has no serious accessibility issues with an institution filled in', async ({ page }) => {
+    await page.goto(INSTITUTION_FORM)
     await expectNoSeriousAxeIssues(page)
   })
 

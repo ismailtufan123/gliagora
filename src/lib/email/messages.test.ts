@@ -13,6 +13,7 @@ import {
 
 const URL_SENT = 'https://www.example.org/jobs/48213?utm_source=list'
 const JOB_PATH = '/en/jobs/phd-position-in-glia-k3f9a/'
+const INSTITUTION_PATH = '/en/institutions/example-institute-of-neuroscience-k3f9a/'
 
 describe('suggestionEmail', () => {
   it('tells that a suggestion was published, with the link sent and the Gliagora link', () => {
@@ -95,6 +96,42 @@ describe('reportAcknowledgement', () => {
     expect(email.text).toContain('We check the item against the original posting')
     expect(email.text).toContain('2 years after we close it')
     expect(email.text).not.toContain('24 hours')
+  })
+
+  it('names an institution page the same way (D40)', () => {
+    const email = reportAcknowledgement({
+      locale: 'tr',
+      kind: 'personal-rights',
+      itemPath: INSTITUTION_PATH,
+    })
+    expect(email.text).toContain(
+      '\nhttps://gliagora.com/en/institutions/example-institute-of-neuroscience-k3f9a/\n',
+    )
+    expect(email.text).toContain('24 saat içinde')
+  })
+
+  it('checks a report about an institution against its website and ROR record, not a posting (D40)', () => {
+    const en = reportAcknowledgement({
+      locale: 'en',
+      kind: 'wrong-fact',
+      itemPath: INSTITUTION_PATH,
+    })
+    expect(en.subject).toBe('We have received your report')
+    expect(en.text).toContain('We check the institution’s details against its own website')
+    expect(en.text).toContain('Research Organization Registry (ROR)')
+    expect(en.text).not.toContain('original posting')
+    const tr = reportAcknowledgement({
+      locale: 'tr',
+      kind: 'broken-link',
+      itemPath: INSTITUTION_PATH,
+    })
+    expect(tr.text).toContain('Kurumun bilgilerini kendi web sitesiyle')
+    expect(tr.text).not.toContain('asıl ilan')
+    // A general report, and one from any other page, keep the posting's wording.
+    for (const itemPath of [null, '/en/institutions/', '/en/report/']) {
+      const general = reportAcknowledgement({ locale: 'en', kind: 'other', itemPath })
+      expect(general.text, String(itemPath)).toContain('against the original posting')
+    }
   })
 
   it('tells a personal-rights request that we answer within 24 hours and usually decide within 72', () => {

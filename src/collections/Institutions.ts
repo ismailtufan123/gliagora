@@ -85,6 +85,8 @@ const inRange =
 // Jobs refer to their institution (PLAN §5.1), so an institution is kept while a job or a job
 // version refers to it. Versions are the jobs' history (PLAN §5.2) and need their institution
 // (the database refuses to clear it). This also holds for code that bypasses access control.
+// Reports about the institution do not keep it: the database clears their link (ON DELETE SET
+// NULL), and each keeps the address of the page it was about (D40).
 const keepReferenced: CollectionBeforeDeleteHook = async ({ id, req }) => {
   const { totalDocs } = await req.payload.count({
     collection: 'jobs',
