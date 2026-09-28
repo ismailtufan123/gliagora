@@ -14,21 +14,23 @@ import {
   activeFilters,
   clearAllHref,
   filtersHref,
-  isUnfiltered,
   pageHref,
   serializeFilters,
 } from '@/lib/filters/model'
+import { jobsListIndexed } from '@/lib/indexing'
 import { jobChips } from '@/lib/jobs/chips'
 import { formatDay } from '@/lib/jobs/format'
 import { type JobsList, jobsList, requestTime } from '@/lib/records'
+import { FEED_PATH } from '@/lib/seo/feed'
 import { paths } from '@/lib/site'
 
 // The jobs list (PLAN §3.2 "Jobs list", §9.3, §9.4): server-rendered, 25 per page, with the shared
 // filters in the URL (src/lib/filters). The proxy has already redirected any other spelling of the
 // filters to the canonical address, except a range of days with a mistake, which the form shows
 // again with an error. Only the unfiltered first page is indexed; filtered addresses point to it
-// as their canonical page (PLAN §2.1, §16.1). A top-level window page: no breadcrumbs, like the
-// other windows. The map view (`view=map`, M5) shows the list until then.
+// as their canonical page (PLAN §2.1, §16.1), and only it is in the sitemaps (the same rule,
+// src/lib/indexing.ts). Every variant links to the jobs feed. A top-level window page: no
+// breadcrumbs, like the other windows. The map view (`view=map`, M5) shows the list until then.
 export const dynamic = 'force-dynamic'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
@@ -44,13 +46,15 @@ async function queryOf(searchParams: Props['searchParams']): Promise<URLSearchPa
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const query = await queryOf(searchParams)
   const filters = parseJobFilters(query)
-  const t = await getTranslations({ locale: 'en', namespace: 'jobs.list' })
-  const indexed = isUnfiltered(JOB_FILTERS, filters) && !invalidDeadlineRange(query)
+  const t = await getTranslations({ locale: 'en', namespace: 'jobs' })
   return {
-    title: filters.page > 1 ? t('titlePage', { page: filters.page }) : t('title'),
-    description: t('description'),
-    alternates: { canonical: JOB_FILTERS.path },
-    ...(indexed ? {} : { robots: { index: false, follow: true } }),
+    title: filters.page > 1 ? t('list.titlePage', { page: filters.page }) : t('list.title'),
+    description: t('list.description'),
+    alternates: {
+      canonical: JOB_FILTERS.path,
+      types: { 'application/rss+xml': [{ url: FEED_PATH, title: t('feed.title') }] },
+    },
+    ...(jobsListIndexed(query) ? {} : { robots: { index: false, follow: true } }),
   }
 }
 

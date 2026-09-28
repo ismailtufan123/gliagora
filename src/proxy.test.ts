@@ -42,3 +42,30 @@ describe('proxy: filtered lists', () => {
     expect(response.headers.get('location')).toMatch(/\/en\/jobs\/\?utm_source=x$/)
   })
 })
+
+describe('proxy: sitemap files', () => {
+  it('lets the names of sitemap files through to their route, which knows whether they exist', async () => {
+    for (const path of ['/sitemaps/jobs.xml', '/sitemaps/jobs-2.xml', '/sitemaps/pages-tr.xml']) {
+      const response = await proxy(request(path))
+      expect(response.headers.get('x-middleware-next'), path).toBe('1')
+    }
+  })
+
+  it('gives other names under /sitemaps/ the 404 page, not stored', async () => {
+    for (const path of [
+      '/sitemaps/',
+      '/sitemaps/unknown.xml',
+      '/sitemaps/wp-login.php',
+      '/sitemaps/foo/',
+      '/sitemaps/jobs-1.xml',
+      '/sitemaps/jobs.xml/extra',
+    ]) {
+      const response = await proxy(request(path))
+      expect(response.status, path).toBe(404)
+      expect(new URL(response.headers.get('x-middleware-rewrite') ?? '').pathname, path).toBe(
+        '/_not-found',
+      )
+      expect(response.headers.get('cache-control'), path).toBe('private, no-store')
+    }
+  })
+})

@@ -8,6 +8,7 @@ import { JobList } from '@/components/jobs/JobList'
 import { OriginalPostingLink } from '@/components/jobs/OriginalPostingLink'
 import { NotFoundContent } from '@/components/NotFoundContent'
 import { matchDetailRoute } from '@/lib/detail-routes'
+import { jobIndexed } from '@/lib/indexing'
 import { listingState } from '@/lib/jobs/deadline'
 import { deadlineView, formatDay, languageName, listOf } from '@/lib/jobs/format'
 import { textDirection } from '@/lib/jobs/languages'
@@ -51,8 +52,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       job.summary ??
       t('description', { title: job.title, institution: job.institution?.name ?? '' }),
     alternates: { canonical: job.path },
-    // Indexed only while open (PLAN §2.5, §16.1).
-    ...(state === 'open' ? {} : { robots: { index: false } }),
+    // Indexed only while open (PLAN §2.5, §16.1), and listed in the sitemaps by the same rule.
+    ...(jobIndexed(state) ? {} : { robots: { index: false } }),
   }
 }
 

@@ -3,7 +3,8 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { SUBFIELDS_PATH, subfieldPath } from '@/lib/detail-routes'
-import { activeSubfields } from '@/lib/records'
+import { subfieldIndexIndexed } from '@/lib/indexing'
+import { activeSubfields, subfieldsForIndexing } from '@/lib/records'
 import { paths } from '@/lib/site'
 
 // All subfields (PLAN §4.2), each linking to its hub. Read from the database on every request.
@@ -15,8 +16,9 @@ export async function generateMetadata(): Promise<Metadata> {
     title: t('title'),
     description: t('description'),
     alternates: { canonical: SUBFIELDS_PATH },
-    // Hubs are indexed once they have their written introductions (PLAN §16.3, M3).
-    robots: { index: false },
+    // Indexed once one of its hubs is: hubs are indexed with their written introductions (PLAN
+    // §16.3, M3). The sitemaps list it by the same rule.
+    ...(subfieldIndexIndexed(await subfieldsForIndexing()) ? {} : { robots: { index: false } }),
   }
 }
 

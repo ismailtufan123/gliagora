@@ -248,6 +248,15 @@
       "text": "Bizim tarafımızda bir sorun oluştu. Lütfen biraz sonra yeniden deneyin.",
       "retry": "Yeniden dene",
       "reference": "Hata kodu: {digest}"
+    },
+    "feed": {
+      "title": "En yeni sinirbilim pozisyonları",
+      "description": "Gliagora’da en son yayımlanan açık pozisyonlar: temel bilgiler, kendi özetimiz ve işverenin kendi ilanına bağlantı.",
+      "institution": "Kurum: {name}.",
+      "location": "Konum: {place}.",
+      "deadline": "Son başvuru: {date}.",
+      "rolling": "Sürekli başvuru.",
+      "untilFilled": "Pozisyon dolana kadar açık."
     }
   },
   "job": {

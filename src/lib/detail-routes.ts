@@ -16,10 +16,10 @@ const JOB_SEGMENT = new RegExp(`^(?:([a-z0-9]+(?:-[a-z0-9]+)*)-)?(${SHORT_ID_CHA
 
 /**
  * Names under /en/jobs/ that belong to a route of their own rather than to a job; the proxy lets
- * them through untouched. The jobs feed (M4.8) adds `feed.xml` here. Until a name is listed, it
+ * them through untouched: the jobs feed (`feed.xml`, src/lib/seo/feed.ts). A name not listed here
  * answers 404 like every other segment that cannot be a job URL.
  */
-export const JOBS_RESERVED_SEGMENTS: ReadonlySet<string> = new Set<string>([])
+export const JOBS_RESERVED_SEGMENTS: ReadonlySet<string> = new Set<string>(['feed.xml'])
 
 export type DetailRoute =
   | { kind: 'institution'; slug: string | null; id: string }

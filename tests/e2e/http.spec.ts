@@ -62,6 +62,78 @@ test.describe('HTTP behaviour', () => {
     expect(await (await request.get('/tr/iletisim/')).text()).toContain('<html lang="tr"')
   })
 
+  // Machine files (PLAN §2.2): they end in a file name, so they get no trailing slash.
+  const machineFiles = [
+    ['/robots.txt', 'text/plain'],
+    ['/sitemap.xml', 'application/xml; charset=utf-8'],
+    ['/sitemaps/pages.xml', 'application/xml; charset=utf-8'],
+    ['/sitemaps/jobs.xml', 'application/xml; charset=utf-8'],
+    ['/sitemaps/institutions.xml', 'application/xml; charset=utf-8'],
+    ['/en/jobs/feed.xml', 'application/rss+xml; charset=utf-8'],
+  ] as const
+  for (const [path, type] of machineFiles) {
+    test(`${path} answers 200 as ${type}, without a redirect`, async ({ request }) => {
+      const response = await request.get(path, { maxRedirects: 0 })
+      expect(response.status()).toBe(200)
+      expect(response.headers()['content-type']).toContain(type)
+    })
+  }
+
+  for (const path of ['/sitemap.xml', '/sitemaps/jobs.xml', '/en/jobs/feed.xml']) {
+    test(`${path}/ redirects permanently to the file`, async ({ request }) => {
+      const response = await request.get(`${path}/`, { maxRedirects: 0 })
+      expect(response.status()).toBe(308)
+      expect(new URL(response.headers()['location']!, 'http://x').pathname).toBe(path)
+    })
+  }
+
+  for (const path of [
+    // A type without pages: no hub has its introduction yet.
+    '/sitemaps/subfields.xml',
+    // Only when there are more than 50,000 jobs.
+    '/sitemaps/jobs-3.xml',
+    // Only once Turkish pages are indexed.
+    '/sitemaps/pages-tr.xml',
+  ]) {
+    test(`${path} answers 404, not stored`, async ({ request }) => {
+      const response = await request.get(path, { maxRedirects: 0 })
+      expect(response.status()).toBe(404)
+      expect(response.headers()['cache-control']).toContain('no-store')
+    })
+  }
+
+  test('/sitemaps/jobs-2.xml repeats the last job of jobs.xml, for an index read before jobs closed', async ({
+    request,
+  }) => {
+    const locs = async (path: string) => {
+      const response = await request.get(path, { maxRedirects: 0 })
+      expect(response.status(), path).toBe(200)
+      return [...(await response.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
+    }
+    const jobs = await locs('/sitemaps/jobs.xml')
+    expect(jobs.length).toBeGreaterThan(0)
+    expect(await locs('/sitemaps/jobs-2.xml')).toEqual(jobs.slice(-1))
+  })
+
+  // Names no sitemap file can have get the 404 page, like any unknown URL.
+  for (const path of [
+    '/sitemaps/',
+    '/sitemaps/unknown.xml',
+    '/sitemaps/wp-login.php',
+    '/sitemaps/jobs-1.xml',
+    '/sitemaps/foo/',
+  ]) {
+    test(`${path} is a server-rendered 404, not stored`, async ({ request }) => {
+      const response = await request.get(path, { maxRedirects: 0 })
+      expect(response.status()).toBe(404)
+      expect(response.headers()['content-type']).toContain('text/html')
+      expect(response.headers()['cache-control']).toContain('no-store')
+      const html = await response.text()
+      expect(html).toContain('<main id="main"')
+      expect(html).toContain('Page not found')
+    })
+  }
+
   test('the health check reports the database', async ({ request }) => {
     const response = await request.get('/health/')
     expect(response.status()).toBe(200)
@@ -239,8 +311,8 @@ test.describe('Job pages', () => {
     '/en/jobs/no-such-job-zzzzz/',
     '/en/jobs/PhD-test1/',
     '/en/jobs/phd/',
-    // Until the jobs feed (M4.8) takes this name.
-    '/en/jobs/feed.xml',
+    // Names under /en/jobs/ that look like files and are not the feed.
+    '/en/jobs/rss.xml',
   ]) {
     test(`${path} is a server-rendered 404`, async ({ request }) => {
       const response = await request.get(path)

@@ -7,6 +7,7 @@ import { JobList } from '@/components/jobs/JobList'
 import { NotFoundContent } from '@/components/NotFoundContent'
 import { SUBFIELDS_PATH, subfieldPath } from '@/lib/detail-routes'
 import { jobsHref } from '@/lib/filters/jobs'
+import { hubIndexed } from '@/lib/indexing'
 import { activeSubfields, openJobsInSubfield, requestTime, subfieldBySlug } from '@/lib/records'
 import { paths } from '@/lib/site'
 
@@ -30,8 +31,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: subfield.label,
     description: t('hubDescription', { subfield: subfield.label }),
     alternates: { canonical: subfieldPath(slug) },
-    // Hubs are indexed once they have their written introductions (PLAN §16.3, M3).
-    robots: { index: false },
+    // Hubs are indexed once they have their written introductions (PLAN §16.3, M3), and listed in
+    // the sitemaps by the same rule.
+    ...(hubIndexed(subfield) ? {} : { robots: { index: false } }),
   }
 }
 

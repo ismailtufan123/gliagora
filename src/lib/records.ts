@@ -19,20 +19,50 @@ import {
   termIds,
 } from '@/lib/jobs/query'
 import { type JobCard, type JobDoc, toJobCard, toJobDetail } from '@/lib/jobs/view'
+import type { FeedJob } from '@/lib/seo/feed'
 import type { MethodGroup } from '@/lib/taxonomy'
 
 // Reads for the pages that show database records. The proxy has already checked that the record
 // exists (src/lib/detail-routes.ts); these return null only if it disappeared in between.
 // `cache` shares each read between a page and its metadata within one request.
 
+/**
+ * Subfields whose hubs answer: unset counts as active, as in src/lib/detail-lookup.ts (the proxy
+ * renders such a hub), so the subfield index links it and the sitemaps can list it. Payload's
+ * Postgres adapter turns `not_equals` into `IS NULL OR <>`.
+ */
+const ACTIVE_SUBFIELDS: Where = {
+  vocabulary: { equals: 'subfield' },
+  isActive: { not_equals: false },
+}
+
 export const activeSubfields = cache(async (locale: Locale) => {
   const payload = await getPayload({ config })
   const { docs } = await payload.find({
     collection: 'terms',
-    where: { vocabulary: { equals: 'subfield' }, isActive: { equals: true } },
+    where: ACTIVE_SUBFIELDS,
     sort: 'sortOrder',
     select: { slug: true, label: true, description: true },
     locale,
+    pagination: false,
+    depth: 0,
+  })
+  return docs
+})
+
+/**
+ * The active subfields with what decides whether their hubs are indexed (src/lib/indexing.ts):
+ * the written introduction. For the subfield index's robots rule and the sitemaps.
+ */
+export const subfieldsForIndexing = cache(async () => {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'terms',
+    where: ACTIVE_SUBFIELDS,
+    sort: 'sortOrder',
+    select: { slug: true, hubIntro: true },
+    // Hubs exist in English only (PLAN §12).
+    locale: 'en',
     pagination: false,
     depth: 0,
   })
@@ -128,6 +158,37 @@ export const jobByShortId = cache(async (shortId: string, locale: Locale) => {
   })
   return docs[0] ? toJobDetail(docs[0] as JobDoc) : null
 })
+
+/**
+ * The open jobs published last, newest first, at most `limit`: the jobs feed (PLAN §2.2). `now`
+ * is passed in, since a route handler has no request cache for `requestTime`.
+ */
+export async function latestOpenJobs(now: Date, limit: number, locale: Locale): Promise<FeedJob[]> {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'jobs',
+    where: openJobsWhere(now),
+    sort: JOBS_SORT.newest,
+    select: { ...JOB_CARD_SELECT, summary: true, publishedAt: true },
+    populate: JOB_POPULATE,
+    locale,
+    limit,
+    pagination: false,
+    depth: 1,
+  })
+  return docs.flatMap((doc) => {
+    const card = toJobCard(doc as JobDoc)
+    return card
+      ? [
+          {
+            ...card,
+            summary: doc.summary?.trim() || null,
+            publishedAt: doc.publishedAt ?? null,
+          },
+        ]
+      : []
+  })
+}
 
 /**
  * Open jobs matching `where`, in deadline order (the nearest first; rolling and until-filled

@@ -7,6 +7,7 @@ import { JobList } from '@/components/jobs/JobList'
 import { NotFoundContent } from '@/components/NotFoundContent'
 import { institutionPath, matchDetailRoute } from '@/lib/detail-routes'
 import { jobsHref } from '@/lib/filters/jobs'
+import { institutionIndexed } from '@/lib/indexing'
 import { institutionByUrlId, openJobsAtInstitution, requestTime } from '@/lib/records'
 import { rorUrl } from '@/lib/ror/ror-id'
 import { paths } from '@/lib/site'
@@ -44,7 +45,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: t('description', { name: institution.name }),
     alternates: { canonical: institutionPath(institution.slug, urlId(institution)) },
     // Indexed only while it has open positions (PLAN §2.5); upcoming events count too from M8.
-    ...(positions.total > 0 ? {} : { robots: { index: false } }),
+    // The sitemaps list it by the same rule.
+    ...(institutionIndexed(positions.total) ? {} : { robots: { index: false } }),
   }
 }
 
