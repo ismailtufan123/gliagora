@@ -7,7 +7,9 @@
 #
 # Every run:
 #   1. Streams each database dump (pg_dump) straight into restic, which encrypts and deduplicates
-#      it. No unencrypted dump is written to disk.
+#      it. No unencrypted dump is written to disk. The rows of form_limits (hashed IP addresses and
+#      used spam-check answers, kept 24 hours in the app database only, D34) are left out; the
+#      table itself is dumped, so a restore starts with empty form limits.
 #   2. Adds the files needed to rebuild the server: .env, admin-auth.caddy, Compose files.
 # Nightly runs only (other tags, such as pre-update and pre-restore, never delete anything):
 #   3. Keeps everything from the last 2 days plus 7 daily, 4 weekly and 6 monthly snapshots.
@@ -49,7 +51,9 @@ for db in $DATABASES; do
   log "Dumping database $db"
   out=$(mktemp)
   set +e
-  compose exec -T db pg_dump -U postgres --format=custom --compress=0 "$db" \
+  # form_limits never goes into backups (D34, step 1); databases without it are not affected.
+  compose exec -T db pg_dump -U postgres --format=custom --compress=0 \
+    --exclude-table-data=public.form_limits "$db" \
     | restic backup --stdin --stdin-filename "$db.dump" --host "$HOST_TAG" \
       --tag "$TAG" --tag "db:$db" --json >"$out"
   status=("${PIPESTATUS[@]}")

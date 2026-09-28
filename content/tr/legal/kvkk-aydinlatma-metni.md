@@ -313,7 +313,9 @@ Tarayıcınızda yalnızca hizmetin çalışması için zorunlu bilgileri saklar
 - **Giriş güvenliği çerezleri:** Google, ORCID veya e-posta bağlantısıyla giriş yaparken girişin güvenli olması için kullanılır.
 - **Yönetim paneli oturum çerezi:** Yalnızca editörler için.
 
-[KARAR VERİLECEK: ALTCHA ve dil önerisi bandı kurulurken – tarayıcıda bir şey saklayıp saklamadıkları; liste o zaman tamamlanır]
+Formlardaki spam koruması (ALTCHA) çerez kullanmaz ve tarayıcınızda hiçbir şey saklamaz.
+
+[KARAR VERİLECEK: dil önerisi bandı kurulurken – tarayıcıda bir şey saklayıp saklamadığı; liste o zaman tamamlanır]
 
 **Hukuki sebep:**
 

@@ -357,7 +357,9 @@ We use only what is strictly necessary for the site to work, so there is no cook
 - **Sign-in security cookies:** short-lived cookies that protect sign-in with Google, ORCID or an email link against misuse. Their names and lifetimes are listed on the cookies and storage page.
 - **Editor session cookie:** only for editors of Gliagora. It cannot be read by scripts, is sent only over encrypted connections and is not sent when you arrive from another site (HttpOnly, Secure, SameSite=Strict). Its lifetime is listed on the cookies and storage page.
 
-[TO DECIDE: when ALTCHA and the translated-version notice are built – whether they store anything in your browser; this list is completed then]
+The spam protection on forms (ALTCHA) sets no cookie and stores nothing in your browser.
+
+[TO DECIDE: when the translated-version notice is built – whether it stores anything in your browser; this list is completed then]
 
 We set no analytics cookies: our statistics tool works without cookies. There are no third-party cookies, because our pages do not fetch anything from other websites.
 

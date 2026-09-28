@@ -35,6 +35,8 @@ services:
     environment:
       DATABASE_URL: postgres://gliagora:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}@db:5432/gliagora
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET in .env}
+      # Spam check of the public forms (ALTCHA, on this server only).
+      ALTCHA_HMAC_KEY: ${ALTCHA_HMAC_KEY:?Set ALTCHA_HMAC_KEY in .env}
       # Runs scheduled jobs: the nightly check for a new ROR release (PLAN §6.2).
       PAYLOAD_JOBS_AUTORUN: 'true'
       # Optional; raises the ROR API rate limit for editors adding institutions by ROR ID.
@@ -68,6 +70,18 @@ services:
       start_period: 30s
     security_opt:
       - no-new-privileges:true
+
+# IPv6 on the stack's network: Docker then forwards IPv6 visitors to Caddy with ip6tables NAT,
+# which keeps their address. Without it, docker-proxy forwards them from the bridge gateway (for
+# example 172.18.0.1), so Caddy, its access log and the form rate limit (src/lib/forms/client-ip.ts)
+# see one address for every IPv6 visitor. Docker Engine 27 and later (setup-server.sh) has ip6tables
+# on by default and gives such a network a local (ULA) prefix of its own; it also works on a server
+# without public IPv6. Check it after the first deploy (README.md, step 5). Only if the server's
+# kernel has IPv6 switched off does Docker refuse to create this network ("Cannot read IPv6
+# setup"): then remove these lines and publish no AAAA record.
+networks:
+  default:
+    enable_ipv6: true
 
 volumes:
   caddy-data:

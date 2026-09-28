@@ -6,6 +6,7 @@ import * as migration_20260927_141000_seed_geography from './20260927_141000_see
 import * as migration_20260927_142000_institutions from './20260927_142000_institutions';
 import * as migration_20260927_200239_jobs from './20260927_200239_jobs';
 import * as migration_20260927_221038_review_queue from './20260927_221038_review_queue';
+import * as migration_20260927_235439_form_limits from './20260927_235439_form_limits';
 
 export const migrations = [
   {
@@ -47,5 +48,10 @@ export const migrations = [
     up: migration_20260927_221038_review_queue.up,
     down: migration_20260927_221038_review_queue.down,
     name: '20260927_221038_review_queue',
+  },
+  {
+    up: migration_20260927_235439_form_limits.up,
+    down: migration_20260927_235439_form_limits.down,
+    name: '20260927_235439_form_limits'
   },
 ];

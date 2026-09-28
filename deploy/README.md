@@ -49,7 +49,7 @@ Until the repository variable `DEPLOY_ENABLED` is `true`, the workflow stops wit
 ## Before you start
 
 1. **Server:** Ubuntu 24.04 with your SSH public key installed for root (most providers ask for it when ordering).
-2. **DNS (Cloudflare, D1):** `A` records for `gliagora.com` and `www` pointing to the server's IPv4 address (plus `AAAA` for IPv6 if the server has one), all **DNS only** (grey cloud). Add `CAA 0 issue "letsencrypt.org"`. Caddy needs these to get certificates.
+2. **DNS (Cloudflare, D1):** `A` records for `gliagora.com` and `www` pointing to the server's IPv4 address, all **DNS only** (grey cloud). If the server has IPv6, add the `AAAA` records only after the IPv6 check in step 5 has passed. Add `CAA 0 issue "letsencrypt.org"`. Caddy needs these to get certificates.
 3. **Deploy key:** on your computer, create a key pair used only by the Deploy workflow:
 
    ```sh
@@ -90,7 +90,7 @@ On the server, in `/opt/gliagora`:
 
 ```sh
 cp .env.example .env && chmod 600 .env
-openssl rand -hex 32          # run three times; paste into POSTGRES_PASSWORD, APP_DB_PASSWORD, PAYLOAD_SECRET
+openssl rand -hex 32          # run four times; paste into POSTGRES_PASSWORD, APP_DB_PASSWORD, PAYLOAD_SECRET, ALTCHA_HMAC_KEY
 nano .env
 
 docker run --rm -it caddy:2.11.4-alpine caddy hash-password    # choose the /admin password
@@ -104,7 +104,7 @@ Do not start the stack by hand: the first deploy (step 5) pulls the images and s
 
 Backups are encrypted with restic (PLAN §11.7.1, §18.2). Each night at 00:30 UTC (03:30 in Istanbul):
 
-- each database is dumped and streamed into the encrypted repository, together with `.env`, `admin-auth.caddy` and the Compose files;
+- each database is dumped and streamed into the encrypted repository, together with `.env`, `admin-auth.caddy` and the Compose files. The rows of `form_limits` (hashed IP addresses for the form rate limits, kept 24 hours in the app database only, D34) are left out; after a restore the limits start empty;
 - everything from the last 2 days is kept, plus 7 daily, 4 weekly and 6 monthly snapshots. Backups taken before updates and restores never delete anything themselves;
 - on Sundays the repository is checked for damage.
 
@@ -162,6 +162,7 @@ With environments available:
 
 1. GitHub: **Actions → Deploy → Run workflow**, tag `main`. The log ends with "Deployed ghcr.io/…:main".
 2. Check https://gliagora.com/ (redirects to `/en/`) and https://gliagora.com/health/ (`{"status":"ok"}`).
+   If the server has IPv6, check that Caddy sees the real address of IPv6 visitors (the form rate limit and the access log depend on it; `compose.prod.yml` enables IPv6 on the stack's network for this). From a computer with IPv6, run `curl -6 --resolve gliagora.com:443:[<server IPv6>] https://gliagora.com/health/`; then, on the server in `/opt/gliagora`, `docker compose -f compose.prod.yml exec caddy tail -n 1 /var/log/caddy/access.log` must show your own IPv6 address, masked to its first 48 bits, as `remote_ip`, not a `172.x` address. Publish the `AAAA` records only once this passes; until then the site is reached over IPv4 only.
 3. Open https://gliagora.com/admin/, enter the `/admin` password, and create the first editor account.
 4. On the server, take the first backup, test it and switch on the timers:
 

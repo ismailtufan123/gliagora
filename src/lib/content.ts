@@ -57,7 +57,7 @@ export const CONTENT_PAGES = {
     messages: 'privacy',
     path: '/en/legal/privacy/',
     file: 'en/legal/privacy.md',
-    updated: '2026-09-27',
+    updated: '2026-09-28',
     draft: true,
   },
   kvkk: {
@@ -65,7 +65,7 @@ export const CONTENT_PAGES = {
     messages: 'kvkk',
     path: '/tr/legal/kvkk-aydinlatma-metni/',
     file: 'tr/legal/kvkk-aydinlatma-metni.md',
-    updated: '2026-09-27',
+    updated: '2026-09-28',
     draft: true,
   },
   acikRiza: {

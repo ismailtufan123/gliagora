@@ -1,9 +1,23 @@
 // Addresses of original postings (PLAN §3.2, §6.3). Listings link to the employer's own page; the
 // canonical form of that address finds the same posting entered twice.
 
-/** A full http or https address with a host, e.g. https://www.example.org/jobs/123. */
+// Characters the URL parser drops or rewrites without complaint: whitespace (also tabs and line
+// breaks inside an address), backslashes (read as "/"), control characters, and the invisible
+// characters that reorder text. An address with any of them would be stored as typed but lead
+// somewhere else than it reads, or break the database (PostgreSQL text cannot hold NUL).
+const REWRITTEN_BY_PARSER = /[\s\\\u0000-\u001F\u007F-\u009F\u202A-\u202E\u2066-\u2069]/
+
+/** Whether an address has characters that the URL parser would silently drop or change. */
+export function hasRewrittenCharacters(value: string): boolean {
+  return REWRITTEN_BY_PARSER.test(value)
+}
+
+/**
+ * A full http or https address with a host, e.g. https://www.example.org/jobs/123, exactly as the
+ * browser will read it (nothing the parser would drop or change).
+ */
 export function isHttpUrl(value: unknown): value is string {
-  if (typeof value !== 'string' || value.trim() !== value || value === '') return false
+  if (typeof value !== 'string' || value === '' || hasRewrittenCharacters(value)) return false
   try {
     const url = new URL(value)
     return (url.protocol === 'https:' || url.protocol === 'http:') && url.hostname !== ''

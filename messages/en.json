@@ -309,5 +309,77 @@
   },
   "unavailable": {
     "text": "Gliagora is temporarily unavailable. Please try again in a few minutes."
+  },
+  "suggest": {
+    "title": "Suggest a listing",
+    "description": "Send us the link to a neuroscience position on the employer’s own page, or to an event, funding call or resource. An editor checks every suggestion; nothing is published automatically.",
+    "intro": "Know of a neuroscience position that is not on Gliagora yet? Send us the link to the original posting, and an editor will check it.",
+    "employers": "We list positions at universities, research institutes and companies, from the employer’s own page. We do not list positions placed by recruitment agencies.",
+    "otherKinds": "You can also suggest events, funding, papers, news and resources. We keep them and add them when those sections of Gliagora open.",
+    "unavailable": "The form is temporarily unavailable. Please email the link to <email>hello@gliagora.com</email> instead.",
+    "noscript": "The spam check on this form needs JavaScript. If JavaScript is turned off, you can email the link to <email>hello@gliagora.com</email> instead.",
+    "url": {
+      "label": "Address of the original page",
+      "hint": "The employer’s or organiser’s own page, starting with https:// or http://."
+    },
+    "kind": {
+      "legend": "What are you suggesting?",
+      "position": "A position",
+      "event": "An event",
+      "funding": "Funding",
+      "paper": "A paper",
+      "news": "News",
+      "resource": "A resource, such as a dataset or a tool",
+      "other": "Something else"
+    },
+    "note": {
+      "label": "Note (optional)",
+      "hint": "Anything that helps us check it, such as the deadline. Plain text, up to 500 characters. Please do not include anyone’s personal details.",
+      "left": "Characters left: {count}",
+      "over": "Characters over the limit: {count}"
+    },
+    "email": {
+      "label": "Your email address (optional)",
+      "hint": "Only if you want us to tell you the outcome."
+    },
+    "consent": {
+      "label": "Email me the outcome of this suggestion",
+      "hint": "We use your email address only for this and delete it 90 days after our decision. You must be 16 or older. See the <privacy>privacy policy</privacy> and the <kvkk>KVKK information notice</kvkk> (in Turkish)."
+    },
+    "honeypot": "Leave this field empty",
+    "spamNote": "To keep out spam programs, your browser solves a small puzzle before the form is sent, and we keep a scrambled form of your IP address for 24 hours to limit how often the form can be sent. <link>How we protect the form</link>",
+    "submit": "Send suggestion",
+    "sending": "Sending your suggestion…",
+    "errors": {
+      "title": "There is a problem",
+      "prefix": "Error:",
+      "urlMissing": "Enter the address of the page.",
+      "urlInvalid": "Enter the full address of a web page, such as https://www.example.org/jobs/123.",
+      "urlScheme": "Enter an address that starts with https:// or http://.",
+      "urlCredentials": "Enter the address without a user name or password in it.",
+      "urlTooLong": "Enter an address of 2,000 characters or fewer.",
+      "kindMissing": "Choose what you are suggesting.",
+      "noteTooLong": "Shorten the note to 500 characters or fewer.",
+      "emailInvalid": "Enter an email address in the correct format, such as name@example.org.",
+      "emailTooLong": "Enter an email address of 254 characters or fewer.",
+      "emailMissing": "Enter your email address, or untick the box if you do not want us to email you the outcome.",
+      "consentMissing": "Tick the box if you want us to email you the outcome, or leave the email field empty.",
+      "needsJs": "The spam check did not run: the page had not finished loading, or JavaScript is turned off or blocked in your browser. Wait until the page has loaded and send the form again, or email the link to hello@gliagora.com.",
+      "spamCheck": "The spam check has expired or did not work. Please send the form again.",
+      "rateLimited": "You have sent several suggestions in the last hour. Please try again later.",
+      "unavailable": "The form is temporarily unavailable. Please email the link to hello@gliagora.com instead.",
+      "failed": "Something went wrong and your suggestion was not saved. Please try again later, or email the link to hello@gliagora.com and mention reference {reference}."
+    },
+    "sent": {
+      "title": "Thank you for your suggestion",
+      "metaTitle": "Suggestion sent",
+      "next": "What happens next",
+      "check": "An editor opens the original page and checks that it fits Gliagora.",
+      "publish": "If it fits, we publish our own short summary with a link to the original page. Nothing is published automatically.",
+      "outcome": "If you gave us your email address, we tell you the outcome and delete the address 90 days after our decision.",
+      "changedMind": "Changed your mind about the email? Write to <email>privacy@gliagora.com</email>, and we delete your address.",
+      "another": "Suggest another listing",
+      "jobs": "Browse positions"
+    }
   }
 }

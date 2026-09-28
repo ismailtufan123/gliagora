@@ -128,6 +128,20 @@ describe('addressProblem', () => {
     }
   })
 
+  it('refuses characters the URL parser would drop or change, which would be stored as typed', () => {
+    for (const value of [
+      '\u0000https://www.example.org/job',
+      'https://www.example.org/jo\u0000b',
+      'ht\ttps://www.example.org/job',
+      'https://www.example.org/a job',
+      'https://www.example.org\\@evil.example/job',
+      'https://www.example.org/\u202Ejob',
+    ]) {
+      expect(isHttpUrl(value), JSON.stringify(value)).toBe(false)
+      expect(addressProblem(value), JSON.stringify(value)).toMatch(/full address/)
+    }
+  })
+
   it('refuses an address whose canonical form is longer than 2000 characters', () => {
     // 999 characters as typed, but each of these letters takes 9 once percent-encoded.
     expect(addressProblem('https://www.example.org/jobs/' + '神経'.repeat(485))).toBe(

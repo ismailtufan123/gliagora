@@ -14,6 +14,8 @@ export const PAGES = [
   { path: '/en/legal/takedown/', name: 'notice and takedown' },
   { path: '/en/legal/data-requests/', name: 'data requests' },
   { path: '/en/events/', name: 'placeholder (window)' },
+  { path: '/en/suggest/', name: 'suggest a listing' },
+  { path: '/en/suggest/sent/', name: 'suggestion sent' },
   { path: '/en/learn/bench-to-bedside/', name: 'placeholder (section)' },
   { path: '/en/subfields/', name: 'subfield index' },
   { path: '/en/subfields/glia/', name: 'subfield hub' },
