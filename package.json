@@ -34,6 +34,7 @@
     "@payloadcms/email-nodemailer": "3.90.2",
     "@payloadcms/next": "3.90.2",
     "@payloadcms/ui": "3.90.2",
+    "@photostructure/tz-lookup": "11.7.0",
     "altcha-lib": "2.5.0",
     "graphql": "16.14.2",
     "lucide-react": "1.48.0",

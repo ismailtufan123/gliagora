@@ -12,6 +12,7 @@ import * as migration_20260928_033903_maintenance from './20260928_033903_mainte
 import * as migration_20260928_052700_retention_safeguards from './20260928_052700_retention_safeguards';
 import * as migration_20260928_100000_search from './20260928_100000_search';
 import * as migration_20260928_135840_report_institution from './20260928_135840_report_institution';
+import * as migration_20260928_143415_institution_time_zone from './20260928_143415_institution_time_zone';
 
 export const migrations = [
   {
@@ -83,5 +84,10 @@ export const migrations = [
     up: migration_20260928_135840_report_institution.up,
     down: migration_20260928_135840_report_institution.down,
     name: '20260928_135840_report_institution'
+  },
+  {
+    up: migration_20260928_143415_institution_time_zone.up,
+    down: migration_20260928_143415_institution_time_zone.down,
+    name: '20260928_143415_institution_time_zone'
   },
 ];

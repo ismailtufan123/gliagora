@@ -1,4 +1,4 @@
-import { type APIRequestContext, type APIResponse, expect, test } from '@playwright/test'
+import { type APIRequestContext, type APIResponse, type Page, expect, test } from '@playwright/test'
 
 import { E2E_EDITOR_EMAIL } from '../../src/scripts/e2e-editor-account'
 import { FIXED_JOBS } from '../../src/scripts/fake-jobs-fixed'
@@ -10,7 +10,9 @@ import { FAKE_QUEUE_NOTE } from '../../src/scripts/fake-queue-data'
 // list while Payload was bundled into the server more than once (see next.config.ts).
 //
 // Signs in as the test editor from `pnpm e2e:editor` (src/scripts/e2e-editor.ts), with the password
-// in E2E_EDITOR_PASSWORD. CI always has it; a local run without it skips the test.
+// in E2E_EDITOR_PASSWORD. CI always has it; a local run without it skips the test. The admin's own
+// behaviour that needs the editor (the deadline time zone of the job form) is tested here too, so
+// that no two tests sign in at the same moment.
 const password = process.env.E2E_EDITOR_PASSWORD
 
 type FieldError = { path: string; message: string }
@@ -22,6 +24,14 @@ async function signIn(request: APIRequestContext) {
   expect(response.status(), 'sign-in as the test editor (pnpm e2e:editor)').toBe(200)
   const { token } = (await response.json()) as { token: string }
   return { Authorization: `JWT ${token}` }
+}
+
+/** Chooses `name` in the admin form's select or relationship field `path`, by typing it. */
+async function choose(page: Page, path: string, name: string) {
+  const field = page.locator(`#field-${path}`)
+  await field.locator('.rs__control').click()
+  await page.keyboard.type(name)
+  await page.locator('.rs__option', { hasText: name }).first().click()
 }
 
 async function fieldErrors(response: APIResponse): Promise<FieldError[] | undefined> {
@@ -122,6 +132,73 @@ test.describe('admin API', () => {
           message: 'A report does not go back to New. Set it to In progress to reopen it.',
         },
       ])
+    })
+  })
+
+  // D40: the job form fills in the deadline's time zone from the institution the editor chooses,
+  // and keeps a zone the editor chose. The form is left without saving, so nothing is stored.
+  test("the job form takes the deadline's time zone from the institution", async ({ page }) => {
+    const headers = await signIn(page.request)
+    await page.context().setExtraHTTPHeaders(headers)
+    await page.goto('/admin/collections/jobs/create/')
+    const zone = page.locator('#field-deadlineTz')
+    const shown = zone.locator('.rs__single-value')
+    await expect(zone).toBeVisible()
+    await expect(shown).toHaveCount(0)
+
+    await test.step('an institution fills the empty field', async () => {
+      await choose(page, 'institution', 'Karolinska Institutet')
+      await expect(shown).toHaveText('Europe/Stockholm')
+      await expect(zone).toContainText("Taken from the institution's location.")
+    })
+
+    await test.step('a zone the editor chose stays when the institution changes', async () => {
+      await choose(page, 'deadlineTz', 'Asia/Tokyo')
+      await expect(shown).toHaveText('Asia/Tokyo')
+      await expect(zone).not.toContainText("Taken from the institution's location.")
+      // The institution's zone is read in the background: wait for it before looking.
+      const read = page.waitForResponse(
+        (response) => /\/api\/institutions\/\d+\/?\?.*select/.test(response.url()) && response.ok(),
+      )
+      await choose(page, 'institution', 'Max Planck Institute for Brain Research')
+      await read
+      await expect(page.locator('#field-institution')).toContainText('Max Planck Institute')
+      await expect(shown).toHaveText('Asia/Tokyo')
+    })
+
+    await test.step('an emptied field takes the next institution, and then follows it', async () => {
+      await zone.locator('.clear-indicator').click()
+      await expect(shown).toHaveCount(0)
+      await choose(page, 'institution', 'University College London')
+      await expect(shown).toHaveText('Europe/London')
+      await choose(page, 'institution', 'Koç University')
+      await expect(shown).toHaveText('Europe/Istanbul')
+    })
+
+    await test.step('an emptied field stays empty while the deadline changes kind', async () => {
+      await zone.locator('.clear-indicator').click()
+      await expect(shown).toHaveCount(0)
+      await choose(page, 'deadlineKind', 'Rolling')
+      // Payload decides on the server whether a field is shown (a form-state request after each
+      // change), which takes longer while other tests run.
+      await expect(zone).toBeHidden({ timeout: 15_000 })
+      // Shown again, the field reads the institution's zone again: wait for it before looking.
+      const read = page.waitForResponse(
+        (response) => /\/api\/institutions\/\d+\/?\?.*select/.test(response.url()) && response.ok(),
+      )
+      await choose(page, 'deadlineKind', 'Fixed date')
+      await (await read).finished()
+      await expect(zone).toBeVisible({ timeout: 15_000 })
+      await page.evaluate(
+        () => new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve))),
+      )
+      await expect(shown).toHaveCount(0)
+
+      // An institution chosen while the field is hidden fills it once it is shown again.
+      await choose(page, 'deadlineKind', 'Rolling')
+      await choose(page, 'institution', 'University College London')
+      await choose(page, 'deadlineKind', 'Fixed date')
+      await expect(shown).toHaveText('Europe/London', { timeout: 15_000 })
     })
   })
 

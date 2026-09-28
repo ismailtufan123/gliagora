@@ -20,7 +20,10 @@ const RANDOM_JOBS = 60
 const DAY_MS = 86_400_000
 const MINUTE_MS = 60_000
 
-/** Institutions of the ROR test data (tests/fixtures/ror) that could plausibly post these jobs. */
+/**
+ * Institutions of the ROR test data (tests/fixtures/ror) that could plausibly post these jobs, with
+ * the time zone their coordinates give (a test checks it), which their jobs take (D40).
+ */
 export const FAKE_INSTITUTIONS = [
   { rorId: '05dxps055', timeZone: 'America/Los_Angeles' },
   { rorId: '02h1nk258', timeZone: 'Europe/Berlin' },
@@ -40,6 +43,15 @@ export const FAKE_INSTITUTIONS = [
   { rorId: '04p94ax69', timeZone: 'Europe/Paris' },
   { rorId: '03m6ee736', timeZone: 'America/New_York' },
 ] as const
+
+/** The zone a fake job's deadline ends in once stored: its own, or else its institution's. */
+export function storedZone(
+  job: Pick<FakeJob, 'deadlineKind' | 'deadlineTz' | 'institutionRorId'>,
+): string | null {
+  if (job.deadlineKind !== 'fixed') return null
+  if (job.deadlineTz !== undefined) return job.deadlineTz
+  return FAKE_INSTITUTIONS.find(({ rorId }) => rorId === job.institutionRorId)?.timeZone ?? null
+}
 
 /** A site away from the institution, for the first random job at these institutions. */
 const LOCATION_OVERRIDES: Record<string, { city: string; country?: string }> = {
@@ -165,7 +177,11 @@ export type FakeJob = {
   deadlineKind: 'fixed' | 'rolling' | 'until-filled'
   /** Stored form of the deadline day (noon UTC). */
   deadlineDate: string | null
-  deadlineTz: string | null
+  /**
+   * The deadline's time zone; null when it is unknown (Anywhere on Earth). Undefined leaves it out,
+   * so the collection gives the job its institution's zone, as for a job made from a candidate.
+   */
+  deadlineTz?: string | null
   positionType: string
   subfields: string[]
   methods: string[]
@@ -308,7 +324,11 @@ export function fakeJobs(now: Date, seed = SEED): FakeJob[] {
     const kindRoll = random()
     const deadlineKind = kindRoll < 0.1 ? 'rolling' : kindRoll < 0.2 ? 'until-filled' : 'fixed'
     const day = deadlineKind === 'fixed' ? addDays(today, between(random, -45, 150)) : null
-    const timeZone = day && random() < 0.5 ? institution.timeZone : null
+    // Most take their institution's zone from the collection (D40); a few have an unknown zone,
+    // as when an editor empties the field. (Drawn only for fixed deadlines, as it always was, so
+    // the other values stay the same.)
+    const unknownZone = day ? random() < 0.1 : true
+    const timeZone = day && !unknownZone ? institution.timeZone : null
     const ended = day ? deadlineEnd(day, timeZone).getTime() <= nowMs : random() < 0.15
     const statusRoll = random()
     const status = ended
@@ -326,7 +346,7 @@ export function fakeJobs(now: Date, seed = SEED): FakeJob[] {
       status,
       deadlineKind,
       deadlineDate: day ? storedDay(day) : null,
-      deadlineTz: timeZone,
+      deadlineTz: unknownZone ? null : undefined,
       positionType,
       subfields,
       methods,

@@ -83,18 +83,19 @@ try {
   const jobs = fakeJobs(new Date())
   const counts: Record<string, number> = {}
   const jobId = new Map<string, number>()
-  for (const { institutionRorId, ...job } of jobs) {
+  for (const { institutionRorId, deadlineTz, ...job } of jobs) {
     const created = await payload.create({
       collection: 'jobs',
       data: {
         ...job,
+        // Left out, the job takes its institution's zone (D40); null keeps it unknown (AoE).
+        ...(deadlineTz === undefined ? {} : { deadlineTz: deadlineTz as never }),
         institution: institutionId.get(institutionRorId) as number,
         positionType: ids('position-type', [job.positionType])[0],
         careerStages: ids('career-stage', job.careerStages),
         subfields: ids('subfield', job.subfields),
         methods: ids('method', job.methods),
         modelSystems: ids('model-system', job.modelSystems),
-        deadlineTz: job.deadlineTz as never,
         originalLanguage: 'en',
         linkStatus: 'unchecked',
         internalNotes: FAKE_NOTE,

@@ -1,12 +1,21 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import { calendarDay, closedAt, deadlineEnd, goneAt, isOpen } from '@/lib/jobs/deadline'
 import { likelyDuplicate, normaliseTitle } from '@/lib/jobs/similarity'
+import { timeZoneAt } from '@/lib/jobs/time-zone-at'
 import { isTimeZone } from '@/lib/jobs/time-zones'
 import { isHttpUrl } from '@/lib/jobs/url'
+import { fromRorRecord } from '@/lib/ror/record'
 import { SHORT_ID_PATTERN } from '@/lib/short-id'
 
-import { FAKE_INSTITUTIONS, type FakeJob, fakeJobs, seededRandom } from './fake-jobs-data'
+import {
+  FAKE_INSTITUTIONS,
+  type FakeJob,
+  fakeJobs,
+  seededRandom,
+  storedZone,
+} from './fake-jobs-data'
 import { FIXED_JOBS } from './fake-jobs-fixed'
 
 const now = new Date('2026-09-28T09:00:00Z')
@@ -16,7 +25,7 @@ const byId = (shortId: string) => jobs.find((job) => job.shortId === shortId) as
 const listing = (job: FakeJob) => ({
   ...job,
   deadlineAt: job.deadlineDate
-    ? deadlineEnd(calendarDay(job.deadlineDate) as string, job.deadlineTz)
+    ? deadlineEnd(calendarDay(job.deadlineDate) as string, storedZone(job))
     : null,
 })
 
@@ -48,7 +57,8 @@ describe('fake jobs', () => {
       expect(job.title.length).toBeLessThanOrEqual(300)
       expect(job.summary.length).toBeLessThanOrEqual(280)
       expect(job.subfields.length).toBeGreaterThan(0)
-      if (job.deadlineTz) expect(isTimeZone(job.deadlineTz)).toBe(true)
+      const zone = storedZone(job)
+      if (zone) expect(isTimeZone(zone)).toBe(true)
     }
   })
 
@@ -79,10 +89,48 @@ describe('fake jobs', () => {
   it('include rolling and until-filled deadlines, time zones and location overrides', () => {
     const kinds = new Set(jobs.map((job) => job.deadlineKind))
     expect([...kinds].sort()).toEqual(['fixed', 'rolling', 'until-filled'])
-    expect(jobs.filter((job) => job.deadlineTz).length).toBeGreaterThan(10)
+    expect(jobs.filter((job) => storedZone(job)).length).toBeGreaterThan(40)
     expect(jobs.filter((job) => job.locationOverride).length).toBe(3)
     const institutions = new Set(jobs.map((job) => job.institutionRorId))
     expect(institutions.size).toBeGreaterThan(FAKE_INSTITUTIONS.length / 2)
+  })
+
+  it("mostly take their institution's time zone, and some leave it unknown (D40)", () => {
+    const generated = jobs.filter(
+      (job) =>
+        job.deadlineKind === 'fixed' &&
+        !Object.values(FIXED_JOBS).some((fixed) => fixed.shortId === job.shortId),
+    )
+    const fromInstitution = generated.filter((job) => job.deadlineTz === undefined)
+    const unknown = generated.filter((job) => job.deadlineTz === null)
+    expect(fromInstitution.length + unknown.length).toBe(generated.length)
+    expect(fromInstitution.length).toBeGreaterThan(unknown.length * 4)
+    expect(unknown.length).toBeGreaterThan(0)
+    // The fixed jobs keep the zones the end-to-end tests expect, unknown ones included.
+    for (const fixed of Object.values(FIXED_JOBS)) {
+      const job = byId(fixed.shortId)
+      expect(job.deadlineTz).toBe('deadlineTz' in fixed ? fixed.deadlineTz : null)
+    }
+  })
+
+  it('know the time zones the coordinates and countries of their institutions give', () => {
+    const records = JSON.parse(
+      readFileSync(
+        new URL('../../tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.json', import.meta.url),
+        'utf8',
+      ),
+    ) as unknown[]
+    const places = new Map(
+      records.flatMap((record) => {
+        const institution = fromRorRecord(record)
+        return institution ? [[institution.rorId, institution] as const] : []
+      }),
+    )
+    for (const { rorId, timeZone } of FAKE_INSTITUTIONS) {
+      const place = places.get(rorId)
+      expect(place, rorId).toBeDefined()
+      expect(timeZoneAt(place?.lat, place?.lng, place?.countryCode), rorId).toBe(timeZone)
+    }
   })
 
   it('never look like the same position twice', () => {
