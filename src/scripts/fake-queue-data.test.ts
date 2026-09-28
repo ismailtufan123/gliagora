@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { similarity, normaliseTitle } from '@/lib/jobs/similarity'
 import { canonicalUrl, isHttpUrl } from '@/lib/jobs/url'
-import { REPORT_KINDS, statusProblem } from '@/lib/reports/status'
+import { REPORT_KINDS, kindsFor, statusProblem } from '@/lib/reports/status'
 import { transitionProblem } from '@/lib/review/status'
 
 import { FAKE_INSTITUTIONS, postingUrl } from './fake-jobs-data'
@@ -118,13 +118,24 @@ describe('fake reports', () => {
       new Set(['new', 'in-progress', 'closed']),
     )
     expect(FAKE_REPORTS.some((r) => r.kind === 'personal-rights' && r.status === 'new')).toBe(true)
-    expect(FAKE_REPORTS.some((r) => r.job === undefined)).toBe(true)
+    expect(FAKE_REPORTS.some((r) => r.job === undefined && r.institution === undefined)).toBe(true)
     const shortIds = Object.values(FIXED_JOBS).map((job) => job.shortId as string)
     for (const report of FAKE_REPORTS) {
       expect(REPORT_KINDS.map((k) => k.value)).toContain(report.kind)
       if (report.job) expect(shortIds).toContain(report.job)
+      // One item at most, as the form sends it.
+      expect(Boolean(report.job) && Boolean(report.institution)).toBe(false)
       if (report.status === 'closed') expect(report.action).toBeDefined()
       expect(statusProblem('new', report.status)).toBeNull()
+    }
+  })
+
+  it('include one about an institution, of a kind that fits it (D40)', () => {
+    const about = FAKE_REPORTS.filter((r) => r.institution)
+    expect(about.length).toBeGreaterThanOrEqual(1)
+    for (const report of about) {
+      expect(kindsFor('institution')).toContain(report.kind)
+      expect(FAKE_QUEUE_INSTITUTIONS).toContain(report.institution)
     }
   })
 })

@@ -20,6 +20,7 @@ import {
   termIds,
 } from '@/lib/jobs/query'
 import { type JobCard, type JobDoc, toJobCard, toJobDetail } from '@/lib/jobs/view'
+import type { ItemLookup } from '@/lib/reports/item'
 import type { FeedJob } from '@/lib/seo/feed'
 import { matchingJobIds, prepareSearch, searchRows } from '@/lib/search/database'
 import type { MethodGroup } from '@/lib/taxonomy'
@@ -219,6 +220,26 @@ export const jobForReport = cache(async (shortId: string) => {
   })
   return docs[0] ?? null
 })
+
+/**
+ * What "Report a problem" needs of the institution named in its address: its name and address.
+ * Found as the institution page finds it (institutionByUrlId), by its ROR ID or short ID.
+ */
+export const institutionForReport = cache(async (id: string) => {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'institutions',
+    where: id.length === 9 ? { rorId: { equals: id } } : { shortId: { equals: id } },
+    select: { name: true, slug: true, rorId: true, shortId: true },
+    limit: 1,
+    pagination: false,
+    depth: 0,
+  })
+  return docs[0] ?? null
+})
+
+/** How "Report a problem" finds the item named in its address, on the page and when stored. */
+export const reportItemLookup: ItemLookup = { job: jobForReport, institution: institutionForReport }
 
 /**
  * Open jobs matching `where`, in deadline order (the nearest first; rolling and until-filled

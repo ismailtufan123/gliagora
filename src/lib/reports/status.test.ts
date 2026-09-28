@@ -1,17 +1,39 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  JOB_ONLY_KINDS,
   OTHER_ANSWER_DAYS,
   PERSONAL_RIGHTS_ANSWER_HOURS,
   REPORT_KINDS,
   REPORT_RETENTION_YEARS,
   closing,
+  kindsFor,
   purgeAt,
   respondBy,
   statusProblem,
 } from './status'
 
 const RECEIVED = '2026-09-28T10:15:00.000Z'
+
+describe('kindsFor', () => {
+  const ALL = REPORT_KINDS.map(({ value }) => value)
+
+  it('offers every kind for a job, and for a report about nothing in particular', () => {
+    expect(kindsFor('job')).toEqual(ALL)
+    expect(kindsFor(null)).toEqual(ALL)
+    expect(kindsFor(undefined)).toEqual(ALL)
+  })
+
+  it('leaves out, for an institution, what only a position can be: closed, or not from the employer', () => {
+    expect(JOB_ONLY_KINDS).toEqual(['closed', 'not-employer'])
+    expect(kindsFor('institution')).toEqual([
+      'wrong-fact',
+      'broken-link',
+      'personal-rights',
+      'other',
+    ])
+  })
+})
 
 describe('respondBy', () => {
   it('gives a personal-rights request 24 hours (PLAN §3.2, §15.1, §15.4)', () => {

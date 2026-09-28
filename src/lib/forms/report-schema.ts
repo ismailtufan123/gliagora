@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { type Locale, locales } from '@/i18n/routing'
 import { type ItemRef, parseItemRef } from '@/lib/reports/item'
-import { PERSONAL_RIGHTS, REPORT_KINDS, type ReportKind } from '@/lib/reports/status'
+import { PERSONAL_RIGHTS, REPORT_KINDS, type ReportKind, kindsFor } from '@/lib/reports/status'
 
 import { DETAILS_MAX, FORM_INPUTS, REPORT_FIELDS, type ReportField } from './fields'
 import { type Parse, formText } from './public-form'
@@ -15,6 +15,7 @@ import { cleanText, emailProblem } from './text'
 /** Each message in messages/{locale}.json under `report.errors`. */
 export type ReportErrorCode =
   | 'kindMissing'
+  | 'kindJobOnly'
   | 'detailsMissing'
   | 'detailsTooLong'
   | 'emailInvalid'
@@ -26,7 +27,7 @@ export type ReportValues = {
   kind: string
   details: string
   email: string
-  /** The item from the page's address (`job:{shortId}`), in a hidden input. */
+  /** The item from the page's address (`job:{shortId}`, `institution:{id}`), in a hidden input. */
   item: string
 }
 
@@ -87,6 +88,22 @@ const schema = z
     },
     // Only once the kind is known; the address's own problems come first.
     { when: (payload) => (payload.value as { kind?: unknown }).kind === PERSONAL_RIGHTS },
+  )
+  // A position closes, and a posting comes from the employer or not: those kinds are for jobs
+  // only, so the form does not offer them for an institution (D40). Refused when sent all the
+  // same, at the field; a general report (no item) and a job take every kind.
+  .superRefine(
+    ({ kind, item }, ctx) => {
+      if (item && !kindsFor(item.type).includes(kind)) {
+        ctx.addIssue({ code: 'custom', path: ['kind'], message: 'kindJobOnly' })
+      }
+    },
+    // Also when another field has a problem, so that every problem is shown at once; only once
+    // the kind is one of the kinds.
+    {
+      when: (payload) =>
+        (KINDS as readonly unknown[]).includes((payload.value as { kind?: unknown }).kind),
+    },
   )
 
 /** Checks a report: the data to store, or a problem for each field that has one. */

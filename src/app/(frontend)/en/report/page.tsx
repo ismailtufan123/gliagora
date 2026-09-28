@@ -7,16 +7,17 @@ import { altchaKey } from '@/lib/forms/altcha'
 import { initialFormState } from '@/lib/forms/public-form'
 import { REPORT_LEGAL_LINKS, emptyReportValues } from '@/lib/forms/report'
 import { textDirection } from '@/lib/jobs/languages'
-import { jobForReport, requestTime } from '@/lib/records'
-import { ITEM_PARAM, type ReportItem, parseItemRef, reportItem } from '@/lib/reports/item'
-import { REPORT_KINDS } from '@/lib/reports/status'
+import { reportItemLookup, requestTime } from '@/lib/records'
+import { ITEM_PARAM, type ReportItem, findReportItem, parseItemRef } from '@/lib/reports/item'
+import { type ReportKind, kindsFor } from '@/lib/reports/status'
 import { CONTACT_EMAIL } from '@/lib/site'
 
 import { sendReport } from './actions'
 
 // "Report a problem" (PLAN §3.2, §7.5, §15.4): the form behind the link on every item, with the
-// item filled in from the address (`?item=job:{shortId}`), and the form the notice and takedown
-// page links to for corrections, removals and personal-rights requests. Not indexed (PLAN §2.2);
+// item filled in from the address (`?item=job:{shortId}`, `?item=institution:{id}`), and the form
+// the notice and takedown page links to for corrections, removals and personal-rights requests.
+// A report about an institution offers only the kinds that fit it (D40). Not indexed (PLAN §2.2);
 // rendered for each request, because each page gets its own spam-check challenge.
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,7 @@ async function itemOf(value: unknown): Promise<ReportItem | null> {
   const ref = parseItemRef(value)
   if (!ref) return null
   try {
-    return reportItem(await jobForReport(ref.shortId), requestTime())
+    return await findReportItem(ref, reportItemLookup, requestTime())
   } catch (error) {
     // The form works without its item; storing the report reports the database error itself.
     console.error('Item lookup for a report failed:', error instanceof Error ? error.name : error)
@@ -46,6 +47,14 @@ export default async function Page({ searchParams }: Props) {
   const email = (chunks: ReactNode) => <a href={`mailto:${CONTACT_EMAIL}`}>{chunks}</a>
   const item = await itemOf((await searchParams)[ITEM_PARAM])
   const key = altchaKey()
+  // What a fact or a link is, on an institution's page rather than a job's.
+  const institutionHints: Partial<Record<ReportKind, string>> =
+    item?.type === 'institution'
+      ? {
+          'wrong-fact': t('kind.wrong-fact.hintInstitution'),
+          'broken-link': t('kind.broken-link.hintInstitution'),
+        }
+      : {}
 
   let form: ReactNode
   if (key) {
@@ -64,10 +73,10 @@ export default async function Page({ searchParams }: Props) {
             errorPrefix: t('errors.prefix'),
             kind: {
               legend: t('kind.legend'),
-              options: REPORT_KINDS.map(({ value }) => ({
+              options: kindsFor(item?.type).map((value) => ({
                 value,
                 label: t(`kind.${value}.label`),
-                hint: t(`kind.${value}.hint`),
+                hint: institutionHints[value] ?? t(`kind.${value}.hint`),
               })),
             },
             details: {
@@ -107,7 +116,10 @@ export default async function Page({ searchParams }: Props) {
     <main id="main" className="page-frame flex-1 py-12">
       <div className="grid max-w-(--measure) gap-6">
         <h1 className="text-h1">{t('title')}</h1>
-        <p className="text-card">{t('intro')}</p>
+        {/* An institution has no posting to check a report against (D40). */}
+        <p className="text-card">
+          {t(item?.type === 'institution' ? 'introInstitution' : 'intro')}
+        </p>
         <p>
           {t.rich('takedown', {
             link: (chunks) => <a href={REPORT_LEGAL_LINKS.takedown}>{chunks}</a>,

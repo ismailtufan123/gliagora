@@ -178,16 +178,6 @@ export const FAKE_CANDIDATES: FakeCandidate[] = [
   },
 ]
 
-/** The test institutions the fake queue refers to (ROR IDs). */
-export const FAKE_QUEUE_INSTITUTIONS = [
-  ...new Set(
-    [...FAKE_SUBMISSIONS, ...FAKE_CANDIDATES].flatMap((item) => [
-      ...('institutionRorId' in item && item.institutionRorId ? [item.institutionRorId] : []),
-      ...(item.review ? [item.review.institutionRorId] : []),
-    ]),
-  ),
-]
-
 /** A report from "Report a problem" (M4.6), and how far an editor has handled it. */
 export type FakeReport = {
   kind: ReportKind
@@ -195,6 +185,8 @@ export type FakeReport = {
   email: string | null
   /** The fixed job it is about (its short ID), if any. */
   job?: string
+  /** Or the test institution it is about (its ROR ID). */
+  institution?: string
   status: ReportStatus
   action?: ReportAction
   actionNote?: string
@@ -241,4 +233,24 @@ export const FAKE_REPORTS: FakeReport[] = [
     status: 'closed',
     action: 'not-applicable',
   },
+  {
+    // From an institution page (D40): the institution of the "institution" template of the
+    // end-to-end tests (tests/e2e/pages.ts).
+    kind: 'wrong-fact',
+    details: note('A name the institution also uses is missing from its page.'),
+    email: 'reader@example.org',
+    institution: '05dxps055',
+    status: 'new',
+  },
+]
+
+/** The test institutions the fake queue refers to (ROR IDs). */
+export const FAKE_QUEUE_INSTITUTIONS = [
+  ...new Set([
+    ...[...FAKE_SUBMISSIONS, ...FAKE_CANDIDATES].flatMap((item) => [
+      ...('institutionRorId' in item && item.institutionRorId ? [item.institutionRorId] : []),
+      ...(item.review ? [item.review.institutionRorId] : []),
+    ]),
+    ...FAKE_REPORTS.flatMap((report) => (report.institution ? [report.institution] : [])),
+  ]),
 ]

@@ -301,7 +301,8 @@
     "allPositions": "{name} bünyesindeki {count} pozisyonun tümü",
     "events": "Yaklaşan etkinlikler",
     "noEvents": "Şu anda burada yaklaşan etkinlik yok. <link>Tüm etkinliklere</link> göz atın.",
-    "source": "Kurum verileri: <link>Research Organization Registry (ROR)</link>, CC0."
+    "source": "Kurum verileri: <link>Research Organization Registry (ROR)</link>, CC0.",
+    "reportProblem": "Sorun bildir"
   },
   "subfields": {
     "title": "Alt alanlar",
@@ -432,6 +433,7 @@
     "title": "Sorun bildirin",
     "description": "Gliagora'daki yanlış bir bilgiyi, kapanmış bir pozisyonu veya çalışmayan bir bağlantıyı bize bildirin ya da sizinle ilgili bir içeriğin düzeltilmesini veya kaldırılmasını isteyin.",
     "intro": "Gliagora'da yanlış olan ya da yer almaması gereken bir şey varsa bize bildirin. Her bildirimi bir editör asıl ilanla karşılaştırarak inceler.",
+    "introInstitution": "Gliagora'da bu kurumla ilgili yanlış bir bilgi varsa bize bildirin. Her bildirimi bir editör kurumun kendi web sitesiyle ve varsa Research Organization Registry (ROR) kaydıyla karşılaştırarak inceler.",
     "takedown": "Düzeltme ve kaldırma taleplerini nasıl ele aldığımız ve ne kadar sürede harekete geçtiğimiz <link>kaldırma ve düzeltme sayfasında</link> (İngilizce) anlatılır.",
     "about": "<strong>İlgili içerik:</strong> <link>{title}</link>",
     "unavailable": "Form geçici olarak kullanılamıyor. Lütfen bildiriminizi <email>hello@gliagora.com</email> adresine e-postayla gönderin.",
@@ -440,7 +442,8 @@
       "legend": "Sorun nedir?",
       "wrong-fact": {
         "label": "Bir bilgi yanlış",
-        "hint": "Örneğin son başvuru tarihi, kurum veya pozisyon türü asıl ilandakinden farklı."
+        "hint": "Örneğin son başvuru tarihi, kurum veya pozisyon türü asıl ilandakinden farklı.",
+        "hintInstitution": "Örneğin kurumun adı, şehri, ülkesi veya web sitesi yanlış."
       },
       "closed": {
         "label": "Pozisyon kapandı",
@@ -448,7 +451,8 @@
       },
       "broken-link": {
         "label": "Bir bağlantı çalışmıyor",
-        "hint": "Asıl ilanın bağlantısı veya başka bir bağlantı bir hata sayfasına ya da yanlış bir sayfaya gidiyor."
+        "hint": "Asıl ilanın bağlantısı veya başka bir bağlantı bir hata sayfasına ya da yanlış bir sayfaya gidiyor.",
+        "hintInstitution": "Kurumun web sitesine giden bağlantı veya başka bir bağlantı bir hata sayfasına ya da yanlış bir sayfaya gidiyor."
       },
       "not-employer": {
         "label": "İlan işverenden gelmiyor",
@@ -481,6 +485,7 @@
       "title": "Bir sorun var",
       "prefix": "Hata:",
       "kindMissing": "Sorunun ne olduğunu seçin.",
+      "kindJobOnly": "Sorunun ne olduğunu listelenen seçeneklerden seçin: o seçenek yalnızca pozisyonlar içindir.",
       "detailsMissing": "Neyin yanlış olduğunu yazın.",
       "detailsTooLong": "Ayrıntıları en fazla 2.000 karaktere kısaltın.",
       "emailInvalid": "E-posta adresini doğru biçimde girin, örneğin ad@example.org.",
@@ -533,6 +538,7 @@
       "introPersonalRights": "Bu e-posta, kişilik haklarınızla ilgili talebinizi aldığımızın otomatik onayıdır.",
       "item": "İlgili sayfa:",
       "next": "İçeriği asıl ilanla karşılaştırır, ardından düzeltir ya da Gliagora'da yer almaması gerekiyorsa kaldırırız. İnceledikten sonra bu adrese yanıt vereceğiz.",
+      "nextInstitution": "Kurumun bilgilerini kendi web sitesiyle ve varsa Research Organization Registry (ROR) kaydıyla karşılaştırır, gerekirse düzeltiriz. İnceledikten sonra bu adrese yanıt vereceğiz.",
       "nextPersonalRights": "Editörümüz size 24 saat içinde yanıt verecek; genellikle 72 saat içinde karar veririz. Bir içeriği kaldırmaya karar verirsek içerik hemen yayından kalkar.",
       "retention": "Bildiriminizi ve e-posta adresinizi, bildirim kapatıldıktan sonra 2 yıl saklarız. Kişisel verilerinizi nasıl işlediğimiz: {privacyUrl}",
       "retentionPersonalRights": "Talebinizi ve e-posta adresinizi, talep kapatıldıktan sonra 2 yıl saklarız. Kişisel verilerinizi nasıl işlediğimiz: {privacyUrl}"

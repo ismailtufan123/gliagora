@@ -7,7 +7,7 @@ import type { Payload } from 'payload'
 import { FAKE_DATA } from '@/collections/Jobs'
 import { idOf } from '@/lib/relationship'
 
-import { reportItem } from '@/lib/reports/item'
+import { type ItemLookup, type ItemRef, findReportItem, itemRefText } from '@/lib/reports/item'
 
 import {
   FAKE_CANDIDATES,
@@ -168,27 +168,42 @@ export async function addFakeQueue(payload: Payload, { institutionId, jobId }: L
   }
   // Reports as the form stores them, then handled as an editor would: In progress, then Closed.
   const now = new Date()
-  for (const { job, status, action, actionNote, ...report } of FAKE_REPORTS) {
-    const jobDoc =
-      job === undefined
-        ? null
-        : (
-            await payload.find({
-              collection: 'jobs',
-              where: { shortId: { equals: job } },
-              depth: 0,
-              limit: 1,
-            })
-          ).docs[0]
-    if (job !== undefined && !jobDoc) throw new Error(`Fake job missing: ${job}`)
-    // The address of a public job's page, as the form records it.
-    const item = jobDoc ? reportItem(jobDoc, now) : null
+  const lookup: ItemLookup = {
+    job: async (shortId) =>
+      (
+        await payload.find({
+          collection: 'jobs',
+          where: { shortId: { equals: shortId } },
+          depth: 0,
+          limit: 1,
+        })
+      ).docs[0] ?? null,
+    institution: async (rorId) =>
+      (
+        await payload.find({
+          collection: 'institutions',
+          where: { rorId: { equals: rorId } },
+          depth: 0,
+          limit: 1,
+        })
+      ).docs[0] ?? null,
+  }
+  for (const { job, institution, status, action, actionNote, ...report } of FAKE_REPORTS) {
+    const ref: ItemRef | null = job
+      ? { type: 'job', shortId: job }
+      : institution
+        ? { type: 'institution', id: institution }
+        : null
+    // The item and the address of its page, as the form records them.
+    const item = await findReportItem(ref, lookup, now)
+    if (ref && !item) throw new Error(`Fake item missing: ${itemRefText(ref)}`)
     const created = await payload.create({
       collection: 'reports',
       data: {
         ...report,
         locale: 'en',
-        job: jobDoc?.id ?? null,
+        job: item?.type === 'job' ? item.id : null,
+        institution: item?.type === 'institution' ? item.id : null,
         itemUrl: item?.path ?? null,
         status: 'new',
       },

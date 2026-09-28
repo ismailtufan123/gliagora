@@ -4,6 +4,7 @@ import { validations } from 'payload'
 import { fixedFieldHooks } from '@/lib/fixed-fields'
 import { keepOutOfLists } from '@/lib/private-fields'
 import {
+  JOB_ONLY_KINDS,
   OTHER_ANSWER_DAYS,
   PERSONAL_RIGHTS,
   PERSONAL_RIGHTS_ANSWER_HOURS,
@@ -11,6 +12,7 @@ import {
   REPORT_KINDS,
   REPORT_RETENTION_YEARS,
   REPORT_STATUSES,
+  type ReportKind,
   type ReportStatus,
   closing,
   respondBy,
@@ -34,7 +36,7 @@ const MAX_EMAIL_LENGTH = 254
 const MAX_DETAILS_LENGTH = 2000
 
 /** What the person sent: fixed once stored, also for code that bypasses access control. */
-const FROM_FORM = ['kind', 'job', 'itemUrl', 'details', 'email', 'locale'] as const
+const FROM_FORM = ['kind', 'job', 'institution', 'itemUrl', 'details', 'email', 'locale'] as const
 const fixed = fixedFieldHooks('reports', FROM_FORM)
 
 /** Personal data: never a list column, and never loaded by the list. */
@@ -87,8 +89,9 @@ const sidebarDate = (name: string, label: string, description: string): Field =>
 
 // PLAN §5.1 (TakedownRequest), §3.2, §7.5, §15.1: reports from the public "Report a problem"
 // form (/en/report/): wrong facts, closed positions, broken links, agency postings, and requests
-// to remove or correct content about a person (Law 5651 Art. 9). Created only by the form;
-// editors handle them here and close them with what they did.
+// to remove or correct content about a person (Law 5651 Art. 9), about a job, an institution
+// (D40) or nothing in particular. Created only by the form; editors handle them here and close
+// them with what they did.
 //
 // No versions: a report holds personal data (the email address and the details), and the 2-year
 // deletion (the retention task, M4.7) removes the whole record; versions would keep copies of it. If versions are ever
@@ -104,7 +107,7 @@ export const Reports: CollectionConfig = {
     // fields from any column list, also one from ?columns= or a saved preference, so they are not
     // sent to the list page either; an editor sees them only by opening a report.
     enableListViewSelectAPI: true,
-    defaultColumns: ['kind', 'status', 'respondBy', 'job', 'createdAt'],
+    defaultColumns: ['kind', 'status', 'respondBy', 'job', 'institution', 'createdAt'],
     listSearchableFields: ['itemUrl'],
     description: `Reports from the "Report a problem" form, newest first. Requests about personal rights (Law 5651 Art. 9) are answered within ${PERSONAL_RIGHTS_ANSWER_HOURS} hours and usually decided within 72 hours (the notice and takedown page); other reports within ${OTHER_ANSWER_DAYS} days. Set a report to In progress once you have answered the person or started checking (a personal-rights request only once you have answered the person: until then the dashboard counts it as waiting for its ${PERSONAL_RIGHTS_ANSWER_HOURS}-hour answer), and close it with what you did: to remove a listing, withdraw the job itself. The email address and details are deleted with the report ${REPORT_RETENTION_YEARS} years after it is closed, by the nightly retention task. A report sent with an email address gets an automatic acknowledgement within minutes, once email is set up (M2). To answer a data request, filter by Email, then delete.`,
     pagination: { defaultLimit: 50 },
@@ -131,18 +134,39 @@ export const Reports: CollectionConfig = {
       required: true,
       index: true,
       options: REPORT_KINDS.map(({ value, label }) => ({ value, label })),
+      // As on the form: a position closes, and a posting comes from the employer or not, so an
+      // institution cannot have those kinds (D40).
+      validate: (value: string | null | undefined, options: Options) =>
+        options.data.institution && JOB_ONLY_KINDS.includes(value as ReportKind)
+          ? 'This kind is for reports about a job only, not about an institution.'
+          : validations.select(value as never, options as never),
       admin: { description: 'As the person chose it on the form.' },
     }),
     {
       type: 'row',
       fields: [
+        // A report names a job or an institution, never both: the one it names is shown here (Job
+        // for other reports too, empty). The database clears the link when the job or the
+        // institution is deleted (ON DELETE SET NULL); the page's address stays.
         fromForm({
           name: 'job',
           label: 'Job',
           type: 'relationship',
           relationTo: 'jobs',
           admin: {
+            condition: (data) => !data?.institution,
             description: 'The job the report is about, when it was sent from a job page.',
+          },
+        }),
+        fromForm({
+          name: 'institution',
+          label: 'Institution',
+          type: 'relationship',
+          relationTo: 'institutions',
+          admin: {
+            condition: (data) => Boolean(data?.institution),
+            description:
+              'The institution the report is about, when it was sent from an institution page.',
           },
         }),
         fromForm({

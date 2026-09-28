@@ -301,7 +301,8 @@
     "allPositions": "All {count} positions at {name}",
     "events": "Upcoming events",
     "noEvents": "There are no upcoming events here at the moment. See <link>all events</link>.",
-    "source": "Institution data: <link>Research Organization Registry (ROR)</link>, CC0."
+    "source": "Institution data: <link>Research Organization Registry (ROR)</link>, CC0.",
+    "reportProblem": "Report a problem"
   },
   "subfields": {
     "title": "Subfields",
@@ -432,6 +433,7 @@
     "title": "Report a problem",
     "description": "Tell us about a wrong fact, a closed position or a broken link on Gliagora, or ask us to correct or remove content about you.",
     "intro": "Tell us if something on Gliagora is wrong or should not be there. An editor checks every report against the original posting.",
+    "introInstitution": "Tell us if something about this institution on Gliagora is wrong. An editor checks every report against the institution’s own website and, where there is one, its record in the Research Organization Registry (ROR).",
     "takedown": "How we handle corrections and removal requests, and how quickly we act, is explained on the <link>notice and takedown page</link>.",
     "about": "<strong>About:</strong> <link>{title}</link>",
     "unavailable": "The form is temporarily unavailable. Please email your report to <email>hello@gliagora.com</email> instead.",
@@ -440,7 +442,8 @@
       "legend": "What is wrong?",
       "wrong-fact": {
         "label": "A fact is wrong",
-        "hint": "For example, the deadline, the institution or the type of position differs from the original posting."
+        "hint": "For example, the deadline, the institution or the type of position differs from the original posting.",
+        "hintInstitution": "For example, the institution’s name, city, country or website is wrong."
       },
       "closed": {
         "label": "The position has closed",
@@ -448,7 +451,8 @@
       },
       "broken-link": {
         "label": "A link does not work",
-        "hint": "The link to the original posting, or another link, leads to an error or to the wrong page."
+        "hint": "The link to the original posting, or another link, leads to an error or to the wrong page.",
+        "hintInstitution": "The link to the institution’s website, or another link, leads to an error or to the wrong page."
       },
       "not-employer": {
         "label": "It does not come from the employer",
@@ -481,6 +485,7 @@
       "title": "There is a problem",
       "prefix": "Error:",
       "kindMissing": "Choose what is wrong.",
+      "kindJobOnly": "Choose what is wrong from the options listed: that choice is for positions only.",
       "detailsMissing": "Tell us what is wrong.",
       "detailsTooLong": "Shorten the details to 2,000 characters or fewer.",
       "emailInvalid": "Enter an email address in the correct format, such as name@example.org.",
@@ -533,6 +538,7 @@
       "introPersonalRights": "This is an automatic confirmation that we have received your request about your personal rights.",
       "item": "It is about this page:",
       "next": "We check the item against the original posting, then correct it, or remove it if it should not be on Gliagora. We will reply to this address once we have checked it.",
+      "nextInstitution": "We check the institution’s details against its own website and, where there is one, its record in the Research Organization Registry (ROR), then correct them if needed. We will reply to this address once we have checked it.",
       "nextPersonalRights": "Our editor will answer you within 24 hours, and we usually decide within 72 hours. If we decide to remove an item, it goes offline at once.",
       "retention": "We keep your report, with your email address, for 2 years after we close it. How we handle your data: {privacyUrl}",
       "retentionPersonalRights": "We keep your request, with your email address, for 2 years after we close it. How we handle your data: {privacyUrl}"

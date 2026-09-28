@@ -17,6 +17,8 @@ export const PAGES = [
   { path: '/en/suggest/', name: 'suggest a listing' },
   { path: '/en/suggest/sent/', name: 'suggestion sent' },
   { path: '/en/report/', name: 'report a problem' },
+  // From an institution page (D40): only the kinds that fit. The ROR test data, as below.
+  { path: '/en/report/?item=institution:05dxps055', name: 'report a problem (institution)' },
   { path: '/en/report/sent/', name: 'report sent' },
   { path: '/en/learn/bench-to-bedside/', name: 'placeholder (section)' },
   { path: '/en/subfields/', name: 'subfield index' },
