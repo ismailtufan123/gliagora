@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   type DetailLookup,
@@ -91,6 +91,7 @@ describe('resolveDetailRoute', () => {
     subfield: async (slug) =>
       ({ glia: { isActive: true }, retired: { isActive: false } })[slug] ?? null,
     job: async () => null,
+    retiredJob: async () => false,
   }
   const resolve = (path: string) => {
     const route = matchDetailRoute(path)
@@ -142,10 +143,17 @@ describe('resolveDetailRoute for jobs (PLAN §2.5)', () => {
   const ahead = (ms: number) => new Date(now.getTime() + ms).toISOString()
   const PATH = '/en/jobs/phd-in-glia-k3f9a/'
 
-  const resolveJob = (job: Partial<JobRecord> | null, path = PATH, at = now) => {
+  const resolveJob = (
+    job: Partial<JobRecord> | null,
+    path = PATH,
+    at = now,
+    retired: string[] = [],
+  ) => {
+    const retiredJob = vi.fn(async (shortId: string) => retired.includes(shortId))
     const lookup: DetailLookup = {
       institution: async () => null,
       subfield: async () => null,
+      retiredJob,
       job: async (shortId) =>
         job && shortId === 'k3f9a'
           ? {
@@ -174,6 +182,35 @@ describe('resolveDetailRoute for jobs (PLAN §2.5)', () => {
     expect(await resolveJob(null)).toEqual({ action: 'notFound' })
     expect(await resolveJob({}, '/en/jobs/phd-in-glia-k3f9b/')).toEqual({ action: 'notFound' })
     expect(await resolveJob({}, '/en/jobs/PhD-k3f9a/')).toEqual({ action: 'notFound' })
+  })
+
+  it('answers 410 for a retired job, whose address and ID are all that is kept (D34)', async () => {
+    expect(await resolveJob(null, PATH, now, ['k3f9a'])).toEqual({ action: 'gone' })
+    // Whatever the slug, as for a withdrawn job.
+    expect(await resolveJob(null, '/en/jobs/k3f9a/', now, ['k3f9a'])).toEqual({ action: 'gone' })
+    expect(await resolveJob(null, '/en/jobs/old-title-k3f9a/', now, ['k3f9a'])).toEqual({
+      action: 'gone',
+    })
+    // Another retired ID does not make an unknown one gone.
+    expect(await resolveJob(null, PATH, now, ['k3f9b'])).toEqual({ action: 'notFound' })
+  })
+
+  it('looks for a retired job only when no job has the short ID', async () => {
+    const lookup: DetailLookup = {
+      institution: async () => null,
+      subfield: async () => null,
+      job: async () => ({
+        slug: 'phd-in-glia',
+        shortId: 'k3f9a',
+        status: 'published',
+        deadlineKind: 'rolling',
+      }),
+      retiredJob: vi.fn(async () => true),
+    }
+    const route = matchDetailRoute(PATH)
+    if (!route) throw new Error('not a detail route')
+    expect(await resolveDetailRoute(route, lookup, now)).toEqual({ action: 'render' })
+    expect(lookup.retiredJob).not.toHaveBeenCalled()
   })
 
   it('answers 404 for drafts and jobs in review, which were never public', async () => {

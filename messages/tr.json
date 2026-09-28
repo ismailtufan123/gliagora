@@ -504,5 +504,38 @@
       "another": "Başka bir sorun bildirin",
       "jobs": "Pozisyonlara göz atın"
     }
+  },
+  "emails": {
+    "greeting": "Merhaba,",
+    "automatic": "Bu e-posta otomatik olarak gönderildi. Bize ulaşmak için bu e-postayı yanıtlayabilir veya {email} adresine yazabilirsiniz.",
+    "signature": "Gliagora | Neuroscience",
+    "suggestion": {
+      "subjectPublished": "Öneriniz artık Gliagora'da",
+      "subjectNotAdded": "Gliagora'ya yaptığınız öneri",
+      "intro": "Gliagora | Neuroscience'a bir ilan önerdiğiniz için teşekkür ederiz. Sonucu size e-postayla bildirmemizi istediniz. Önerdiğiniz sayfa:",
+      "published": "Pozisyonu işverenin kendi web sitesinde kontrol ettik ve Gliagora'da yayımladık:",
+      "notAdded": "Bu öneriyi Gliagora'ya eklememeye karar verdik.",
+      "reasons": {
+        "duplicate": "Bu pozisyon Gliagora'da zaten yer alıyor.",
+        "not-neuroscience": "Pozisyon, Gliagora'nın yer verdiği sinirbilim veya ona yakın bir alanda değil.",
+        "agency-or-intermediary": "Pozisyonu bir işe alım ajansı veya başka bir aracı ilan etmiş. Yalnızca işverenin kendisinin yayımladığı pozisyonlara yer veriyoruz.",
+        "closed": "Kontrol ettiğimizde pozisyon kapanmıştı ya da son başvuru tarihi geçmişti.",
+        "not-a-position": "Sayfa, başvurulabilecek bir pozisyonu anlatmıyor.",
+        "not-employer-page": "Pozisyonu işverenin kendi web sitesinde bulamadık. Yalnızca işverenin kendisinin yayımladığı pozisyonlara yer veriyoruz.",
+        "other": "Öneri, Gliagora'da yer verdiğimiz içeriklere uymuyor."
+      },
+      "retention": "E-posta adresinizi, bağlantıyı ve notunuzu kararımızdan 90 gün sonra sileriz. Bu öneriyle ilgili size gönderdiğimiz tek e-posta budur. Kişisel verilerinizi nasıl işlediğimiz: {privacyUrl}"
+    },
+    "report": {
+      "subject": "Bildiriminizi aldık",
+      "subjectPersonalRights": "Talebinizi aldık",
+      "intro": "Bu e-posta, bildiriminizi aldığımızın otomatik onayıdır.",
+      "introPersonalRights": "Bu e-posta, kişilik haklarınızla ilgili talebinizi aldığımızın otomatik onayıdır.",
+      "item": "İlgili sayfa:",
+      "next": "İçeriği asıl ilanla karşılaştırır, ardından düzeltir ya da Gliagora'da yer almaması gerekiyorsa kaldırırız. İnceledikten sonra bu adrese yanıt vereceğiz.",
+      "nextPersonalRights": "Editörümüz size 24 saat içinde yanıt verecek; genellikle 72 saat içinde karar veririz. Bir içeriği kaldırmaya karar verirsek içerik hemen yayından kalkar.",
+      "retention": "Bildiriminizi ve e-posta adresinizi, bildirim kapatıldıktan sonra 2 yıl saklarız. Kişisel verilerinizi nasıl işlediğimiz: {privacyUrl}",
+      "retentionPersonalRights": "Talebinizi ve e-posta adresinizi, talep kapatıldıktan sonra 2 yıl saklarız. Kişisel verilerinizi nasıl işlediğimiz: {privacyUrl}"
+    }
   }
 }

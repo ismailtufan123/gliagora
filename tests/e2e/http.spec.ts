@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
+import { FIXED_JOBS, RETIRED_JOB, jobPath } from '../../src/scripts/fake-jobs-fixed'
 
 // PLAN §2.1 and §2.5: locale prefix, trailing slashes, redirects and status codes.
 test.describe('HTTP behaviour', () => {
@@ -301,6 +301,20 @@ test.describe('Job pages', () => {
       expect(html).toContain('Page removed')
       expect(html).toContain('<meta name="robots" content="noindex"')
       expect(html).not.toContain(job.title)
+    })
+  }
+
+  // A job deleted 12 months after it went offline keeps only its address and ID (D34).
+  for (const path of [jobPath(RETIRED_JOB), `/en/jobs/${RETIRED_JOB.shortId}/`]) {
+    test(`a retired job (${path}) keeps answering 410 with the removed-page`, async ({
+      request,
+    }) => {
+      const response = await request.get(path)
+      expect(response.status()).toBe(410)
+      expect(response.headers()['cache-control']).toContain('no-store')
+      const html = await response.text()
+      expect(html).toContain('Page removed')
+      expect(html).toContain('<meta name="robots" content="noindex"')
     })
   }
 

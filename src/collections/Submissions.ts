@@ -110,7 +110,7 @@ const sidebarDate = (name: string, label: string, description: string): Field =>
   label,
   type: 'date',
   index: true,
-  // Set by the hooks (and from M4.7 by the retention and email jobs) only.
+  // Set by the hooks, and by the email task (src/jobs/maintenance/notifySubmitters.ts), only.
   access: { create: () => false, update: () => false },
   admin: {
     position: 'sidebar',
@@ -138,7 +138,7 @@ export const Submissions: CollectionConfig = {
     enableListViewSelectAPI: true,
     defaultColumns: ['url', 'kind', 'status', 'createdAt'],
     listSearchableFields: ['url'],
-    description: `Suggestions from the "Suggest a listing" form, newest first. A suggested position goes straight into the review queue as a candidate: decide it there, and the suggestion follows. Events, funding, papers, news, resources and other suggestions are not in the review queue yet: they wait here as New until their milestones; check them by hand and set them to Decided. The email address is stored only with the person's consent; it is deleted with the link and the note ${SUBMISSION_RETENTION_DAYS} days after the decision (D34). To answer a data request, filter by Email, then delete.`,
+    description: `Suggestions from the "Suggest a listing" form, newest first. A suggested position goes straight into the review queue as a candidate: decide it there, and the suggestion follows. Events, funding, papers, news, resources and other suggestions are not in the review queue yet: they wait here as New until their milestones; check them by hand and set them to Decided. The email address is stored only with the person's consent, to email them the outcome once email is set up (M2): when the candidate is rejected or marked as a duplicate (with a plain reason, never your note), or once its job is published. The suggestion, with its email address, link and note, is deleted ${SUBMISSION_RETENTION_DAYS} days after the decision (D34). To answer a data request, filter by Email, then delete.`,
     pagination: { defaultLimit: 50 },
   },
   defaultSort: '-createdAt',
@@ -259,12 +259,12 @@ export const Submissions: CollectionConfig = {
     sidebarDate(
       'emailPurgeAt',
       'Personal data deleted on',
-      `The email address, link and note are deleted ${SUBMISSION_RETENTION_DAYS} days after the decision (D34, from M4.7).`,
+      `The suggestion, with the email address, link and note, is deleted ${SUBMISSION_RETENTION_DAYS} days after the decision by the nightly retention task (D34).`,
     ),
     sidebarDate(
       'notifiedAt',
       'Outcome emailed',
-      'When the person was told the outcome (from M4.7).',
+      'When the person was emailed the outcome. Empty while no mail server is set up, while the job is not published yet, and for spam.',
     ),
   ],
 }

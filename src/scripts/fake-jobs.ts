@@ -1,15 +1,16 @@
 // Adds fake jobs for local development and CI (D38): pnpm fake:jobs
 // About 60 generated jobs over the test institutions, plus the fixed jobs the end-to-end tests
-// rely on (src/scripts/fake-jobs-fixed.ts), then a handful of suggestions, candidates and reports
-// for the review queue (src/scripts/fake-queue-data.ts). Earlier fake data is removed first, so the script
-// can run again at any time. Needs the test institutions: pnpm ror:import tests/fixtures/ror/…-sample.zip
+// rely on (src/scripts/fake-jobs-fixed.ts) and the address of one retired job, then a handful of
+// suggestions, candidates and reports for the review queue (src/scripts/fake-queue-data.ts).
+// Earlier fake data is removed first, so the script can run again at any time. Needs the test
+// institutions: pnpm ror:import tests/fixtures/ror/…-sample.zip
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
 import { FAKE_DATA } from '@/collections/Jobs'
 
 import { FAKE_INSTITUTIONS, FAKE_NOTE, fakeJobs } from './fake-jobs-data'
-import { FIXED_JOBS } from './fake-jobs-fixed'
+import { FIXED_JOBS, RETIRED_JOB } from './fake-jobs-fixed'
 import { addFakeQueue, removeFakeQueue } from './fake-queue'
 import { FAKE_QUEUE_INSTITUTIONS } from './fake-queue-data'
 
@@ -103,6 +104,18 @@ try {
     })
     jobId.set(job.shortId, created.id)
     counts[job.status] = (counts[job.status] ?? 0) + 1
+  }
+  // The retired job the end-to-end tests expect to answer 410: added once, never removed.
+  const retired = await payload.count({
+    collection: 'retired-listings',
+    where: { shortId: { equals: RETIRED_JOB.shortId } },
+  })
+  if (retired.totalDocs === 0) {
+    await payload.create({
+      collection: 'retired-listings',
+      data: { kind: 'job', ...RETIRED_JOB, retiredAt: new Date().toISOString() },
+      depth: 0,
+    })
   }
   const queue = await addFakeQueue(payload, {
     institutionId: new Map([...institutionId].map(([rorId, id]) => [String(rorId), id])),

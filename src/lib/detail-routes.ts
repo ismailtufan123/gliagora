@@ -74,6 +74,11 @@ export type DetailLookup = {
   subfield: (slug: string) => Promise<{ isActive: boolean } | null>
   /** The job with this short ID, in any status. */
   job: (shortId: string) => Promise<JobRecord | null>
+  /**
+   * Whether a job with this short ID was retired: deleted 12 months after it went offline, with
+   * only its address and ID kept (D34, `retired-listings`). Asked only when no job has the ID.
+   */
+  retiredJob: (shortId: string) => Promise<boolean>
 }
 
 export type Resolution =
@@ -89,8 +94,9 @@ export type Resolution =
  * still finds the record).
  *
  * Jobs (PLAN §2.5): drafts and jobs in review were never public, so they are unknown (404); a
- * withdrawn job, and a closed one from 30 days after it closed, are gone (410) whatever the slug;
- * a closed job before then renders with the closed notice. `now` is the moment of the request.
+ * withdrawn job, and a closed one from 30 days after it closed, are gone (410) whatever the slug,
+ * also once the job has been retired (only its address and ID kept, D34); a closed job before
+ * then renders with the closed notice. `now` is the moment of the request.
  */
 export async function resolveDetailRoute(
   route: DetailRoute,
@@ -105,7 +111,9 @@ export async function resolveDetailRoute(
   }
   if (route.kind === 'job') {
     const job = await lookup.job(route.shortId)
-    if (!job) return { action: 'notFound' }
+    if (!job) {
+      return (await lookup.retiredJob(route.shortId)) ? { action: 'gone' } : { action: 'notFound' }
+    }
     const state = listingState(job, now)
     if (state === 'hidden') return { action: 'notFound' }
     if (state === 'gone') return { action: 'gone' }

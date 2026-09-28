@@ -10,11 +10,15 @@ import { FormLimits } from './collections/FormLimits'
 import { Institutions } from './collections/Institutions'
 import { Jobs } from './collections/Jobs'
 import { Reports } from './collections/Reports'
+import { RetiredListings } from './collections/RetiredListings'
 import { Submissions } from './collections/Submissions'
 import { Terms } from './collections/Terms'
 import { Users } from './collections/Users'
 import { RorImport } from './globals/RorImport'
+import { autoRunCrons } from './jobs/autorun'
+import { MAINTENANCE_TASKS } from './jobs/maintenance'
 import { RorImportTask } from './jobs/rorImport'
+import { emailAdapter } from './lib/email/adapter'
 import { migrations } from './migrations'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -42,6 +46,7 @@ export default buildConfig({
     Submissions,
     Reports,
     Jobs,
+    RetiredListings,
     Terms,
     Countries,
     CountrySets,
@@ -50,12 +55,15 @@ export default buildConfig({
   ],
   globals: [RorImport],
   jobs: {
-    tasks: [RorImportTask],
-    // Scheduled jobs (the nightly ROR import) run only where PAYLOAD_JOBS_AUTORUN is "true": on the
-    // production server (deploy/compose.prod.yml), never in CI or local development.
-    autoRun: () =>
-      process.env.PAYLOAD_JOBS_AUTORUN === 'true' ? [{ cron: '*/10 * * * *', queue: 'ror' }] : [],
+    tasks: [RorImportTask, ...MAINTENANCE_TASKS],
+    // Scheduled jobs run only where PAYLOAD_JOBS_AUTORUN is "true": on the production server
+    // (deploy/compose.prod.yml), never in CI or local development (there: `pnpm jobs:run`). The
+    // ticks and their queues are in src/jobs/autorun.ts.
+    autoRun: () => autoRunCrons(),
   },
+  // Outgoing email through the SMTP server in SMTP_HOST (from M2 the Turkish mailbox's; Mailpit
+  // locally); without it nothing is sent and no address is logged (src/lib/email/adapter.ts).
+  email: emailAdapter(),
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL ?? '',

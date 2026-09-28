@@ -48,11 +48,13 @@ async function problems(
   data: Record<string, unknown>,
   {
     event = 'submit',
+    id,
     operation = 'update',
     previous = {},
     req = request(),
   }: {
     event?: 'onChange' | 'submit'
+    id?: number
     operation?: 'create' | 'update'
     previous?: Record<string, unknown>
     req?: ReturnType<typeof request>
@@ -64,6 +66,7 @@ async function problems(
     if (f.admin?.condition && !f.admin.condition(data, data, {})) continue
     const message = await f.validate(data[f.name], {
       ...f,
+      id,
       data,
       siblingData: data,
       event,
@@ -147,6 +150,54 @@ describe('Candidates: values filled in on save', () => {
     expect(again.decidedAt).toBe(earlier)
     const reopened = await run({ status: 'triaged' }, { operation: 'update', originalDoc: saved })
     expect(reopened).toMatchObject({ decidedAt: null, decisionReason: null })
+  })
+
+  it('marks a candidate made from a suggestion, and keeps the mark after the suggestion is deleted', async () => {
+    expect(
+      (await run({ submission: 3, rawUrl: 'https://www.example.org/jobs/1' })).fromSuggestion,
+    ).toBe(true)
+    expect((await run({ rawUrl: 'https://www.example.org/jobs/1' })).fromSuggestion).toBe(false)
+    const saved = { id: 1, status: 'rejected', submission: null, fromSuggestion: true }
+    expect(
+      (await run({ fromSuggestion: false }, { operation: 'update', originalDoc: saved }))
+        .fromSuggestion,
+    ).toBe(true)
+    expect(
+      (await run({ fromSuggestion: true }, { operation: 'update', originalDoc: { id: 2 } }))
+        .fromSuggestion,
+    ).toBe(false)
+  })
+
+  it('does not take back an address and title the retention task cleared, until reopened', async () => {
+    const stale = { rawUrl: 'https://www.example.org/jobs/9', rawTitle: 'PhD position' }
+    const cleared = { id: 1, rawUrl: null, rawTitle: null }
+    for (const saved of [
+      // Rejected or duplicate, with its suggestion deleted by the 90-day purge.
+      { ...cleared, status: 'rejected', fromSuggestion: true, submission: null },
+      { ...cleared, status: 'duplicate', fromSuggestion: true, submission: null, duplicateOf: 4 },
+      // Accepted, or a duplicate, of a job retired 12 months after it went offline.
+      { ...cleared, status: 'accepted', publishedRef: null },
+      { ...cleared, status: 'duplicate', duplicateOf: null },
+    ]) {
+      const data = await run(
+        { ...stale, status: 'triaged' },
+        { operation: 'update', originalDoc: saved },
+      )
+      expect(data).toMatchObject({ rawUrl: null, rawTitle: null, canonicalUrl: null })
+    }
+    for (const saved of [
+      // Reopened: an editor may type an address again.
+      { ...cleared, status: 'triaged', fromSuggestion: true, submission: null },
+      // Rejected by hand without an address; never from a suggestion.
+      { ...cleared, status: 'rejected', fromSuggestion: false, submission: null },
+      // Its suggestion is still there, or its address was not cleared.
+      { ...cleared, status: 'rejected', fromSuggestion: true, submission: 3 },
+      { ...cleared, ...stale, status: 'rejected', fromSuggestion: true, submission: null },
+      { ...cleared, status: 'accepted', publishedRef: 8 },
+    ]) {
+      const data = await run(stale, { operation: 'update', originalDoc: saved })
+      expect(data).toMatchObject(stale)
+    }
   })
 
   it('keeps the suggestion and the job it was linked to', async () => {
@@ -263,6 +314,32 @@ describe('Candidates: rules', () => {
     const found = await problems({ status: 'accepted' }, { previous: { status: 'triaged' } })
     expect(Object.keys(found).sort()).toEqual(['institution', 'rawTitle', 'rawUrl'])
     expect(await problems(ready(), { previous: { status: 'triaged' } })).toEqual({})
+  })
+
+  it('asks for them only on the save that accepts, not on later saves of an accepted candidate', async () => {
+    // The retention task clears an accepted candidate's address and title once its job is
+    // retired (M4.7); the saved status is read only when a fact is missing.
+    const findByID = vi.fn(async () => ({ id: 5, status: 'accepted' }))
+    const later = await problems(
+      { status: 'accepted', institution: 7 },
+      { id: 5, previous: { status: 'accepted' }, req: request({ findByID }) },
+    )
+    expect(later).toEqual({})
+    expect(findByID).toHaveBeenCalledWith(
+      expect.objectContaining({ collection: 'candidates', id: 5, select: { status: true } }),
+    )
+    const accepts = await problems(
+      { status: 'accepted' },
+      {
+        id: 5,
+        previous: { status: 'triaged' },
+        req: request({ findByID: vi.fn(async () => ({ id: 5, status: 'triaged' })) }),
+      },
+    )
+    expect(Object.keys(accepts).sort()).toEqual(['institution', 'rawTitle', 'rawUrl'])
+    findByID.mockClear()
+    await problems(ready(), { id: 5, previous: { status: 'triaged' }, req: request({ findByID }) })
+    expect(findByID).not.toHaveBeenCalled()
   })
 
   it('refuses to accept a posting that already has a job, and names it', async () => {

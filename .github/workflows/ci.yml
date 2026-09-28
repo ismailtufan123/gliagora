@@ -110,12 +110,15 @@ jobs:
           DATABASE_URL: postgres://gliagora:smoke-test-only@localhost:5432/gliagora
           PAYLOAD_SECRET: test-data-only
           E2E_EDITOR_PASSWORD: e2e-test-only
-      # Search against a real PostgreSQL (src/lib/search/search.db.test.ts): a scratch database
-      # owned by a throwaway role that is not a superuser, as on the server, dropped afterwards.
+      # Tests against a real PostgreSQL (pnpm test:db), on scratch databases dropped afterwards:
+      # search (src/lib/search/search.db.test.ts, owned by a throwaway role that is not a superuser,
+      # as on the server) and the scheduled tasks (tests/integration/, M4.7, on a migrated scratch
+      # database, with a throwaway Mailpit container for the emails).
       - name: Database tests
         run: pnpm test:db
         env:
           TEST_DATABASE_URL: postgres://gliagora:smoke-test-only@localhost:5432/gliagora
+          PAYLOAD_SECRET: test-data-only
       - name: Install Chromium for Playwright
         run: pnpm exec playwright install --with-deps chromium
       - name: End-to-end tests (Playwright + axe)

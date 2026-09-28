@@ -132,3 +132,13 @@ export const FIXED_JOBS = {
     careerStages: ['independent'],
   },
 } as const satisfies Record<string, FixedJob>
+
+/**
+ * A job retired long ago (D34): only its address and ID are kept, in `retired-listings`, so its
+ * address answers 410 Gone. `pnpm fake:jobs` adds it if it is missing (retired listings are never
+ * deleted); no job has its short ID.
+ */
+export const RETIRED_JOB = {
+  shortId: 'test8',
+  slug: 'postdoctoral-researcher-in-neural-circuit-development',
+} as const

@@ -31,6 +31,8 @@ import {
 import { TIME_ZONES, isTimeZone, timeZoneLabel } from '@/lib/jobs/time-zones'
 import { addressProblem, canonicalUrl } from '@/lib/jobs/url'
 import { idOf } from '@/lib/relationship'
+import { isRetention } from '@/lib/retention/context'
+import { isRetirable } from '@/lib/retention/rules'
 import { SHORT_ID_PATTERN, newShortId } from '@/lib/short-id'
 import { slugify } from '@/lib/slug'
 import type { Vocabulary } from '@/lib/taxonomy'
@@ -84,15 +86,16 @@ export function jobLocation(
 }
 
 async function uniqueShortId(req: PayloadRequest): Promise<string> {
-  // 32⁵ IDs make a clash very unlikely; checking avoids a confusing "must be unique" error.
+  // 32⁵ IDs make a clash very unlikely; checking avoids a confusing "must be unique" error. The ID
+  // of a retired listing is never given again: its address keeps answering 410 (D34).
   for (let attempt = 0; attempt < 5; attempt++) {
     const shortId = newShortId()
-    const { totalDocs } = await req.payload.count({
-      collection: 'jobs',
-      where: { shortId: { equals: shortId } },
-      req,
-    })
-    if (totalDocs === 0) return shortId
+    const where = { shortId: { equals: shortId } }
+    // One after the other: in a transaction both use the same connection.
+    const jobs = await req.payload.count({ collection: 'jobs', where, req })
+    if (jobs.totalDocs > 0) continue
+    const retired = await req.payload.count({ collection: 'retired-listings', where, req })
+    if (retired.totalDocs === 0) return shortId
   }
   throw new APIError('No free short ID was found. Save again.')
 }
@@ -177,11 +180,58 @@ const prepare: CollectionBeforeValidateHook<Job> = async ({
   return data
 }
 
+/**
+ * The retention task deletes a job only when it has answered 410 for 12 months and its address is
+ * already kept in `retired-listings`, in the same transaction, so the address answers 410 after
+ * the job is gone (src/jobs/maintenance/purgeRetention.ts).
+ */
+async function checkRetirement(id: number | string, req: PayloadRequest): Promise<void> {
+  const job = await req.payload.findByID({
+    collection: 'jobs',
+    id,
+    select: {
+      shortId: true,
+      status: true,
+      deadlineKind: true,
+      deadlineAt: true,
+      expiredAt: true,
+      withdrawnAt: true,
+    },
+    depth: 0,
+    req,
+    disableErrors: true,
+  })
+  if (!job) return
+  if (!isRetirable(job, new Date())) {
+    throw new APIError(
+      'Only a listing that has been offline for 12 months is removed by the retention task.',
+      403,
+      null,
+      true,
+    )
+  }
+  const { totalDocs } = await req.payload.count({
+    collection: 'retired-listings',
+    where: { shortId: { equals: job.shortId } },
+    req,
+  })
+  if (totalDocs === 0) {
+    throw new APIError(
+      'Keep the address in Retired listings before deleting the job.',
+      403,
+      null,
+      true,
+    )
+  }
+}
+
 // Published addresses keep answering, first with the closed notice and then with 410 Gone (PLAN
 // §2.5), so only drafts that were never published are deleted. Access control shows this in the
-// admin; this hook also covers code that bypasses it.
+// admin; this hook also covers code that bypasses it. The one exception is the retention task: 12
+// months after a listing went offline it keeps only the address and ID (D34).
 const keepPublished: CollectionBeforeDeleteHook = async ({ id, req, context }) => {
   if (isFakeData(context)) return
+  if (isRetention(context)) return checkRetirement(id, req)
   const job = await req.payload.findByID({
     collection: 'jobs',
     id,

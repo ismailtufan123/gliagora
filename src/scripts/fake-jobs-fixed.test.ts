@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { SHORT_ID_PATTERN } from '@/lib/short-id'
 import { slugify } from '@/lib/slug'
 
-import { FIXED_JOBS, jobPath } from './fake-jobs-fixed'
+import { FIXED_JOBS, RETIRED_JOB, jobPath } from './fake-jobs-fixed'
 
 describe('fixed fake jobs', () => {
   const jobs = Object.values(FIXED_JOBS)
@@ -30,6 +30,12 @@ describe('fixed fake jobs', () => {
       'published',
       'withdrawn',
     ])
+  })
+
+  it('keep a retired job whose short ID no fake job has', () => {
+    expect(RETIRED_JOB.shortId).toMatch(SHORT_ID_PATTERN)
+    expect(slugify(RETIRED_JOB.slug, { fallback: 'job' })).toBe(RETIRED_JOB.slug)
+    expect(jobs.map((job) => job.shortId)).not.toContain(RETIRED_JOB.shortId)
   })
 
   it('build the job address from slug and short ID', () => {

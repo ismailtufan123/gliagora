@@ -75,7 +75,7 @@ const sidebarDate = (name: string, label: string, description: string): Field =>
   label,
   type: 'date',
   index: true,
-  // Set by the hooks (and from M4.7 by the email and retention tasks) only.
+  // Set by the hooks, and by the email task (src/jobs/maintenance/acknowledgeReports.ts), only.
   access: { create: () => false, update: () => false },
   admin: {
     position: 'sidebar',
@@ -91,7 +91,7 @@ const sidebarDate = (name: string, label: string, description: string): Field =>
 // editors handle them here and close them with what they did.
 //
 // No versions: a report holds personal data (the email address and the details), and the 2-year
-// deletion (M4.7) removes the whole record; versions would keep copies of it. If versions are ever
+// deletion (the retention task, M4.7) removes the whole record; versions would keep copies of it. If versions are ever
 // switched on, that deletion must remove the report's versions too (`_reports_v`), as the
 // candidates' purge does for their source text.
 export const Reports: CollectionConfig = {
@@ -106,7 +106,7 @@ export const Reports: CollectionConfig = {
     enableListViewSelectAPI: true,
     defaultColumns: ['kind', 'status', 'respondBy', 'job', 'createdAt'],
     listSearchableFields: ['itemUrl'],
-    description: `Reports from the "Report a problem" form, newest first. Requests about personal rights (Law 5651 Art. 9) are answered within ${PERSONAL_RIGHTS_ANSWER_HOURS} hours and usually decided within 72 hours (the notice and takedown page); other reports within ${OTHER_ANSWER_DAYS} days. Set a report to In progress once you have answered the person or started checking (a personal-rights request only once you have answered the person: until then the dashboard counts it as waiting for its ${PERSONAL_RIGHTS_ANSWER_HOURS}-hour answer), and close it with what you did: to remove a listing, withdraw the job itself. The email address and details are deleted with the report ${REPORT_RETENTION_YEARS} years after it is closed (from M4.7). To answer a data request, filter by Email, then delete.`,
+    description: `Reports from the "Report a problem" form, newest first. Requests about personal rights (Law 5651 Art. 9) are answered within ${PERSONAL_RIGHTS_ANSWER_HOURS} hours and usually decided within 72 hours (the notice and takedown page); other reports within ${OTHER_ANSWER_DAYS} days. Set a report to In progress once you have answered the person or started checking (a personal-rights request only once you have answered the person: until then the dashboard counts it as waiting for its ${PERSONAL_RIGHTS_ANSWER_HOURS}-hour answer), and close it with what you did: to remove a listing, withdraw the job itself. The email address and details are deleted with the report ${REPORT_RETENTION_YEARS} years after it is closed, by the nightly retention task. A report sent with an email address gets an automatic acknowledgement within minutes, once email is set up (M2). To answer a data request, filter by Email, then delete.`,
     pagination: { defaultLimit: 50 },
   },
   defaultSort: '-createdAt',
@@ -255,13 +255,13 @@ export const Reports: CollectionConfig = {
     sidebarDate(
       'ackSentAt',
       'Acknowledgement emailed',
-      'When the automatic acknowledgement was emailed to the person (from M4.7).',
+      'When the automatic acknowledgement was emailed to the person. Empty while no mail server is set up.',
     ),
     sidebarDate('closedAt', 'Closed', 'When the report was closed.'),
     sidebarDate(
       'purgeAt',
       'Deleted on',
-      `The report, with the email address and details, is deleted ${REPORT_RETENTION_YEARS} years after it was closed (PLAN §18.1; from M4.7).`,
+      `The report, with the email address and details, is deleted ${REPORT_RETENTION_YEARS} years after it was closed (PLAN §18.1), by the nightly retention task.`,
     ),
   ],
 }

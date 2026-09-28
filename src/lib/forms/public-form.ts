@@ -1,5 +1,7 @@
 import { randomBytes } from 'node:crypto'
 
+import { errorCode } from '@/lib/errors'
+
 import { type SpamChallenge, checkAnswer, newChallenge } from './altcha'
 import { clientIp, hashClientIp } from './client-ip'
 import { FORM_INPUTS } from './fields'
@@ -68,20 +70,6 @@ export function readControls(form: FormData) {
 /** A short code a person can quote, which also appears in the server log with the error. */
 export function newReference(): string {
   return randomBytes(5).toString('hex').toUpperCase()
-}
-
-/**
- * The database's error code (e.g. 22021 for a character PostgreSQL cannot store). Drizzle wraps
- * the driver's error, so the code is on a cause rather than on the error itself.
- */
-function errorCode(error: unknown): string | undefined {
-  let current = error
-  for (let depth = 0; depth < 3 && current && typeof current === 'object'; depth++) {
-    const code = (current as { code?: unknown }).code
-    if (typeof code === 'string' || typeof code === 'number') return String(code)
-    current = (current as { cause?: unknown }).cause
-  }
-  return undefined
 }
 
 /**

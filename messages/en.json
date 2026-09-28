@@ -504,5 +504,38 @@
       "another": "Report another problem",
       "jobs": "Browse positions"
     }
+  },
+  "emails": {
+    "greeting": "Hello,",
+    "automatic": "This email was sent automatically. To reach us, reply to it or write to {email}.",
+    "signature": "Gliagora | Neuroscience",
+    "suggestion": {
+      "subjectPublished": "Your suggestion is now on Gliagora",
+      "subjectNotAdded": "Your suggestion to Gliagora",
+      "intro": "Thank you for suggesting a listing to Gliagora | Neuroscience. You asked us to email you the outcome. You suggested this page:",
+      "published": "We checked the position on the employer's own website and published it on Gliagora:",
+      "notAdded": "We have decided not to add it to Gliagora.",
+      "reasons": {
+        "duplicate": "We already list this position.",
+        "not-neuroscience": "The position is not in neuroscience or a closely related field, which is what Gliagora lists.",
+        "agency-or-intermediary": "It was advertised by a recruitment agency or another intermediary. We list only positions that the employer publishes itself.",
+        "closed": "The position had already closed, or its deadline had passed, when we checked it.",
+        "not-a-position": "The page does not describe a position that people can apply for.",
+        "not-employer-page": "We could not find the position on the employer's own website. We list only positions that the employer publishes itself.",
+        "other": "It does not fit what we list on Gliagora."
+      },
+      "retention": "We will delete your email address, together with the link and your note, 90 days after our decision. This is the only email we send you about this suggestion. How we handle your data: {privacyUrl}"
+    },
+    "report": {
+      "subject": "We have received your report",
+      "subjectPersonalRights": "We have received your request",
+      "intro": "This is an automatic confirmation that we have received your report.",
+      "introPersonalRights": "This is an automatic confirmation that we have received your request about your personal rights.",
+      "item": "It is about this page:",
+      "next": "We check the item against the original posting, then correct it, or remove it if it should not be on Gliagora. We will reply to this address once we have checked it.",
+      "nextPersonalRights": "Our editor will answer you within 24 hours, and we usually decide within 72 hours. If we decide to remove an item, it goes offline at once.",
+      "retention": "We keep your report, with your email address, for 2 years after we close it. How we handle your data: {privacyUrl}",
+      "retentionPersonalRights": "We keep your request, with your email address, for 2 years after we close it. How we handle your data: {privacyUrl}"
+    }
   }
 }

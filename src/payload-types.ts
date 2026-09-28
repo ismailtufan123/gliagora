@@ -72,6 +72,7 @@ export interface Config {
     submissions: Submission;
     reports: Report;
     jobs: Job;
+    'retired-listings': RetiredListing;
     terms: Term;
     countries: Country;
     'country-sets': CountrySet;
@@ -90,6 +91,7 @@ export interface Config {
     submissions: SubmissionsSelect<false> | SubmissionsSelect<true>;
     reports: ReportsSelect<false> | ReportsSelect<true>;
     jobs: JobsSelect<false> | JobsSelect<true>;
+    'retired-listings': RetiredListingsSelect<false> | RetiredListingsSelect<true>;
     terms: TermsSelect<false> | TermsSelect<true>;
     countries: CountriesSelect<false> | CountriesSelect<true>;
     'country-sets': CountrySetsSelect<false> | CountrySetsSelect<true>;
@@ -121,6 +123,12 @@ export interface Config {
   jobs: {
     tasks: {
       rorImport: TaskRorImport;
+      expireListings: TaskExpireListings;
+      purgeFormLimits: TaskPurgeFormLimits;
+      syncJobPlaces: TaskSyncJobPlaces;
+      purgeRetention: TaskPurgeRetention;
+      notifySubmitters: TaskNotifySubmitters;
+      acknowledgeReports: TaskAcknowledgeReports;
       inline: {
         input: unknown;
         output: unknown;
@@ -260,6 +268,7 @@ export interface Candidate {
    * The "Suggest a listing" suggestion it came from, with its note.
    */
   submission?: (number | null) | Submission;
+  fromSuggestion?: boolean | null;
   /**
    * What it becomes when accepted. Events, funding and papers follow later.
    */
@@ -1019,7 +1028,7 @@ export interface Term {
   createdAt: string;
 }
 /**
- * Suggestions from the "Suggest a listing" form, newest first. A suggested position goes straight into the review queue as a candidate: decide it there, and the suggestion follows. Events, funding, papers, news, resources and other suggestions are not in the review queue yet: they wait here as New until their milestones; check them by hand and set them to Decided. The email address is stored only with the person's consent; it is deleted with the link and the note 90 days after the decision (D34). To answer a data request, filter by Email, then delete.
+ * Suggestions from the "Suggest a listing" form, newest first. A suggested position goes straight into the review queue as a candidate: decide it there, and the suggestion follows. Events, funding, papers, news, resources and other suggestions are not in the review queue yet: they wait here as New until their milestones; check them by hand and set them to Decided. The email address is stored only with the person's consent, to email them the outcome once email is set up (M2): when the candidate is rejected or marked as a duplicate (with a plain reason, never your note), or once its job is published. The suggestion, with its email address, link and note, is deleted 90 days after the decision (D34). To answer a data request, filter by Email, then delete.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "submissions".
@@ -1051,18 +1060,18 @@ export interface Submission {
    */
   decidedAt?: string | null;
   /**
-   * The email address, link and note are deleted 90 days after the decision (D34, from M4.7).
+   * The suggestion, with the email address, link and note, is deleted 90 days after the decision by the nightly retention task (D34).
    */
   emailPurgeAt?: string | null;
   /**
-   * When the person was told the outcome (from M4.7).
+   * When the person was emailed the outcome. Empty while no mail server is set up, while the job is not published yet, and for spam.
    */
   notifiedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Reports from the "Report a problem" form, newest first. Requests about personal rights (Law 5651 Art. 9) are answered within 24 hours and usually decided within 72 hours (the notice and takedown page); other reports within 30 days. Set a report to In progress once you have answered the person or started checking (a personal-rights request only once you have answered the person: until then the dashboard counts it as waiting for its 24-hour answer), and close it with what you did: to remove a listing, withdraw the job itself. The email address and details are deleted with the report 2 years after it is closed (from M4.7). To answer a data request, filter by Email, then delete.
+ * Reports from the "Report a problem" form, newest first. Requests about personal rights (Law 5651 Art. 9) are answered within 24 hours and usually decided within 72 hours (the notice and takedown page); other reports within 30 days. Set a report to In progress once you have answered the person or started checking (a personal-rights request only once you have answered the person: until then the dashboard counts it as waiting for its 24-hour answer), and close it with what you did: to remove a listing, withdraw the job itself. The email address and details are deleted with the report 2 years after it is closed, by the nightly retention task. A report sent with an email address gets an automatic acknowledgement within minutes, once email is set up (M2). To answer a data request, filter by Email, then delete.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "reports".
@@ -1111,7 +1120,7 @@ export interface Report {
    */
   respondBy?: string | null;
   /**
-   * When the automatic acknowledgement was emailed to the person (from M4.7).
+   * When the automatic acknowledgement was emailed to the person. Empty while no mail server is set up.
    */
   ackSentAt?: string | null;
   /**
@@ -1119,10 +1128,31 @@ export interface Report {
    */
   closedAt?: string | null;
   /**
-   * The report, with the email address and details, is deleted 2 years after it was closed (PLAN §18.1; from M4.7).
+   * The report, with the email address and details, is deleted 2 years after it was closed (PLAN §18.1), by the nightly retention task.
    */
   purgeAt?: string | null;
   updatedAt: string;
+}
+/**
+ * Listings that were offline (answering "410 Gone") for 12 months: the rest of the record has been deleted, and only the address and ID are kept, so the address keeps answering 410 (D34). Added by the daily retention task; never changed or deleted.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "retired-listings".
+ */
+export interface RetiredListing {
+  id: number;
+  kind: 'job';
+  shortId: string;
+  /**
+   * The last slug of its address.
+   */
+  slug: string;
+  /**
+   * When the rest of the record was deleted.
+   */
+  retiredAt: string;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * Groups of countries used in funding eligibility (PLAN §4.6). When you change a list, update the source, the date you checked it and the note.
@@ -1224,7 +1254,15 @@ export interface PayloadJob {
     | {
         executedAt: string;
         completedAt: string;
-        taskSlug: 'inline' | 'rorImport';
+        taskSlug:
+          | 'inline'
+          | 'rorImport'
+          | 'expireListings'
+          | 'purgeFormLimits'
+          | 'syncJobPlaces'
+          | 'purgeRetention'
+          | 'notifySubmitters'
+          | 'acknowledgeReports';
         taskID: string;
         input?:
           | {
@@ -1257,7 +1295,18 @@ export interface PayloadJob {
         id?: string | null;
       }[]
     | null;
-  taskSlug?: ('inline' | 'rorImport') | null;
+  taskSlug?:
+    | (
+        | 'inline'
+        | 'rorImport'
+        | 'expireListings'
+        | 'purgeFormLimits'
+        | 'syncJobPlaces'
+        | 'purgeRetention'
+        | 'notifySubmitters'
+        | 'acknowledgeReports'
+      )
+    | null;
   queue?: string | null;
   waitUntil?: string | null;
   processing?: boolean | null;
@@ -1299,6 +1348,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'jobs';
         value: number | Job;
+      } | null)
+    | ({
+        relationTo: 'retired-listings';
+        value: number | RetiredListing;
       } | null)
     | ({
         relationTo: 'terms';
@@ -1406,6 +1459,7 @@ export interface CandidatesSelect<T extends boolean = true> {
   decidedAt?: T;
   publishedRef?: T;
   submission?: T;
+  fromSuggestion?: T;
   kind?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1503,6 +1557,18 @@ export interface JobsSelect<T extends boolean = true> {
   lastCheckedAt?: T;
   submission?: T;
   aiAssisted?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "retired-listings_select".
+ */
+export interface RetiredListingsSelect<T extends boolean = true> {
+  kind?: T;
+  shortId?: T;
+  slug?: T;
+  retiredAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1765,6 +1831,82 @@ export interface TaskRorImport {
   output: {
     release?: string | null;
     imported?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskExpireListings".
+ */
+export interface TaskExpireListings {
+  input?: unknown;
+  output: {
+    expired?: number | null;
+    failed?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskPurgeFormLimits".
+ */
+export interface TaskPurgeFormLimits {
+  input?: unknown;
+  output: {
+    deleted?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSyncJobPlaces".
+ */
+export interface TaskSyncJobPlaces {
+  input?: unknown;
+  output: {
+    updated?: number | null;
+    failed?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskPurgeRetention".
+ */
+export interface TaskPurgeRetention {
+  input?: unknown;
+  output: {
+    snippets?: number | null;
+    suggestions?: number | null;
+    candidateLinks?: number | null;
+    listings?: number | null;
+    listingsFailed?: number | null;
+    reports?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskNotifySubmitters".
+ */
+export interface TaskNotifySubmitters {
+  input?: unknown;
+  output: {
+    sent?: number | null;
+    waiting?: number | null;
+    failed?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskAcknowledgeReports".
+ */
+export interface TaskAcknowledgeReports {
+  input?: unknown;
+  output: {
+    sent?: number | null;
+    failed?: number | null;
+    skipped?: boolean | null;
   };
 }
 /**
