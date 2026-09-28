@@ -24,6 +24,7 @@
     "generate:importmap": "payload generate:importmap",
     "ror:import": "payload run src/scripts/ror-import.ts",
     "fake:jobs": "payload run src/scripts/fake-jobs.ts",
+    "e2e:editor": "payload run src/scripts/e2e-editor.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
   // Self-contained server in .next/standalone for the Docker image.
   output: 'standalone',
   poweredByHeader: false,
+  // One copy of Payload in the server, loaded from node_modules (withPayload does this only in
+  // development). Bundled, Payload is copied into each part of the server (instrumentation, proxy,
+  // route handlers, pages), yet all of them share the one instance that the first caller of
+  // getPayload creates (at startup: src/lib/startup.ts). Errors from that copy then fail
+  // `instanceof` in the others, and the REST API answers a refused save without the per-field
+  // messages the admin shows at each field. The build traces Payload and its dependencies into
+  // .next/standalone/node_modules, which the Docker image copies. tests/e2e/admin-api.spec.ts
+  // checks this.
+  serverExternalPackages: ['payload'],
   // PLAN §2.1: every URL ends with a slash, and `/` goes to the English home page.
   trailingSlash: true,
   async redirects() {

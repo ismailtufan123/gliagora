@@ -95,20 +95,24 @@ jobs:
       # Institutions for the institution pages: 21 records from a ROR release (CC0), imported with
       # the same code as the nightly import. The taxonomy and countries come with the migrations.
       # Then fake jobs at those institutions, including the fixed ones the jobs tests rely on
-      # (src/scripts/fake-jobs-fixed.ts).
+      # (src/scripts/fake-jobs-fixed.ts), and the editor account the admin API tests sign in with
+      # (src/scripts/e2e-editor.ts; an example.org address, in this throwaway database only).
       - name: Load test data
         run: |
           pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip
           pnpm fake:jobs
+          pnpm e2e:editor
         env:
           DATABASE_URL: postgres://gliagora:smoke-test-only@localhost:5432/gliagora
           PAYLOAD_SECRET: test-data-only
+          E2E_EDITOR_PASSWORD: e2e-test-only
       - name: Install Chromium for Playwright
         run: pnpm exec playwright install --with-deps chromium
       - name: End-to-end tests (Playwright + axe)
         run: pnpm test:e2e
         env:
           BASE_URL: http://localhost:3000
+          E2E_EDITOR_PASSWORD: e2e-test-only
 
       - name: Show container logs
         if: failure()
