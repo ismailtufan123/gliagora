@@ -14,6 +14,10 @@ import {
 
 const NOW = new Date('2026-09-28T12:00:00Z')
 
+/** A hub introduction of `n` words, in paragraphs (D40: a hub is indexed from 150). */
+const intro = (n: number) =>
+  Array.from({ length: n }, (_, i) => `word${i}${i % 50 === 49 ? '.\n\n' : ''}`).join(' ')
+
 const job = (shortId: string, fields: Partial<SitemapJob> = {}): SitemapJob => ({
   slug: `position-${shortId}`,
   shortId,
@@ -73,14 +77,14 @@ describe('pageEntries', () => {
     expect(paths.some((path) => path.includes('?'))).toBe(false)
   })
 
-  it('lists the subfield index once one of its hubs has its written introduction', () => {
+  it('lists the subfield index once one of its hubs has an introduction of 150 words', () => {
     const hub = (hubIntro: string | null) => ({ slug: 'glia', hubIntro })
-    expect(pageEntries([hub(null), hub('  \n ')]).map((e) => e.path)).not.toContain(
-      '/en/subfields/',
-    )
-    expect(pageEntries([hub(null), hub('Glia are …')]).map((e) => e.path)).toContain(
-      '/en/subfields/',
-    )
+    const paths = (hubs: { slug: string; hubIntro: string | null }[]) =>
+      pageEntries(hubs).map((e) => e.path)
+    expect(paths([hub(null), hub('  \n ')])).not.toContain('/en/subfields/')
+    expect(paths([hub(null), hub('Glia are …')])).not.toContain('/en/subfields/')
+    expect(paths([hub(null), hub(intro(149))])).not.toContain('/en/subfields/')
+    expect(paths([hub(null), hub(intro(150))])).toContain('/en/subfields/')
   })
 
   it('gives no hreflang alternates while the translations are drafts', () => {
@@ -148,11 +152,14 @@ describe('institutionEntries', () => {
 })
 
 describe('subfieldEntries', () => {
-  it('lists only hubs with their written introduction, without lastmod', () => {
+  it('lists only hubs with an introduction of at least 150 words, without lastmod', () => {
     const subfields = [
-      { slug: 'glia', hubIntro: 'Glia are …' },
+      { slug: 'glia', hubIntro: intro(150) },
       { slug: 'motor', hubIntro: '' },
-      { slug: 'cognitive', hubIntro: 'Cognition …' },
+      { slug: 'cognitive', hubIntro: intro(212) },
+      // Short, or short once punctuation is left out: shown on the hub, but not indexed.
+      { slug: 'sleep', hubIntro: 'Sleep …' },
+      { slug: 'pain', hubIntro: `${intro(149)} — … !` },
     ]
     // A hub lists the open jobs of its subfield: it changes as deadlines pass.
     expect(subfieldEntries(subfields)).toEqual([
@@ -174,7 +181,7 @@ describe('lastmod when a job closes', () => {
       job('bbbbb', { updatedAt: '2026-09-25T10:00:00.000Z', deadlineAt: '2026-10-01T22:00:00Z' }),
     ]
     const institutions = [{ id: 1, slug: 'karolinska-institutet', rorId: '056d84691' }]
-    const hubs = [{ slug: 'glia', hubIntro: 'Glia are …' }]
+    const hubs = [{ slug: 'glia', hubIntro: intro(150) }]
     const sitemaps = (now: Date) => {
       const perInstitution = openJobsPer(jobs, now, (j) => [j.institution])
       const files = [

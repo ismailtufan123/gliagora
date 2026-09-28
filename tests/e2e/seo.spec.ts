@@ -68,7 +68,7 @@ test.describe('sitemaps', () => {
     expect(xml).not.toContain('<lastmod>')
   })
 
-  test('the subfields sitemap answers 404 while no hub has its introduction, and is not in the index', async ({
+  test('the subfields sitemap answers 404 while no hub has a 150-word introduction, and is not in the index', async ({
     request,
   }) => {
     const response = await request.get('/sitemaps/subfields.xml', { maxRedirects: 0 })

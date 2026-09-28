@@ -10,7 +10,7 @@ import { unavailableResponse } from '@/lib/unavailable'
 
 // /sitemaps/{type}.xml (PLAN §2.2, §16.1): the pages of one type that are indexed, at their
 // canonical addresses (src/lib/seo/sitemap-entries.ts). A file exists only while it lists a page:
-// a type with none (`subfields.xml` until a hub has its introduction) answers 404, and so does
+// a type with none (`subfields.xml` until a hub has a 150-word introduction) answers 404, as does
 // a Turkish file (`pages-tr.xml`) until Turkish pages are indexed. `jobs-2.xml` and further files
 // exist when a type has more than 50,000 pages; the file right after a type's last one repeats
 // that file's last page, so a file listed by an index read shortly before still answers after

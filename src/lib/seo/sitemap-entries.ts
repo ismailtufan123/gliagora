@@ -122,8 +122,9 @@ export function institutionEntries(
 }
 
 /**
- * Subfield hubs that are indexed (with their written introductions, PLAN §16.3). No `lastmod`,
- * for the same reason as institutions: a hub lists the open jobs of its subfield.
+ * Subfield hubs that are indexed (their written introductions have at least 150 words, PLAN §16.3,
+ * D40). No `lastmod`, for the same reason as institutions: a hub lists the open jobs of its
+ * subfield.
  */
 export function subfieldEntries(subfields: readonly SitemapSubfield[]): SitemapEntry[] {
   return subfields.flatMap((subfield) =>
