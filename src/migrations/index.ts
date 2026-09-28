@@ -8,6 +8,8 @@ import * as migration_20260927_200239_jobs from './20260927_200239_jobs';
 import * as migration_20260927_221038_review_queue from './20260927_221038_review_queue';
 import * as migration_20260927_235439_form_limits from './20260927_235439_form_limits';
 import * as migration_20260928_020440_reports from './20260928_020440_reports';
+import * as migration_20260928_033903_maintenance from './20260928_033903_maintenance';
+import * as migration_20260928_052700_retention_safeguards from './20260928_052700_retention_safeguards';
 import * as migration_20260928_100000_search from './20260928_100000_search';
 
 export const migrations = [
@@ -60,6 +62,16 @@ export const migrations = [
     up: migration_20260928_020440_reports.up,
     down: migration_20260928_020440_reports.down,
     name: '20260928_020440_reports',
+  },
+  {
+    up: migration_20260928_033903_maintenance.up,
+    down: migration_20260928_033903_maintenance.down,
+    name: '20260928_033903_maintenance',
+  },
+  {
+    up: migration_20260928_052700_retention_safeguards.up,
+    down: migration_20260928_052700_retention_safeguards.down,
+    name: '20260928_052700_retention_safeguards',
   },
   {
     up: migration_20260928_100000_search.up,

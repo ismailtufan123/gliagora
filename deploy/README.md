@@ -98,6 +98,8 @@ cp admin-auth.caddy.example admin-auth.caddy && chmod 600 admin-auth.caddy
 nano admin-auth.caddy         # paste the hash; keep or change the user name
 ```
 
+Leave the `SMTP_*` settings empty until the Turkish mailbox is set up at M2 (its SMTP server sends the email; PLAN §11.7.1, D22): until then the app sends no email (the outcome of suggestions, the acknowledgement of reports) and writes no address to its logs. Admin password resets do not arrive either; reset a password by hand.
+
 Do not start the stack by hand: the first deploy (step 5) pulls the images and starts it.
 
 ## 3. Prepare backups (once)

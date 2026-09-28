@@ -37,10 +37,19 @@ services:
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET in .env}
       # Spam check of the public forms (ALTCHA, on this server only).
       ALTCHA_HMAC_KEY: ${ALTCHA_HMAC_KEY:?Set ALTCHA_HMAC_KEY in .env}
-      # Runs scheduled jobs: the nightly check for a new ROR release (PLAN §6.2).
+      # Runs scheduled jobs: the nightly check for a new ROR release (PLAN §6.2), the hourly expiry
+      # of listings, the retention purges (D34) and the automatic emails (src/jobs/maintenance/).
       PAYLOAD_JOBS_AUTORUN: 'true'
       # Optional; raises the ROR API rate limit for editors adding institutions by ROR ID.
       ROR_CLIENT_ID: ${ROR_CLIENT_ID:-}
+      # Outgoing email through the Turkish mailbox's SMTP server (from M2, PLAN §11.7.1, D22).
+      # Empty SMTP_HOST: nothing is sent.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Gliagora <hello@gliagora.com>}
     depends_on:
       db:
         condition: service_healthy

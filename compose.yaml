@@ -1,6 +1,7 @@
 # Local development only: PostgreSQL for the app. The project is "gliagora-dev" so it can never
 # clash with the production stack (deploy/compose.prod.yml, project "gliagora") on the same machine.
-# Start with `docker compose up -d db`. Values come from .env (see .env.example).
+# Start with `docker compose up -d db`. Values come from .env (see .env.example). Mailpit, for
+# testing emails, starts only with its profile: `docker compose --profile mail up -d mailpit`.
 name: gliagora-dev
 
 services:
@@ -21,6 +22,23 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # Local email testing (M4.7): Mailpit catches every message the app sends and shows it at
+  # http://127.0.0.1:8025; nothing is delivered anywhere. Start it with
+  # `docker compose --profile mail up -d mailpit` and set SMTP_HOST=127.0.0.1 and SMTP_PORT=1025
+  # in .env (see .env.example). Messages are kept in the container only, for at most a day.
+  mailpit:
+    image: axllent/mailpit:v1.31.3@sha256:ed9b00c609e77e99c79b93f1178255ebc271868920f2c69a8d166bd5634ed10d
+    profiles: ['mail']
+    restart: unless-stopped
+    environment:
+      MP_MAX_AGE: 1d
+      MP_DISABLE_VERSION_CHECK: 'true'
+      MP_BLOCK_REMOTE_CSS_AND_FONTS: 'true'
+    ports:
+      # Bound to this computer only, not to the local network: SMTP and the web interface.
+      - '127.0.0.1:1025:1025'
+      - '127.0.0.1:8025:8025'
 
 volumes:
   db-data:

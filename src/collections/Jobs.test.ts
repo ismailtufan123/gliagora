@@ -1,6 +1,7 @@
 import type { Field } from 'payload'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { RETENTION } from '@/lib/retention/context'
 import { SHORT_ID_PATTERN } from '@/lib/short-id'
 
 import { FAKE_DATA, Jobs, duplicateMessage, isFakeData, jobLocation } from './Jobs'
@@ -163,13 +164,40 @@ describe('Jobs: values filled in on save', () => {
   })
 
   it('tries another short ID when one is taken', async () => {
-    const count = vi
-      .fn()
-      .mockResolvedValueOnce({ totalDocs: 1 })
-      .mockResolvedValue({ totalDocs: 0 })
+    const taken = new Set<string>()
+    const count = vi.fn(async ({ collection }: { collection: string }) => {
+      // The first ID tried belongs to a job.
+      if (collection === 'jobs' && taken.size === 0) {
+        taken.add('first')
+        return { totalDocs: 1 }
+      }
+      return { totalDocs: 0 }
+    })
     const data = await run({ title: 'Postdoc' }, { payload: { count } })
-    expect(count).toHaveBeenCalledTimes(2)
+    // The first ID: one count (a job has it); the second: both counts.
+    expect(count).toHaveBeenCalledTimes(3)
     expect(data.shortId).toMatch(SHORT_ID_PATTERN)
+  })
+
+  it('never gives a new job the short ID of a retired listing, whose address answers 410', async () => {
+    const tried: string[] = []
+    const count = vi.fn(
+      async ({
+        collection,
+        where,
+      }: {
+        collection: string
+        where: { shortId: { equals: string } }
+      }) => {
+        if (collection !== 'retired-listings') return { totalDocs: 0 }
+        tried.push(where.shortId.equals)
+        return { totalDocs: tried.length === 1 ? 1 : 0 }
+      },
+    )
+    const data = await run({ title: 'Postdoc' }, { payload: { count } })
+    expect(tried).toHaveLength(2)
+    expect(data.shortId).toBe(tried[1])
+    expect(data.shortId).not.toBe(tried[0])
   })
 
   it('keeps a given short ID (the fixed fake jobs) and never makes one on update', async () => {
@@ -711,6 +739,40 @@ describe('Jobs: deleting', () => {
     await expect(
       remove({ status: 'expired', publishedAt: '2026-09-01' }, { fakeData: FAKE_DATA }),
     ).resolves.toBeUndefined()
+  })
+
+  it('lets only the retention task delete a published job, 12 months after it went offline', async () => {
+    const now = Date.now()
+    const monthsAgo = (months: number) => new Date(now - months * 31 * 86_400_000).toISOString()
+    const guard = (job: Record<string, unknown>, kept: number, context: object) => {
+      const count = vi.fn(async () => ({ totalDocs: kept }))
+      const findByID = vi.fn(async () => ({ shortId: 'k3f9a', ...job }))
+      return {
+        count,
+        result: keepPublished?.({ id: 1, req: request({ findByID, count }), context } as never),
+      }
+    }
+    const retention = { retention: RETENTION }
+    const longGone = { status: 'withdrawn', withdrawnAt: monthsAgo(13), publishedAt: monthsAgo(15) }
+    // Due, and its address already kept in Retired listings (in the same transaction).
+    const due = guard(longGone, 1, retention)
+    await expect(due.result).resolves.toBeUndefined()
+    expect(due.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'retired-listings',
+        where: { shortId: { equals: 'k3f9a' } },
+      }),
+    )
+    // Not yet 12 months offline.
+    const recent = { status: 'withdrawn', withdrawnAt: monthsAgo(11), publishedAt: monthsAgo(15) }
+    await expect(guard(recent, 1, retention).result).rejects.toThrow(/offline for 12 months/)
+    // The address is not kept yet.
+    await expect(guard(longGone, 0, retention).result).rejects.toThrow(/Retired listings/)
+    // Without the flag, or with a flag a request could send (a string), it stays refused.
+    await expect(guard(longGone, 1, {}).result).rejects.toThrow(/Withdrawn/)
+    await expect(guard(longGone, 1, { retention: 'gliagora.retention' }).result).rejects.toThrow(
+      /Withdrawn/,
+    )
   })
 
   it('keeps a draft that the review queue points at', async () => {

@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const getPayload = vi.fn()
-const releaseInterruptedImports = vi.fn()
+const releaseInterruptedJobs = vi.fn()
 vi.mock('payload', () => ({ getPayload }))
 vi.mock('@payload-config', () => ({ default: {} }))
-vi.mock('@/jobs/rorImport', () => ({ releaseInterruptedImports }))
+vi.mock('@/jobs/release', () => ({ releaseInterruptedJobs }))
 
 const { connectOnStart } = await import('./startup')
 
@@ -12,7 +12,7 @@ afterEach(() => {
   vi.unstubAllEnvs()
   vi.restoreAllMocks()
   getPayload.mockReset()
-  releaseInterruptedImports.mockReset()
+  releaseInterruptedJobs.mockReset()
 })
 
 describe('connectOnStart', () => {
@@ -30,8 +30,8 @@ describe('connectOnStart', () => {
     expect(getPayload).toHaveBeenCalledWith({ config: {} })
     // Payload starts its job crons only when asked with cron: true.
     expect(getPayload).toHaveBeenLastCalledWith({ config: {}, cron: true })
-    // An import cut off by a restart would otherwise block every later scheduled run.
-    expect(releaseInterruptedImports).toHaveBeenCalledWith(payload)
+    // A job cut off by a restart would otherwise block every later scheduled run of its task.
+    expect(releaseInterruptedJobs).toHaveBeenCalledWith(payload)
   })
 
   it('starts without ALTCHA_HMAC_KEY, warning that the suggestion form is unavailable', async () => {

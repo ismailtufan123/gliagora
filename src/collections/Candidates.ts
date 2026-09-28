@@ -40,7 +40,45 @@ type Options = {
   req: PayloadRequest
 }
 
-const accepting = (data: CandidateData) => data.status === 'accepted'
+/**
+ * Whether this save accepts the candidate. The facts accepting needs are checked on that save, not
+ * on later saves of an accepted candidate: the retention task clears its address and title once
+ * its job is retired (M4.7, D34). Called only when a fact is missing, so the saved status is read
+ * from the database only then.
+ */
+async function accepting({ data, id, operation, req }: Options): Promise<boolean> {
+  if (data.status !== 'accepted') return false
+  if (operation !== 'update' || id == null) return true
+  const saved = await req.payload.findByID({
+    collection: 'candidates',
+    id,
+    select: { status: true },
+    depth: 0,
+    req,
+    disableErrors: true,
+  })
+  return saved?.status !== 'accepted'
+}
+
+/**
+ * Whether the retention task (M4.7, D34) cleared the posting's address and title of this saved
+ * candidate: of a rejected or duplicate candidate with its suggestion, or once the job it was
+ * accepted as or marked as a duplicate of was retired (the database then cleared that link).
+ */
+function linkCleared(saved: CandidateData): boolean {
+  if (saved.rawUrl != null || saved.rawTitle != null) return false
+  const suggestionGone = saved.fromSuggestion === true && saved.submission == null
+  switch (saved.status) {
+    case 'rejected':
+      return suggestionGone
+    case 'duplicate':
+      return suggestionGone || saved.duplicateOf == null
+    case 'accepted':
+      return saved.publishedRef == null
+    default:
+      return false
+  }
+}
 
 /** Jobs that a candidate can repeat by its title: those not closed yet. */
 const NOT_CLOSED: JobStatus[] = ['draft', 'in_review', 'published']
@@ -139,6 +177,18 @@ const prepare: CollectionBeforeValidateHook<Candidate> = async ({
   const saved: CandidateData = operation === 'update' ? (originalDoc ?? {}) : {}
   const value = <K extends keyof Candidate>(key: K): Candidate[K] | undefined =>
     key in data ? (data as Candidate)[key] : saved[key]
+
+  // An admin form opened before the retention task cleared the address and title sends them back
+  // on save, and no later run would clear them again: they stay cleared. Once the candidate is
+  // reopened (saved as Triaged), an editor can type an address again.
+  if (operation === 'update' && linkCleared(saved)) {
+    data.rawUrl = null
+    data.rawTitle = null
+  }
+  // Whether it came from a suggestion stays known after the suggestion is deleted by hand (a data
+  // request), so that the retention task still clears the suggested link in time.
+  data.fromSuggestion =
+    operation === 'update' ? (saved.fromSuggestion ?? false) : idOf(data.submission) !== undefined
 
   if (typeof data.rawUrl === 'string') data.rawUrl = data.rawUrl.trim() || null
   if (typeof data.rawTitle === 'string') data.rawTitle = data.rawTitle.trim() || null
@@ -361,8 +411,10 @@ export const Candidates: CollectionConfig = {
       label: 'Address of the posting',
       type: 'text',
       maxLength: 2000,
-      validate: (value: string | null | undefined, options: Options) => {
-        if (!value) return !accepting(options.data) || 'Accepting needs the address of the posting.'
+      validate: async (value: string | null | undefined, options: Options) => {
+        if (!value) {
+          return !(await accepting(options)) || 'Accepting needs the address of the posting.'
+        }
         // Payload's own text check applies maxLength.
         return addressProblem(value) ?? validations.text(value, options as never)
       },
@@ -376,8 +428,8 @@ export const Candidates: CollectionConfig = {
       label: 'Title as posted',
       type: 'text',
       maxLength: 300,
-      validate: (value: string | null | undefined, options: Options) =>
-        !value && accepting(options.data)
+      validate: async (value: string | null | undefined, options: Options) =>
+        !value && (await accepting(options))
           ? 'Accepting needs the title as the employer posted it.'
           : validations.text(value, options as never),
       admin: { description: 'The title exactly as the employer posted it, in its language.' },
@@ -386,9 +438,9 @@ export const Candidates: CollectionConfig = {
       name: 'institution',
       type: 'relationship',
       relationTo: 'institutions',
-      validate: (value: unknown, options: Options) =>
+      validate: async (value: unknown, options: Options) =>
         idOf(value) === undefined
-          ? !accepting(options.data) || 'Accepting needs the employer. Search by name or ROR ID.'
+          ? !(await accepting(options)) || 'Accepting needs the employer. Search by name or ROR ID.'
           : validations.relationship(value as never, options as never),
       admin: { description: 'The employer. Search by name or ROR ID. Needed to accept.' },
     },
@@ -542,6 +594,15 @@ export const Candidates: CollectionConfig = {
         readOnly: true,
         description: 'The "Suggest a listing" suggestion it came from, with its note.',
       },
+    },
+    {
+      // Set when the candidate is made from a suggestion, and kept after the suggestion is deleted
+      // (a data request), so the retention task still finds the suggested link (M4.7, D34).
+      name: 'fromSuggestion',
+      type: 'checkbox',
+      defaultValue: false,
+      access: { create: () => false, update: () => false },
+      admin: { hidden: true },
     },
     {
       name: 'kind',

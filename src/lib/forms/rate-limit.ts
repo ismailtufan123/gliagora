@@ -6,7 +6,7 @@ import type { Payload } from 'payload'
 // (src/collections/FormLimits.ts): one row for each form accepted from a hashed IP address, in the
 // form's own bucket, and one for each spam-check answer used, so that an answer sends only one
 // form. Rows are deleted within 24 hours: here, whenever a form reaches the limit (whatever the
-// decision), and by the hourly task (M4.7). They never go into backups (deploy/backup/backup.sh).
+// decision), and by the hourly task (src/jobs/maintenance/purgeFormLimits.ts). They never go into backups (deploy/backup/backup.sh).
 
 /** A form's own limit: at most `perWindow` sends per hashed IP address within LIMIT_WINDOW_MS. */
 export type LimitBucket = { name: string; perWindow: number }

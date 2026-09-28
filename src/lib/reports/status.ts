@@ -58,7 +58,7 @@ export const OTHER_ANSWER_DAYS = 30
 /**
  * A report is kept for 2 years after it is closed, then deleted with its email address and
  * details: PLAN §18.1 ("data request / takedown correspondence: 2 years after closure", [U] B11)
- * and the privacy texts. The deletion is part of the retention task (M4.7).
+ * and the privacy texts. The deletion is part of the retention task (src/jobs/maintenance/purgeRetention.ts).
  */
 export const REPORT_RETENTION_YEARS = 2
 
