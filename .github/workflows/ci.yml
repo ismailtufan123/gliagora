@@ -77,9 +77,12 @@ jobs:
             gliagora:ci
           for i in $(seq 1 60); do curl -fsS http://localhost:3000/health/ && break; sleep 2; done
           echo
-          curl -fsS http://localhost:3000/health/ | grep -q '"ok"'
-          curl -fsS http://localhost:3000/en/ | grep -q 'Where neuroscience meets'
-          curl -fsS http://localhost:3000/en/contact/ | grep -q 'hello@gliagora.com'
+          # Read the whole response before searching it: `curl | grep -q` fails under pipefail when
+          # grep stops at the first match while curl is still writing a longer page (curl exit 23).
+          contains() { local body; body="$(curl -fsS "$1")"; grep -qF -- "$2" <<<"$body"; }
+          contains http://localhost:3000/health/ '"ok"'
+          contains http://localhost:3000/en/ 'Where neuroscience meets'
+          contains http://localhost:3000/en/contact/ 'hello@gliagora.com'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/)" = 308
           test "$(docker exec app id -u)" != 0
           docker exec db psql -U gliagora -d gliagora -tAc 'select name from payload_migrations'
