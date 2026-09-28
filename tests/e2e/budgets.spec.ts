@@ -39,6 +39,10 @@ test.describe('size budgets', () => {
         kb[kind] += (kind === 'font' ? body.length : gzipSync(body).length) / 1024
       }
       const htmlKb = gzipSync(await main!.body()).length / 1024
+      // For the record: the milestone notes (PLAN §20) give the JavaScript of each template.
+      console.log(
+        `${template.name}: JavaScript ${kb.script.toFixed(2)} KB, CSS ${kb.stylesheet.toFixed(2)} KB, HTML ${htmlKb.toFixed(2)} KB (gzip), fonts ${kb.font.toFixed(1)} KB`,
+      )
 
       expect(kb.script, 'JavaScript, KB gzip').toBeLessThanOrEqual(BUDGET_KB.script)
       expect(kb.stylesheet, 'CSS, KB gzip').toBeLessThanOrEqual(BUDGET_KB.stylesheet)

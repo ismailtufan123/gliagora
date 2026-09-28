@@ -1,4 +1,4 @@
-import { ChevronDown, Search } from 'lucide-react'
+import { ChevronDown, Globe, Search } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import { Lockup } from '@/components/Lockup'
@@ -50,6 +50,9 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   return (
     <header className="site-header">
       <div className="page-frame flex h-full items-center gap-2 sm:gap-4">
+        {/* Where longer labels or larger text need more room, the lockup gives way: it drops its
+            descriptor, then its name (global.css). The navigation and the buttons keep their
+            size. */}
         <Lockup
           size="header"
           href={paths.home()}
@@ -90,7 +93,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           </ul>
         </nav>
 
-        <div className="ms-auto flex items-center gap-1 sm:gap-2 xl:gap-1">
+        <div className="ms-auto flex shrink-0 items-center gap-1 sm:gap-2 xl:gap-1">
           {/* A link to the search page, which JavaScript turns into the search dialog's button
               (DisclosureEnhancer). The search icon with its name for screen readers (PLAN §7.4);
               in the desktop layout also the shortcut, on screens with a keyboard, once JavaScript
@@ -99,7 +102,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           <a
             href={paths.search()}
             hrefLang={locale === 'en' ? undefined : 'en'}
-            className="button button-secondary search-trigger max-[22.5rem]:hidden"
+            className="button button-secondary search-trigger whitespace-nowrap max-[22.5rem]:hidden"
             data-search-open
           >
             <Search aria-hidden="true" size={18} />
@@ -109,9 +112,18 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               <kbd data-key="apple">{t('search.shortcutApple')}</kbd>
             </span>
           </a>
-          <LocaleSwitcher className="hidden md:block" locale={locale} labels={localeLabels} />
+          <LocaleSwitcher
+            className="hidden md:block"
+            locale={locale}
+            labels={localeLabels}
+            icons={{
+              globe: <Globe aria-hidden="true" size={18} />,
+              chevron: <ChevronDown aria-hidden="true" size={16} className="chevron" />,
+            }}
+          />
+          {/* A longer label wraps within 15rem: two lines for one 40% longer than the English. */}
           <a
-            className="button button-primary hidden max-w-60 text-center leading-tight whitespace-normal md:inline-flex"
+            className="button button-primary hidden max-w-60 leading-tight md:inline-flex"
             href={paths.section('newsletter')}
           >
             {t('header.digest')}

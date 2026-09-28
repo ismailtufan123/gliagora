@@ -4,22 +4,33 @@
  */
 
 /*
- * Size-adjusted fallbacks for the web fonts (PLAN §7.3): while Commissioner and Atkinson
+ * Size-adjusted fallbacks for the web fonts (PLAN §7.3, §17.4): while Commissioner and Atkinson
  * Hyperlegible Next load, text is drawn in a local font scaled to their metrics, so nothing
  * shifts when they arrive. Arial, Liberation Sans and Arimo share the same metrics, and Roboto
- * (Android) differs by 0.2%. The values are those next/font computes for Arial from our font
- * files; if the font files change, recompute them (set `adjustFontFallback: 'Arial'` in
- * fonts.ts, build, and copy the numbers from the generated "Fallback" @font-face rules).
+ * (Android) differs by 0.2%. Bold text has a face of its own: a regular face that the browser
+ * draws bold keeps its regular widths, while bold Atkinson is about 7% wider than its regular, so
+ * bold labels and buttons re-wrapped when the font arrived (M4.10). Commissioner is used only at
+ * 600 and 700 (headings, the lockup), so its one face is Arial Bold, for every weight, so that the
+ * browser does not embolden it again.
+ *
+ * The regular Atkinson values are those next/font computes for Arial from our font file. The bold
+ * ones are measured in the browser: size-adjust is the width of site text (UI strings, a legal
+ * text, Turkish labels) in the web font divided by its width in Arial Bold, and the ascent and
+ * descent overrides are the font's own (next/font's values times their size-adjust) divided by
+ * the new size-adjust. If the font files change, recompute them (for the regular face, set
+ * `adjustFontFallback: 'Arial'` in fonts.ts, build, and copy the generated "Fallback" rule).
  */
 @font-face {
   font-family: 'Commissioner Fallback';
   src:
-    local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans'),
-    local('Arimo'), local('Roboto'), local('Roboto-Regular');
-  ascent-override: 97.91%;
-  descent-override: 19.83%;
+    local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'),
+    local('LiberationSans-Bold'), local('Arimo Bold'), local('Arimo-Bold'), local('Roboto Bold'),
+    local('Roboto-Bold');
+  font-weight: 100 900;
+  ascent-override: 107.16%;
+  descent-override: 21.7%;
   line-gap-override: 0%;
-  size-adjust: 103.87%;
+  size-adjust: 94.9%;
 }
 
 @font-face {
@@ -27,10 +38,24 @@
   src:
     local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans'),
     local('Arimo'), local('Roboto'), local('Roboto-Regular');
+  font-weight: 100 550;
   ascent-override: 99.04%;
   descent-override: 31.8%;
   line-gap-override: 0%;
   size-adjust: 99.36%;
+}
+
+@font-face {
+  font-family: 'Atkinson Fallback';
+  src:
+    local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'),
+    local('LiberationSans-Bold'), local('Arimo Bold'), local('Arimo-Bold'), local('Roboto Bold'),
+    local('Roboto-Bold');
+  font-weight: 551 900;
+  ascent-override: 99.91%;
+  descent-override: 32.08%;
+  line-gap-override: 0%;
+  size-adjust: 98.5%;
 }
 
 :root {
@@ -102,9 +127,13 @@
   --duration-slow: 320ms;
   --ease: cubic-bezier(0.2, 0, 0, 1);
 
-  /* Layout */
-  --container: 1280px;
-  --gutter: var(--space-4);
+  /* Layout. The page frame is 1280px at the browser's default text size and grows with its text
+     setting, as the breakpoints do, so the desktop header, which shows from 80rem, always has the
+     room it was designed for. The gutters (16 / 24 / 32px, §7.4) stay within 5% of the screen's
+     width, so enlarged text (WCAG 1.4.4) keeps the room of a small screen for content; at normal
+     size that changes nothing from 320px up. */
+  --container: 80rem;
+  --gutter: min(var(--space-4), 5vw);
   --header-height: 4rem;
 
   /* Stacking (PLAN §7.4) */
@@ -117,13 +146,13 @@
 
 @media (min-width: 768px) {
   :root {
-    --gutter: var(--space-6);
+    --gutter: min(var(--space-6), 5vw);
   }
 }
 
 @media (min-width: 1024px) {
   :root {
-    --gutter: var(--space-8);
+    --gutter: min(var(--space-8), 5vw);
   }
 }
 

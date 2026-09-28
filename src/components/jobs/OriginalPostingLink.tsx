@@ -24,7 +24,7 @@ export async function OriginalPostingLink({
   return (
     <a
       href={href}
-      className={`button ${primary ? 'button-primary' : 'button-secondary'} posting-link ${className}`}
+      className={`button ${primary ? 'button-primary' : 'button-secondary'} ${className}`}
     >
       {t('viewOriginal')}
       <ExternalLink aria-hidden="true" size={18} className="flex-none" />

@@ -1,7 +1,7 @@
 'use client'
 
-import { ChevronDown, Globe } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import type { ReactNode } from 'react'
 
 import { type Locale, locales } from '@/i18n/routing'
 import { translationsOf } from '@/lib/site'
@@ -16,18 +16,27 @@ export type LocaleLabels = {
   short: Record<Locale, string>
 }
 
+/** The menu's globe and chevron, drawn by the server (SiteHeader). */
+export type LocaleIcons = { globe: ReactNode; chevron: ReactNode }
+
 // PLAN §2.3, §7.5: shows the current language, links to the same page in the other languages
 // where a reviewed translation exists (TRANSLATIONS in src/lib/site.ts), and says that more
 // languages are coming. Language names are written in their own language, with `lang`.
 // `variant="list"` shows the same choices as a plain list, for the mobile menu.
+// A client component because the links follow the address (usePathname). Its icons come from the
+// server as props, so their definitions and lucide's createLucideIcon stay out of its client code
+// (PLAN §17.3). lucide's Icon component is still sent: lucide-react marks it "use client", so
+// every lucide icon, also one drawn on the server, loads it in the browser.
 export function LocaleSwitcher({
   locale,
   labels,
+  icons,
   variant = 'menu',
   className = '',
 }: {
   locale: Locale
   labels: LocaleLabels
+  icons?: LocaleIcons
   variant?: 'menu' | 'list'
   className?: string
 }) {
@@ -75,9 +84,9 @@ export function LocaleSwitcher({
   return (
     <details className={`disclosure relative ${className}`} data-disclosure>
       <summary className="disclosure-button gap-1 px-2" aria-label={labels.button}>
-        <Globe aria-hidden="true" size={18} />
+        {icons?.globe}
         <span>{labels.short[locale]}</span>
-        <ChevronDown aria-hidden="true" size={16} className="chevron" />
+        {icons?.chevron}
       </summary>
       <div className="menu-panel end-0 w-56">{choices}</div>
     </details>

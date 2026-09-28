@@ -201,7 +201,10 @@ test.describe('report a problem', () => {
       })
     const overflow = () =>
       page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        () =>
+          // Against the layout's width: clientWidth includes the space scrollbar-gutter keeps.
+          document.documentElement.scrollWidth -
+          Math.round(document.documentElement.getBoundingClientRect().width),
       )
     expect(await overflow()).toBeLessThanOrEqual(0)
     await page.addStyleTag({ content: TEXT_SPACING })
