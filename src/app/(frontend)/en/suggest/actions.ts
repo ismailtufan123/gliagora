@@ -7,7 +7,8 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 
-import { altchaKey, newChallenge } from '@/lib/forms/altcha'
+import { altchaKey } from '@/lib/forms/altcha'
+import { stateAfter } from '@/lib/forms/public-form'
 import { postgresLimitStore } from '@/lib/forms/rate-limit'
 import { SUGGEST_SENT_PATH, type SuggestState, handleSuggestion } from '@/lib/forms/suggest'
 
@@ -49,25 +50,5 @@ export async function sendSuggestion(
   }
 
   const t = await getTranslations({ locale: 'en', namespace: 'suggest.errors' })
-  const fieldErrors: SuggestState['fieldErrors'] = {}
-  if (outcome.kind === 'invalid') {
-    for (const [field, code] of Object.entries(outcome.errors)) {
-      fieldErrors[field as keyof typeof fieldErrors] = t(code)
-    }
-  }
-  return {
-    values: outcome.values,
-    fieldErrors,
-    formError:
-      outcome.kind === 'refused'
-        ? t(outcome.problem)
-        : outcome.kind === 'failed'
-          ? t('failed', { reference: outcome.reference })
-          : null,
-    status: outcome.status,
-    // A new challenge for the next attempt: an answer is used once, and may have expired.
-    challenge: key ? await newChallenge(key) : null,
-    // Without JavaScript, React posts the previous state with the form, so it is not trusted.
-    attempt: (Number.isSafeInteger(previous?.attempt) ? previous.attempt : 0) + 1,
-  }
+  return stateAfter(outcome, previous, (code, values) => t(code as never, values as never), key)
 }

@@ -2,16 +2,20 @@ import type { CollectionSlug, ServerProps, Where } from 'payload'
 import { formatAdminURL } from 'payload/shared'
 
 import { CLOSING_SOON_DAYS } from '@/lib/jobs/deadline'
+import { PERSONAL_RIGHTS_ANSWER_HOURS } from '@/lib/reports/status'
 import {
   type ReviewSummary,
   WHERE,
   closingWhere,
+  personalRightsDueWhere,
+  personalRightsOverdueWhere,
   reviewSummary,
   whereQuery,
 } from '@/lib/review/dashboard'
 
 // The review queue at the top of the admin dashboard (PLAN §3.2, admin core): what waits for an
-// editor, and the deadline tracker. A server component that reads through the local API. Admin
+// editor, reports and removal requests with the personal-rights ones due soon, and the deadline
+// tracker. A server component that reads through the local API. Admin
 // text is plain English written here, like the labels in the collection configs: the admin is
 // not translated through messages/*.json.
 
@@ -40,7 +44,7 @@ export function ReviewDashboardView({
   links: Links
   now: Date
 }) {
-  const { candidates, jobsInReview, suggestions, closing } = summary
+  const { candidates, jobsInReview, suggestions, reports, closing } = summary
   return (
     <section className="review-dashboard" aria-labelledby="review-dashboard-title">
       <h2 id="review-dashboard-title" className="review-dashboard__title">
@@ -71,6 +75,25 @@ export function ReviewDashboardView({
                 {suggestions.notQueued} not in the review queue
               </a>
               , to handle by hand)
+            </>
+          ) : null}
+        </li>
+        <li>
+          Reports: <a href={links.list('reports', WHERE.newReports)}>{reports.new} new</a>
+        </li>
+        <li>
+          Personal-rights requests due within {PERSONAL_RIGHTS_ANSWER_HOURS} hours:{' '}
+          <a href={links.list('reports', personalRightsDueWhere(now))}>
+            {reports.personalRightsDue}
+          </a>
+          {reports.personalRightsOverdue > 0 ? (
+            <>
+              {' '}
+              (
+              <a href={links.list('reports', personalRightsOverdueWhere(now))}>
+                <strong>{reports.personalRightsOverdue} overdue</strong>
+              </a>
+              )
             </>
           ) : null}
         </li>

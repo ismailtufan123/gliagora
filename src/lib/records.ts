@@ -191,6 +191,34 @@ export async function latestOpenJobs(now: Date, limit: number, locale: Locale): 
 }
 
 /**
+ * What "Report a problem" needs of the job named in its address (src/lib/reports/item.ts): its
+ * title and address, and the dates that say whether its page is public. Any status; the form
+ * decides.
+ */
+export const jobForReport = cache(async (shortId: string) => {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'jobs',
+    where: { shortId: { equals: shortId } },
+    select: {
+      title: true,
+      slug: true,
+      shortId: true,
+      originalLanguage: true,
+      status: true,
+      deadlineKind: true,
+      deadlineAt: true,
+      expiredAt: true,
+      withdrawnAt: true,
+    },
+    limit: 1,
+    pagination: false,
+    depth: 0,
+  })
+  return docs[0] ?? null
+})
+
+/**
  * Open jobs matching `where`, in deadline order (the nearest first; rolling and until-filled
  * ones after them, newest first), at most `limit`. `total` counts all matches when `count` is
  * set, otherwise only the ones returned.

@@ -6,7 +6,7 @@ import { z } from 'zod'
 // Spam protection with ALTCHA (PLAN §3.2, §18.2): before a form is sent, the browser finds the
 // secret number behind a challenge by trying one SHA-256 hash after another (proof of work), and
 // the server checks the answer. Everything runs on our own server: altcha-lib creates and checks
-// challenges without any network call, and our own small solver (src/components/suggest/solve.ts)
+// challenges without any network call, and our own small solver (src/components/forms/solve.ts)
 // replaces the ALTCHA widget. Nothing is stored in the browser (no cookie), as the cookies page
 // says.
 //

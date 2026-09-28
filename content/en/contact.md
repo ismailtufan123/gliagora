@@ -41,12 +41,12 @@ For now, this page gives email addresses only. Before Gliagora earns any income,
 Tell us if something we published is wrong or out of date, or if it affects your personal rights (for example, your privacy or your reputation). You can:
 
 - use the **Report a problem** link on the listing or page;
-- fill in the form on our [notice and takedown page](/en/legal/takedown/), our page for correction and removal requests;
+- fill in our [report form](/en/report/), also linked from our [notice and takedown page](/en/legal/takedown/), our page for correction and removal requests;
 - email [hello@gliagora.com](mailto:hello@gliagora.com).
 
-The **Report a problem** link and the notice and takedown form open step by step, as we build Gliagora. Until they are open, email [hello@gliagora.com](mailto:hello@gliagora.com).
+The **Report a problem** link and the report form open step by step, as we build Gliagora. Until they are open, email [hello@gliagora.com](mailto:hello@gliagora.com).
 
-Include the link to the page, what is wrong and what you would like us to do. Employers can ask us to update or remove their own listings in the same way. If you use the form on the notice and takedown page, you get an automatic email as soon as we receive your request.
+Include the link to the page, what is wrong and what you would like us to do. Employers can ask us to update or remove their own listings in the same way. If you use the report form and give your email address, you get an automatic email as soon as we receive your request.
 
 If content affects your personal rights, you can ask us to remove it (Law No. 5651, Article 9). You can also apply directly to a criminal judgeship of peace ({tr: sulh ceza hâkimliği}) to have the content removed or access to it blocked. [TO DECIDE: B2 – direct application to a court]
 

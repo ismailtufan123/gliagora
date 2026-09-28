@@ -97,6 +97,19 @@ describe('Submissions: personal data', () => {
     expect(Submissions.admin?.enableListViewSelectAPI).toBe(true)
   })
 
+  it('never loads them into the list, even when a link or a saved preference asks for them', async () => {
+    const [hook] = Submissions.hooks?.beforeOperation ?? []
+    const read = (select: Record<string, boolean> | undefined, overrideAccess: boolean) =>
+      hook!({ args: { select }, operation: 'read', overrideAccess, req: {} } as never)
+    // The admin list: ?columns=["email","note","url"].
+    expect(await read({ url: true, email: true, note: true }, false)).toEqual({
+      select: { url: true },
+    })
+    // The document view asks for no fields, and server code bypasses access control.
+    expect(await read(undefined, false)).toEqual({ select: undefined })
+    expect(await read({ email: true }, true)).toEqual({ select: { email: true } })
+  })
+
   it('keeps what the person sent unchanged by editors', () => {
     for (const name of ['url', 'kind', 'note', 'email', 'consentToContact', 'locale']) {
       expect(field(name).access?.update?.({})).toBe(false)

@@ -7,6 +7,7 @@ import * as migration_20260927_142000_institutions from './20260927_142000_insti
 import * as migration_20260927_200239_jobs from './20260927_200239_jobs';
 import * as migration_20260927_221038_review_queue from './20260927_221038_review_queue';
 import * as migration_20260927_235439_form_limits from './20260927_235439_form_limits';
+import * as migration_20260928_020440_reports from './20260928_020440_reports';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20260927_235439_form_limits.up,
     down: migration_20260927_235439_form_limits.down,
-    name: '20260927_235439_form_limits'
+    name: '20260927_235439_form_limits',
+  },
+  {
+    up: migration_20260928_020440_reports.up,
+    down: migration_20260928_020440_reports.down,
+    name: '20260928_020440_reports'
   },
 ];

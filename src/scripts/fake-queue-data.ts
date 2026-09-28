@@ -3,14 +3,16 @@
 // notes, addresses and email addresses only on the reserved example.org and example.com domains,
 // no real people. src/scripts/fake-queue.ts stores them after the fake jobs.
 
+import type { ReportAction, ReportKind, ReportStatus } from '@/lib/reports/status'
 import type { RejectionReason, SubmissionKind } from '@/lib/review/status'
 
 import { postingUrl } from './fake-jobs-data'
 import { FIXED_JOBS } from './fake-jobs-fixed'
 
 /**
- * Marks every fake suggestion (at the start of its note) and every candidate added by hand (at
- * the start of its source text), so the next run can remove them first.
+ * Marks every fake suggestion (at the start of its note), every candidate added by hand (at the
+ * start of its source text) and every fake report (at the start of its details), so the next run
+ * can remove them first. The end-to-end tests start what they send with it too.
  */
 export const FAKE_QUEUE_NOTE = 'Fake data (pnpm fake:jobs).'
 
@@ -184,4 +186,59 @@ export const FAKE_QUEUE_INSTITUTIONS = [
       ...(item.review ? [item.review.institutionRorId] : []),
     ]),
   ),
+]
+
+/** A report from "Report a problem" (M4.6), and how far an editor has handled it. */
+export type FakeReport = {
+  kind: ReportKind
+  details: string
+  email: string | null
+  /** The fixed job it is about (its short ID), if any. */
+  job?: string
+  status: ReportStatus
+  action?: ReportAction
+  actionNote?: string
+}
+
+const { rolling, expiredRecently } = FIXED_JOBS
+
+export const FAKE_REPORTS: FakeReport[] = [
+  {
+    kind: 'wrong-fact',
+    details: note('The deadline on the original posting is two weeks later.'),
+    email: null,
+    job: open.shortId,
+    status: 'new',
+  },
+  {
+    kind: 'personal-rights',
+    details: note('My name is listed as the contact person, but I have left the lab.'),
+    email: 'reporter@example.org',
+    job: closingSoon.shortId,
+    status: 'new',
+  },
+  {
+    kind: 'broken-link',
+    details: note('The link to the posting leads to an error page.'),
+    email: 'reader@example.com',
+    job: rolling.shortId,
+    status: 'in-progress',
+    actionNote: 'Asked the employer for the new address.',
+  },
+  {
+    kind: 'closed',
+    details: note('The position was filled last week.'),
+    email: null,
+    job: expiredRecently.shortId,
+    status: 'closed',
+    action: 'corrected',
+    actionNote: 'Marked as expired after checking the original posting.',
+  },
+  {
+    kind: 'other',
+    details: note('A general question about the site, not about an item.'),
+    email: null,
+    status: 'closed',
+    action: 'not-applicable',
+  },
 ]

@@ -4,16 +4,24 @@ import { memoryLimitStore } from './memory-limit-store'
 import {
   LIMIT_RETENTION_MS,
   LIMIT_WINDOW_MS,
+  type LimitBucket,
   type LimitStore,
+  REPORT_LIMIT,
   SUGGESTIONS_PER_WINDOW,
+  SUGGEST_LIMIT,
   admit,
 } from './rate-limit'
 
 const T0 = Date.parse('2026-09-28T10:00:00Z')
 const MINUTE = 60_000
 let answers = 0
-const send = (store: LimitStore, ipHash: string, at: number, replayKey = `answer-${++answers}`) =>
-  admit(store, { ipHash, replayKey, now: new Date(at) })
+const send = (
+  store: LimitStore,
+  ipHash: string,
+  at: number,
+  replayKey = `answer-${++answers}`,
+  bucket: LimitBucket = SUGGEST_LIMIT,
+) => admit(store, { bucket, ipHash, replayKey, now: new Date(at) })
 
 describe('suggestion rate limit', () => {
   it('takes 5 suggestions an hour from one address and refuses the 6th', async () => {
@@ -81,20 +89,22 @@ describe('clean-up (D34)', () => {
     await send(store, 'ip-a', T0)
     await send(store, 'ip-b', T0 + LIMIT_RETENTION_MS - MINUTE)
     await send(store, 'ip-c', T0 + LIMIT_RETENTION_MS + 1)
-    expect(store.rows.map((row) => row.key)).not.toContain('ip:ip-a')
-    expect(store.rows.map((row) => row.key)).toEqual(expect.arrayContaining(['ip:ip-b', 'ip:ip-c']))
+    expect(store.rows.map((row) => row.key)).not.toContain('ip:suggest:ip-a')
+    expect(store.rows.map((row) => row.key)).toEqual(
+      expect.arrayContaining(['ip:suggest:ip-b', 'ip:suggest:ip-c']),
+    )
   })
 
   it('also deletes them when a suggestion is refused as rate-limited or replayed', async () => {
     for (const refusal of ['rate-limited', 'replayed'] as const) {
       const store = memoryLimitStore()
-      await send(store, 'old', T0, 'old-answer')
+      await send(store, 'ip-old', T0, 'old-answer')
       // Five suggestions from one address just under 24 hours later fill its hour.
       const later = T0 + LIMIT_RETENTION_MS - 10 * MINUTE
       for (let i = 0; i < SUGGESTIONS_PER_WINDOW; i++) {
         await send(store, 'ip-a', later + i * MINUTE, `later-${refusal}-${i}`)
       }
-      expect(store.rows.map((row) => row.key)).toContain('ip:old')
+      expect(store.rows.map((row) => row.key)).toContain('ip:suggest:ip-old')
       // A day after the first suggestion, only refused requests arrive.
       const next = T0 + LIMIT_RETENTION_MS + MINUTE
       const outcome =
@@ -102,7 +112,7 @@ describe('clean-up (D34)', () => {
           ? await send(store, 'ip-a', next)
           : await send(store, 'ip-b', next, `later-${refusal}-0`)
       expect(outcome).toBe(refusal)
-      expect(store.rows.map((row) => row.key)).not.toContain('ip:old')
+      expect(store.rows.map((row) => row.key)).not.toContain('ip:suggest:ip-old')
       expect(store.rows.map((row) => row.key)).not.toContain('altcha:old-answer')
     }
   })
@@ -120,12 +130,33 @@ describe('clean-up (D34)', () => {
 })
 
 describe('stored keys', () => {
-  it('are the hashed address and the answer’s replay key, with a prefix each', async () => {
+  it('are the hashed address in the form’s bucket and the answer’s replay key', async () => {
     const store = memoryLimitStore()
     await send(store, 'hash-of-address', T0, 'hash-of-signature')
+    await send(store, 'hash-of-address', T0, 'another-signature', REPORT_LIMIT)
     expect(store.rows.map((row) => row.key)).toEqual([
-      'ip:hash-of-address',
+      'ip:suggest:hash-of-address',
       'altcha:hash-of-signature',
+      'ip:report:hash-of-address',
+      'altcha:another-signature',
     ])
+  })
+})
+
+describe('buckets', () => {
+  it('count each form apart: 5 reports an hour besides 5 suggestions from one address', async () => {
+    const store = memoryLimitStore()
+    for (let i = 0; i < SUGGESTIONS_PER_WINDOW; i++) await send(store, 'ip-a', T0 + i)
+    expect(await send(store, 'ip-a', T0 + 10)).toBe('rate-limited')
+    for (let i = 0; i < REPORT_LIMIT.perWindow; i++) {
+      expect(await send(store, 'ip-a', T0 + 20 + i, undefined, REPORT_LIMIT)).toBe('accepted')
+    }
+    expect(await send(store, 'ip-a', T0 + 30, undefined, REPORT_LIMIT)).toBe('rate-limited')
+  })
+
+  it('share the used answers: an answer sends one form, whichever form it is', async () => {
+    const store = memoryLimitStore()
+    expect(await send(store, 'ip-a', T0, 'one-answer')).toBe('accepted')
+    expect(await send(store, 'ip-a', T0 + 1, 'one-answer', REPORT_LIMIT)).toBe('replayed')
   })
 })

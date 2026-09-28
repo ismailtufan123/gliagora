@@ -1,35 +1,21 @@
 import { randomBytes } from 'node:crypto'
 
-import AxeBuilder from '@axe-core/playwright'
 import { type Browser, type Page, expect, test } from '@playwright/test'
 
 import { FAKE_QUEUE_NOTE } from '../../src/scripts/fake-queue-data'
+import { TEXT_SPACING, clientAddress, expectNoSeriousAxeIssues, summary } from './forms'
 
 // "Suggest a listing" in the browser (PLAN §3.2, §7.5, §18.2). The page itself, the sent page and
 // their size budgets are covered for every template in accessibility.spec.ts and budgets.spec.ts
 // (tests/e2e/pages.ts). Suggestions sent here are fake data: their notes start with the fake-data
 // marker, so `pnpm fake:jobs` removes them with the other fake suggestions.
 //
-// Sending runs on the desktop project only. Each test that sends gets its own client address in
-// X-Forwarded-For, so that parallel tests and reruns within the hour do not share the rate limit
-// (5 an hour per address). That is harmless in production: Caddy replaces the header with the
-// address that connected to it, and the app is reachable only through Caddy
-// (src/lib/forms/client-ip.ts).
+// Sending runs on the desktop project only, each test from its own client address (forms.ts).
 
 const FORM = '/en/suggest/'
 const SENT = '/en/suggest/sent/'
 
-/** A random address in the IPv6 documentation range, a /64 of its own. */
-const clientAddress = () => {
-  const [a, b, c, d] = [...randomBytes(8).subarray(0, 4)].map((byte) => byte.toString(16))
-  return `2001:db8:${a}${b}:${c}${d}::1`
-}
-
 const uniqueUrl = () => `https://careers.example.org/e2e/${randomBytes(6).toString('hex')}`
-
-/** WCAG 1.4.12's text spacing, as in layout.spec.ts. */
-const TEXT_SPACING =
-  '* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }'
 
 async function openForm(browser: Browser, { javaScript = true } = {}) {
   const context = await browser.newContext({
@@ -41,25 +27,10 @@ async function openForm(browser: Browser, { javaScript = true } = {}) {
   return page
 }
 
-const summary = (page: Page) => page.getByRole('alert').filter({ hasText: 'There is a problem' })
-
 async function fillValid(page: Page, url = uniqueUrl()) {
   await page.getByLabel('Address of the original page').fill(url)
   await page.getByLabel('A position').check()
   await page.getByLabel('Note (optional)').fill(`${FAKE_QUEUE_NOTE} Sent by the e2e tests.`)
-}
-
-async function expectNoSeriousAxeIssues(page: Page) {
-  for (const colorScheme of ['light', 'dark'] as const) {
-    await page.emulateMedia({ colorScheme })
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze()
-    const serious = results.violations.filter(
-      (v) => v.impact === 'serious' || v.impact === 'critical',
-    )
-    expect(serious.map((v) => `${colorScheme}: ${v.id}: ${v.help}`)).toEqual([])
-  }
 }
 
 test.describe('suggest a listing', () => {

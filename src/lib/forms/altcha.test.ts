@@ -1,7 +1,7 @@
 import { createChallenge } from 'altcha-lib/v1'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { solveChallenge } from '@/components/suggest/solve'
+import { solveChallenge } from '@/components/forms/solve'
 
 import {
   ALTCHA_MAX_NUMBER,

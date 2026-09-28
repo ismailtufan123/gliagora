@@ -131,8 +131,7 @@ Gliagora has these public forms:
 - newsletter signup;
 - sign-in by email link;
 - "Suggest a listing";
-- "Report a problem", linked from every item;
-- Notice and takedown (corrections and removals);
+- "Report a problem", linked from every item and from the Notice and takedown page (corrections and removals);
 - Data requests.
 
 Please use each form only for its purpose.

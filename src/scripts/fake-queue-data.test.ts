@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { similarity, normaliseTitle } from '@/lib/jobs/similarity'
 import { canonicalUrl, isHttpUrl } from '@/lib/jobs/url'
+import { REPORT_KINDS, statusProblem } from '@/lib/reports/status'
 import { transitionProblem } from '@/lib/review/status'
 
 import { FAKE_INSTITUTIONS, postingUrl } from './fake-jobs-data'
@@ -10,6 +11,7 @@ import {
   FAKE_CANDIDATES,
   FAKE_QUEUE_INSTITUTIONS,
   FAKE_QUEUE_NOTE,
+  FAKE_REPORTS,
   FAKE_SUBMISSIONS,
 } from './fake-queue-data'
 
@@ -92,6 +94,37 @@ describe('fake review queue', () => {
       expect(similarity(normaliseTitle(accepted.rawTitle), normaliseTitle(job.title))).toBeLessThan(
         0.8,
       )
+    }
+  })
+})
+
+describe('fake reports', () => {
+  it('are marked, so the next run removes them, and fit the collection', () => {
+    for (const { details } of FAKE_REPORTS) {
+      expect(details.startsWith(FAKE_QUEUE_NOTE)).toBe(true)
+      expect(details.length).toBeLessThanOrEqual(2000)
+    }
+  })
+
+  it('use only reserved example domains, and give an address for personal rights', () => {
+    for (const { email, kind } of FAKE_REPORTS) {
+      if (email) expect(email.split('@')[1]).toMatch(RESERVED)
+      if (kind === 'personal-rights') expect(email).not.toBeNull()
+    }
+  })
+
+  it('cover every status, with an action on each closed one, and name fixed jobs', () => {
+    expect(new Set(FAKE_REPORTS.map((r) => r.status))).toEqual(
+      new Set(['new', 'in-progress', 'closed']),
+    )
+    expect(FAKE_REPORTS.some((r) => r.kind === 'personal-rights' && r.status === 'new')).toBe(true)
+    expect(FAKE_REPORTS.some((r) => r.job === undefined)).toBe(true)
+    const shortIds = Object.values(FIXED_JOBS).map((job) => job.shortId as string)
+    for (const report of FAKE_REPORTS) {
+      expect(REPORT_KINDS.map((k) => k.value)).toContain(report.kind)
+      if (report.job) expect(shortIds).toContain(report.job)
+      if (report.status === 'closed') expect(report.action).toBeDefined()
+      expect(statusProblem('new', report.status)).toBeNull()
     }
   })
 })

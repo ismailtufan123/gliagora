@@ -127,11 +127,12 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Veriler:**
   - ilgili içeriğin bağlantısı;
   - talebin nedeni ve açıklamanız;
-  - e-posta adresiniz;
+  - e-posta adresiniz (verdiyseniz);
+  - kullandığınız sayfanın dili;
   - talebin alındığı ve yanıtlanması gereken tarihler;
   - talebin durumu ve yapılan işlem.
 - **Nereden ve nasıl:** Sizden, şu yollardan biriyle:
-  - her içerikteki "{en: Report a problem}" (Sorun bildirin) bağlantısı (içerik bilgisi önceden doldurulur) [KARAR VERİLECEK: M4 – "{en: Report a problem}" formunun hangi alanları topladığı ve e-posta adresi isteyip istemediği];
+  - her içerikteki "{en: Report a problem}" (Sorun bildirin) bağlantısı (içerik bilgisi önceden doldurulur). Form, sorunun ne olduğunu, en fazla 2.000 karakterlik açıklamanızı ve e-posta adresinizi sorar. E-posta adresi isteğe bağlıdır; yalnızca kişilik haklarınızla ilgili bir talepte, size yanıt verebilmemiz için zorunludur;
   - İngilizce [{en: Notice and takedown}](/en/legal/takedown/) (kaldırma ve düzeltme) sayfası;
   - e-posta.
 - **Amaç:** Talebinizi incelemek ve size yanıt vermek. Gerekiyorsa içeriği düzeltmek veya yayından kaldırmak ve bunu kayıt altına almak. Kaldırılmasına karar verilen içerik hemen yayından kalkar veya düzeltilir.
@@ -164,10 +165,10 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 ### Form ve giriş güvenliği
 
 - **Veriler:** IP adresinizin karma (hash) değeri.
-- **Nereden ve nasıl:** "{en: Suggest a listing}" (İlan önerin) formunu gönderdiğinizde, otomatik olarak.
+- **Nereden ve nasıl:** "{en: Suggest a listing}" (İlan önerin) veya "{en: Report a problem}" (Sorun bildirin) formunu gönderdiğinizde, otomatik olarak.
 - **Amaç:** İstenmeyen gönderileri (spam) ve kötüye kullanımı önlemek.
-  - Örneğin ilan önerme formunda aynı IP adresinden saatte en fazla 5 gönderim kabul edilir.
-  - Giriş bağlantısı isteklerini ve diğer formları da sınırlarız. [KARAR VERİLECEK: S ve M4b – bu sınırlamada hangi bilginin kullanılacağı; karma IP değeri yalnızca ilan önerme formu için kararlaştırılmıştır]
+  - Örneğin ilan önerme formunda ve sorun bildirme formunda aynı IP adresinden her biri için saatte en fazla 5 gönderim kabul edilir.
+  - Giriş bağlantısı isteklerini ve diğer formları da sınırlarız. [KARAR VERİLECEK: S ve M4b – bu sınırlamada hangi bilginin kullanılacağı; karma IP değeri yalnızca ilan önerme ve sorun bildirme formları için kararlaştırılmıştır]
   - Spam koruması (ALTCHA) kendi sunucumuzda çalışır; başka bir hizmete veri gitmez.
 - **Hukuki sebep:** Meşru menfaatimiz (m.5/2 (f)), yani siteyi ve kullanıcılarını kötüye kullanıma karşı korumak.
 - **Saklama:** Karma değer yalnızca kendi sunucumuzdaki site veritabanında tutulur ve 24 saat sonra silinir.

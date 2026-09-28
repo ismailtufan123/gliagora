@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { SUBMISSION_KINDS } from '@/lib/review/status'
 
 import { NOTE_MAX } from './fields'
+import { readControls } from './public-form'
 import {
   type SuggestValues,
-  cleanNote,
   parseSuggestion,
-  readSuggestForm,
+  readSuggestValues,
   urlProblem,
 } from './suggest-schema'
 
@@ -137,11 +137,9 @@ describe('suggestion form: content type, note, email and consent', () => {
   })
 
   it('removes control characters and text-reordering characters from the note', () => {
-    expect(cleanNote('a\u0000b\u0007c\u001bd\u007fe\u0085f')).toBe('abcdef')
-    expect(cleanNote('evil‮gnp.exe ⁦x⁩')).toBe('evilgnp.exe x')
-    expect(cleanNote('line 1\r\nline 2\rline 3\n\tindented')).toBe(
-      'line 1\nline 2\nline 3\n\tindented',
-    )
+    expect(parseSuggestion(values({ note: 'a\u0000b\u202Ec' }), 'en')).toMatchObject({
+      data: { note: 'abc' },
+    })
   })
 
   it('stores an email address only with consent, and asks rather than dropping it', () => {
@@ -195,19 +193,19 @@ describe('reading the form', () => {
     form.set('url', 'https://www.example.org/jobs/1')
     form.set('note', new Blob(['not text']), 'note.txt')
     form.set('reference_code', 'filled in by a program')
-    expect(readSuggestForm(form)).toEqual({
-      values: {
-        url: 'https://www.example.org/jobs/1',
-        kind: '',
-        note: '',
-        email: '',
-        consent: false,
-      },
+    expect(readSuggestValues(form)).toEqual({
+      url: 'https://www.example.org/jobs/1',
+      kind: '',
+      note: '',
+      email: '',
+      consent: false,
+    })
+    expect(readControls(form)).toEqual({
       locale: '',
       altcha: '',
       honeypot: 'filled in by a program',
     })
     form.set('consent', 'yes')
-    expect(readSuggestForm(form).values.consent).toBe(true)
+    expect(readSuggestValues(form).consent).toBe(true)
   })
 })

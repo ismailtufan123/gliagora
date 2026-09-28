@@ -4,7 +4,9 @@ import { type Locale, locales } from '@/i18n/routing'
 import { MAX_URL_LENGTH, canonicalUrl, hasRewrittenCharacters } from '@/lib/jobs/url'
 import { SUBMISSION_KINDS, type SubmissionKind } from '@/lib/review/status'
 
-import { EMAIL_MAX, NOTE_MAX, SUGGEST_FIELDS, SUGGEST_INPUTS, type SuggestField } from './fields'
+import { NOTE_MAX, SUGGEST_FIELDS, type SuggestField } from './fields'
+import { type Parse, formText } from './public-form'
+import { cleanText, emailProblem } from './text'
 
 // The "Suggest a listing" form (PLAN §3.2, §18.2): what it accepts, checked on the server. The
 // browser only sends text; every message the person sees comes from here, so the form works the
@@ -45,40 +47,16 @@ export type SuggestionData = {
 
 export type FieldErrors = Partial<Record<SuggestField, SuggestErrorCode>>
 
-/** A form field's text; anything else (a file, a missing field) counts as empty. */
-function text(form: FormData, name: string): string {
-  const value = form.get(name)
-  return typeof value === 'string' ? value : ''
-}
-
-/** Reads the form as sent. */
-export function readSuggestForm(form: FormData) {
+/** Reads the fields as sent. */
+export function readSuggestValues(form: FormData): SuggestValues {
   return {
-    values: {
-      url: text(form, 'url'),
-      kind: text(form, 'kind'),
-      note: text(form, 'note'),
-      email: text(form, 'email'),
-      // An unticked checkbox sends nothing; a ticked one sends its value.
-      consent: form.get('consent') !== null,
-    } satisfies SuggestValues,
-    locale: text(form, SUGGEST_INPUTS.locale),
-    altcha: text(form, SUGGEST_INPUTS.altcha),
-    honeypot: text(form, SUGGEST_INPUTS.honeypot),
+    url: formText(form, 'url'),
+    kind: formText(form, 'kind'),
+    note: formText(form, 'note'),
+    email: formText(form, 'email'),
+    // An unticked checkbox sends nothing; a ticked one sends its value.
+    consent: form.get('consent') !== null,
   }
-}
-
-// Control characters (C0 except tab and line feed, DEL, C1) and the invisible characters that
-// reorder text (bidirectional overrides and isolates), which could make a note look different in
-// the admin than what was sent.
-const UNWANTED = /[\u0000-\u0008\u000B-\u001F\u007F-\u009F‪-‮⁦-⁩]/g
-
-/**
- * A note as plain text: line breaks as "\n" (browsers send them as "\r\n", but count them as one
- * character), without control characters, trimmed.
- */
-export function cleanNote(value: string): string {
-  return value.replace(/\r\n?/g, '\n').replace(UNWANTED, '').trim()
 }
 
 /**
@@ -108,14 +86,6 @@ export function urlProblem(value: string): SuggestErrorCode | null {
   return null
 }
 
-/**
- * The email check of Payload's email fields (payload/dist/fields/validations.js), so that nothing
- * passes here that the Submissions collection would refuse: no spaces or quotes, no double dots,
- * a domain with a top-level domain of two or more letters.
- */
-const EMAIL =
-  /^(?!.*\.\.)[\w!#$%&'*+/=?^`{|}~-](?:[\w!#$%&'*+/=?^`{|}~.-]*[\w!#$%&'*+/=?^`{|}~-])?@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/i
-
 const KINDS = SUBMISSION_KINDS.map((kind) => kind.value) as [SubmissionKind, ...SubmissionKind[]]
 
 const schema = z
@@ -130,16 +100,14 @@ const schema = z
     kind: z.enum(KINDS, { error: 'kindMissing' }),
     note: z
       .string()
-      .transform(cleanNote)
+      .transform(cleanText)
       .pipe(z.string().max(NOTE_MAX, { error: 'noteTooLong' })),
     email: z
       .string()
       .trim()
       .superRefine((value, ctx) => {
-        if (value.length > EMAIL_MAX) ctx.addIssue({ code: 'custom', message: 'emailTooLong' })
-        else if (value !== '' && !EMAIL.test(value)) {
-          ctx.addIssue({ code: 'custom', message: 'emailInvalid' })
-        }
+        const problem = emailProblem(value)
+        if (problem) ctx.addIssue({ code: 'custom', message: problem })
       }),
     consent: z.boolean(),
     // The form's own hidden field; anything else is read as English, the site's language.
@@ -161,7 +129,7 @@ const schema = z
     { when: () => true },
   )
 
-export type SuggestParse = { ok: true; data: SuggestionData } | { ok: false; errors: FieldErrors }
+export type SuggestParse = Parse<SuggestionData, FieldErrors>
 
 /** Checks a suggestion: the data to store, or a problem for each field that has one. */
 export function parseSuggestion(values: SuggestValues, locale: string): SuggestParse {

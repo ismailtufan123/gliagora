@@ -2,14 +2,25 @@ import { sql } from '@payloadcms/db-postgres'
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
 
-// Limits on the "Suggest a listing" form (PLAN §3.2, D34), kept in the form-limits table
-// (src/collections/FormLimits.ts): one row for each suggestion accepted from a hashed IP address,
-// and one for each spam-check answer used, so that an answer sends only one suggestion. Rows are
-// deleted within 24 hours: here, whenever a suggestion reaches the limit (whatever the decision),
-// and by the hourly task (M4.7). They never go into backups (deploy/backup/backup.sh).
+// Limits on the public forms (PLAN §3.2, D34), kept in the form-limits table
+// (src/collections/FormLimits.ts): one row for each form accepted from a hashed IP address, in the
+// form's own bucket, and one for each spam-check answer used, so that an answer sends only one
+// form. Rows are deleted within 24 hours: here, whenever a form reaches the limit (whatever the
+// decision), and by the hourly task (M4.7). They never go into backups (deploy/backup/backup.sh).
 
-/** At most this many suggestions per hashed IP address within LIMIT_WINDOW_MS (PLAN §3.2). */
-export const SUGGESTIONS_PER_WINDOW = 5
+/** A form's own limit: at most `perWindow` sends per hashed IP address within LIMIT_WINDOW_MS. */
+export type LimitBucket = { name: string; perWindow: number }
+
+/** "Suggest a listing": 5 suggestions an hour per address (PLAN §3.2). */
+export const SUGGEST_LIMIT: LimitBucket = { name: 'suggest', perWindow: 5 }
+
+/**
+ * "Report a problem" (M4.6): 5 reports an hour per address, counted apart from suggestions, so
+ * someone who suggested listings can still report a problem.
+ */
+export const REPORT_LIMIT: LimitBucket = { name: 'report', perWindow: 5 }
+
+export const SUGGESTIONS_PER_WINDOW = SUGGEST_LIMIT.perWindow
 export const LIMIT_WINDOW_MS = 60 * 60_000
 
 /**
@@ -41,25 +52,32 @@ export type LimitStore = {
   purge(before: Date): Promise<void>
 }
 
-export const ipLimitKey = (ipHash: string) => `ip:${ipHash}`
+/** The key of an address in a form's bucket ("ip:suggest:…", "ip:report:…"). */
+export const ipLimitKey = (bucket: LimitBucket, ipHash: string) => `ip:${bucket.name}:${ipHash}`
+/** Used answers share one namespace: an answer sends one form, whichever form it is. */
 export const answerLimitKey = (replayKey: string) => `altcha:${replayKey}`
 
 /**
- * Decides whether a suggestion with a verified spam-check answer is taken: refused if the answer
- * was used before, or if its address has sent SUGGESTIONS_PER_WINDOW suggestions in the last hour
- * (a sliding window). Otherwise both are recorded. Only suggestions that passed every other check
- * are counted, so mistakes in the form or failed spam checks do not use up anyone's limit.
+ * Decides whether a form with a verified spam-check answer is taken: refused if the answer was
+ * used before, or if its address has sent `bucket.perWindow` forms of this kind in the last hour
+ * (a sliding window). Otherwise both are recorded. Only forms that passed every other check are
+ * counted, so mistakes in the form or failed spam checks do not use up anyone's limit.
  */
 export async function admit(
   store: LimitStore,
-  { ipHash, replayKey, now }: { ipHash: string; replayKey: string; now: Date },
+  {
+    bucket,
+    ipHash,
+    replayKey,
+    now,
+  }: { bucket: LimitBucket; ipHash: string; replayKey: string; now: Date },
 ): Promise<Admission> {
-  const ip = ipLimitKey(ipHash)
+  const ip = ipLimitKey(bucket, ipHash)
   const answer = answerLimitKey(replayKey)
   const at = now.getTime()
   const decision = await store.transaction([ip, answer], async (tx) => {
     if ((await tx.count(answer, new Date(at - LIMIT_RETENTION_MS))) > 0) return 'replayed'
-    if ((await tx.count(ip, new Date(at - LIMIT_WINDOW_MS))) >= SUGGESTIONS_PER_WINDOW) {
+    if ((await tx.count(ip, new Date(at - LIMIT_WINDOW_MS))) >= bucket.perWindow) {
       return 'rate-limited'
     }
     await tx.add([ip, answer], now)
