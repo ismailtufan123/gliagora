@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
 
@@ -69,6 +71,23 @@ describe('Terms (taxonomy)', () => {
     expect(mesh(['9457'])).not.toBe(true)
     expect(mesh('D009457')).not.toBe(true)
     expect(mesh(null)).toBe(true)
+  })
+
+  it('tells editors that a hub is listed from 150 words, and shows the count (D40)', () => {
+    const admin = (
+      field('hubIntro') as { admin: { description: string; components: { afterInput: string[] } } }
+    ).admin
+    expect(admin.description).toContain('English introduction has at least 150 words')
+    expect(admin.description).toContain('noindex')
+    // The component must be in the committed import map (pnpm generate:importmap), or the admin
+    // leaves it out without an error.
+    const importMap = readFileSync(
+      new URL('../app/(payload)/admin/importMap.js', import.meta.url),
+      'utf8',
+    )
+    for (const component of admin.components.afterInput) {
+      expect(importMap).toContain(`"${component}"`)
+    }
   })
 
   it('keeps every change as a version (the changelog in PLAN §4.1)', () => {

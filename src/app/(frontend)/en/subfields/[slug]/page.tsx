@@ -31,8 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: subfield.label,
     description: t('hubDescription', { subfield: subfield.label }),
     alternates: { canonical: subfieldPath(slug) },
-    // Hubs are indexed once they have their written introductions (PLAN §16.3, M3), and listed in
-    // the sitemaps by the same rule.
+    // Hubs are indexed once their written introductions have at least 150 words (PLAN §16.3, D40),
+    // and listed in the sitemaps by the same rule. A shorter introduction is shown all the same.
     ...(hubIndexed(subfield) ? {} : { robots: { index: false } }),
   }
 }

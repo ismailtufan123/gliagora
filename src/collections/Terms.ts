@@ -5,6 +5,7 @@ import type {
 } from 'payload'
 
 import { fixedFieldHooks } from '@/lib/fixed-fields'
+import { HUB_INTRO_MIN_WORDS } from '@/lib/indexing'
 import { requiredInEnglish } from '@/lib/localized'
 import {
   METHOD_GROUPS,
@@ -189,8 +190,11 @@ export const Terms: CollectionConfig = {
       localized: true,
       admin: {
         condition: (data) => data?.vocabulary === 'subfield',
-        description:
-          'Human-written introduction for the subfield hub page, 150–300 words (PLAN §16.3). Separate paragraphs with a blank line.',
+        description: `Human-written introduction for the subfield hub page, 150–300 words (PLAN §16.3). Separate paragraphs with a blank line. Search engines list the hub only once its English introduction has at least ${HUB_INTRO_MIN_WORDS} words; until then its page stays noindex (D40).`,
+        components: {
+          // The number of words so far, counted as src/lib/indexing.ts counts them.
+          afterInput: ['/admin/HubIntroWordCount#HubIntroWordCount'],
+        },
       },
     },
     {

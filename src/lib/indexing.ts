@@ -26,12 +26,36 @@ export const jobIndexed = (state: ListingState) => state === 'open'
  */
 export const institutionIndexed = (openJobs: number) => openJobs > 0
 
+// A word: a letter or digit, then letters, combining marks and digits, joined by an apostrophe
+// (' or ’), a hyphen (-, the Unicode hyphens, a soft hyphen), or by . and , between two digits.
+// Each part starts with a letter or digit, so a mark with no letter or digit before it (U+FE0F,
+// the variation selector after an emoji such as ❤, or a stray accent) is no word.
+const WORD =
+  /[\p{L}\p{N}][\p{L}\p{M}\p{N}]*(?:(?:['’\u00AD\u2010\u2011-]|(?<=\p{N})[.,](?=\p{N}))[\p{L}\p{N}][\p{L}\p{M}\p{N}]*)*/gu
+
 /**
- * A subfield hub: once it has its human-written introduction (PLAN §2.2, §16.3). Until then the
- * hub is a skeleton of lists and stays `noindex`.
+ * The words of a text, in any language. A word is a run of letters or digits (Unicode, with their
+ * accents, so Turkish ı, İ, ş and ğ are letters like any other); an apostrophe or a hyphen between
+ * two such runs keeps them one word ("Türkiye'nin", "well-known"), and so does a decimal point or
+ * thousands separator between digits ("3.5", "1,000"). Punctuation, dashes, symbols and emoji on
+ * their own are not words, and the white space between words and paragraphs (blank lines,
+ * several spaces) does not matter. Other punctuation separates words, so an abbreviation such as
+ * "e.g." or a URL or e-mail address counts one word per run of letters or digits (an introduction
+ * is plain prose, so these are rare).
+ */
+export const countWords = (text: string | null | undefined): number =>
+  text?.match(WORD)?.length ?? 0
+
+/** The shortest introduction a hub is indexed with, in words (D40; §16.3 asks for 150–300). */
+export const HUB_INTRO_MIN_WORDS = 150
+
+/**
+ * A subfield hub: once its human-written introduction has at least 150 words (PLAN §2.2, §16.3,
+ * D40). Until then it stays `noindex`: a skeleton of lists, or with a shorter introduction shown
+ * all the same. The admin shows the count below the field (src/admin/HubIntroWordCount.tsx).
  */
 export const hubIndexed = (subfield: { hubIntro?: string | null }) =>
-  Boolean(subfield.hubIntro?.trim())
+  countWords(subfield.hubIntro) >= HUB_INTRO_MIN_WORDS
 
 /** The subfield index: once at least one of its hubs is indexed. */
 export const subfieldIndexIndexed = (subfields: readonly { hubIntro?: string | null }[]) =>

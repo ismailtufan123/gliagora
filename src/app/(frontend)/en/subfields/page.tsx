@@ -16,8 +16,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: t('title'),
     description: t('description'),
     alternates: { canonical: SUBFIELDS_PATH },
-    // Indexed once one of its hubs is: hubs are indexed with their written introductions (PLAN
-    // §16.3, M3). The sitemaps list it by the same rule.
+    // Indexed once one of its hubs is: hubs are indexed once their written introductions have at
+    // least 150 words (PLAN §16.3, D40). The sitemaps list it by the same rule.
     ...(subfieldIndexIndexed(await subfieldsForIndexing()) ? {} : { robots: { index: false } }),
   }
 }

@@ -65,7 +65,8 @@ describe('robots.txt', () => {
   })
 
   it('allows every kind of page the sitemaps list, the machine files and the assets', () => {
-    const hub = { id: 1, slug: 'glia', hubIntro: 'Glia are …', updatedAt: '' }
+    // An indexed hub: its introduction has 150 words (D40).
+    const hub = { id: 1, slug: 'glia', hubIntro: 'Glia are … '.repeat(75), updatedAt: '' }
     const paths = [
       ...pageEntries([hub]).map((entry) => entry.path),
       SUBFIELDS_PATH,

@@ -1013,7 +1013,7 @@ export interface Term {
     openalexTopics?: string[] | null;
   };
   /**
-   * Human-written introduction for the subfield hub page, 150–300 words (PLAN §16.3). Separate paragraphs with a blank line.
+   * Human-written introduction for the subfield hub page, 150–300 words (PLAN §16.3). Separate paragraphs with a blank line. Search engines list the hub only once its English introduction has at least 150 words; until then its page stays noindex (D40).
    */
   hubIntro?: string | null;
   /**
