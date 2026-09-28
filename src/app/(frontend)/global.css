@@ -284,6 +284,13 @@
     container: lockup / inline-size;
   }
 
+  /* The link is as wide as what it shows, not as its frame: where the frame is narrowed by less
+     than the 4px that hide the descriptor, or a browser draws the words a fraction of a pixel
+     wider than measured, the link (and its focus outline) still encloses the whole lockup. */
+  .lockup-frame-header > .lockup {
+    width: max-content;
+  }
+
   .lockup-frame-large {
     container: lockup / inline-size;
   }
