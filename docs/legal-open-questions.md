@@ -20,6 +20,8 @@ The operator decided all five on 2026-09-27; they are recorded in PLAN §22.3 (D
 
 **Decided.** The whole site stays private until M2. Order: server setup (S), then the one-time lawyer review, then M2. At M2, hello@ moves to the Turkish mail host, and the two contact pages, the privacy policy, the KVKK aydınlatma metni and the açık rıza metni go live together with the newsletter signup. The terms and the other legal pages go live by M6. Until M2, hello@ keeps its current forwarding (Cloudflare Email Routing). (D32) As recommended, the remaining legal texts (açık rıza metni, notice and takedown, data requests, cookies and storage) are drafted before the review, so that the one review covers them all.
 
+**Extended on 2026-09-28 (D39).** At M2 only the coming-soon page, the newsletter signup and the legal pages go public; jobs and the other sections (search, institution pages, subfield hubs, the suggest and report forms) stay private until the public-launch gate in PLAN §3.4 is met, at the M6 launch.
+
 **In the drafts.** Nothing is public before M2, so no text describes the interim forwarding, the interim mailbox or a transfer abroad for it. Each draft reads as it will be true when it goes live: at M2, or by M6 for the terms. This also settles part (3) of B12.
 
 Texts: `content/en/contact.md`, `content/tr/iletisim.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/terms.md`, `content/tr/legal/acik-riza-metni.md`, `content/en/legal/cookies.md`, `content/en/legal/takedown.md`, `content/en/legal/data-requests.md`
@@ -34,7 +36,7 @@ Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md
 
 **Decided.** The periods for the data that PLAN gave no period for (D34):
 
-- Hashed IP addresses for the suggestion-form limit: kept only in the app database on our server, deleted after 24 hours.
+- Hashed IP addresses for the rate limits of both public forms (suggestion and "Report a problem"; the report form added to D34 on 2026-09-28): kept only in the app database on our server, deleted after 24 hours.
 - Bounce records: deleted together with the address.
 - Suggestion link and note: deleted with the email, 90 days after the decision.
 - Ordinary email to hello@: 2 years after the last message.

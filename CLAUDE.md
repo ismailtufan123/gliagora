@@ -7,13 +7,13 @@ Instructions for Claude Code in this repository. Read this file first, then `PLA
 Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, events, funding, papers, news, resources, a world map and a monthly newsletter, **Glia Notes**. Tagline: "Where neuroscience meets".
 
 - Data controller and editor: Nuray Sancar (natural person, Türkiye). The team has no professional web-development background: explain choices briefly and prefer boring, well-documented tools.
-- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D38). If a task conflicts with `PLAN.md`, stop and ask.
+- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D40). If a task conflicts with `PLAN.md`, stop and ask.
 
 ## Current milestone
 
-**M4 Jobs is built and tested locally** with fake data only (D38), including its scheduled work (the hourly expiry, the form-limit and retention purges, the outcome and acknowledgement emails), which runs only where `PAYLOAD_JOBS_AUTORUN` is `true` and sends email only once an SMTP server is configured (M2). Nothing is deployed yet, and content entry waits for the server. The M4 summary and the open points for the operator are at the end of the M4 notes (PLAN §20).
+**M4 Jobs is built and tested locally** with fake data only (D38), including its scheduled work (the hourly expiry, the form-limit and retention purges, the outcome and acknowledgement emails), which runs only where `PAYLOAD_JOBS_AUTORUN` is `true` and sends email only once an SMTP server is configured (M2). The operator approved M4 on 2026-09-28. Nothing is deployed yet; content entry starts right after S. The M4 summary and the operator's decisions on its open points are at the end of the M4 notes (PLAN §20).
 
-**Next: S, the one-time server setup.** It starts only when the operator says so. Milestone order: M0 → M1 → M3 → M4 (local) → S → one-time lawyer review → M2 → M4b → … (PLAN §20, D32, D38). The whole site stays private until M2 (D32).
+**Next: the follow-up steps from the operator's decisions (D40) and an audit of the access rules of every Payload collection and global.** Then S, the one-time server setup, which starts only when the operator says so; M5 does not start before the operator says so either. Milestone order: M0 → M1 → M3 → M4 (local) → S → one-time lawyer review → M2 → M4b → … (PLAN §20, D32, D38, D39). The whole site stays private until M2 (D32); at M2 only the coming-soon page, the newsletter signup and the legal pages go public, and jobs and the other sections stay private until the M6 launch, once the §3.4 gate is met; how they stay private is set up at S or M2 (D39).
 
 The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM) is bought but not set up. Do not work on the server until the operator says so. Until then, work locally only; nothing may depend on a live server. The server files in `deploy/` are prepared but have never been run.
 
