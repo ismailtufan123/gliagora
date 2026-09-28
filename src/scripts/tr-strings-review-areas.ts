@@ -1,0 +1,701 @@
+// Where each interface string appears, for docs/tr-strings-review.md (pnpm tr:review, D40): the
+// table a native speaker reviews the Turkish strings from (PLAN §12). Written for a reader who
+// does not work on the code: the page or email, the place on it and the element.
+//
+// Each area lists keys of messages/{locale}.json, or prefixes of keys (`jobs.filters.regions`
+// stands for every key under it); a key takes the description of its longest match. Rows follow
+// the order below, then the order of the keys in messages/en.json. A new key needs a description
+// here (a unit test checks this): find where it is used (`grep -rn "<key or its last part>" src`)
+// and say where a visitor sees or hears it. `shown` says whether the Turkish text is on the
+// Turkish site now; an entry can differ from its area's default.
+
+export type Place = string | { where: string; shown: boolean }
+
+export type Area = {
+  title: string
+  /** Whether the area's strings are on the Turkish site now, unless an entry says otherwise. */
+  shown: boolean
+  /** Why they are, or are not yet, on the Turkish site: shown in the file's list of areas. */
+  note: string
+  places: Record<string, Place>
+}
+
+/** The Turkish pages that exist now (src/app/(frontend)/tr/). */
+export const TURKISH_PAGES = [
+  '/tr/iletisim/',
+  '/tr/legal/kvkk-aydinlatma-metni/',
+  '/tr/legal/acik-riza-metni/',
+]
+
+const ENGLISH_ONLY = 'like the rest of the site until the Turkish locale gate (PLAN §3.4)'
+
+export const AREAS: Area[] = [
+  {
+    title: 'Header, menus and search box',
+    shown: true,
+    note: `On every page, so also on the Turkish pages (${TURKISH_PAGES.join(', ')}). The code EN on the language button is shown only on English pages, which use the English text.`,
+    places: {
+      'a11y.skipLink':
+        'Every page - top left, visible only when reached with the Tab key - link that skips to the main content',
+      'brand.name':
+        'Every page - header - the name after the logo, a link to the home page (the same in every language); also on the About page (/en/about/)',
+      'brand.descriptor':
+        'Every page - header - the word after the name and a vertical line, where there is room (the same in every language); also on the About page (/en/about/)',
+      'header.navLabel':
+        'Every page - header and mobile menu - name of the main navigation, read by screen readers',
+      windows:
+        "Every page - header, mobile menu and footer (first column) - name of a section; also the heading of its page while it is being built, the first link in the path above a job page's heading, and links on the not-found and search pages",
+      'header.menuFor':
+        'Every page - header, wide screens - the arrow button beside Jobs, Events and Resources that opens their menu (name read by screen readers)',
+      'menus.jobs':
+        'Every page - Jobs menu (the arrow beside Jobs in the header, or Jobs in the mobile menu) - links',
+      'menus.events':
+        'Every page - Events menu (the arrow beside Events in the header, or Events in the mobile menu) - links',
+      'menus.resources':
+        'Every page - Resources menu (the arrow beside Resources in the header, or Resources in the mobile menu) - links',
+      'search.trigger':
+        'Every page - header - the search button (magnifier), name read by screen readers; on screens narrower than 360px a Search row at the top of the mobile menu',
+      'search.shortcutCtrl':
+        'Every page - header, wide screens with a keyboard - shortcut shown on the search button (Windows and Linux)',
+      'search.shortcutApple':
+        'Every page - header, wide screens with a keyboard - shortcut shown on the search button (Apple devices)',
+      'search.label':
+        'Every page - search box (opened from the header) - label of the text field; also on the search page (/en/search/) and the not-found page',
+      'search.submit':
+        'Every page - search box - Search button; also on the search page (/en/search/) and the not-found page',
+      'search.hintEnter': 'Every page - search box - first hint under the field',
+      'search.hintSyntax':
+        'Every page - search box - second hint under the field; also on the search page (/en/search/), before a search and when nothing is found',
+      'search.close': 'Every page - search box - close button (X), name read by screen readers',
+      'locale.button':
+        'Every page - header, from 768px - the language button (globe and code), name read by screen readers',
+      'locale.short.en': {
+        where:
+          'Every page - header, from 768px - language code on the language button; a Turkish page shows TR (locale.short.tr), so this Turkish text is not shown',
+        shown: false,
+      },
+      'locale.short': 'Every page - header, from 768px - language code on the language button',
+      'locale.names':
+        'Every page - language menu (header) and language list (mobile menu, below 768px) - the languages, each named in its own language',
+      'locale.moreComing':
+        'Every page - language menu and language list - note under the languages',
+      'locale.heading': 'Every page - mobile menu, below 768px - heading of the language list',
+      'header.digest': 'Every page - header (from 768px) and mobile menu - newsletter button',
+      'header.menu':
+        'Every page - header below 1280px - Menu button (the word shows from 640px; narrower, it is read by screen readers)',
+      'sections.map':
+        'Every page - mobile menu - link after the six sections; also the heading of the map page (/en/map/, being built)',
+      'sections.learn':
+        'Every page - mobile menu - link after the six sections; also the heading of the Learn page (/en/learn/, being built)',
+      'sections.about':
+        'Every page - mobile menu, and footer (About column) - link to the About page (/en/about/)',
+    },
+  },
+  {
+    title: 'Footer',
+    shown: true,
+    note: 'On every page, so also on the Turkish pages. The social media links stay hidden on every page until the addresses of the profiles are known (D31).',
+    places: {
+      'footer.sitemap':
+        'Every page - footer - name of the footer navigation, read by screen readers',
+      'footer.windows': 'Every page - footer - heading of the first column (the six sections)',
+      'footer.learn': 'Every page - footer - heading of the second column',
+      'footer.learnBasics':
+        'Every page - footer, Learn column - link to the Learn page (/en/learn/)',
+      'sections.benchToBedside':
+        'Every page - footer, Learn column - link; also the heading of the Bench to Bedside page (/en/learn/bench-to-bedside/, being built)',
+      'footer.about': 'Every page - footer - heading of the third column',
+      'footer.contact':
+        'Every page - footer, About column and bottom row - link to the contact and legal notice page',
+      'footer.legal':
+        'Every page - footer - heading of the fourth column (its links are the titles of the legal pages, below)',
+      'footer.follow': {
+        where:
+          'Every page - footer, bottom row - name of the list of social media links, read by screen readers (hidden until the addresses are known)',
+        shown: false,
+      },
+      'footer.social': {
+        where:
+          'Every page - footer, bottom row - social media links (hidden until the addresses are known)',
+        shown: false,
+      },
+    },
+  },
+  {
+    title: 'Browser tab titles and link previews',
+    shown: true,
+    note: 'The title pattern and the site name are used on the Turkish pages. The home page title and the general description are not: every Turkish page has a title and a description of its own, and the home page exists only in English.',
+    places: {
+      'meta.titleTemplate':
+        "Every page - browser tab and search results - the page's title followed by the site name; also the title of the jobs feed",
+      'meta.siteName':
+        'Every page - the site name in link previews (when a page is shared), not visible on the page',
+      'meta.homeTitle': {
+        where: 'Home page (/en/) - browser tab and search results - title',
+        shown: false,
+      },
+      'meta.description': {
+        where:
+          'Home page (/en/), and pages without a description of their own - description in search results and link previews',
+        shown: false,
+      },
+    },
+  },
+  {
+    title: 'Legal and contact pages',
+    shown: true,
+    note: 'The Turkish contact page and the two Turkish legal texts show their own titles and descriptions, and every Turkish page shows the titles of all legal pages in its footer. The descriptions of the English legal pages and of the About page are not yet shown: those pages exist only in English. The texts of the pages themselves are reviewed separately (see the top of this file).',
+    places: {
+      'pages.draftNotice':
+        'Legal and contact pages - notice under the heading while the text is a draft (all of them for now)',
+      'pages.updated': 'Legal, contact and About pages - date at the end of the text',
+      'pages.contact.title':
+        'Contact and legal notice (/en/contact/, /tr/iletisim/) - heading and browser tab',
+      'pages.contact.description':
+        'Contact and legal notice (/en/contact/, /tr/iletisim/) - description in search results and link previews',
+      'pages.kvkk.title':
+        'Every page - footer, Legal column - link; also the heading of the KVKK notice (/tr/legal/kvkk-aydinlatma-metni/)',
+      'pages.kvkk.description':
+        'KVKK notice (/tr/legal/kvkk-aydinlatma-metni/) - description in search results and link previews',
+      'pages.acikRiza.title':
+        'Every page - footer, Legal column - link; also the heading of the Glia Notes consent text (/tr/legal/acik-riza-metni/)',
+      'pages.acikRiza.description':
+        'Glia Notes consent text (/tr/legal/acik-riza-metni/) - description in search results and link previews',
+      'pages.privacy.title':
+        'Every page - footer, Legal column - link; also the heading of the privacy policy (/en/legal/privacy/)',
+      'pages.privacy.description': {
+        where:
+          'Privacy policy (/en/legal/privacy/) - description in search results and link previews',
+        shown: false,
+      },
+      'pages.cookies.title':
+        'Every page - footer, Legal column - link; also the heading of the cookies page (/en/legal/cookies/)',
+      'pages.cookies.description': {
+        where:
+          'Cookies and storage (/en/legal/cookies/) - description in search results and link previews',
+        shown: false,
+      },
+      'pages.terms.title':
+        'Every page - footer, Legal column - link; also the heading of the terms of use (/en/legal/terms/)',
+      'pages.terms.description': {
+        where: 'Terms of use (/en/legal/terms/) - description in search results and link previews',
+        shown: false,
+      },
+      'pages.takedown.title':
+        'Every page - footer, Legal column - link; also the heading of the notice and takedown page (/en/legal/takedown/)',
+      'pages.takedown.description': {
+        where:
+          'Notice and takedown (/en/legal/takedown/) - description in search results and link previews',
+        shown: false,
+      },
+      'pages.dataRequests.title':
+        'Every page - footer, Legal column - link; also the heading of the data requests page (/en/legal/data-requests/)',
+      'pages.dataRequests.description': {
+        where:
+          'Data requests (/en/legal/data-requests/) - description in search results and link previews',
+        shown: false,
+      },
+      'pages.about.title': {
+        where: 'About page (/en/about/) - heading and browser tab',
+        shown: false,
+      },
+      'pages.about.description': {
+        where: 'About page (/en/about/) - description in search results and link previews',
+        shown: false,
+      },
+    },
+  },
+  {
+    title: 'Home page',
+    shown: false,
+    note: 'The home page is a coming-soon page in English only (/en/); there is no Turkish home page yet.',
+    places: {
+      'brand.tagline': 'Home page (/en/) - main heading',
+      'home.comingSoon': 'Home page (/en/) - text under the heading',
+      'home.writeToUs': 'Home page (/en/) - contact line under the text',
+    },
+  },
+  {
+    title: 'Pages being built',
+    shown: false,
+    note: 'These stand-in pages for the sections that are not built yet exist only in English (/en/events/, /en/funding/, /en/papers/, /en/news/, /en/resources/, /en/map/, /en/learn/, /en/learn/bench-to-bedside/, /en/newsletter/).',
+    places: {
+      'placeholder.text': 'Pages being built - text under the heading',
+      'placeholder.contact': 'Pages being built - contact line',
+      'placeholder.home': 'Pages being built - link to the home page',
+      'sections.newsletter':
+        'Newsletter page (/en/newsletter/, being built) - heading and browser tab',
+      'sections.suggest':
+        'Not used on any page at the moment (the Suggest a listing page has its own title, suggest.title)',
+    },
+  },
+  {
+    title: 'Error pages',
+    shown: false,
+    note: 'Always in English. The not-found page answers every unknown address, also under /tr/; the removed page and the short answer while the database is unreachable are in English too.',
+    places: {
+      'notFound.title': 'Not-found page (any unknown address) - heading and browser tab',
+      'notFound.text':
+        'Not-found page - text under the heading, before the links to the six sections and the search box',
+      'notFound.home': 'Not-found page - link to the home page at the end',
+      'gone.title':
+        'Removed page (a withdrawn job, a job 30 days after it closed, a removed page) - heading and browser tab',
+      'gone.text': 'Removed page - text under the heading',
+      'gone.home': 'Removed page - link to the home page at the end',
+      'unavailable.text':
+        'Plain-text answer while the database cannot be reached (job, institution and subfield pages, sitemaps, jobs feed)',
+    },
+  },
+  {
+    title: 'Jobs list',
+    shown: false,
+    note: `The jobs list exists only in English (/en/jobs/), ${ENGLISH_ONLY}.`,
+    places: {
+      'jobs.list.title': 'Jobs list (/en/jobs/) - main heading and browser tab',
+      'jobs.list.titlePage': 'Jobs list, page 2 and later - browser tab',
+      'jobs.list.description': 'Jobs list - description in search results and link previews',
+      'jobs.list.open': 'Jobs list - number of open positions, beside the main heading',
+      'jobs.list.matches':
+        'Jobs list - heading above the results (how many match the filters), read out when the results change; also read out in the filter sheet',
+      'jobs.filters.label': 'Jobs list - the filters, name read by screen readers',
+      'jobs.filters.search':
+        'Jobs list - search field above the filters - text in the empty field, and its name for screen readers',
+      'jobs.filters.searchButton':
+        'Jobs list - search button (magnifier) beside that field, name read by screen readers',
+      'jobs.filters.open':
+        'Jobs list, below 1280px - button that opens the filter sheet, with the number of filters set',
+      'jobs.filters.title': 'Jobs list, below 1280px - filter sheet - heading',
+      'jobs.filters.close':
+        'Jobs list, below 1280px - filter sheet - close button (X), name read by screen readers',
+      'jobs.filters.type': 'Jobs list - filters - first filter button (and its panel)',
+      'jobs.filters.subfield': 'Jobs list - filters - second filter button (and its panel)',
+      'jobs.filters.method': 'Jobs list - filters - third filter button (and its panel)',
+      'jobs.filters.methodGroups': 'Jobs list - Method filter - group headings',
+      'jobs.filters.otherMethods':
+        'Jobs list - Method filter - heading of the methods without a group',
+      'jobs.filters.model': 'Jobs list - filters - fourth filter button (and its panel)',
+      'jobs.filters.country':
+        'Jobs list - filters - fifth filter button (location), and the heading of its list of countries',
+      'jobs.filters.region': 'Jobs list - Country filter - heading of the regions',
+      'jobs.filters.regions':
+        'Jobs list - Country filter - the regions; also on the chips of active filters',
+      'jobs.filters.searchInList':
+        'Jobs list - Subfield, Method and Country filters - field that narrows the list of choices as you type',
+      'jobs.filters.deadline': 'Jobs list - filters - sixth filter button (and its panel)',
+      'jobs.filters.deadlineAny': 'Jobs list - Deadline filter - first choice',
+      'jobs.filters.within':
+        'Jobs list - Deadline filter - choices for 7, 14, 30 and 90 days; also on the chip of that filter',
+      'jobs.filters.thisMonth':
+        'Jobs list - Deadline filter - choice; also on the chip of that filter',
+      'jobs.filters.between': 'Jobs list - Deadline filter - last choice, with two dates',
+      'jobs.filters.from': 'Jobs list - Deadline filter - label of the first date',
+      'jobs.filters.to': 'Jobs list - Deadline filter - label of the second date',
+      'jobs.filters.rangeHint': 'Jobs list - Deadline filter - hint under the two dates',
+      'jobs.filters.rangeError':
+        'Jobs list - Deadline filter - error under the two dates when they make no range',
+      'jobs.filters.more': 'Jobs list - filters - last filter button (and its panel)',
+      'jobs.filters.stage': 'Jobs list - More filter - heading of the career stages',
+      'jobs.filters.button':
+        'Jobs list - a filter button when values are chosen, with their number, e.g. "Subfield (2)"',
+      'jobs.filters.apply':
+        'Jobs list - each filter panel - Apply button; also beside "Sort by" when JavaScript is off',
+      'jobs.filters.show': 'Jobs list, below 1280px - filter sheet - button at the bottom',
+      'jobs.filters.clearAll':
+        'Jobs list - filter sheet (bottom), and beside the active filters - link that clears them',
+      'jobs.filters.sort': 'Jobs list - above the results - label of the order',
+      'jobs.filters.sortDeadline': 'Jobs list - Sort by - first choice',
+      'jobs.filters.sortNewest': 'Jobs list - Sort by - second choice',
+      'jobs.filters.chips':
+        'Jobs list - the active filters (chips) under the heading of the results, name read by screen readers',
+      'jobs.filters.removeFilter':
+        'Jobs list - each active filter (chip), name read by screen readers',
+      'jobs.filters.chipRange': 'Jobs list - chip of a deadline between two dates',
+      'jobs.filters.chipSearch': 'Jobs list - chip of the words searched for',
+      'jobs.list.emptyText': 'Jobs list - text when no position matches',
+      'jobs.list.removeLast':
+        'Jobs list, no position matches - button that removes the last filter',
+      'jobs.list.removeUnknown':
+        'Jobs list, no position matches - button that removes filters that no longer exist',
+      'jobs.list.clearAll': 'Jobs list, no position matches - button that clears all filters',
+      'jobs.list.suggest': 'Jobs list, no position matches - button to Suggest a listing',
+      'jobs.list.pastEnd': 'Jobs list - note on a page number past the end of the list',
+      'jobs.list.firstPage': 'Jobs list - link after that note',
+      'pagination.label': 'Jobs list - page links under the results - name read by screen readers',
+      'pagination.previous': 'Jobs list - page links - link to the previous page',
+      'pagination.next': 'Jobs list - page links - link to the next page',
+      'pagination.page': 'Jobs list - page links - each page number, as read by screen readers',
+      'jobs.error.title': 'Jobs list, when the list cannot be loaded - heading',
+      'jobs.error.text': 'Jobs list, when the list cannot be loaded - text',
+      'jobs.error.retry': 'Jobs list, when the list cannot be loaded - button',
+      'jobs.error.reference':
+        'Jobs list, when the list cannot be loaded - reference that finds the error in our logs',
+    },
+  },
+  {
+    title: 'Positions in lists',
+    shown: false,
+    note: `Each position in a list (the jobs list, job pages, institution and subfield pages, search results) and the deadline on job pages. These pages exist only in English, ${ENGLISH_ONLY}.`,
+    places: {
+      'jobs.institution':
+        'Lists of positions - each position - label of the institution, read by screen readers',
+      'jobs.location':
+        'Lists of positions - each position - label of the place, read by screen readers',
+      'jobs.place': 'Lists of positions, job page and jobs feed - city and country of a position',
+      'jobs.positionType':
+        'Lists of positions - each position - label of the position type, read by screen readers',
+      'jobs.deadline':
+        'Lists of positions - each position - label of the deadline, read by screen readers',
+      'jobs.closes': 'Lists of positions - each position - the deadline day',
+      'jobs.daysLeft': 'Lists of positions and job page - days left before the deadline',
+      'jobs.lastDay':
+        'Lists of positions and job page - instead of the days left, when less than a day is left',
+      'jobs.closed': 'Lists of positions and job page - when the deadline has passed',
+      'jobs.closingSoon':
+        'Lists of positions and job page - badge when the deadline is within 14 days',
+      'jobs.rolling':
+        'Lists of positions and job page - deadline of a position with a rolling deadline',
+      'jobs.untilFilled':
+        'Lists of positions and job page - deadline of a position open until filled',
+      'jobs.topics':
+        'Lists of positions - each position - its topics (up to three), name read by screen readers',
+      'jobs.moreTopics': 'Lists of positions - each position - chip after the topics, e.g. "+2"',
+      'jobs.moreTopicsLabel': 'Lists of positions - that chip, as read by screen readers',
+      'jobs.viewOriginal': "Lists of positions and job page - button to the employer's posting",
+      'jobs.opensEmployerSite':
+        'Lists of positions and job page - added to that button for screen readers',
+    },
+  },
+  {
+    title: 'Job pages',
+    shown: false,
+    note: `Job pages exist only in English (/en/jobs/…/), ${ENGLISH_ONLY}.`,
+    places: {
+      'a11y.breadcrumb':
+        'Job, institution and subfield pages - the path above the heading (breadcrumbs), name read by screen readers',
+      'job.description':
+        'Job page - description in search results and link previews, when the position has no summary',
+      'job.closedTitle': 'Job page of a closed position - heading of the notice at the top',
+      'job.closedText': 'Job page of a closed position - text of that notice',
+      'job.facts': 'Job page - heading of the facts box, read by screen readers',
+      'job.deadline': 'Job page - facts box - label',
+      'job.deadlineZone':
+        'Job page - facts box - under the deadline day: until when, with the time zone',
+      'job.deadlineOffset': 'Job page - facts box - the same, when the time zone has no name',
+      'job.positionType': 'Job page - facts box - label',
+      'job.careerStages': 'Job page - facts box - label',
+      'job.start': 'Job page - facts box - label',
+      'job.originalLanguage': 'Job page - facts box - label',
+      'job.location': 'Job page - facts box - label',
+      'job.institution': {
+        where:
+          'Not used on any page at the moment (the job page names the institution without a label)',
+        shown: false,
+      },
+      'job.posting':
+        "Job page - heading of the box with the button to the employer's posting, read by screen readers",
+      'job.verification':
+        'Job page of a closed position - heading of that box, read by screen readers',
+      'job.authoritative': 'Job page - under the button to the posting',
+      'job.lastVerified': 'Job page - the day the listing was last checked',
+      'job.reportProblem': 'Job page - link to the Report a problem form',
+      'job.summary': 'Job page - heading of our summary',
+      'job.topics': 'Job page - heading of the topics',
+      'job.subfields': 'Job page - topics - label',
+      'job.methods': 'Job page - topics - label',
+      'job.modelSystems': 'Job page - topics - label',
+      'job.moreAtInstitution': 'Job page - heading of other positions at the same institution',
+      'job.allAtInstitution': 'Job page - link under those positions, when there are more',
+      'job.similar': 'Job page - heading of similar positions',
+      'job.noSimilar': 'Job page - text when there are no similar open positions',
+    },
+  },
+  {
+    title: 'Jobs feed',
+    shown: false,
+    note: 'The feed (/en/jobs/feed.xml), which feed readers show, is in English only.',
+    places: {
+      'jobs.feed.title':
+        "Jobs feed - its title (with the site name); also the feed's name in the jobs list page",
+      'jobs.feed.description': 'Jobs feed - its description',
+      'jobs.feed.institution': 'Jobs feed - text of each position - the institution',
+      'jobs.feed.location': 'Jobs feed - text of each position - the place',
+      'jobs.feed.deadline': 'Jobs feed - text of each position - the deadline day',
+      'jobs.feed.rolling': 'Jobs feed - text of a position with a rolling deadline',
+      'jobs.feed.untilFilled': 'Jobs feed - text of a position open until filled',
+    },
+  },
+  {
+    title: 'Institution pages',
+    shown: false,
+    note: `Institution pages exist only in English (/en/institutions/…/), ${ENGLISH_ONLY}.`,
+    places: {
+      'institution.description':
+        'Institution page - description in search results and link previews',
+      'institution.home':
+        'Institution page - path above the heading (breadcrumbs) - first link, to the home page',
+      'institution.location':
+        'Institution page - city and country under the name; also in the search results (institutions)',
+      'institution.notActive':
+        'Institution page - note on an institution that ROR lists as no longer active',
+      'institution.website': "Institution page - link to the institution's website",
+      'institution.rorRecord': 'Institution page - link to its record in ROR',
+      'institution.otherNames': 'Institution page - its other names, under the links',
+      'institution.positions': 'Institution page - heading of the open positions',
+      'institution.allPositions':
+        'Institution page - link under the positions, when there are more',
+      'institution.noPositions': 'Institution page - text when it has no open positions',
+      'institution.events': 'Institution page - heading of the upcoming events',
+      'institution.noEvents':
+        'Institution page - text under that heading (there are no events yet)',
+      'institution.reportProblem':
+        'Institution page - link to the Report a problem form, under the links and other names',
+      'institution.source': 'Institution page - source line at the end',
+    },
+  },
+  {
+    title: 'Subfields',
+    shown: false,
+    note: `The subfield pages exist only in English (/en/subfields/), ${ENGLISH_ONLY}.`,
+    places: {
+      'subfields.title':
+        'Subfields page (/en/subfields/) - heading and browser tab; also in the path above the heading of each subfield page',
+      'subfields.description': 'Subfields page - description in search results and link previews',
+      'subfields.home':
+        'Subfields page and subfield pages - path above the heading (breadcrumbs) - first link, to the home page',
+      'subfields.intro': 'Subfields page - text under the heading',
+      'subfields.hubDescription':
+        'Subfield page (/en/subfields/…/) - description in search results and link previews',
+      'subfields.positions': 'Subfield page - heading of the open positions',
+      'subfields.allPositions': 'Subfield page - link under the positions, when there are more',
+      'subfields.noPositions': 'Subfield page - text when there are no open positions',
+      'subfields.comingSoon': 'Subfield page - note under the positions',
+      'subfields.others': 'Subfield page - heading of the list of the other subfields',
+    },
+  },
+  {
+    title: 'Search page',
+    shown: false,
+    note: `The search page exists only in English (/en/search/), ${ENGLISH_ONLY}. The search box of the header is in area 1.`,
+    places: {
+      'search.title': 'Search page (/en/search/) - heading and browser tab',
+      'search.titleQuery': 'Search page, after a search - browser tab',
+      'search.description': 'Search page - description in link previews',
+      'search.results': 'Search page - number of results, under the search field',
+      'search.emptyTitle': 'Search page, before a search - heading',
+      'search.emptyText': 'Search page, before a search - text under that heading',
+      'search.browse': 'Search page, before a search - heading of the links to the sections',
+      'search.allSubfields': 'Search page, before a search - last of those links',
+      'search.noResultsTips': 'Search page, when nothing is found - heading of the tips',
+      'search.tipSpelling': 'Search page, when nothing is found - first tip',
+      'search.tipFewer': 'Search page, when nothing is found - second tip',
+      'search.browsePositions': 'Search page, when nothing is found - first button',
+      'search.suggest': 'Search page, when nothing is found - second button',
+      'search.positions': 'Search results - heading of the positions',
+      'search.positionsCount': 'Search results - number beside that heading',
+      'search.seeAll': 'Search results - link under the positions, to the jobs list',
+      'search.institutions': 'Search results - heading of the institutions',
+      'search.institutionsCount': 'Search results - number beside that heading',
+      'search.openPositions': 'Search results - each institution - its open positions',
+      'search.institutionsMore':
+        'Search results - note under the institutions, when there are more than shown',
+      'search.subfields': 'Search results - heading of the subfields',
+      'search.subfieldsCount': 'Search results - number beside that heading',
+      'search.error.title': 'Search page, when the search fails - heading',
+      'search.error.text': 'Search page, when the search fails - text',
+      'search.error.reference':
+        'Search page, when the search fails - reference that finds the error in our logs',
+      'search.error.retry': 'Search page, when the search fails - button',
+    },
+  },
+  {
+    title: 'Suggest a listing',
+    shown: false,
+    note: `The form exists only in English (/en/suggest/), ${ENGLISH_ONLY}.`,
+    places: {
+      'suggest.title': 'Suggest a listing (/en/suggest/) - heading and browser tab',
+      'suggest.description': 'Suggest a listing - description in search results and link previews',
+      'suggest.intro': 'Suggest a listing - first paragraph under the heading',
+      'suggest.employers': 'Suggest a listing - second paragraph',
+      'suggest.otherKinds': 'Suggest a listing - third paragraph',
+      'suggest.noscript': 'Suggest a listing - note above the form when JavaScript is off',
+      'suggest.unavailable':
+        'Suggest a listing - shown instead of the form while the form is switched off',
+      'suggest.url.label': 'Suggest a listing - form - label of the first field (the address)',
+      'suggest.url.hint': 'Suggest a listing - form - hint under that label',
+      'suggest.kind.legend': 'Suggest a listing - form - question above the choices',
+      'suggest.kind': 'Suggest a listing - form - the choices of what is suggested',
+      'suggest.note.label': 'Suggest a listing - form - label of the note field',
+      'suggest.note.hint': 'Suggest a listing - form - hint under that label',
+      'suggest.note.left': 'Suggest a listing - form - count under the note field',
+      'suggest.note.over':
+        'Suggest a listing - form - count under the note field, when the note is too long',
+      'suggest.email.label': 'Suggest a listing - form - label of the email field',
+      'suggest.email.hint': 'Suggest a listing - form - hint under that label',
+      'suggest.consent.label': 'Suggest a listing - form - label of the tick box',
+      'suggest.consent.hint': 'Suggest a listing - form - hint under the tick box',
+      'suggest.honeypot':
+        'Suggest a listing - form - label of a hidden field that only spam programs see',
+      'suggest.spamNote': 'Suggest a listing - form - note above the send button',
+      'suggest.submit': 'Suggest a listing - form - send button',
+      'suggest.sending': 'Suggest a listing - form - the send button while the form is sent',
+      'suggest.errors.title':
+        'Suggest a listing, after sending with problems - heading of the list of problems at the top of the form',
+      'suggest.errors.prefix':
+        'Suggest a listing, after sending with problems - word before the message at each field, read by screen readers',
+      'suggest.errors.urlMissing': 'Suggest a listing - error at the address field',
+      'suggest.errors.urlInvalid': 'Suggest a listing - error at the address field',
+      'suggest.errors.urlScheme': 'Suggest a listing - error at the address field',
+      'suggest.errors.urlCredentials': 'Suggest a listing - error at the address field',
+      'suggest.errors.urlTooLong': 'Suggest a listing - error at the address field',
+      'suggest.errors.kindMissing': 'Suggest a listing - error at the choices',
+      'suggest.errors.noteTooLong': 'Suggest a listing - error at the note field',
+      'suggest.errors.emailInvalid': 'Suggest a listing - error at the email field',
+      'suggest.errors.emailTooLong': 'Suggest a listing - error at the email field',
+      'suggest.errors.emailMissing':
+        'Suggest a listing - error at the email field, when the box is ticked without an address',
+      'suggest.errors.consentMissing':
+        'Suggest a listing - error at the tick box, when an address is given without it',
+      'suggest.errors.needsJs':
+        'Suggest a listing - error at the top of the form, when the spam check did not run',
+      'suggest.errors.spamCheck':
+        'Suggest a listing - error at the top of the form, when the spam check failed',
+      'suggest.errors.rateLimited':
+        'Suggest a listing - error at the top of the form, after too many suggestions in an hour',
+      'suggest.errors.unavailable':
+        'Suggest a listing - error at the top of the form, while the form is switched off',
+      'suggest.errors.failed':
+        'Suggest a listing - error at the top of the form, when the suggestion could not be saved',
+      'suggest.sent.title': 'Suggestion sent (/en/suggest/sent/) - heading',
+      'suggest.sent.metaTitle': 'Suggestion sent - browser tab',
+      'suggest.sent.next': 'Suggestion sent - heading of the steps',
+      'suggest.sent.check': 'Suggestion sent - first step',
+      'suggest.sent.publish': 'Suggestion sent - second step',
+      'suggest.sent.outcome': 'Suggestion sent - third step',
+      'suggest.sent.changedMind': 'Suggestion sent - paragraph after the steps',
+      'suggest.sent.another': 'Suggestion sent - first link at the end',
+      'suggest.sent.jobs': 'Suggestion sent - second link at the end',
+    },
+  },
+  {
+    title: 'Report a problem',
+    shown: false,
+    note: `The form exists only in English (/en/report/), ${ENGLISH_ONLY}.`,
+    places: {
+      'report.title': 'Report a problem (/en/report/) - heading and browser tab',
+      'report.description': 'Report a problem - description in link previews',
+      'report.intro':
+        'Report a problem - first paragraph under the heading (a general report, or one opened from a job page)',
+      'report.introInstitution':
+        'Report a problem, opened from an institution page - first paragraph under the heading',
+      'report.takedown': 'Report a problem - second paragraph',
+      'report.about':
+        'Report a problem, opened from a job or institution page - box naming the page the report is about',
+      'report.noscript': 'Report a problem - note above the form when JavaScript is off',
+      'report.unavailable':
+        'Report a problem - shown instead of the form while the form is switched off',
+      'report.kind.legend': 'Report a problem - form - question above the choices',
+      'report.kind.wrong-fact': 'Report a problem - form - first choice (its label and hint)',
+      'report.kind.wrong-fact.hintInstitution':
+        'Report a problem, opened from an institution page - form - hint under the first choice',
+      'report.kind.closed':
+        'Report a problem - form - second choice (its label and hint); not offered for an institution',
+      'report.kind.broken-link':
+        'Report a problem - form - third choice (its label and hint; the second for an institution)',
+      'report.kind.broken-link.hintInstitution':
+        'Report a problem, opened from an institution page - form - hint under the second choice',
+      'report.kind.not-employer':
+        'Report a problem - form - fourth choice (its label and hint); not offered for an institution',
+      'report.kind.personal-rights':
+        'Report a problem - form - fifth choice (its label and hint; the third for an institution)',
+      'report.kind.other': 'Report a problem - form - last choice (its label and hint)',
+      'report.details.label': 'Report a problem - form - label of the details field',
+      'report.details.hint': 'Report a problem - form - hint under that label',
+      'report.details.left': 'Report a problem - form - count under the details field',
+      'report.details.over':
+        'Report a problem - form - count under the details field, when the text is too long',
+      'report.email.label': 'Report a problem - form - label of the email field',
+      'report.email.hint': 'Report a problem - form - hint under that label',
+      'report.honeypot':
+        'Report a problem - form - label of a hidden field that only spam programs see',
+      'report.spamNote': 'Report a problem - form - note above the send button',
+      'report.submit': 'Report a problem - form - send button',
+      'report.sending': 'Report a problem - form - the send button while the form is sent',
+      'report.errors.title':
+        'Report a problem, after sending with problems - heading of the list of problems at the top of the form',
+      'report.errors.prefix':
+        'Report a problem, after sending with problems - word before the message at each field, read by screen readers',
+      'report.errors.kindMissing': 'Report a problem - error at the choices',
+      'report.errors.kindJobOnly':
+        'Report a problem, opened from an institution page - error at the choices, when a choice for positions only was sent',
+      'report.errors.detailsMissing': 'Report a problem - error at the details field',
+      'report.errors.detailsTooLong': 'Report a problem - error at the details field',
+      'report.errors.emailInvalid': 'Report a problem - error at the email field',
+      'report.errors.emailTooLong': 'Report a problem - error at the email field',
+      'report.errors.emailRequired':
+        'Report a problem - error at the email field, for a request about personal rights without an address',
+      'report.errors.needsJs':
+        'Report a problem - error at the top of the form, when the spam check did not run',
+      'report.errors.spamCheck':
+        'Report a problem - error at the top of the form, when the spam check failed',
+      'report.errors.rateLimited':
+        'Report a problem - error at the top of the form, after too many reports in an hour',
+      'report.errors.unavailable':
+        'Report a problem - error at the top of the form, while the form is switched off',
+      'report.errors.failed':
+        'Report a problem - error at the top of the form, when the report could not be saved',
+      'report.sent.title': 'Report sent (/en/report/sent/) - heading',
+      'report.sent.metaTitle': 'Report sent - browser tab',
+      'report.sent.next': 'Report sent - heading of what happens next',
+      'report.sent.personalRightsTitle': 'Report sent - first subheading',
+      'report.sent.personalRights': 'Report sent - text under the first subheading',
+      'report.sent.otherTitle': 'Report sent - second subheading',
+      'report.sent.other': 'Report sent - text under the second subheading',
+      'report.sent.takedown': 'Report sent - paragraph after that text',
+      'report.sent.another': 'Report sent - first link at the end',
+      'report.sent.jobs': 'Report sent - second link at the end',
+    },
+  },
+  {
+    title: 'Automatic emails',
+    shown: false,
+    note: 'Each email goes out in the language of the form the person used, and both forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).',
+    places: {
+      'emails.greeting':
+        'Both automatic emails (the outcome of a suggestion, the confirmation of a report) - first line',
+      'emails.suggestion.subjectPublished':
+        'Email about the outcome of a suggestion, when it was published - subject',
+      'emails.suggestion.subjectNotAdded':
+        'Email about the outcome of a suggestion, when it was not added - subject',
+      'emails.suggestion.intro':
+        'Email about a suggestion - first paragraph, followed by the address the person suggested',
+      'emails.suggestion.published':
+        'Email about a published suggestion - second paragraph, followed by the address of the job page',
+      'emails.suggestion.notAdded':
+        'Email about a suggestion that was not added - second paragraph, followed by the reason',
+      'emails.suggestion.reasons':
+        'Email about a suggestion that was not added - the reason, as the editor chose it',
+      'emails.suggestion.retention':
+        'Email about a suggestion - last paragraph before the closing lines (the link leads to the privacy policy, and in the Turkish email to the KVKK notice)',
+      'emails.report.subject': 'Confirmation of a report - subject',
+      'emails.report.subjectPersonalRights':
+        'Confirmation of a request about personal rights - subject',
+      'emails.report.intro': 'Confirmation of a report - first paragraph',
+      'emails.report.introPersonalRights':
+        'Confirmation of a request about personal rights - first paragraph',
+      'emails.report.item':
+        'Both confirmations (report, request about personal rights) - second paragraph, followed by the address of the page the report is about (when there is one)',
+      'emails.report.next':
+        'Confirmation of a report about a job, or of a general report - what happens next',
+      'emails.report.nextInstitution':
+        'Confirmation of a report about an institution - what happens next',
+      'emails.report.nextPersonalRights':
+        'Confirmation of a request about personal rights - what happens next',
+      'emails.report.retention':
+        'Confirmation of a report - last paragraph before the closing lines (the link leads to the privacy policy, and in the Turkish email to the KVKK notice)',
+      'emails.report.retentionPersonalRights':
+        'Confirmation of a request about personal rights - last paragraph before the closing lines (the link leads to the privacy policy, and in the Turkish email to the KVKK notice)',
+      'emails.automatic': 'Both automatic emails - line before the signature',
+      'emails.signature': 'Both automatic emails - signature',
+    },
+  },
+]
