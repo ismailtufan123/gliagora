@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 export default defineConfig({
   resolve: {
@@ -11,5 +11,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
+    // Tests that need a database run with `pnpm test:db` (vitest.db.config.mts).
+    exclude: [...configDefaults.exclude, '**/*.db.test.ts'],
   },
 })

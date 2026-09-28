@@ -55,6 +55,8 @@
   --success: #1e754a;
   --warning: #8a5300;
   --elevation-overlay: 0 8px 24px rgb(22 25 66 / 0.18);
+  /* Behind modal dialogs (the search dialog): the page stays visible, dimmed. */
+  --backdrop: rgb(22 25 66 / 0.45);
 
   /* Type. After the self-hosted font and its size-adjusted Arial fallback (next/font), the
      browser takes glyphs the font lacks, such as ₺ and ə in Atkinson Hyperlegible Next, from
@@ -146,5 +148,6 @@
     --success: #6fd39c;
     --warning: #f2b660;
     --elevation-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
+    --backdrop: rgb(0 0 0 / 0.6);
   }
 }

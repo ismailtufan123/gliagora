@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Search } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import { Lockup } from '@/components/Lockup'
@@ -10,6 +10,7 @@ import { DisclosureEnhancer } from './DisclosureEnhancer'
 import { type LocaleLabels, LocaleSwitcher } from './LocaleSwitcher'
 import { MobileMenu, type MenuWindowLinks } from './MobileMenu'
 import { NavLink } from './NavLink'
+import { SearchDialog } from './SearchDialog'
 
 // The desktop navigation shows from the `xl` breakpoint (1280px); below it, the mobile menu. The
 // six windows, language and digest button need about 1200px in Turkish. Keep this query in step
@@ -17,8 +18,8 @@ import { NavLink } from './NavLink'
 const DESKTOP_QUERY = '(min-width: 80rem)'
 
 // PLAN §2.3, §7.5: lockup, the six windows (Jobs, Events and Resources open a mega-menu from a
-// separate button; the label itself is a real link), language, and the digest button.
-// Search (M4) and Sign in (M4b) are added with their features.
+// separate button; the label itself is a real link), search, language, and the digest button.
+// Sign in (M4b) is added with its feature.
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale })
 
@@ -89,7 +90,25 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           </ul>
         </nav>
 
-        <div className="ms-auto flex items-center gap-2">
+        <div className="ms-auto flex items-center gap-1 sm:gap-2 xl:gap-1">
+          {/* A link to the search page, which JavaScript turns into the search dialog's button
+              (DisclosureEnhancer). The search icon with its name for screen readers (PLAN §7.4);
+              in the desktop layout also the shortcut, on screens with a keyboard, once JavaScript
+              runs (global.css). The word "Search" does not fit beside the Turkish labels. Below
+              360px the lockup leaves room for the menu button only, so search moves into the menu. */}
+          <a
+            href={paths.search()}
+            hrefLang={locale === 'en' ? undefined : 'en'}
+            className="button button-secondary search-trigger max-[22.5rem]:hidden"
+            data-search-open
+          >
+            <Search aria-hidden="true" size={18} />
+            <span className="sr-only">{t('search.trigger')}</span>
+            <span className="search-hint" aria-hidden="true">
+              <kbd data-key="ctrl">{t('search.shortcutCtrl')}</kbd>
+              <kbd data-key="apple">{t('search.shortcutApple')}</kbd>
+            </span>
+          </a>
           <LocaleSwitcher className="hidden md:block" locale={locale} labels={localeLabels} />
           <a
             className="button button-primary hidden max-w-60 text-center leading-tight whitespace-normal md:inline-flex"
@@ -100,6 +119,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           <MobileMenu locale={locale} windows={windows} localeLabels={localeLabels} />
         </div>
       </div>
+      <SearchDialog locale={locale} />
       <DisclosureEnhancer desktopQuery={DESKTOP_QUERY} />
     </header>
   )

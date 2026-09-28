@@ -29,6 +29,15 @@ export const PAGES = [
   { path: '/en/jobs/?type=phd&q=no+such+position', name: 'jobs list (empty)' },
   { path: jobPath(FIXED_JOBS.open), name: 'job (open)' },
   { path: jobPath(FIXED_JOBS.expiredRecently), name: 'job (closed)' },
+  { path: '/en/search/', name: 'search (empty)' },
+  // Positions, institutions and subfields on the CI data; "See all" too (more than 10 positions).
+  { path: '/en/search/?q=neuro', name: 'search (results)' },
+  // A pasted address: one long word must wrap, not widen the page (WCAG 1.4.10).
+  {
+    path: `/en/search/?q=${encodeURIComponent('https://www.example-university.edu/careers/postdoctoral-position-neuroscience-2026')}`,
+    name: 'search (long query)',
+  },
+  { path: '/en/search/?q=zzqxv', name: 'search (no results)' },
   { path: '/this-page-does-not-exist/', name: '404', status: 404 },
   { path: '/en/gone-example/', name: '410', status: 410 },
 ] as const

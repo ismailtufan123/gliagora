@@ -40,6 +40,8 @@ export const paths = {
   window: (key: WindowKey) => `/${siteLocale}/${key}/`,
   section: (key: SectionKey) => `/${siteLocale}/${sectionPaths[key]}`,
   contact: (locale: Locale) => (locale === 'tr' ? '/tr/iletisim/' : '/en/contact/'),
+  /** The search page (PLAN §2.2); English only, like the windows. */
+  search: () => `/${siteLocale}/search/`,
 }
 
 /**

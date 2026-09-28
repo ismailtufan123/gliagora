@@ -1012,6 +1012,176 @@
     }
   }
 
+  /*
+   * Search (PLAN §2.3, §3.2, §7.5). The header's Search link: the search icon, named for screen
+   * readers (PLAN §7.4), and in the desktop layout the shortcut. The shortcut shows only where a
+   * keyboard is likely (a fine pointer that can hover, so not on touch screens) and only once
+   * JavaScript runs, which makes it work; its room is kept from the first paint, so nothing moves
+   * when it appears. The Ctrl and ⌘ versions share one cell (DisclosureEnhancer sets
+   * <html data-apple>).
+   */
+  .search-trigger {
+    padding-inline: 0.5rem;
+  }
+
+  @media (min-width: 30rem) {
+    .search-trigger {
+      padding-inline: 0.625rem;
+    }
+  }
+
+  .search-hint {
+    display: none;
+  }
+
+  @media (width >= 80rem) and (hover: hover) and (pointer: fine) {
+    .search-hint {
+      display: inline-grid;
+      visibility: hidden;
+    }
+
+    html[data-js] .search-hint {
+      visibility: visible;
+    }
+
+    /* The Turkish labels fill the header (about 1,200px, PLAN §2.3): there the shortcut works and
+       is announced (aria-keyshortcuts) but not shown, so the digest button keeps two lines. */
+    .search-hint:lang(tr) {
+      display: none;
+    }
+  }
+
+  .search-hint > kbd {
+    grid-area: 1 / 1;
+    padding-inline: var(--space-1);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--corner-control);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: var(--step--1);
+    font-weight: 400;
+    text-align: center;
+  }
+
+  .search-hint > [data-key='apple'],
+  html[data-apple] .search-hint > [data-key='ctrl'] {
+    visibility: hidden;
+  }
+
+  html[data-apple] .search-hint > [data-key='apple'] {
+    visibility: inherit;
+  }
+
+  /* The search form of the page and the dialog (SearchForm.tsx). */
+  .search-form {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .search-row {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  /* No width of its own (a text field's default width would widen narrow pages): it takes the
+     room the button leaves. */
+  .search-row > .input {
+    flex: 1;
+    inline-size: 0;
+  }
+
+  /* The search dialog: a native modal <dialog> near the top of the screen (SearchDialog.tsx). */
+  .search-dialog {
+    width: min(40rem, calc(100% - 2 * var(--gutter)));
+    max-width: none;
+    max-height: calc(100% - 2 * var(--space-4));
+    margin: min(12vh, 6rem) auto auto;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--corner-overlay);
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: var(--elevation-overlay);
+  }
+
+  .search-dialog::backdrop {
+    background: var(--backdrop);
+  }
+
+  /* While the dialog is open, the page behind it does not scroll, as with the mobile menu and the
+     filter sheet (showModal() does not stop it). Only JavaScript opens the dialog, at any width;
+     scrollbar-gutter: stable on <html> keeps the page's width. */
+  html:has(.search-dialog[open]) {
+    overflow: hidden;
+  }
+
+  .search-dialog-panel {
+    position: relative;
+    padding: var(--space-4);
+  }
+
+  @media (min-width: 30rem) {
+    .search-dialog-panel {
+      padding: var(--space-6);
+    }
+  }
+
+  .search-dialog-close {
+    position: absolute;
+    top: var(--space-1);
+    inset-inline-end: var(--space-1);
+  }
+
+  /* Room for the close button beside the label. */
+  .search-dialog .search-form > label {
+    padding-inline-end: var(--space-12);
+  }
+
+  /* Responsive motion only (PLAN §7.4): the dialog fades in unless motion is reduced. */
+  @media (prefers-reduced-motion: no-preference) {
+    .search-dialog[open] {
+      animation: dialog-in var(--duration-base) var(--ease);
+    }
+  }
+
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(calc(-1 * var(--space-2)));
+    }
+  }
+
+  /* Groups on the search page: a heading with its count, and rows between hairlines. */
+  .result-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-6);
+  }
+
+  .result-list {
+    display: grid;
+    border-block: 1px solid var(--line);
+  }
+
+  .result-list > li {
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+  }
+
+  .result-list > li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  .result-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    font-size: var(--step--1);
+  }
+
   /* Pagination (PLAN §7.5): real links; the current page in bold with a strong border. */
   .pagination ul {
     display: flex;
