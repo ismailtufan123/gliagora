@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { type JobDoc, jobsListPath, rowTags, subfieldHubPath, toJobCard, toJobDetail } from './view'
+import { jobsHref } from '@/lib/filters/jobs'
+
+import { type JobDoc, rowTags, subfieldHubPath, toJobCard, toJobDetail } from './view'
 
 const term = (id: number, slug: string, label = slug) => ({ id, slug, label })
 
@@ -77,7 +79,7 @@ describe('toJobCard and toJobDetail', () => {
       urlId: 'b7c2d',
     })
     // PLAN §2.4: `institution` takes a ROR ID, or the short ID of an institution without one.
-    expect(jobsListPath({ institution: card?.institution?.urlId })).toBe(
+    expect(jobsHref({ institution: [card?.institution?.urlId ?? ''] })).toBe(
       '/en/jobs/?institution=b7c2d',
     )
   })
@@ -119,16 +121,5 @@ describe('subfieldHubPath', () => {
     const glia = { id: 10, slug: 'glia', label: 'Glial biology', isActive: true }
     expect(subfieldHubPath(glia)).toBe('/en/subfields/glia/')
     expect(subfieldHubPath({ ...glia, isActive: false })).toBeNull()
-  })
-})
-
-describe('jobsListPath', () => {
-  it('encodes filters in the order of the shared filter model (PLAN §2.4)', () => {
-    expect(jobsListPath()).toBe('/en/jobs/')
-    expect(jobsListPath({ subfield: 'glia', type: 'phd' })).toBe('/en/jobs/?type=phd&subfield=glia')
-    expect(jobsListPath({ institution: '056d84691' })).toBe('/en/jobs/?institution=056d84691')
-    expect(jobsListPath({ method: 'optical-imaging', type: undefined })).toBe(
-      '/en/jobs/?method=optical-imaging',
-    )
   })
 })

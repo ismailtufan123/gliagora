@@ -273,6 +273,6 @@ test('the Turkish language menu links back to the English page', async ({ page, 
 })
 
 test('placeholder pages are not indexed', async ({ request }) => {
-  const html = await (await request.get('/en/jobs/')).text()
+  const html = await (await request.get('/en/events/')).text()
   expect(html).toContain('<meta name="robots" content="noindex"')
 })

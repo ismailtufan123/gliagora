@@ -13,13 +13,16 @@ export const PAGES = [
   { path: '/en/legal/terms/', name: 'terms of use' },
   { path: '/en/legal/takedown/', name: 'notice and takedown' },
   { path: '/en/legal/data-requests/', name: 'data requests' },
-  { path: '/en/jobs/', name: 'placeholder (window)' },
+  { path: '/en/events/', name: 'placeholder (window)' },
   { path: '/en/learn/bench-to-bedside/', name: 'placeholder (section)' },
   { path: '/en/subfields/', name: 'subfield index' },
   { path: '/en/subfields/glia/', name: 'subfield hub' },
   // From the ROR test data that CI loads (pnpm ror:import tests/fixtures/ror/…-sample.zip).
   { path: '/en/institutions/california-institute-of-technology-05dxps055/', name: 'institution' },
   // From the fake jobs (pnpm fake:jobs, src/scripts/fake-jobs-fixed.ts).
+  { path: '/en/jobs/', name: 'jobs list' },
+  { path: '/en/jobs/?subfield=glia&type=phd,postdoc&deadline=90d', name: 'jobs list (filtered)' },
+  { path: '/en/jobs/?type=phd&q=no+such+position', name: 'jobs list (empty)' },
   { path: jobPath(FIXED_JOBS.open), name: 'job (open)' },
   { path: jobPath(FIXED_JOBS.expiredRecently), name: 'job (closed)' },
   { path: '/this-page-does-not-exist/', name: '404', status: 404 },

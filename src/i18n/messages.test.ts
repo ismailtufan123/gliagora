@@ -15,14 +15,51 @@ function entries(value: unknown, prefix = ''): [string, string][] {
 }
 
 // Placeholders ({title}) and rich-text tags (<email>) a message expects its caller to fill in.
+// Read like ICU does, so the words of a plural or select branch ({count, plural, =0 {Filters}
+// other {Filters (#)}}) do not count as placeholders.
 function slots(text: string) {
-  const names = [...text.matchAll(/\{\s*(\w+)|<(\w+)>/g)].map((m) => m[1] ?? `<${m[2]}>`)
-  return [...new Set(names)].sort()
+  const names = new Set<string>()
+  let at = 0
+  const message = (nested: boolean) => {
+    while (at < text.length) {
+      const tag = /^<(\/?)(\w+)>/.exec(text.slice(at))
+      if (tag) {
+        if (!tag[1]) names.add(`<${tag[2]}>`)
+        at += tag[0].length
+      } else if (text[at] === '{') {
+        at++
+        argument()
+      } else if (text[at++] === '}' && nested) {
+        return
+      }
+    }
+  }
+  const argument = () => {
+    const name = /^\s*(\w+)\s*/.exec(text.slice(at))
+    if (name) {
+      names.add(name[1] as string)
+      at += name[0].length
+    }
+    // The rest of the argument: a type and style, or the branches of a plural or select.
+    while (at < text.length && text[at] !== '}') {
+      if (text[at++] === '{') message(true)
+    }
+    at++
+  }
+  message(false)
+  return [...names].sort()
 }
 
 const english = new Map(entries(en))
 
 describe('messages', () => {
+  it('are read for placeholders and tags, not for the words of plural branches', () => {
+    expect(
+      slots('{count, plural, =0 {Filters} other {Filters (#) in {place}}} <link>all</link> {name}'),
+    ).toEqual(['<link>', 'count', 'name', 'place'])
+    expect(slots('Closes {date, date, medium}')).toEqual(['date'])
+  })
+
   it('have the same keys in every locale', () => {
     for (const messages of Object.values(locales)) {
       expect(

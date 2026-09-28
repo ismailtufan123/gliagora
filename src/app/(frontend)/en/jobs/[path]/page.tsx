@@ -11,7 +11,8 @@ import { matchDetailRoute } from '@/lib/detail-routes'
 import { listingState } from '@/lib/jobs/deadline'
 import { deadlineView, formatDay, languageName, listOf } from '@/lib/jobs/format'
 import { textDirection } from '@/lib/jobs/languages'
-import { type TermRef, jobsListPath, subfieldHubPath } from '@/lib/jobs/view'
+import { jobsHref } from '@/lib/filters/jobs'
+import { type TermRef, subfieldHubPath } from '@/lib/jobs/view'
 import { jobByShortId, openJobsAtInstitution, requestTime, similarOpenJobs } from '@/lib/records'
 import { CONTACT_EMAIL } from '@/lib/site'
 
@@ -96,7 +97,7 @@ export default async function Page({ params }: Props) {
   const firstSubfield = job.subfields.find((term) => term.isActive)
   // A closed position has no way to apply (PLAN §2.5).
   const postingUrl = open ? job.originalUrl : null
-  const allJobsLink = (chunks: ReactNode) => <a href={jobsListPath()}>{chunks}</a>
+  const allJobsLink = (chunks: ReactNode) => <a href={jobsHref()}>{chunks}</a>
   const report = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
     t('job.reportSubject', { id: job.shortId }),
   )}`
@@ -141,7 +142,7 @@ export default async function Page({ params }: Props) {
       />
       {atInstitution.total > MORE_AT_INSTITUTION && (
         <p>
-          <a href={jobsListPath({ institution: institution.urlId })}>
+          <a href={jobsHref({ institution: [institution.urlId] })}>
             {t('job.allAtInstitution', {
               // The list shows this job too while it is open.
               count: atInstitution.total + (open ? 1 : 0),
@@ -159,13 +160,16 @@ export default async function Page({ params }: Props) {
         <Breadcrumbs
           locale="en"
           items={[
-            { label: t('windows.jobs'), href: jobsListPath() },
-            ...(type ? [{ label: type.label, href: jobsListPath({ type: type.slug }) }] : []),
+            { label: t('windows.jobs'), href: jobsHref() },
+            ...(type ? [{ label: type.label, href: jobsHref({ type: [type.slug] }) }] : []),
             ...(firstSubfield
               ? [
                   {
                     label: firstSubfield.label,
-                    href: jobsListPath({ type: type?.slug, subfield: firstSubfield.slug }),
+                    href: jobsHref({
+                      type: type ? [type.slug] : [],
+                      subfield: [firstSubfield.slug],
+                    }),
                   },
                 ]
               : []),
@@ -296,15 +300,13 @@ export default async function Page({ params }: Props) {
             {job.methods.length > 0 && (
               <div>
                 <dt>{t('job.methods')}</dt>
-                <dd>{topicLinks(job.methods, (term) => jobsListPath({ method: term.slug }))}</dd>
+                <dd>{topicLinks(job.methods, (term) => jobsHref({ method: [term.slug] }))}</dd>
               </div>
             )}
             {job.modelSystems.length > 0 && (
               <div>
                 <dt>{t('job.modelSystems')}</dt>
-                <dd>
-                  {topicLinks(job.modelSystems, (term) => jobsListPath({ model: term.slug }))}
-                </dd>
+                <dd>{topicLinks(job.modelSystems, (term) => jobsHref({ model: [term.slug] }))}</dd>
               </div>
             )}
           </dl>

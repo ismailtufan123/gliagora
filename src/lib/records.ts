@@ -3,7 +3,23 @@ import { type Where, getPayload } from 'payload'
 import { cache } from 'react'
 
 import type { Locale } from '@/i18n/routing'
+import { type JobFilters, TERM_PARAMS } from '@/lib/filters/jobs'
+import type { Region } from '@/lib/geography'
+import { intlLocale } from '@/lib/jobs/format'
+import {
+  type FilterCountry,
+  type FilterTerm,
+  JOBS_PER_PAGE,
+  JOBS_SORT,
+  type JobFilterOptions,
+  filterOptions,
+  jobsWhere,
+  locationCodes,
+  openJobsWhere,
+  termIds,
+} from '@/lib/jobs/query'
 import { type JobCard, type JobDoc, toJobCard, toJobDetail } from '@/lib/jobs/view'
+import type { MethodGroup } from '@/lib/taxonomy'
 
 // Reads for the pages that show database records. The proxy has already checked that the record
 // exists (src/lib/detail-routes.ts); these return null only if it disappeared in between.
@@ -114,24 +130,6 @@ export const jobByShortId = cache(async (shortId: string, locale: Locale) => {
 })
 
 /**
- * Open jobs (PLAN §2.5): published, and before the end of the deadline day when the deadline is
- * fixed. The same rule as `isOpen` in src/lib/jobs/deadline.ts, as a query.
- */
-export function openJobsWhere(now: Date): Where {
-  return {
-    and: [
-      { status: { equals: 'published' } },
-      {
-        or: [
-          { deadlineKind: { not_equals: 'fixed' } },
-          { deadlineAt: { greater_than: now.toISOString() } },
-        ],
-      },
-    ],
-  }
-}
-
-/**
  * Open jobs matching `where`, in deadline order (the nearest first; rolling and until-filled
  * ones after them, newest first), at most `limit`. `total` counts all matches when `count` is
  * set, otherwise only the ones returned.
@@ -151,8 +149,7 @@ async function findOpenJobs({
   const { docs, totalDocs } = await payload.find({
     collection: 'jobs',
     where: { and: [openJobsWhere(requestTime()), ...where] },
-    // PostgreSQL puts empty deadlines (rolling, until filled) last in ascending order.
-    sort: ['deadlineAt', '-publishedAt'],
+    sort: JOBS_SORT.deadline,
     select: JOB_CARD_SELECT,
     populate: JOB_POPULATE,
     locale,
@@ -217,4 +214,158 @@ export async function similarOpenJobs(
     locale,
   })
   return [...sameType, ...others.jobs]
+}
+
+/** What the jobs list shows for its filters (PLAN §3.2). */
+export type JobsList = {
+  /** The rows of the requested page. */
+  jobs: JobCard[]
+  /** Open jobs that match the filters. */
+  matches: number
+  /** Pages of matches (0 when nothing matches). */
+  pages: number
+  /** All open jobs ("412 open positions"). */
+  open: number
+  options: JobFilterOptions
+  /** The institutions of the institution filter that exist, by the ID in the URL. */
+  institutions: { id: string; name: string }[]
+}
+
+/**
+ * The jobs list for these filters: one query each for the taxonomy terms (options, slugs and
+ * their descendants), the countries with open jobs, the chosen institutions and countries, the
+ * number of open jobs, and the page of matching jobs with their total. Unknown and retired
+ * values match nothing (PLAN §2.4); a filter with no known value skips the jobs query.
+ */
+export async function jobsList(filters: JobFilters, locale: Locale): Promise<JobsList> {
+  const payload = await getPayload({ config })
+  const now = requestTime()
+  const open = openJobsWhere(now)
+  const rorIds = filters.institution.filter((id) => id.length === 9)
+  const shortIds = filters.institution.filter((id) => id.length !== 9)
+  const [terms, openCountries, openCount, institutions, chosenCountries] = await Promise.all([
+    payload.find({
+      collection: 'terms',
+      where: {
+        vocabulary: { in: Object.values(TERM_PARAMS) },
+        // Unset counts as active, as in src/lib/detail-lookup.ts.
+        isActive: { not_equals: false },
+      },
+      select: { vocabulary: true, slug: true, label: true, parent: true, group: true },
+      sort: ['sortOrder', 'id'],
+      locale,
+      pagination: false,
+      depth: 0,
+    }),
+    payload.findDistinct({
+      collection: 'jobs',
+      field: 'country',
+      where: open,
+      locale,
+      depth: 1,
+      populate: { countries: { name: true, region: true } },
+    }),
+    payload.count({ collection: 'jobs', where: open }),
+    filters.institution.length > 0
+      ? payload.find({
+          collection: 'institutions',
+          where: {
+            or: [
+              ...(rorIds.length > 0 ? [{ rorId: { in: rorIds } }] : []),
+              ...(shortIds.length > 0 ? [{ shortId: { in: shortIds } }] : []),
+            ],
+          },
+          select: { name: true, rorId: true, shortId: true },
+          locale,
+          pagination: false,
+          depth: 0,
+        })
+      : null,
+    filters.country.length > 0
+      ? payload.find({
+          collection: 'countries',
+          where: { id: { in: filters.country } },
+          select: { name: true, region: true },
+          locale,
+          pagination: false,
+          depth: 0,
+        })
+      : null,
+  ])
+
+  const filterTerms: FilterTerm[] = terms.docs.map((term) => ({
+    id: term.id,
+    vocabulary: term.vocabulary,
+    slug: term.slug,
+    label: term.label || term.slug,
+    parent: typeof term.parent === 'object' ? (term.parent?.id ?? null) : (term.parent ?? null),
+    group: (term.group as MethodGroup | null | undefined) ?? null,
+  }))
+  const withOpenJobs: FilterCountry[] = openCountries.values.flatMap(({ country }) =>
+    typeof country === 'object' && country
+      ? [
+          {
+            code: country.id,
+            name: country.name || country.id,
+            region: (country.region as Region | null | undefined) ?? null,
+          },
+        ]
+      : [],
+  )
+  // Chosen countries without open jobs stay in the options, so they can be unticked.
+  const chosenOnly: FilterCountry[] = (chosenCountries?.docs ?? [])
+    .filter((doc) => !withOpenJobs.some((country) => country.code === doc.id))
+    .map((doc) => ({
+      code: doc.id,
+      name: doc.name || doc.id,
+      region: (doc.region as Region | null | undefined) ?? null,
+    }))
+
+  const where = jobsWhere(
+    filters,
+    {
+      terms: termIds(filters, filterTerms),
+      countries: locationCodes(filters, withOpenJobs),
+      institutions: institutions ? institutions.docs.map((doc) => doc.id) : null,
+    },
+    now,
+  )
+  const found = where
+    ? await payload.find({
+        collection: 'jobs',
+        where,
+        sort: JOBS_SORT[filters.sort],
+        select: JOB_CARD_SELECT,
+        populate: JOB_POPULATE,
+        locale,
+        limit: JOBS_PER_PAGE,
+        page: filters.page,
+        depth: 1,
+      })
+    : null
+  // A page past the end has no rows, and then Payload's Postgres adapter reports 0 matches when
+  // the query joins another table (the terms a job has several of, or `q` on the institution's
+  // name), so such a page counts them separately.
+  const matches =
+    where && found && found.docs.length === 0 && filters.page > 1
+      ? (await payload.count({ collection: 'jobs', where, locale })).totalDocs
+      : (found?.totalDocs ?? 0)
+
+  return {
+    jobs: (found?.docs ?? []).flatMap((doc) => toJobCard(doc as JobDoc) ?? []),
+    matches,
+    pages: Math.ceil(matches / JOBS_PER_PAGE),
+    open: openCount.totalDocs,
+    options: filterOptions(
+      filterTerms,
+      [...withOpenJobs, ...chosenOnly],
+      filters.region,
+      new Intl.Collator(intlLocale(locale)),
+    ),
+    institutions: (institutions?.docs ?? []).flatMap((doc) =>
+      [doc.rorId, doc.shortId].flatMap((id) =>
+        id && filters.institution.includes(id) ? [{ id, name: doc.name }] : [],
+      ),
+    ),
+  }
 }

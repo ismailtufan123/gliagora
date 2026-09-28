@@ -290,8 +290,9 @@ test.describe('Job pages', () => {
   test('the jobs list the breadcrumbs and "all positions" links lead to answers 200', async ({
     request,
   }) => {
-    for (const path of ['/en/jobs/?type=phd', '/en/jobs/?type=phd&subfield=glia']) {
-      expect((await request.get(path)).status()).toBe(200)
+    // Canonical addresses (src/lib/filters): no redirect on the way.
+    for (const path of ['/en/jobs/?type=phd', '/en/jobs/?subfield=glia&type=phd']) {
+      expect((await request.get(path, { maxRedirects: 0 })).status()).toBe(200)
     }
   })
 })

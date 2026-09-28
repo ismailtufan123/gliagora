@@ -1,5 +1,4 @@
 import { institutionPath, jobPath, subfieldPath } from '@/lib/detail-routes'
-import { paths } from '@/lib/site'
 
 import { type DeadlineKind, calendarDay } from './deadline'
 import type { DeadlineFacts } from './format'
@@ -167,21 +166,3 @@ export function rowTags(job: JobCard, max = 3): { shown: TermRef[]; more: number
  */
 export const subfieldHubPath = (term: TermRef): string | null =>
   term.isActive ? subfieldPath(term.slug) : null
-
-/** Filters of the jobs list, in the shared filter model (PLAN §2.4). */
-export type JobsFilter = Partial<
-  Record<'type' | 'subfield' | 'method' | 'model' | 'institution', string>
->
-
-/**
- * The jobs list with these filters, e.g. `/en/jobs/?type=phd&subfield=glia`. Parameters keep the
- * order of PLAN §2.4, so the same filters always give the same address. The list itself is built
- * in M4.3.
- */
-export function jobsListPath(filter: JobsFilter = {}): string {
-  const order = ['type', 'subfield', 'method', 'model', 'institution'] as const
-  const query = new URLSearchParams(
-    order.flatMap((key) => (filter[key] ? [[key, filter[key]] as [string, string]] : [])),
-  ).toString()
-  return query ? `${paths.window('jobs')}?${query}` : paths.window('jobs')
-}

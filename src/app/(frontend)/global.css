@@ -591,4 +591,370 @@
       border-top: 1px solid CanvasText;
     }
   }
+
+  /* Controls that need JavaScript, such as the search boxes of long filter lists, show only when
+     it runs (DisclosureEnhancer sets <html data-js>). */
+  html:not([data-js]) .js-only {
+    display: none !important;
+  }
+
+  /* Text boxes and selects. */
+  .input {
+    min-height: 2.75rem;
+    min-width: 0;
+    padding-inline: var(--space-3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--corner-control);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+  }
+
+  :where(.job-filters) input:is([type='checkbox'], [type='radio']) {
+    flex: none;
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    margin-block-start: 0.2em;
+    accent-color: var(--accent);
+  }
+
+  /*
+   * Jobs list filters (PLAN §7.5, §9.3, §9.4; JobFilterForm.tsx). One form: from 1280px (with the
+   * header's desktop navigation) a bar of popovers; below, a "Filters (3)" button that opens the
+   * same controls as a sheet, with the popovers as accordions. Without JavaScript the sheet opens
+   * in the page; with it, it covers the screen as a dialog, except when it was opened before
+   * JavaScript ran (data-inline, see DisclosureEnhancer): that one stays in the page until closed.
+   */
+  .job-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  /* On a row of its own, so the bar does not re-wrap when a filter's count appears. */
+  .filter-search {
+    display: flex;
+    flex: 1 1 100%;
+    gap: var(--space-2);
+    max-width: 36rem;
+  }
+
+  .filter-search .input {
+    flex: 1;
+  }
+
+  .filter-sheet[open] {
+    flex-basis: 100%;
+  }
+
+  .sheet-panel {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .sheet-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .filter-bar {
+    display: grid;
+    align-content: start;
+  }
+
+  .filter {
+    position: relative;
+  }
+
+  .filter-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-height: 3rem;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .filter-panel {
+    display: grid;
+    gap: var(--space-3);
+    padding-block-end: var(--space-4);
+  }
+
+  .filter-field,
+  .filter-group {
+    display: grid;
+    gap: var(--space-2);
+    min-inline-size: 0;
+  }
+
+  .filter-group > legend {
+    margin-block-end: var(--space-2);
+    font-weight: 700;
+  }
+
+  .filter-options {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  /* Narrower options (rodent: mouse, rat) under their parent. */
+  .filter-options .filter-options {
+    margin-block-start: var(--space-1);
+    padding-inline-start: var(--space-6);
+  }
+
+  .filter-option {
+    display: flex;
+    gap: var(--space-2);
+    min-height: 2rem;
+    padding-block: var(--space-1);
+    cursor: pointer;
+  }
+
+  @media (width < 80rem) {
+    .filter {
+      border-bottom: 1px solid var(--line);
+    }
+
+    /* The sheet's own button applies the filters. */
+    .filter-apply {
+      display: none;
+    }
+
+    /* With JavaScript the open sheet is a dialog over the page, nearly full height. */
+    html[data-js]:has(.filter-sheet[open]:not([data-inline])) {
+      overflow: hidden;
+    }
+
+    html[data-js] .filter-sheet[open]:not([data-inline]) > .sheet-panel {
+      position: fixed;
+      inset: var(--space-4) 0 0;
+      z-index: var(--z-sheet);
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 0;
+      background: var(--surface-raised);
+      border: 1px solid var(--line);
+      border-radius: var(--corner-overlay) var(--corner-overlay) 0 0;
+      box-shadow: var(--elevation-overlay);
+    }
+
+    html[data-js] .filter-sheet[open]:not([data-inline]) .sheet-head {
+      padding: var(--space-2) var(--gutter);
+      border-bottom: 1px solid var(--line);
+    }
+
+    html[data-js] .filter-sheet[open]:not([data-inline]) .filter-bar {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scroll-padding-block: var(--space-2);
+      padding-inline: var(--gutter);
+    }
+
+    html[data-js] .filter-sheet[open]:not([data-inline]) .sheet-foot {
+      padding: var(--space-3) var(--gutter) calc(var(--space-3) + env(safe-area-inset-bottom));
+      border-top: 1px solid var(--line);
+    }
+
+    /* A sheet in the page closes with its own button, as without JavaScript. */
+    .filter-sheet[data-inline] [data-disclosure-close] {
+      display: none;
+    }
+  }
+
+  @media (width >= 80rem) {
+    .filter-sheet {
+      flex: 1 1 auto;
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .filter-button {
+      min-height: 2.75rem;
+      padding-inline: var(--space-3);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--corner-control);
+    }
+
+    .filter-button:hover,
+    .filter[open] > .filter-button {
+      background: var(--surface-sunken);
+    }
+
+    .filter-panel {
+      position: absolute;
+      top: calc(100% + var(--space-2));
+      inset-inline-start: 0;
+      z-index: var(--z-dropdown);
+      width: max-content;
+      min-width: 16rem;
+      max-width: 28rem;
+      max-height: min(32rem, 70vh);
+      overflow-y: auto;
+      padding: var(--space-4);
+      background: var(--surface-raised);
+      border: 1px solid var(--line);
+      border-radius: var(--corner-overlay);
+      box-shadow: var(--elevation-overlay);
+    }
+
+    /* The last popovers open towards the start, so they stay inside the window. */
+    .filter:nth-last-child(-n + 3) > .filter-panel {
+      inset-inline: auto 0;
+    }
+
+    .filter-apply {
+      justify-self: start;
+    }
+
+    /* The bar is always shown: the sheet's button, title and footer are for small screens. Where
+       a browser cannot show a closed disclosure's content, the button stays as the way in. */
+    @supports selector(::details-content) {
+      .filter-sheet > summary,
+      .sheet-head,
+      .sheet-foot {
+        display: none;
+      }
+
+      .filter-sheet::details-content {
+        content-visibility: visible;
+      }
+    }
+  }
+
+  /* The number of results and the sort order, on one line where they fit (PLAN §9.3). */
+  .results-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-6);
+  }
+
+  /* Active filters as removable chips, and "Clear all" (PLAN §9.3). */
+  .filter-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .chip-remove {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 2rem;
+    border-color: var(--line-strong);
+    color: var(--text);
+    font-size: var(--step--1);
+    text-decoration: none;
+  }
+
+  .chip-remove:hover {
+    text-decoration: underline;
+  }
+
+  .sort {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  /* At least a screen tall, so the footer does not rise into view when a change brings fewer
+     results, which would shift it; the rows themselves are new for each address (page.tsx). */
+  .job-results {
+    align-content: start;
+    min-height: 100svh;
+  }
+
+  /*
+   * While a change loads (JobsListEnhancer marks the results busy), each row shows placeholder
+   * bars in its own box, so nothing moves; only after 300ms, so a quick answer does not flash.
+   * Still, also without reduced motion. The count above the rows is announced when it changes.
+   */
+  .job-results[aria-busy='true'] .job-list > li {
+    position: relative;
+  }
+
+  .job-results[aria-busy='true'] .job-list > li::after {
+    --bar: linear-gradient(var(--surface-sunken), var(--surface-sunken));
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      var(--bar) 0 var(--space-4) / 70% 1.5rem no-repeat,
+      var(--bar) 0 calc(var(--space-4) + 2.25rem) / 45% 1rem no-repeat,
+      var(--bar) 0 calc(var(--space-4) + 3.75rem) / 30% 1rem no-repeat,
+      var(--bg);
+    opacity: 0;
+    animation: skeleton-show 1ms 300ms forwards;
+  }
+
+  @keyframes skeleton-show {
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Pagination (PLAN §7.5): real links; the current page in bold with a strong border. */
+  .pagination ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .pagination a,
+  .pagination-gap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding-inline: var(--space-3);
+  }
+
+  .pagination a {
+    border: 1px solid var(--line-strong);
+    border-radius: var(--corner-control);
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .pagination a:hover {
+    background: var(--surface-sunken);
+    text-decoration: underline;
+  }
+
+  .pagination a[aria-current] {
+    border: 2px solid var(--text);
+    background: var(--surface-sunken);
+    font-weight: 700;
+  }
+
+  .pagination-gap::before {
+    content: '…' / '';
+    color: var(--text-muted);
+  }
 }

@@ -14,6 +14,12 @@
     "skipLink": "Skip to main content",
     "breadcrumb": "Breadcrumb"
   },
+  "pagination": {
+    "label": "Pages",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page}"
+  },
   "footer": {
     "contact": "Contact and legal notice",
     "sitemap": "Site map",
@@ -168,7 +174,81 @@
     "moreTopics": "+{count}",
     "moreTopicsLabel": "{count, plural, one {# more topic} other {# more topics}}",
     "viewOriginal": "View original posting",
-    "opensEmployerSite": "(opens the employer’s website)"
+    "opensEmployerSite": "(opens the employer’s website)",
+    "list": {
+      "title": "Neuroscience positions",
+      "titlePage": "Neuroscience positions, page {page}",
+      "description": "Open neuroscience positions around the world, from MSc and PhD places to faculty and industry roles, each with a link to the employer’s own posting.",
+      "open": "{count, plural, one {# open position} other {# open positions}}",
+      "matches": "{count, plural, =0 {No positions match} one {# position matches} other {# positions match}}",
+      "emptyText": "Try removing a filter or clearing them all. If you know of a position that is missing here, tell us about it.",
+      "removeLast": "Remove the last filter ({label})",
+      "removeUnknown": "Remove the filters that no longer exist",
+      "clearAll": "Clear all filters",
+      "suggest": "Suggest a listing",
+      "pastEnd": "This list has {pages, plural, one {only # page} other {# pages}}.",
+      "firstPage": "Go to the first page"
+    },
+    "filters": {
+      "label": "Filter positions",
+      "title": "Filters",
+      "open": "{count, plural, =0 {Filters} other {Filters (#)}}",
+      "close": "Close filters",
+      "apply": "Apply",
+      "button": "{label} ({count})",
+      "show": "{count, plural, one {Show # position} other {Show # positions}}",
+      "clearAll": "Clear all",
+      "search": "Search positions",
+      "searchButton": "Search",
+      "searchInList": "Search in this list",
+      "type": "Position type",
+      "subfield": "Subfield",
+      "method": "Method",
+      "model": "Model system",
+      "country": "Country",
+      "region": "Region",
+      "deadline": "Deadline",
+      "more": "More",
+      "stage": "Career stage",
+      "methodGroups": {
+        "recording-imaging": "Recording and imaging",
+        "manipulation": "Manipulation",
+        "molecular": "Molecular",
+        "behaviour-clinical": "Behaviour and clinical",
+        "computational": "Computational",
+        "engineering": "Engineering"
+      },
+      "otherMethods": "Other methods",
+      "regions": {
+        "africa": "Africa",
+        "northern-america": "Northern America",
+        "latin-america-caribbean": "Latin America and the Caribbean",
+        "asia": "Asia",
+        "europe": "Europe",
+        "oceania": "Oceania"
+      },
+      "deadlineAny": "Any deadline",
+      "within": "{days, plural, one {Closes within # day} other {Closes within # days}}",
+      "thisMonth": "Closes this month",
+      "between": "Closes between these dates",
+      "from": "From",
+      "to": "To",
+      "rangeHint": "Choose this option and enter both dates.",
+      "rangeError": "Enter both dates, the first on or before the second.",
+      "sort": "Sort by",
+      "sortDeadline": "Deadline",
+      "sortNewest": "Newest first",
+      "chips": "Active filters",
+      "removeFilter": "Remove filter: {label}",
+      "chipRange": "Closes {from} – {to}",
+      "chipSearch": "Search: {q}"
+    },
+    "error": {
+      "title": "The positions could not be loaded",
+      "text": "Something went wrong on our side. Please try again in a moment.",
+      "retry": "Try again",
+      "reference": "Reference: {digest}"
+    }
   },
   "job": {
     "description": "{title} at {institution}: the facts, our summary and a link to the employer’s own posting.",
