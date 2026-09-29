@@ -1,18 +1,23 @@
 #!/usr/bin/env bash
 # Server side of the GitHub Actions deploy workflow (.github/workflows/deploy.yml, PLAN §11.5).
 #
-# The workflow's SSH key may run only this script: its line in ~/.ssh/authorized_keys is
-#   restrict,command="/opt/gliagora/deploy-remote.sh" ssh-ed25519 AAAA... gliagora-deploy
-# The workflow connects with the command "deploy <tag>" and sends two lines on stdin: a registry
-# user name and the job's short-lived GITHUB_TOKEN. This script then:
+# The workflow logs in as the user `deploy` (setup-server.sh), whose only key may run only this
+# script, as root, through one sudo rule (D42). Its line in /home/deploy/.ssh/authorized_keys is
+#   restrict,command="sudo -n /opt/gliagora/deploy-remote.sh" ssh-ed25519 AAAA... gliagora-deploy
+# The workflow connects with the command "deploy <tag>" (passed on by sudo as SSH_ORIGINAL_COMMAND)
+# and sends two lines on stdin: a registry user name and the job's short-lived GITHUB_TOKEN.
+# This script then:
 #   1. accepts only "deploy main" or "deploy sha-<first 7 characters of a commit>";
 #   2. logs in to GHCR with that token in a temporary Docker config, pulls the images and deletes
 #      the config again, so no registry credentials stay on the server (D27);
 #   3. pins the image to the commit it was built from (sha-<commit>), so .env and .env.previous
 #      always name an image that stays on the server and can be rolled back to;
-#   4. records the new image in .env (APP_IMAGE);
+#   4. records the new image in .env (APP_IMAGE), keeping the old file as .env.previous;
 #   5. runs update.sh --no-pull: backup first, then restart and wait until everything is healthy.
-#      If that fails before the app was restarted, .env goes back to the previous image.
+#      If that fails before the app was restarted, .env goes back to the previous image;
+#   6. if the new image started but did not become healthy, switches back to the previous image
+#      (still on the server) and waits for it (automatic rollback, D42). Database migrations are
+#      not undone; the pre-update backup has the state before them.
 set -euo pipefail
 
 APP_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -29,6 +34,7 @@ if [[ "${action:-}" != deploy || -n "${extra:-}" || ! "${tag:-}" =~ ^(main|sha-[
   echo "Refused. This key may only run: deploy main | deploy sha-<7 characters of a commit>" >&2
   exit 2
 fi
+[[ $EUID -eq 0 ]] || fail "Run through the deploy user's sudo rule (setup-server.sh), as root."
 
 IFS= read -r registry_user || true
 IFS= read -r registry_token || true
@@ -60,13 +66,29 @@ log "Pinned to $image"
 cp -p "$ENV_FILE" "$ENV_FILE.previous"
 sed -i "s|^APP_IMAGE=.*|APP_IMAGE=$image|" "$ENV_FILE"
 
-# 5. Backup, restart and health checks (root is needed for the backup repository).
-if ! sudo -n "$APP_DIR/update.sh" --no-pull; then
-  running=$(docker inspect -f '{{.Config.Image}}' "$(compose ps -aq app 2>/dev/null)" 2>/dev/null || true)
-  if [[ "$running" != "$image" ]]; then
-    cp -p "$ENV_FILE.previous" "$ENV_FILE"
-    log "The app was not restarted; APP_IMAGE in .env is back to $current."
-  fi
-  fail "The update did not finish; see the messages above."
+# 5. Backup, restart and health checks.
+if "$APP_DIR/update.sh" --no-pull; then
+  log "Deployed $image"
+  exit 0
 fi
-log "Deployed $image"
+
+running=$(docker inspect -f '{{.Config.Image}}' "$(compose ps -aq app 2>/dev/null)" 2>/dev/null || true)
+if [[ "$running" != "$image" ]]; then
+  cp -p "$ENV_FILE.previous" "$ENV_FILE"
+  fail "The update stopped before the app was restarted (see above). Nothing changed; APP_IMAGE in .env is back to $current."
+fi
+
+# 6. Automatic rollback: the new image started but did not become healthy.
+image_id() { docker image inspect -f '{{.Id}}' "$1" 2>/dev/null || true; }
+previous_id=$(image_id "$current")
+if [[ -z "$previous_id" || "$previous_id" == "$(image_id "$image")" ]]; then
+  fail "$image did not become healthy, and there is no earlier image on the server to go back to (the first deploy?). See: docker compose -f compose.prod.yml logs app"
+fi
+log "Rolling back: $image did not become healthy; starting $current again"
+cp -p "$ENV_FILE.previous" "$ENV_FILE"
+if compose up -d --wait --wait-timeout 300 --remove-orphans; then
+  compose ps
+  fail "Rolled back to $current, which is healthy. $image did not become healthy: see its logs with docker compose -f compose.prod.yml logs app. If its database migrations broke something, restore the newest 'pre-update' snapshot (backup/restore.sh list, then backup/restore.sh database <ID>)."
+fi
+compose ps
+fail "The rollback to $current did not become healthy either. Restore the newest 'pre-update' snapshot: backup/restore.sh list, then backup/restore.sh database <ID> (deploy/README.md, step 7)."

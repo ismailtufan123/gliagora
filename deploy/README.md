@@ -2,18 +2,18 @@
 
 Everything the production server runs is described in this folder (PLAN §11.5), so a new server can be rebuilt from scratch. The server only pulls and runs images built by CI; it never builds.
 
-**Status:** prepared, never run. The one-time server setup (S) happens just before M4 (PLAN §20, D23); until the operator starts it, nobody works on the server.
+**Status:** the one-time server setup (S) runs from 2026-09-30 (PLAN §20, D42).
 
 | File | What it is |
 | --- | --- |
-| `setup-server.sh` | One-time hardening of a fresh Ubuntu 24.04 server |
+| `setup-server.sh` | One-time hardening of a fresh Ubuntu 24.04 server: admin user, deploy user, firewall, fail2ban, Docker, swap |
 | `compose.prod.yml` | The stack: Caddy, the app, PostgreSQL 18 |
-| `Caddyfile` | HTTPS, security headers, the second password (`/admin` and `/api`; until M2 the whole site), masked access logs |
-| `admin-auth.caddy.example` | Template for the second password in front of `/admin` and `/api` (and, until M2, the whole site) |
+| `Caddyfile` | HTTPS, security headers, the site-wide password (until M2 the whole site except `/health/`; always `/admin` and `/api`), masked access logs |
+| `admin-auth.caddy.example` | Template for the site-wide password |
 | `postgres/init/10-app-database.sh` | Creates the app's own database user on first start |
 | `.env.example` | Template for the server's `.env` (domain, image, secrets) |
 | `update.sh` | Backup, then restart with the new image and wait until healthy |
-| `deploy-remote.sh` | Server side of the GitHub Deploy workflow (the only command its SSH key may run) |
+| `deploy-remote.sh` | Server side of the GitHub Deploy workflow (the only command its SSH key may run), with the automatic rollback |
 | `backup/backup.sh` | Encrypted backup of the databases and settings (restic) |
 | `backup/restore.sh` | Restore, list snapshots, or test a restore without touching production |
 | `backup/systemd/` | Timers: nightly backup, monthly restore test |
@@ -23,40 +23,45 @@ On the server, everything lives in `/opt/gliagora`:
 | Path | Contents |
 | --- | --- |
 | `/opt/gliagora/.env` | Secrets and the deployed image `APP_IMAGE` (mode 600, never committed) |
-| `/opt/gliagora/.env.previous` | `.env` before the last deploy, for a quick rollback |
-| `/opt/gliagora/admin-auth.caddy` | Second password hash (mode 600, never committed) |
+| `/opt/gliagora/.env.previous` | `.env` before the last deploy, for the rollback |
+| `/opt/gliagora/admin-auth.caddy` | Hash of the site-wide password (mode 600, never committed) |
+| `/root/site-password` | The site-wide password itself, readable only by root, until you have saved it in your password manager |
 | Docker volume `gliagora_db-data` | The database |
 | Docker volume `gliagora_caddy-data` | TLS certificates |
 | Docker volume `gliagora_caddy-logs` | Access logs with masked IPs, kept 14 days |
-| `/opt/gliagora/backup/` | Backup scripts, `backup.env` and `restic-password` (mode 600) |
+| `/opt/gliagora/backup/` | Backup scripts, `backup.env` (mode 600) and `restic-password` (readable only by root) |
 | `/var/backups/gliagora/restic` | Encrypted backup repository |
+
+## Who logs in
+
+- **`gliagora`**, the admin: logs in with the operator's SSH keys (copied from root's), uses `sudo` without a password and is in the `docker` group. SSH accepts keys only; root cannot log in.
+- **`deploy`**, used only by the Deploy workflow: not an admin (not in the `sudo` or `docker` group), no password, and its only key can run nothing but `deploy-remote.sh`. One sudo rule (`/etc/sudoers.d/gliagora-deploy`) lets it run that script as root, without arguments, and each run is logged. Its `authorized_keys` belongs to root, so the user cannot change it.
 
 ## How deploys work
 
-Deploys run from GitHub: **Actions → Deploy → Run workflow** on `main`, with an image tag: `main`, or `sha-` plus the first 7 characters of a commit, as shown on the GHCR package page (`.github/workflows/deploy.yml`, D27).
+Deploys run from GitHub: **Actions → Deploy → Run workflow** on `main`, with an image tag: `main`, or `sha-` plus the first 7 characters of a commit, as shown in the CI log of that commit (`.github/workflows/deploy.yml`, D27).
 
-1. The workflow connects over SSH with its own key. On the server, that key's line in `authorized_keys` starts with `restrict,command="/opt/gliagora/deploy-remote.sh"`: it can run nothing else, get no shell and forward nothing.
-2. It sends the job's own `GITHUB_TOKEN` (valid only while the job runs) on stdin. `deploy-remote.sh` logs in to GHCR with it in a temporary Docker config, pulls the images and deletes that config. **No registry login is stored on the server.**
+1. The workflow connects over SSH as `deploy`, with its own key, and checks the server's host key against the one pinned in a secret. On the server, that key's line in `/home/deploy/.ssh/authorized_keys` starts with `restrict,command="sudo -n /opt/gliagora/deploy-remote.sh"`: it can run nothing else, get no shell and forward nothing.
+2. It sends the job's own `GITHUB_TOKEN` (valid only while the job runs) on stdin. `deploy-remote.sh` accepts only `deploy main` or `deploy sha-<7 characters>`, logs in to GHCR with the token in a temporary Docker config, pulls the images and deletes that config. **No registry login is stored on the server.**
 3. It pins the image to the commit it was built from (`main` becomes `sha-<commit>`), records it in `.env` (the old file stays as `.env.previous`) and runs `update.sh --no-pull`:
    - a `pre-update` backup (the database is started first if it was stopped), skipped only on the very first start, when there is no database volume yet;
    - a restart;
-   - a wait until every service is healthy. The app applies database migrations when it starts.
+   - a wait (at most 5 minutes) until every service is healthy. The app applies database migrations when it starts.
+4. If that fails before the app was restarted (for example, the backup fails), `.env` goes back to the previous image and nothing else changed. **If the new image started but did not become healthy, the script switches back to the previous image by itself** (it is still on the server) and waits for it (D42). The workflow then fails with "Rolled back to …", so you see it. Database migrations are not undone; if the new version's migrations broke something, restore the `pre-update` snapshot (step 7).
 
-   If this fails before the app was restarted (for example, the backup fails), `.env` goes back to the previous image.
-
-Until the repository variable `DEPLOY_ENABLED` is `true`, the workflow stops with a notice ("Deploy skipped") and changes nothing, so it is safe to leave in place before the server exists. It also refuses to run from any branch other than `main`.
+Until the repository variable `DEPLOY_ENABLED` is `true`, the workflow stops with a notice ("Deploy skipped") and changes nothing. It also refuses to run from any branch other than `main`.
 
 ## Before you start
 
 1. **Server:** Ubuntu 24.04 with your SSH public key installed for root (most providers ask for it when ordering).
-2. **DNS (Cloudflare, D1):** `A` records for `gliagora.com` and `www` pointing to the server's IPv4 address, all **DNS only** (grey cloud). If the server has IPv6, add the `AAAA` records only after the IPv6 check in step 5 has passed. Add `CAA 0 issue "letsencrypt.org"`. Caddy needs these to get certificates.
-3. **Deploy key:** on your computer, create a key pair used only by the Deploy workflow:
+2. **DNS (Cloudflare, D1):** `A` (and, if the server has IPv6, `AAAA`) records for `gliagora.com`, and `www` as a `CNAME` to it, all **DNS only** (grey cloud). Caddy needs these to get certificates. Add `CAA 0 issue "letsencrypt.org"`. With an `AAAA` record, Let's Encrypt checks over IPv6 first, so IPv6 must work on the server before the first deploy; the IPv6 check in step 5 confirms that Caddy also sees IPv6 visitors' real addresses.
+3. **Deploy key:** on your computer, create a key pair used only by the Deploy workflow, outside the repository folder:
 
    ```sh
    ssh-keygen -t ed25519 -N '' -C gliagora-deploy -f ~/.ssh/gliagora-deploy
    ```
 
-   `~/.ssh/gliagora-deploy.pub` goes to the server (step 1). `~/.ssh/gliagora-deploy` (the private key) goes only into a GitHub secret (step 4); delete your local copy afterwards. Never create it inside the repository folder.
+   `~/.ssh/gliagora-deploy.pub` goes to the server (step 1). `~/.ssh/gliagora-deploy` (the private key) goes only into a GitHub secret (step 4); delete your local copy afterwards.
 
 ## 1. Harden the server (once)
 
@@ -64,17 +69,19 @@ From your computer:
 
 ```sh
 scp deploy/setup-server.sh root@<server-ip>:/root/
-ssh -t root@<server-ip> "ADMIN_USER=gliagora DEPLOY_PUBLIC_KEY='$(cat ~/.ssh/gliagora-deploy.pub)' bash /root/setup-server.sh"
+ssh root@<server-ip> "ADMIN_USER=gliagora DEPLOY_PUBLIC_KEY='$(cat ~/.ssh/gliagora-deploy.pub)' bash /root/setup-server.sh"
 ```
 
 The script:
 
-- copies root's SSH key to the new user `gliagora` and asks for a sudo password (store it in the password manager);
-- turns off root and password logins;
-- installs the deploy key, restricted to `deploy-remote.sh`;
-- lets `gliagora` run `update.sh --no-pull` as root without a password, which the deploy needs for the backup.
+- installs updates and turns on automatic security updates (with a reboot at 01:30 UTC when an update needs one);
+- copies root's SSH keys to the new admin user `gliagora`, who uses `sudo` without a password (D42);
+- turns off root and password logins (`/etc/ssh/sshd_config.d/00-gliagora.conf`, read before the provider's files, so its values win) and lets only `gliagora` and `deploy` log in;
+- opens only 22 (rate-limited), 80 and 443 in the firewall, and starts fail2ban;
+- installs Docker, with the network's MTU where the server's network is smaller than 1500;
+- creates the user `deploy` with the deploy key, restricted to `deploy-remote.sh`, and its one sudo rule.
 
-**Before closing that session**, open a second terminal and check `ssh gliagora@<server-ip>` and `sudo -v`.
+**Before closing that session**, check in a second terminal that `ssh gliagora@<server-ip>` works and that `sudo -n true && echo ok` prints `ok`. If `/var/run/reboot-required` exists afterwards, reboot once (`sudo reboot`) before continuing.
 
 ## 2. Prepare the stack (once)
 
@@ -86,17 +93,29 @@ scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/postgres deploy/.env.exam
   gliagora@<server-ip>:/opt/gliagora/
 ```
 
-On the server, in `/opt/gliagora`:
+On the server, in `/opt/gliagora`, create `.env` with four new secrets. They are generated on the server and never shown; nobody needs to know them:
 
 ```sh
-cp .env.example .env && chmod 600 .env
-openssl rand -hex 32          # run four times; paste into POSTGRES_PASSWORD, APP_DB_PASSWORD, PAYLOAD_SECRET, ALTCHA_HMAC_KEY
-nano .env
-
-docker run --rm -it caddy:2.11.4-alpine caddy hash-password    # choose the second password
-cp admin-auth.caddy.example admin-auth.caddy && chmod 600 admin-auth.caddy
-nano admin-auth.caddy         # paste the hash; keep or change the user name
+cd /opt/gliagora
+umask 077
+while IFS= read -r line; do
+  case "$line" in
+    POSTGRES_PASSWORD=* | APP_DB_PASSWORD=* | PAYLOAD_SECRET=* | ALTCHA_HMAC_KEY=*)
+      printf '%s=%s\n' "${line%%=*}" "$(openssl rand -hex 32)" ;;
+    *) printf '%s\n' "$line" ;;
+  esac
+done < .env.example > .env
 ```
+
+Then the **site-wide password** (the user name is `editor`): it is generated into a file only root can read, and only its hash goes into `admin-auth.caddy`:
+
+```sh
+sudo sh -c 'umask 077 && tr -dc A-Za-z0-9 < /dev/urandom | head -c 32 > /root/site-password'
+hash=$(sudo cat /root/site-password | docker run --rm -i caddy:2.11.4-alpine caddy hash-password)
+printf 'basic_auth {\n\teditor %s\n}\n' "$hash" > admin-auth.caddy
+```
+
+Show it in your own terminal, to save it in your password manager: `ssh -t gliagora@<server-ip> sudo cat /root/site-password`. Once it is saved, you may delete the file (`sudo rm /root/site-password`); the server needs only the hash. To change the password later, run the same three commands and restart Caddy (`docker compose -f compose.prod.yml restart caddy`).
 
 Leave the `SMTP_*` settings empty until the Turkish mailbox is set up at M2 (its SMTP server sends the email; PLAN §11.7.1, D22): until then the app sends no email (the outcome of suggestions, the acknowledgement of reports) and writes no address to its logs. Admin password resets do not arrive either; reset a password by hand.
 
@@ -112,16 +131,18 @@ Backups are encrypted with restic (PLAN §11.7.1, §18.2). Each night at 00:30 U
 
 On the 1st of each month the latest backup is restored into a temporary container, with no network, and checked.
 
-On the server, in `/opt/gliagora/backup`:
+On the server, in `/opt/gliagora/backup`, create the settings and the **backup password** (in a file only root can read):
 
 ```sh
+cd /opt/gliagora/backup
 cp backup.env.example backup.env && chmod 600 backup.env
-openssl rand -base64 33 > restic-password && chmod 600 restic-password
-cat restic-password           # store this in the password manager NOW: without it the backups are unreadable
+sudo sh -c 'umask 077 && openssl rand -base64 33 > /opt/gliagora/backup/restic-password'
 sudo ./backup.sh init         # create the repository
 sudo cp systemd/gliagora-*.service systemd/gliagora-*.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 ```
+
+**Save the backup password in your password manager now**: without it the backups are unreadable, also for you. Show it in your own terminal with `ssh -t gliagora@<server-ip> sudo cat /opt/gliagora/backup/restic-password`. Unlike the site-wide password, this file stays on the server: the nightly backup needs it.
 
 The timers are switched on after the first deploy (step 5).
 
@@ -135,37 +156,31 @@ To read that copy, install restic and run `restic -r ~/gliagora-backups/restic s
 
 **Second repository (from M2).** Set `COPY_REPOSITORY` and `COPY_PASSWORD_FILE` in `backup.env`. Each nightly run then also copies the snapshots there and applies the same retention.
 
-**Checking backups:** `cat /var/backups/gliagora/last-success` shows the time of the last good backup; `journalctl -u gliagora-backup` shows the logs. Alerts are decided during S (D23).
+**Checking backups:** `cat /var/backups/gliagora/last-success` shows the time of the last good backup; `journalctl -u gliagora-backup` shows the logs. Emails on success and failure come at M2 with the mailbox (D42); until then, check `last-success` now and then.
 
 ## 4. Connect GitHub (once)
 
-The deploy key must be usable only by the Deploy workflow on `main`, and each deploy should need your approval. GitHub provides this with an **environment**.
+GitHub Free has no environments (with branch rules and required reviewers) for a private repository, so the deploy settings are **repository secrets** (D42). Any workflow on any branch of the repository could read them; they unlock little (a login as `deploy`, which can only deploy a `main` or `sha-` image of this repository), and only the operator can push to the repository.
 
-**Check first (decided during S, D23):** environments with branch rules and required reviewers depend on the repository's visibility and your GitHub plan. On GitHub Free a private repository has no environments. Look up GitHub's current rules ("Managing environments for deployment"), then choose: make the repository public (it contains no secrets), move to a paid plan, or accept repository secrets without the gate. With plain repository secrets, any workflow on any branch could read the deploy key.
-
-With environments available:
-
-1. **Settings → Environments → New environment** `production`:
-   - *Deployment branches and tags*: selected branches, `main` only;
-   - *Required reviewers*: yourself, so every deploy waits for your approval.
-2. In that environment, add four **environment secrets**:
+1. **Settings → Secrets and variables → Actions → Secrets → New repository secret**, four times (or `gh secret set NAME` on your computer, which reads the value from stdin):
 
    | Secret | Value |
    | --- | --- |
    | `DEPLOY_HOST` | The server's IP address (deploys then keep working even if DNS breaks) |
-   | `DEPLOY_USER` | `gliagora` |
+   | `DEPLOY_USER` | `deploy` |
    | `DEPLOY_SSH_KEY` | The whole content of the private key file `~/.ssh/gliagora-deploy` |
    | `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan -t ed25519 <server-ip>` run on your computer, with the same IP as `DEPLOY_HOST` |
 
    Check `DEPLOY_KNOWN_HOSTS` before saving it: on the server, `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` shows the fingerprint, and `ssh-keygen -lf <(ssh-keyscan -t ed25519 <server-ip>)` on your computer must show the same one. The workflow refuses any other host key. If the IP changes, redo both secrets.
-3. **Settings → Secrets and variables → Actions → Variables → New repository variable** `DEPLOY_ENABLED` = `true`. This switches the workflow on. Set it to anything else to switch deploys off again.
+2. **Settings → Secrets and variables → Actions → Variables → New repository variable** `DEPLOY_ENABLED` = `true`. This switches the workflow on. Set it to anything else to switch deploys off again.
+3. Delete your local copy of the private key (`rm ~/.ssh/gliagora-deploy`). If the key is ever lost or exposed, make a new one, run `setup-server.sh` again with the new `DEPLOY_PUBLIC_KEY` (it replaces the old key) and update `DEPLOY_SSH_KEY`.
 
 ## 5. First deploy (once)
 
-1. GitHub: **Actions → Deploy → Run workflow**, tag `main`. The log ends with "Deployed ghcr.io/…:main".
-2. Check https://gliagora.com/health/ (`{"status":"ok"}`, without a password) and https://gliagora.com/ (asks for the second password, then redirects to `/en/`): the whole site stays private until M2 (D32, PLAN §18.2). Signed out, `curl -s -o /dev/null -w '%{http_code}\n' -X POST https://gliagora.com/api/users/login/` must answer `401` (from Caddy, before the app).
-   If the server has IPv6, check that Caddy sees the real address of IPv6 visitors (the form rate limit and the access log depend on it; `compose.prod.yml` enables IPv6 on the stack's network for this). From a computer with IPv6, run `curl -6 --resolve gliagora.com:443:[<server IPv6>] https://gliagora.com/health/`; then, on the server in `/opt/gliagora`, `docker compose -f compose.prod.yml exec caddy tail -n 1 /var/log/caddy/access.log` must show your own IPv6 address, masked to its first 48 bits, as `remote_ip`, not a `172.x` address. Publish the `AAAA` records only once this passes; until then the site is reached over IPv4 only.
-3. Open https://gliagora.com/admin/, enter the second password, and create the first editor account. The page must say "Create first user"; if it shows the sign-in form instead, an account exists that you did not make: stop, change the second password (`admin-auth.caddy`, then restart Caddy), delete the database with `docker compose -f compose.prod.yml down` and `docker volume rm gliagora_db-data` (it holds nothing else yet), and deploy again. Then sign in, open Suggestions (empty for now), then a country (e.g. Türkiye), type a letter into its name and delete it again, and save: the admin's own requests to `/api` must work without asking for the second password again (the browser reuses it).
+1. GitHub: **Actions → Deploy → Run workflow**, tag `main`. The log ends with "Deployed ghcr.io/…:sha-…".
+2. Check https://gliagora.com/health/ (`{"status":"ok"}`, without a password) and https://gliagora.com/ (asks for the site-wide password, then redirects to `/en/`): the whole site stays private until M2 (D32, PLAN §18.2). Signed out, `curl -s -o /dev/null -w '%{http_code}\n' -X POST https://gliagora.com/api/users/login/` must answer `401` (from Caddy, before the app).
+   If the server has IPv6, check that Caddy sees the real address of IPv6 visitors (the form rate limit and the access log depend on it; `compose.prod.yml` enables IPv6 on the stack's network for this). From a computer with IPv6, run `curl -6 --resolve gliagora.com:443:[<server IPv6>] https://gliagora.com/health/`; then, on the server in `/opt/gliagora`, `docker compose -f compose.prod.yml exec caddy tail -n 1 /var/log/caddy/access.log` must show your own IPv6 address, masked to its first 48 bits, as `remote_ip`, not a `172.x` address.
+3. Open https://gliagora.com/admin/, enter the site-wide password, and create the first editor account. The page must say "Create first user"; if it shows the sign-in form instead, an account exists that you did not make: stop, change the site-wide password (step 2), delete the database with `docker compose -f compose.prod.yml down` and `docker volume rm gliagora_db-data` (it holds nothing else yet), and deploy again. Then sign in, open Suggestions (empty for now), then a country (e.g. Türkiye), type a letter into its name and delete it again, and save: the admin's own requests to `/api` must work without asking for the site-wide password again (the browser reuses it).
 4. On the server, take the first backup, test it and switch on the timers:
 
    ```sh
@@ -176,11 +191,13 @@ With environments available:
    systemctl list-timers 'gliagora-*'
    ```
 
+The app's scheduled jobs (`PAYLOAD_JOBS_AUTORUN` in `compose.prod.yml`) run from the first start: every minute the maintenance tick (the hourly expiry of listings, the retention purges; the outcome and acknowledgement emails wait for `SMTP_HOST`, M2), and every night at 03:30 UTC the check for a new ROR release, whose first run imports all institutions (about 15 minutes).
+
 ## 6. Update and roll back
 
 CI pushes a new image for every merge to `main`, tagged `main` and `sha-` plus the first 7 characters of the commit. To update, run the Deploy workflow with `main`, or with the `sha-` tag of a specific merge. `.env` then names the exact `sha-` tag that is running.
 
-To roll back, run the Deploy workflow with the previous `sha-` tag. On the server, without GitHub, `cd /opt/gliagora && cp .env.previous .env && sudo ./update.sh --no-pull` goes back to the image that ran before the last deploy; it is still on the server. Migrations are not undone automatically. If one damaged data, restore the `pre-update` snapshot (below).
+If the new image does not become healthy, the deploy switches back to the previous one by itself (see "How deploys work"). To go back to an older version on purpose, run the Deploy workflow with its `sha-` tag. On the server, without GitHub, `cd /opt/gliagora && cp .env.previous .env && sudo ./update.sh --no-pull` goes back to the image that ran before the last deploy; it is still on the server. Migrations are not undone automatically. If one damaged data, restore the `pre-update` snapshot (below).
 
 ## 7. Restore
 
@@ -198,10 +215,10 @@ sudo ./restore.sh config latest /root/restored  # get the backed-up .env and set
 
 1. Run steps 1 and 2 (with a new deploy key if the old one is lost). Then redo step 4 for the new server: `DEPLOY_HOST` and `DEPLOY_KNOWN_HOSTS` always change (new IP, new host key), and `DEPLOY_SSH_KEY` if you made a new key.
 2. Install the timer units as in step 3, without `backup.sh init`: `sudo cp systemd/gliagora-*.service systemd/gliagora-*.timer /etc/systemd/system/ && sudo systemctl daemon-reload`.
-3. Copy the repository back to `/var/backups/gliagora/restic` (from your computer's copy or the second VDS). In `/opt/gliagora/backup`, create `backup.env` from `backup.env.example` and put the password in `restic-password` (both mode 600).
+3. Copy the repository back to `/var/backups/gliagora/restic` (from your computer's copy or the second VDS). In `/opt/gliagora/backup`, create `backup.env` from `backup.env.example` and put the backup password from your password manager in `restic-password` (readable only by root).
 4. Recover `.env` and `admin-auth.caddy` with `sudo ./restore.sh config latest /root/restored` and copy them to `/opt/gliagora` (mode 600).
 5. Run the Deploy workflow with the last good `sha-` tag: it starts the stack with an empty database.
-6. Restore the data with `sudo ./restore.sh database latest` (it replaces the empty database, with any account made in between), then switch on the timers (step 5). Until then the database has no editor account; the second password keeps its first-account route closed.
+6. Restore the data with `sudo ./restore.sh database latest` (it replaces the empty database, with any account made in between), then switch on the timers (step 5). Until then the database has no editor account; the site-wide password keeps its first-account route closed.
 
 ## Useful commands
 
@@ -211,14 +228,16 @@ docker compose -f compose.prod.yml logs -f app      # app logs
 docker compose -f compose.prod.yml restart caddy    # after editing the Caddyfile or admin-auth.caddy
 sudo ufw status verbose                             # firewall
 sudo fail2ban-client status sshd                    # blocked SSH addresses
+sudo journalctl -t sudo | grep deploy-remote        # every deploy the deploy user started
 ```
 
-## Decided during the server setup (S, D23)
+## Decided during the server setup (S, D42)
 
-- Staging (`staging.gliagora.com`): the same images with their own database, basic auth and `noindex`, or none.
-- Automatic rollback when an update fails its health checks. Until then, `update.sh` stops and explains how to roll back by hand.
-- Rate limits in Caddy, which need a plugin and a custom Caddy build. Until then, the second password guards `/admin` and `/api` (so also Payload's sign-in, password-reset and first-account routes), Payload locks an account for 15 minutes after 5 failed sign-ins, and sends at most one reset email per account every 15 minutes.
-- Backup alerts (success and failure emails).
-- Protection of the deploy secrets: a GitHub environment limited to `main` with a required reviewer (needs a public repository or a paid GitHub plan; see step 4).
+- **Staging:** none while the site is private; production, behind the site-wide password, doubles as staging. A separate staging is reconsidered before the site goes public.
+- **Automatic rollback:** built into `deploy-remote.sh` (see "How deploys work").
+- **Rate limits in Caddy** (for the auth routes and `/en/search/`; they need a plugin and a custom Caddy build): on the pre-launch checklist (PLAN §20). Until then, the site-wide password guards `/admin` and `/api` (so also Payload's sign-in, password-reset and first-account routes), Payload locks an account for 15 minutes after 5 failed sign-ins and sends at most one reset email per account every 15 minutes, the public forms have their own rate limits, and search runs at most two institution searches at a time, each for at most 2 seconds.
+- **Backup alerts** (success and failure emails): at M2, with the mailbox.
+- **Deploy secrets:** repository secrets (step 4), a deploy user that is not an admin, and the pinned host key.
+- **Admin sudo:** without a password (see "Who logs in").
 
 listmonk (M2) and Umami each get their own database and user in the same PostgreSQL later.

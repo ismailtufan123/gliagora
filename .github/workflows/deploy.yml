@@ -7,6 +7,13 @@
 #
 # No long-lived registry credentials: the job's own GITHUB_TOKEN (valid only while the job runs)
 # is sent over SSH to deploy/deploy-remote.sh, which pulls with it and discards it.
+#
+# The DEPLOY_* values are repository secrets: GitHub Free has no environments for a private
+# repository (D42), so a workflow on any branch of this repository could read them. What they
+# unlock is small: the key logs in as the user `deploy`, which may run only deploy-remote.sh, which
+# only deploys a `main` or `sha-` image from this repository's GHCR package. Whoever can push to
+# the repository could still deploy an image of their own, so only the operator has write access.
+# The server's host key is pinned in DEPLOY_KNOWN_HOSTS.
 name: Deploy
 
 on:
@@ -59,9 +66,6 @@ jobs:
     if: needs.check.outputs.ready == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    # The DEPLOY_* secrets live in this environment, which only `main` may use and which can require
-    # an approval (deploy/README.md, step 4).
-    environment: production
     permissions:
       packages: read
     steps:
@@ -80,7 +84,7 @@ jobs:
             [[ -n "${!name}" ]] || missing+=("$name")
           done
           if (( ${#missing[@]} )); then
-            echo "::error title=Deploy misconfigured::Missing secrets in the production environment: ${missing[*]}. Nothing was deployed."
+            echo "::error title=Deploy misconfigured::Missing repository secrets: ${missing[*]}. Nothing was deployed."
             exit 1
           fi
           install -d -m 700 ~/.ssh

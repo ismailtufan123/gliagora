@@ -2,12 +2,14 @@
 # Update the site to the image named by APP_IMAGE in .env (PLAN §11.5):
 #   1. takes an encrypted backup (tag: pre-update), because the new version may migrate the database;
 #   2. pulls the image;
-#   3. restarts the stack and waits until every service reports healthy.
+#   3. restarts the stack and waits (at most 5 minutes) until every service reports healthy.
 #
 #   sudo /opt/gliagora/update.sh --no-pull   # use images already on the server (the deploy
 #                                            # workflow pulls them first; also for a rollback)
 #   sudo /opt/gliagora/update.sh             # pull too (works only for public images, because
 #                                            # the server keeps no registry login, D27)
+# Runs as root (the backup repository is root's). The Deploy workflow runs it through
+# deploy-remote.sh, which also rolls back by itself when the new image does not become healthy.
 set -euo pipefail
 
 APP_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -33,14 +35,15 @@ else
 fi
 
 log "3/3 Restarting"
-if ! compose up -d --wait --remove-orphans; then
+if ! compose up -d --wait --wait-timeout 300 --remove-orphans; then
   compose ps
   cat >&2 <<'MSG'
 
 The update did not become healthy. Check `docker compose -f compose.prod.yml logs app`.
-To roll back: run the Deploy workflow (GitHub → Actions → Deploy) with the previous sha- tag, or,
-without GitHub, `cp .env.previous .env && sudo ./update.sh --no-pull` (the previous image is still
-on the server; the server keeps no registry login, D27). If a migration damaged data, restore the
+A deploy from the Deploy workflow now switches back to the previous image by itself. After a
+manual update, roll back with `cp .env.previous .env && sudo ./update.sh --no-pull` (the previous
+image is still on the server; the server keeps no registry login, D27), or run the Deploy workflow
+(GitHub → Actions → Deploy) with the previous sha- tag. If a migration damaged data, restore the
 newest 'pre-update' snapshot with `backup/restore.sh database <snapshot-id>` (see `restore.sh list`).
 MSG
   exit 1
