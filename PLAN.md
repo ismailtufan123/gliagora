@@ -236,7 +236,7 @@ How 410 works (built in M1): `src/proxy.ts` runs before every page under `/en/` 
 | **ES / DE / FR (each)** | ≥10% of sessions from that language for 3 consecutive months | A native reviewer for that language |
 | **Phase 4** | ≥10,000 subscribers **or** ≥50,000 monthly visitors; ≥3 speakers committed | Tax registration before any revenue; talk-platform decision (§15.2) |
 
-The public-launch gate also decides when jobs and the other sections go public: from M2 until it is met, only the coming-soon page, the newsletter signup and the legal pages are public (D39).
+The public-launch gate also decides when jobs and the other sections go public: from M2 until it is met, only the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved are public (D39, D41).
 
 ---
 
@@ -1019,7 +1019,7 @@ Practical rules for Option T:
 |---|---|---|---|
 | Local | `localhost` | Generated fake data | Developer |
 | Staging | `staging.gliagora.com` | Generated fake data; email only to an allowlist | Basic auth, `noindex`; reachable from a phone for review |
-| Production | `gliagora.com` | Real | Private until M2 (D32); from M2 the coming-soon page, the newsletter signup and the legal pages are public, everything else from the M6 launch (D39); admin with two factors |
+| Production | `gliagora.com` | Real | Private until M2 (D32); from M2 the coming-soon page, the newsletter signup, the About page and the approved legal texts are public, everything else from the M6 launch (D39, D41); admin with two factors |
 
 - Push to `main` → CI (lint, type check, unit tests, Playwright + axe, Lighthouse budgets) → image build and smoke test → image pushed to GHCR (tags `main` and `sha-<commit>`).
 - Deploys run from the manual **Deploy** workflow (Actions → Deploy → Run workflow, with an image tag) (D27):
@@ -1110,6 +1110,7 @@ Order checklist: data centre in Türkiye; renewal price after any campaign perio
 |---|---|
 | Name | "Glia Notes" (D20); subtitle "the monthly Gliagora newsletter" |
 | Cadence | Monthly, first Tuesday, 13:00 UTC (morning in the Americas, afternoon in Europe and Türkiye, evening in East Asia) `[DECISION]` |
+| First issue | No issue before the M6 public launch (D41): signups open at M2, the welcome email tells subscribers that the first issue arrives at the launch, and the first issue is the launch issue |
 | Sections | 1 Opening note (2–3 sentences) → 2 Deadlines in the next 45 days → 3 Selected positions (10–15, balanced by subfield and region) → 4 Papers of the month (5–8, one-line takeaways) → 5 Funding spotlight (1–2) → 6 News in brief (3–5) → 7 From Learn (1) → footer |
 | Footer | Why you get this; unsubscribe (one click); manage preferences (Phase 2); contact and legal notice; privacy links; sponsor disclosure (Phase 4) |
 | Format | 600px single column; system fonts; dark-mode-safe colours; alt text; plain-text part; HTML under 100 KB (Gmail clips larger messages); direct links to employers without tracking parameters; UTM tags only on links to Gliagora pages; no tracking pixels |
@@ -1390,7 +1391,7 @@ Server Components by default (lists and filters render on the server; only contr
 
 ## 20. Build roadmap
 
-Milestones run in this order: M0 → M1 → M3 → M4 (built and tested locally while S waits, D38) → **S (one-time server setup)** → one-time lawyer review → M2 → M4b → M5 → M6 → M7 … M14 (D23, D32, D38, D39). The server setup came after M3 so that nothing depends on a live server earlier; M2 (newsletter) follows S and the lawyer review because it needs the mailbox, listmonk and the server, and it is when the first legal texts go live. The whole site stays private until M2 (D32). At M2 only the coming-soon page, the newsletter signup and the legal pages go public; jobs and the other sections stay private until the M6 public launch, once the §3.4 gate is met (D39).
+Milestones run in this order: M0 → M1 → M3 → M4 (built and tested locally while S waits, D38) → **S (one-time server setup)** → one-time lawyer review → M2 → M4b → M5 → M6 → M7 … M14 (D23, D32, D38, D39). The server setup came after M3 so that nothing depends on a live server earlier; M2 (newsletter) follows S and the lawyer review because it needs the mailbox, listmonk and the server, and it is when the first legal texts go live. The whole site stays private until M2 (D32). At M2 only the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public; jobs and the other sections stay private until the M6 public launch, once the §3.4 gate is met (D39, D41).
 
 Until S, each milestone ends merged to `main` with CI green and its image in GHCR. From S on, each milestone ends deployed to production (and to staging, if S decides to run one).
 
@@ -1400,11 +1401,11 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 | M1 | Design system and shell | Tokens, fonts, header and mega-menu, footer, skip link, dark mode, `/en/` routing, i18n scaffolding, 404/410, legal pages (EN + TR), About with the name story | Shell site with legal pages | 1–2 weeks |
 | M3 | Taxonomy and institutions | Taxonomy seed with synonyms; ROR import job; country sets; institution pages; hub skeletons | Admin-complete data layer; hubs `noindex` | 1 week |
 | S | Server setup (one-time, after M3 and the local M4 work, D38) | Turkish VDS (4 GB, §11.7.1) hardened with `deploy/setup-server.sh`; DNS; production stack with Caddy; backups and restore test switched on; deploy workflow secrets. Decided during S: staging, automatic rollback on failed health checks, Caddy rate limits, backup alerts, protection of the deploy secrets | Production server running; first deploy through the deploy workflow; the site stays private (D32), and how its private sections stay private once the M2 pages are public is set up at S or M2 (D39) | 0.5–1 week |
-| M2 | Newsletter | Turkish mailbox and SMTP relay; SPF/DKIM/DMARC; listmonk; double opt-in pages; consent log; KVKK texts; unsubscribe headers; archive template; MX moves from Cloudflare Email Routing to the Turkish mail host before signups open | Signups open before content exists: the coming-soon page, the newsletter signup and the legal pages go public; everything else stays private until M6 (D39) | 1–2 weeks |
+| M2 | Newsletter | Turkish mailbox and SMTP relay; SPF/DKIM/DMARC; listmonk; double opt-in pages; consent log; KVKK texts; unsubscribe headers; archive template; MX moves from Cloudflare Email Routing to the Turkish mail host before signups open | Signups open before content exists: the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public (unapproved drafts stay private), with a reduced header and footer that link only to public pages; until M6, links to the suggest and report forms point to `hello@gliagora.com`; everything else stays private until M6 (D39, D41). No Glia Notes issue before M6 (D41) | 1–2 weeks |
 | M4 | Jobs | Job collection; review queue v1; "Suggest a listing"; list, filters, chips, URL state; detail; closing soon; auto-expiry; sitemaps; basic search | Jobs window built and tested locally with fake data (D38); deployed at S, private; public at the M6 launch, once the §3.4 gate is met (D39) | 2–3 weeks |
 | M4b | Accounts and self-service privacy | Member sign-in (Google, ORCID, email link); saved items; digest settings and subfield preferences; export and delete; inactivity clean-up; automatic acknowledgements for requests | Accounts ready on staging, released with M6 | 1.5–2 weeks |
 | M5 | Map | Basemap extract and assets; `/en/map/`; jobs split view; clustering; institution panel; list sync | Map deployed; public with M6 (D39) | 1–2 weeks |
-| M6 | Home and public launch | Home with static poster hero, live counts, latest positions and deadlines, windows overview, newsletter blocks; pre-launch checklist below and the §3.4 gate | **Public launch (Phase 1a)**: jobs and the other sections go public once the §3.4 gate is met (D39) | 1 week + seeding |
+| M6 | Home and public launch | Home with static poster hero, live counts, latest positions and deadlines, windows overview, newsletter blocks; the full header and footer, and links to the suggest and report forms again in place of email (D41); the first Glia Notes issue, the launch issue (D41); pre-launch checklist below and the §3.4 gate | **Public launch (Phase 1a)**: jobs and the other sections go public once the §3.4 gate is met (D39) | 1 week + seeding |
 | M7 | Curation automation | Source register; allowed monitors; dedupe; link checker; dashboard widgets; local tag suggester; optional AI tier | Faster curation | 1–2 weeks |
 | M8 | Events and alerts | Events, deadlines, list and month views, iCal feeds, add to calendar, eligible Event markup; saved searches with weekly job alerts | Events window and alerts live | 2–3 weeks |
 | M9 | Funding | Programs, calls, country sets, eligibility finder, last-verified rules and alerts | Funding window live | 2 weeks |
@@ -1482,7 +1483,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 - A rate limit for `/en/search/` in Caddy: decided at S (it needs a plugin and a custom Caddy build).
 - The IPv6 check (`deploy/README.md` step 5) at S, before any `AAAA` record.
 - B8 (the KVKK basis for the optional email on the suggest form) stays open for the lawyer review.
-- How the private sections stay private while the M2 pages are public (D39): set up at S or M2.
+- How the private sections stay private while the M2 pages are public (D39): set up at M2. D41 decides what is public then (the coming-soon page, the newsletter signup, the About page and the approved legal texts) and how those pages link (a reduced header and footer; email in place of the forms).
 
 **Pre-launch checklist** (after S, before the M6 public launch; M6 works through it together with the §3.4 gate):
 
@@ -1491,7 +1492,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 - Real-device check on a mid-range Android phone over throttled 4G (§17.2).
 - Legal texts: the one-time lawyer review of the questions in `docs/legal-open-questions.md` (group b) happens between S and M2 (D32); the operator then approves each text (D28). The contact pages, privacy policy, KVKK aydınlatma metni and açık rıza metni go live at M2; all other required legal pages are live before M6 (§3.4).
 - axe: 0 serious or critical issues; SPF, DKIM and DMARC pass; backup restore drill passed (§3.4).
-- Private until the launch (D39): jobs and the other sections (search, institution pages, subfield hubs, the suggest and report forms, accounts) go public only at the M6 launch, once the §3.4 gate is met (at least 150 active verified positions across at least 25 countries, and the rest of the gate).
+- Private until the launch (D39): jobs and the other sections (search, institution pages, subfield hubs, the suggest and report forms, accounts) go public only at the M6 launch, once the §3.4 gate is met (at least 150 active verified positions across at least 25 countries, and the rest of the gate). At the launch, the reduced M2 header and footer give way to the full ones, and the links that point to `hello@gliagora.com` in place of the suggest and report forms point to the forms again (D41).
 
 Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 2026, the public launch (M6) lands around the turn of the year (late December to early January), still inside the PhD application season.
 
@@ -1606,6 +1607,7 @@ Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 
 | D38 | S is postponed by about two days; no work on the server until the operator says so. M4 starts now and is built and tested locally with fake data only; content entry waits for the server. Parts that need production (scheduled jobs, emails) are built and tested locally but not deployed | §20 |
 | D39 | Approved after M4 (2026-09-28): at M2 only the coming-soon page, the newsletter signup and the legal pages go public (each legal text only once the operator has approved it, D28; D32 names those due at M2). Jobs and all other sections (the windows, search, institution pages, subfield hubs, the suggest and report forms) stay private until the public-launch gate in §3.4 is met (at least 150 active verified positions across at least 25 countries, and the rest of that gate), that is, until the M6 public launch. How the private sections are kept private while those pages are public is set up at S or M2 | §3.4, §11.4, §11.5, §20, §22.2, CLAUDE.md |
 | D40 | Approved after M4 (2026-09-28), the M4 review decisions: a subfield hub is indexed (robots, sitemap, subfield index) only when its introduction has at least 150 words; the jobs feed's `guid` stays the job's short address; the jobs list keeps the chips below the count (a deliberate difference from the §9.3 sketch); no `loading.tsx` skeleton and no offline banner (the reading of §3.2 as built in M4.3); institution pages link to "Report a problem"; a job's deadline time zone is prefilled from its institution's location and the editor can still change it; the Turkish interface strings are collected in `docs/tr-strings-review.md` for one review pass by a native speaker. The hub rule, the institution link, the time-zone prefill and the strings table are built in follow-up steps right after M4, before S | §2.2, §3.2, §7.5, §9.3, §16.3, §20 |
+| D41 | Decided before S (2026-09-30), for M2: (1) until M6, the site's links to the suggest and report forms point to email (`hello@gliagora.com`), since the forms stay private until the launch (D39); (2) only legal texts the operator has approved go public; unapproved drafts stay private (D28); (3) the About page goes public at M2; (4) the M2 pages get a reduced header and footer with links to public pages only; (5) no Glia Notes issue before M6: the welcome email tells subscribers that the first issue arrives at the launch, and the first issue is the launch issue | §3.4, §11.5, §13, §20, CLAUDE.md |
 
 ---
 
