@@ -57,7 +57,7 @@ The production server: Hosting Türkiye Micro Paket, Istanbul, Ubuntu 24.04, 3 v
 
 - Small, reviewable steps: one branch from the latest `main` and one pull request per step. The PR description summarises what changed, how to run it and what to check.
 - Proceed through approved milestone steps without waiting for review. Merge each step's PR yourself once `pnpm lint`, `pnpm typecheck`, `pnpm test` and the build pass (and CI is green), then continue from the updated `main`.
-- Before every merge, check that the latest CI run on `main` is green (`gh run list --branch main --limit 1`). If it is red, fix `main` first; never merge on top of a red `main`.
+- Before every merge, check that the latest CI run on `main` is green (`gh run list --branch main --workflow CI --limit 1`; without `--workflow CI` it may show a Deploy run). If it is red, fix `main` first; never merge on top of a red `main`.
 - Stop and ask only before:
   - (a) anything that touches the production server (running commands on it or deploying to it);
   - (b) using real personal data;
