@@ -173,6 +173,17 @@ describe.skipIf(!ADMIN_URL)('search on a scratch database', () => {
   afterAll(async () => {
     await db?.$client.end()
     if (admin) {
+      // pg's Pool.end() resolves while its connections are still closing. Dropping the database
+      // WITH (FORCE) at that moment ends them with an error (57P01) that the pool passes on as an
+      // unhandled 'error' event, which fails the run although every test passed. So wait until the
+      // server has no connection to the database left; FORCE is only the fallback.
+      for (let tries = 0; tries < 50; tries++) {
+        const { rows } = await admin.execute<{ n: number }>(
+          sql`select count(*)::int as n from pg_stat_activity where datname = ${name}`,
+        )
+        if (Number(rows[0]?.n ?? 0) === 0) break
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
       await admin.execute(sql.raw(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`))
       await admin.execute(sql.raw(`DROP ROLE IF EXISTS ${name}`))
       await admin.$client.end()

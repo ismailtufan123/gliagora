@@ -280,6 +280,12 @@ test.describe('search dialog', () => {
       await expect(page.locator('html[data-js]')).toBeAttached()
       await page.keyboard.press('ControlOrMeta+k')
       await expect(dialog(page)).toBeVisible()
+      // The dialog fades in; measured halfway, its text would fail the contrast check.
+      await dialog(page).evaluate((element) =>
+        Promise.all(
+          element.getAnimations().map((animation) => animation.finished.catch(() => undefined)),
+        ),
+      )
       const results = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze()
