@@ -13,7 +13,7 @@ Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, even
 
 **M4 Jobs is built and tested locally** with fake data only (D38), including its scheduled work (the hourly expiry, the form-limit and retention purges, the outcome and acknowledgement emails), which runs only where `PAYLOAD_JOBS_AUTORUN` is `true` and sends email only once an SMTP server is configured (M2). The operator approved M4 on 2026-09-28. Nothing is deployed yet; content entry starts right after S. The M4 summary and the operator's decisions on its open points are at the end of the M4 notes (PLAN §20).
 
-**Next: the follow-up steps from the operator's decisions (D40) and an audit of the access rules of every Payload collection and global.** Then S, the one-time server setup, which starts only when the operator says so; M5 does not start before the operator says so either. Milestone order: M0 → M1 → M3 → M4 (local) → S → one-time lawyer review → M2 → M4b → … (PLAN §20, D32, D38, D39). The whole site stays private until M2 (D32); at M2 only the coming-soon page, the newsletter signup and the legal pages go public, and jobs and the other sections stay private until the M6 launch, once the §3.4 gate is met; how they stay private is set up at S or M2 (D39).
+**Next: the follow-up steps from the operator's decisions (D40) and an audit of the access rules of every Payload collection and global.** Then S, the one-time server setup, which starts only when the operator says so; M5 does not start before the operator says so either. Milestone order: M0 → M1 → M3 → M4 (local) → S → one-time lawyer review → M2 → M4b → … (PLAN §20, D32, D38, D39). The whole site stays private until M2 (D32); at M2 only the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public (with a reduced header and footer, and email in place of the suggest and report forms, D41), and jobs and the other sections stay private until the M6 launch, once the §3.4 gate is met; how they stay private is set up at M2 (D39, D41).
 
 The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM) is bought but not set up. Do not work on the server until the operator says so. Until then, work locally only; nothing may depend on a live server. The server files in `deploy/` are prepared but have never been run.
 
@@ -57,6 +57,7 @@ The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RA
 
 - Small, reviewable steps: one branch from the latest `main` and one pull request per step. The PR description summarises what changed, how to run it and what to check.
 - Proceed through approved milestone steps without waiting for review. Merge each step's PR yourself once `pnpm lint`, `pnpm typecheck`, `pnpm test` and the build pass (and CI is green), then continue from the updated `main`.
+- Before every merge, check that the latest CI run on `main` is green (`gh run list --branch main --limit 1`). If it is red, fix `main` first; never merge on top of a red `main`.
 - Stop and ask only before:
   - (a) anything that touches the production server (running commands on it or deploying to it);
   - (b) using real personal data;
