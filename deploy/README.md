@@ -110,10 +110,12 @@ done < .env.example > .env
 Then the **site-wide password** (the user name is `editor`): it is generated into a file only root can read, and only its hash goes into `admin-auth.caddy`:
 
 ```sh
-sudo sh -c 'umask 077 && tr -dc A-Za-z0-9 < /dev/urandom | head -c 32 > /root/site-password'
+sudo sh -c 'umask 077 && { tr -dc A-Za-z0-9 < /dev/urandom | head -c 32; echo; } > /root/site-password'
 hash=$(sudo cat /root/site-password | docker run --rm -i caddy:2.11.4-alpine caddy hash-password)
 printf 'basic_auth {\n\teditor %s\n}\n' "$hash" > admin-auth.caddy
 ```
+
+`caddy hash-password` reads one line from the pipe and fails ("Error: EOF") if the line does not end with a newline, hence the `echo`.
 
 Show it in your own terminal, to save it in your password manager: `ssh -t gliagora@<server-ip> sudo cat /root/site-password`. Once it is saved, you may delete the file (`sudo rm /root/site-password`); the server needs only the hash. To change the password later, run the same three commands and restart Caddy (`docker compose -f compose.prod.yml restart caddy`).
 
