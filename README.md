@@ -30,6 +30,7 @@ One TypeScript app: Next.js (App Router) with Payload CMS 3 inside it, on Postgr
 | `compose.yaml`            | Local PostgreSQL for development; Mailpit for emails (profile `mail`) |
 | `Dockerfile`              | Production image (built in CI, pulled by the server)            |
 | `.github/workflows/ci.yml` | CI: checks, image build, smoke test, push to GHCR              |
+| `.github/workflows/deploy.yml` | Deploy: the manual workflow that puts an image from GHCR on the server |
 | `deploy/`                 | Production server: setup script, Compose, Caddy ([runbook](deploy/README.md)) |
 
 ## Local development
@@ -111,3 +112,7 @@ The database schema only changes through committed migrations (PLAN §20).
 5. Commit the collection, the migration and the types together.
 
 If you add custom admin components, run `pnpm generate:importmap`.
+
+## Production
+
+Since 2026-09-30 the site runs on one server in Istanbul (Hosting Türkiye; `45.144.214.78`, `2a0f:85c1:7f5:6e::1`): Caddy, the app and PostgreSQL in Docker Compose. It stays behind a site-wide password, except `/health/`, until M2 (PLAN §20, D32). The server only pulls images that CI built from `main`; deploys run from GitHub (**Actions → Deploy**, tag `main` or `sha-<commit>`) and roll back by themselves when the new image does not become healthy. Backups are encrypted with restic every night and test-restored every month. Everything about the server (logins, passwords, deploys, backups, restores) is in the runbook, [`deploy/README.md`](deploy/README.md).
