@@ -1071,7 +1071,7 @@ Newsletter volume stays small (10k subscribers × 1 issue ≈ 10,000 emails per 
 
 | Item | Choice | Monthly (TL) |
 |---|---|---|
-| Server | **Bought 2026-09-26:** Hosting Türkiye "Micro Paket" (3 vCPU, 4 GB RAM, 40 GB NVMe, KVM, Istanbul Tier III), monthly term; switch to yearly (−10%) after the first month if stable | 287.88 incl. KDV (239.90 + KDV) |
+| Server | **Bought 2026-09-26, set up 2026-09-30 (S notes, §20):** Hosting Türkiye "Micro Paket" (3 vCPU, 4 GB RAM, 40 GB NVMe, KVM, Istanbul Tier III), monthly term; switch to yearly (−10%) after the first month if stable | 287.88 incl. KDV (239.90 + KDV) |
 | Builds | Docker images built in GitHub Actions; the server only pulls and runs them, so 4 GB RAM is enough | 0 |
 | Database | One PostgreSQL instance with separate databases for Payload, listmonk and Umami | 0 |
 | Backups | Until signups open: nightly encrypted dump on the server plus a weekly copy to the operator's computer in Türkiye. From M2: nightly copy to a second 2 GB VDS at a different Turkish company | 0 → ≈95 `[V]` |
@@ -1400,7 +1400,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 | M0 | Foundations | Repository with `PLAN.md` and `CLAUDE.md`; Next.js + Payload + PostgreSQL in Docker Compose; CI that builds the images and pushes them to GHCR; server files prepared but not run (`deploy/`: setup script, Compose with Caddy, backups, manual deploy workflow) | "Coming soon" page with contact and legal notice, merged to `main` | 1–2 weeks |
 | M1 | Design system and shell | Tokens, fonts, header and mega-menu, footer, skip link, dark mode, `/en/` routing, i18n scaffolding, 404/410, legal pages (EN + TR), About with the name story | Shell site with legal pages | 1–2 weeks |
 | M3 | Taxonomy and institutions | Taxonomy seed with synonyms; ROR import job; country sets; institution pages; hub skeletons | Admin-complete data layer; hubs `noindex` | 1 week |
-| S | Server setup (one-time, after M3 and the local M4 work, D38) | Turkish VDS (4 GB, §11.7.1) hardened with `deploy/setup-server.sh`; DNS; production stack with Caddy; backups and restore test switched on; deploy workflow secrets. Decided during S (D42): no staging while the site is private; automatic rollback on failed health checks; Caddy rate limits on the pre-launch checklist; backup alerts at M2; repository secrets with a restricted deploy user | Production server running; first deploy through the deploy workflow; the site stays private (D32), and how its private sections stay private once the M2 pages are public is set up at S or M2 (D39) | 0.5–1 week |
+| S | Server setup (one-time, after M3 and the local M4 work, D38) | Turkish VDS (4 GB, §11.7.1) hardened with `deploy/setup-server.sh`; DNS; production stack with Caddy; backups and restore test switched on; deploy workflow secrets. Decided during S (D42): no staging while the site is private; automatic rollback on failed health checks; Caddy rate limits on the pre-launch checklist; backup alerts at M2; repository secrets with a restricted deploy user | **Done 2026-09-30** (S notes below): production server running; first deploy through the deploy workflow; the site stays private (D32), and how its private sections stay private once the M2 pages are public is set up at M2 (D39, D41) | 0.5–1 week |
 | M2 | Newsletter | Turkish mailbox and SMTP relay; SPF/DKIM/DMARC; listmonk; double opt-in pages; consent log; KVKK texts; unsubscribe headers; archive template; MX moves from Cloudflare Email Routing to the Turkish mail host before signups open; backup alerts by email (D42) | Signups open before content exists: the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public (unapproved drafts stay private), with a reduced header and footer that link only to public pages; until M6, links to the suggest and report forms point to `hello@gliagora.com`; everything else stays private until M6 (D39, D41). No Glia Notes issue before M6 (D41) | 1–2 weeks |
 | M4 | Jobs | Job collection; review queue v1; "Suggest a listing"; list, filters, chips, URL state; detail; closing soon; auto-expiry; sitemaps; basic search | Jobs window built and tested locally with fake data (D38); deployed at S, private; public at the M6 launch, once the §3.4 gate is met (D39) | 2–3 weeks |
 | M4b | Accounts and self-service privacy | Member sign-in (Google, ORCID, email link); saved items; digest settings and subfield preferences; export and delete; inactivity clean-up; automatic acknowledgements for requests | Accounts ready on the deployed site, still private, released with M6 | 1.5–2 weeks |
@@ -1481,9 +1481,37 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 **Still open or scheduled (M4).**
 - Live search suggestions in the search dialog: later (M4.9 sketches them).
 - A rate limit for `/en/search/` in Caddy: on the pre-launch checklist with the other Caddy limits (D42; it needs a plugin and a custom Caddy build). Until then the app's own limits bound the cost of search.
-- The IPv6 check (`deploy/README.md` step 5) at S, before any `AAAA` record.
+- The IPv6 check (`deploy/README.md` step 5): done at S and passed (S notes below). The `AAAA` record was already published before S.
 - B8 (the KVKK basis for the optional email on the suggest form) stays open for the lawyer review.
 - How the private sections stay private while the M2 pages are public (D39): set up at M2. D41 decides what is public then (the coming-soon page, the newsletter signup, the About page and the approved legal texts) and how those pages link (a reduced header and footer; email in place of the forms).
+
+**S notes (2026-09-30).** The one-time server setup, run by Claude Code from the operator's Linux computer with the operator's SSH key, following `deploy/README.md` (decisions: D41 for M2, D42 for S).
+
+- **Server:** Hosting Türkiye Micro Paket (KVM, Istanbul), host name `vps-4448`; Ubuntu 24.04.5 LTS, kernel 6.8.0-142; 3 vCPU, 3.8 GiB RAM plus a 2 GiB swap file, 38 GB disk; IPv4 `45.144.214.78/24`, IPv6 `2a0f:85c1:7f5:6e::1/64`; the provider sets the network's MTU to 1400, and Docker's networks now use it too (`setup-server.sh`), since Docker's 1500 can make TLS from containers hang; time zone UTC. The provider's cloud-init sets Google's DNS resolvers (8.8.8.8); the server looks up only fixed names (GHCR, Docker Hub, Ubuntu, Let's Encrypt, `zenodo.org`, `api.ror.org`), never anything a visitor typed.
+- **DNS** (Cloudflare, DNS only, set by the operator): `A` and `AAAA` for `gliagora.com`, `www` as a `CNAME`. No `CAA` record yet and DNSSEC off (§11.6; the operator's to add).
+- **SSH and accounts:** before S, password login was on: the provider's `50-cloud-init.conf` says `yes` and is read before `60-cloudimg-settings.conf`. `00-gliagora.conf` is now read first: no root login, no passwords, only `gliagora` (the operator's two keys, copied from root) and `deploy` (the deploy key only, restricted to `deploy-remote.sh` through one sudo rule; no shell, terminal or forwarding, all checked). The provider's two files are left as they were. Host key ED25519 `SHA256:2Xl/K1bL4dalAwaHVZKLQjv7Kx2mNSV5nOGlO+FCCzk`, pinned in the secret `DEPLOY_KNOWN_HOSTS`. The firewall rate-limits SSH (6 new connections in 30 seconds per address); fail2ban banned the first scanning addresses within minutes.
+- **Software:** Docker Engine 29.8.1, Compose 5.5.1, restic 0.16.4, OpenSSH 9.6p1; automatic security updates with a reboot at 01:30 UTC when needed (the server was rebooted once after the setup for the new kernel; everything came back by itself).
+- **Stack:** Caddy 2.11.4, the app `sha-8ba4332`, PostgreSQL 18.6; about 150 MB of memory for the three containers when idle. Let's Encrypt certificates for `gliagora.com` and `www.gliagora.com` on the first try (TLS 1.3, renewed by Caddy). First deploy through the Deploy workflow on 2026-09-29 at 23:32 UTC (about a minute); the server keeps no registry login.
+- **IPv6 check (step 5): passed.** Over IPv6 and IPv4, Caddy's access log shows the visitor's own address (masked to /48 and /24), not a Docker address, so the form rate limits and the logs see real visitors.
+- **Checks from outside (IPv4 and IPv6):**
+  - HTTPS works for both names;
+  - http redirects to https, and `www` to `gliagora.com` (308, path and query kept);
+  - HSTS is set, and HTTP/3 answers;
+  - only TCP 22, 80 and 443 are open (all 65,535 ports scanned; everything else is dropped), and UDP 443 serves HTTP/3;
+  - signed out, every path answers `401` from Caddy except `/health/` and its spellings, which return only `{"status":"ok"}`: pages, feeds, sitemaps, `robots.txt`, static files, the admin, every `/api` route (sign-in, first account, password reset) and the 404 and 410 pages;
+  - signed in, 23 templates (the admin too) load in light and dark mode with no request to another origin and no CSP report, and the CSP allows only `'self'`.
+- **Backups:** the first backup and a restore test passed (41 tables, 15 migrations, in a temporary container without network). The nightly backup (00:30 UTC) and the monthly restore test (the 1st, 02:00 UTC) are switched on. The site-wide password and the backup password were generated on the server into files only root can read (`/root/site-password`, `/opt/gliagora/backup/restic-password`); the operator reads them from their own terminal (`deploy/README.md`).
+- **Scheduled jobs:** running (`PAYLOAD_JOBS_AUTORUN`): the maintenance tasks on their schedules, without email until the M2 mailbox (`SMTP_HOST` empty); the first ROR import runs at 03:30 UTC on 2026-09-30 and loads all institutions.
+- **Two incidents during S:**
+  - The first site-wide password was shown once in the Claude session: curl's `%{redirect_url}` repeats the credentials of the request. It was replaced within minutes, before any backup held it, and the old one is refused. `deploy/README.md` now warns about this.
+  - A full-speed scan of all ports from the operator's own connection made the provider's network block that IPv4 address for about 20 minutes; IPv6 kept working. `deploy/README.md` now warns about this too.
+- **CI:** three tests failed now and then on 2026-09-29, one of them turning `main` red. The search dialog's axe check (it measured during the fade-in) and the search database test's teardown (a closing connection ended by the database drop) are fixed (#45). The phone late-font check of the jobs list is held back (#47): its title fills its line in the web font itself (pre-launch checklist).
+- **Left for the operator:**
+  - save both passwords in the password manager;
+  - create the first editor account (`/admin/`);
+  - start the weekly copy of the backups to their computer;
+  - add a `CAA` record and switch on DNSSEC in Cloudflare (optional);
+  - decide whether deploys become automatic after merges (manual for now, §11.5).
 
 **Pre-launch checklist** (after S, before the M6 public launch; M6 works through it together with the §3.4 gate):
 

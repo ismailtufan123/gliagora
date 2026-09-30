@@ -2,7 +2,20 @@
 
 Everything the production server runs is described in this folder (PLAN §11.5), so a new server can be rebuilt from scratch. The server only pulls and runs images built by CI; it never builds.
 
-**Status:** the one-time server setup (S) runs from 2026-09-30 (PLAN §20, D42).
+**Status:** running since the one-time server setup (S) on 2026-09-30. The whole site is behind the site-wide password except `/health/` until M2 (D32). PLAN §20 ("S notes") has the setup's facts and checks; D42 the decisions.
+
+## This server
+
+| | |
+| --- | --- |
+| Provider | Hosting Türkiye Micro Paket (KVM, Istanbul), host name `vps-4448` |
+| System | Ubuntu 24.04 LTS, 3 vCPU, 4 GB RAM plus 2 GB swap, 40 GB disk; network MTU 1400 |
+| Addresses | `45.144.214.78` and `2a0f:85c1:7f5:6e::1` (Cloudflare DNS, DNS only: `A` and `AAAA` for `gliagora.com`, `www` as a `CNAME`) |
+| SSH host key | ED25519 `SHA256:2Xl/K1bL4dalAwaHVZKLQjv7Kx2mNSV5nOGlO+FCCzk` (also in the secret `DEPLOY_KNOWN_HOSTS`) |
+| Log in | `ssh gliagora@45.144.214.78` with the operator's key (`gliagora-linux` or `gliagora-prod`) |
+| Show the site-wide password (user `editor`) | `ssh -t gliagora@45.144.214.78 sudo cat /root/site-password` |
+| Show the backup password | `ssh -t gliagora@45.144.214.78 sudo cat /opt/gliagora/backup/restic-password` |
+| Deploy | GitHub → Actions → Deploy → Run workflow (`main`), or `gh workflow run deploy.yml --ref main -f tag=main` |
 
 | File | What it is |
 | --- | --- |
@@ -117,7 +130,7 @@ printf 'basic_auth {\n\teditor %s\n}\n' "$hash" > admin-auth.caddy
 
 `caddy hash-password` reads one line from the pipe and fails ("Error: EOF") if the line does not end with a newline, hence the `echo`.
 
-Show it in your own terminal, to save it in your password manager: `ssh -t gliagora@<server-ip> sudo cat /root/site-password`. Once it is saved, you may delete the file (`sudo rm /root/site-password`); the server needs only the hash. To change the password later, run the same three commands and restart Caddy (`docker compose -f compose.prod.yml restart caddy`).
+Show it in your own terminal, to save it in your password manager: `ssh -t gliagora@<server-ip> sudo cat /root/site-password`. In scripted checks, send it with `curl -K -` from that file (`printf 'user = "editor:%s"\n' "$(sudo head -n1 /root/site-password)" | curl -K - …`) and never print curl's `%{redirect_url}` or its `-v` output: both repeat the credentials. Once it is saved, you may delete the file (`sudo rm /root/site-password`); the server needs only the hash. To change the password later, run the same three commands and restart Caddy (`docker compose -f compose.prod.yml restart caddy`).
 
 Leave the `SMTP_*` settings empty until the Turkish mailbox is set up at M2 (its SMTP server sends the email; PLAN §11.7.1, D22): until then the app sends no email (the outcome of suggestions, the acknowledgement of reports) and writes no address to its logs. Admin password resets do not arrive either; reset a password by hand.
 
@@ -221,6 +234,10 @@ sudo ./restore.sh config latest /root/restored  # get the backed-up .env and set
 4. Recover `.env` and `admin-auth.caddy` with `sudo ./restore.sh config latest /root/restored` and copy them to `/opt/gliagora` (mode 600).
 5. Run the Deploy workflow with the last good `sha-` tag: it starts the stack with an empty database.
 6. Restore the data with `sudo ./restore.sh database latest` (it replaces the empty database, with any account made in between), then switch on the timers (step 5). Until then the database has no editor account; the site-wide password keeps its first-account route closed.
+
+## Checking from outside
+
+Check the site from another computer with single requests (`curl`, a browser). Do not scan the server's ports at full speed from your own connection: during S, a scan of all 65,535 ports made the provider's network block that IPv4 address for about 20 minutes (IPv6 kept working). If you must, scan slowly or from elsewhere.
 
 ## Useful commands
 

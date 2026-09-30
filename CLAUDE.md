@@ -7,15 +7,15 @@ Instructions for Claude Code in this repository. Read this file first, then `PLA
 Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, events, funding, papers, news, resources, a world map and a monthly newsletter, **Glia Notes**. Tagline: "Where neuroscience meets".
 
 - Data controller and editor: Nuray Sancar (natural person, Türkiye). The team has no professional web-development background: explain choices briefly and prefer boring, well-documented tools.
-- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D40). If a task conflicts with `PLAN.md`, stop and ask.
+- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D42). If a task conflicts with `PLAN.md`, stop and ask.
 
 ## Current milestone
 
-**M4 Jobs is built and tested locally** with fake data only (D38), including its scheduled work (the hourly expiry, the form-limit and retention purges, the outcome and acknowledgement emails), which runs only where `PAYLOAD_JOBS_AUTORUN` is `true` and sends email only once an SMTP server is configured (M2). The operator approved M4 on 2026-09-28. Nothing is deployed yet; content entry starts right after S. The M4 summary and the operator's decisions on its open points are at the end of the M4 notes (PLAN §20).
+**S, the one-time server setup, is done (2026-09-30).** The production server runs the stack (Caddy, the app, PostgreSQL 18) with M4 on it, and the whole site is behind the site-wide password except `/health/` (D32). The scheduled jobs run there; their emails wait for the M2 mailbox. The operator creates the first editor account, and content entry can start. The S notes (the server's facts and checks) are in PLAN §20, the S decisions in D42, the decisions for M2 in D41. M4 was built and tested locally with fake data only (D38) and approved on 2026-09-28; its summary is in the M4 notes (PLAN §20).
 
-**Next: the follow-up steps from the operator's decisions (D40) and an audit of the access rules of every Payload collection and global.** Then S, the one-time server setup, which starts only when the operator says so; M5 does not start before the operator says so either. Milestone order: M0 → M1 → M3 → M4 (local) → S → one-time lawyer review → M2 → M4b → … (PLAN §20, D32, D38, D39). The whole site stays private until M2 (D32); at M2 only the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public (with a reduced header and footer, and email in place of the suggest and report forms, D41), and jobs and the other sections stay private until the M6 launch, once the §3.4 gate is met; how they stay private is set up at M2 (D39, D41).
+**Next: the one-time lawyer review, then M2**, which starts only when the operator says so; M5 does not start before the operator says so either. Milestone order: M0 → M1 → M3 → M4 → S → one-time lawyer review → M2 → M4b → … (PLAN §20, D32, D38, D39). The whole site stays private until M2 (D32); at M2 only the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public (with a reduced header and footer, and email in place of the suggest and report forms, D41), and jobs and the other sections stay private until the M6 launch, once the §3.4 gate is met; how they stay private is set up at M2 (D39, D41).
 
-The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM) is bought but not set up. Do not work on the server until the operator says so. Until then, work locally only; nothing may depend on a live server. The server files in `deploy/` are prepared but have never been run.
+The production server: Hosting Türkiye Micro Paket, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM, `45.144.214.78` and `2a0f:85c1:7f5:6e::1`. `deploy/README.md` is its runbook. Log in as `gliagora` (SSH key only, sudo without a password); root and passwords cannot log in. Change the server only through the files in `deploy/` (so it can be rebuilt from them) and deploy only through the Deploy workflow. Anything that touches the server still needs the operator's go-ahead (rule a below). Never print, copy or log the site-wide password (`/root/site-password`), the backup password (`/opt/gliagora/backup/restic-password`) or any value in `/opt/gliagora/.env`; to use one in a check, read it on the server or pipe it without showing it.
 
 ## Stack (PLAN §11)
 
@@ -57,7 +57,7 @@ The production server (Hosting Türkiye, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RA
 
 - Small, reviewable steps: one branch from the latest `main` and one pull request per step. The PR description summarises what changed, how to run it and what to check.
 - Proceed through approved milestone steps without waiting for review. Merge each step's PR yourself once `pnpm lint`, `pnpm typecheck`, `pnpm test` and the build pass (and CI is green), then continue from the updated `main`.
-- Before every merge, check that the latest CI run on `main` is green (`gh run list --branch main --limit 1`). If it is red, fix `main` first; never merge on top of a red `main`.
+- Before every merge, check that the latest CI run on `main` is green (`gh run list --branch main --workflow CI --limit 1`; without `--workflow CI` it may show a Deploy run). If it is red, fix `main` first; never merge on top of a red `main`.
 - Stop and ask only before:
   - (a) anything that touches the production server (running commands on it or deploying to it);
   - (b) using real personal data;
@@ -106,6 +106,8 @@ Fill these in as the project grows.
 - `pnpm tr:review` — regenerate `docs/tr-strings-review.md`, the table of every Turkish interface string for the native speaker's review (D40), after changing `messages/*.json`; a unit test fails when the file is out of date or a new key has no "where it appears" in `src/scripts/tr-strings-review-areas.ts`
 - `docker compose --profile mail up -d mailpit` — local mail server for testing emails: set `SMTP_HOST=127.0.0.1` and `SMTP_PORT=1025` in `.env` (see `.env.example`) and read the messages at http://127.0.0.1:8025; nothing leaves the computer. Stop it with `docker compose --profile mail rm --stop --force mailpit`
 - `E2E_EDITOR_PASSWORD=… pnpm e2e:editor` — add (or reset) the test editor `e2e-editor@example.org` that the admin API and access end-to-end tests use (one sign-in per run, `tests/e2e/editor.ts`: parallel sign-ins as one user drop each other's session); pass the same `E2E_EDITOR_PASSWORD` to `pnpm test:e2e` (without it the admin API test is skipped locally and the access test uses small IDs; CI always has it). It refuses to run where `PAYLOAD_JOBS_AUTORUN` is `true` (production)
+- `gh workflow run deploy.yml --ref main -f tag=main` (or GitHub → Actions → Deploy) — deploy to production, only when the operator asks: `main` or `sha-` plus 7 characters of a commit; a new image that does not become healthy is rolled back by itself (`deploy/README.md`, "How deploys work")
+- `ssh gliagora@45.144.214.78` — the production server (only when the operator asks); `cd /opt/gliagora && docker compose -f compose.prod.yml ps` shows the stack, and `deploy/README.md` has the backup, restore and rollback commands
 
 ## Target repository layout
 
