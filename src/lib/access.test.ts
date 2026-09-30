@@ -100,6 +100,19 @@ describe('deploy/Caddyfile', () => {
     )
   })
 
+  it('serves the basemap from its own folder, behind the password until the launch', () => {
+    // M5 (PLAN §14): tiles, fonts and sprites from /opt/gliagora/basemap/public. Private until the
+    // map goes public at M6 (D39); the fetch script's temporary folders (.fetch-…) are never served.
+    const block = caddyfile.match(/^\s*handle @basemap \{([\s\S]*?)^\t\}/m)?.[1] ?? ''
+    expect(caddyfile).toMatch(/^\s*@basemap path \/basemap\/\*$/m)
+    expect(block).toMatch(/import \/etc\/caddy\/admin-auth\.caddy/)
+    expect(block).toMatch(/uri strip_prefix \/basemap\n\s*root \* \/srv\/basemap/)
+    expect(block).toMatch(/file_server \{\s*hide \.\*\s*\}/)
+    expect(block).not.toMatch(/reverse_proxy/)
+    // Before the site's catch-all handle, which would otherwise take /basemap/ to the app.
+    expect(caddyfile.indexOf('handle @basemap')).toBeLessThan(caddyfile.lastIndexOf('\thandle {'))
+  })
+
   it('keeps reset tokens and queries out of the logged redirect headers', () => {
     // Next.js's trailing-slash redirect repeats the request address in Location and Refresh.
     for (const header of ['Location', 'Refresh']) {

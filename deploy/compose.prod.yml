@@ -23,6 +23,8 @@ services:
       - caddy-data:/data
       - caddy-config:/config
       - caddy-logs:/var/log/caddy
+      # The map's basemap, filled by basemap/fetch-basemap.sh (not in backups; fetched again).
+      - ./basemap/public:/srv/basemap:ro
     depends_on:
       app:
         condition: service_healthy
