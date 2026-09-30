@@ -1,8 +1,12 @@
-# Deploys an image from GHCR to the production server (PLAN §11.5, D27).
+# Deploys an image from GHCR to the production server (PLAN §11.5, D27, D43).
 #
-# Manual only: Actions → Deploy → Run workflow on `main`, with an image tag (`main` or `sha-` plus
-# the first 7 characters of a commit). Inactive until the server exists (D23): unless the
-# repository variable DEPLOY_ENABLED is `true`, it stops with a notice and changes nothing.
+# Three ways in, all switched off unless the repository variable DEPLOY_ENABLED is `true`:
+# - by hand: Actions → Deploy → Run workflow on `main`, with an image tag (`main` or `sha-` plus
+#   the first 7 characters of a commit); also the way to roll back on purpose;
+# - automatically after every green CI run of a push to `main`, deploying that commit's image,
+#   while the repository variable DEPLOY_AUTO is `main` (while the site is private, until M2);
+# - automatically for a pushed release tag `v…` on a commit whose CI run on `main` passed, while
+#   DEPLOY_AUTO is `tags` (from M2 on). Any other value of DEPLOY_AUTO: by hand only.
 # Setup: deploy/README.md, "How deploys work" and "4. Connect GitHub (once)".
 #
 # No long-lived registry credentials: the job's own GITHUB_TOKEN (valid only while the job runs)
@@ -23,55 +27,106 @@ on:
         description: Image tag to deploy (main or sha-<first 7 characters of the commit>)
         required: true
         default: main
+  # Runs from the default branch's copy of this file whenever CI finishes; the check job decides.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  push:
+    tags: ['v*']
 
 permissions:
   contents: read
 
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
-
 jobs:
   check:
-    name: Check that deploys are enabled
+    name: Check that this deploy may run
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    permissions:
+      actions: read
     outputs:
       ready: ${{ steps.check.outputs.ready }}
+      tag: ${{ steps.check.outputs.tag }}
     steps:
       - id: check
         env:
-          TAG: ${{ inputs.tag }}
-          DEPLOY_ENABLED: ${{ vars.DEPLOY_ENABLED }}
+          EVENT: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
           REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+          DEPLOY_ENABLED: ${{ vars.DEPLOY_ENABLED }}
+          DEPLOY_AUTO: ${{ vars.DEPLOY_AUTO }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+          RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [[ ! "$TAG" =~ ^(main|sha-[0-9a-f]{7})$ ]]; then
+          skip() {
+            echo "::notice title=Deploy skipped::$1 Nothing was deployed."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+          if [[ "$DEPLOY_ENABLED" != true ]]; then
+            skip "Deploys are not enabled (repository variable DEPLOY_ENABLED is not true)."
+          fi
+          case "$EVENT" in
+            workflow_dispatch)
+              tag="$INPUT_TAG"
+              if [[ "$REF" != refs/heads/main ]]; then
+                echo "::error title=Wrong branch::Run the Deploy workflow from main."
+                exit 1
+              fi
+              ;;
+            workflow_run)
+              [[ "$DEPLOY_AUTO" == main ]] || skip "Automatic deploys after CI are off (DEPLOY_AUTO is not main)."
+              # Only a green run of a push to main in this repository, never a pull request's run.
+              if [[ "$RUN_CONCLUSION" != success || "$RUN_EVENT" != push || "$RUN_BRANCH" != main || "$RUN_REPO" != "$REPO" ]]; then
+                skip "CI run: $RUN_CONCLUSION, $RUN_EVENT on $RUN_BRANCH of $RUN_REPO; only a green push to main deploys."
+              fi
+              tag="sha-${RUN_SHA:0:7}"
+              ;;
+            push)
+              [[ "$DEPLOY_AUTO" == tags ]] || skip "Release-tag deploys are off (DEPLOY_AUTO is not tags)."
+              # The tag must name a commit that CI built and tested on main (so its image exists).
+              green=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$SHA&event=push&branch=main&status=success" --jq '.total_count')
+              [[ "$green" -gt 0 ]] || skip "No green CI run of a push to main for ${SHA:0:7}; tag a commit on main after its CI has passed."
+              tag="sha-${SHA:0:7}"
+              ;;
+            *)
+              echo "::error title=Unexpected event::$EVENT"
+              exit 1
+              ;;
+          esac
+          if [[ ! "$tag" =~ ^(main|sha-[0-9a-f]{7})$ ]]; then
             echo "::error title=Invalid tag::Use main or sha- plus the first 7 characters of a commit."
             exit 1
           fi
-          if [[ "$DEPLOY_ENABLED" != true ]]; then
-            echo "::notice title=Deploy skipped::Deploys are not enabled yet (repository variable DEPLOY_ENABLED is not true). Nothing was deployed."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [[ "$REF" != refs/heads/main ]]; then
-            echo "::error title=Wrong branch::Run the Deploy workflow from main."
-            exit 1
-          fi
+          echo "Deploying $tag ($EVENT)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "ready=true" >> "$GITHUB_OUTPUT"
 
   deploy:
-    name: Deploy ${{ inputs.tag }}
+    name: Deploy ${{ needs.check.outputs.tag }}
     needs: check
     if: needs.check.outputs.ready == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # One deploy at a time. A newer deploy that is waiting replaces an older one that is still
+    # waiting, so after several quick merges only the newest image is deployed. On this job, not the
+    # workflow, so runs that only skip never take a waiting deploy's place.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     permissions:
       packages: read
     steps:
       - name: Deploy over SSH
         env:
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ needs.check.outputs.tag }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
