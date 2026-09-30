@@ -7,7 +7,7 @@ Instructions for Claude Code in this repository. Read this file first, then `PLA
 Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, events, funding, papers, news, resources, a world map and a monthly newsletter, **Glia Notes**. Tagline: "Where neuroscience meets".
 
 - Data controller and editor: Nuray Sancar (natural person, Türkiye). The team has no professional web-development background: explain choices briefly and prefer boring, well-documented tools.
-- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D42). If a task conflicts with `PLAN.md`, stop and ask.
+- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D43). If a task conflicts with `PLAN.md`, stop and ask.
 
 ## Current milestone
 
@@ -15,7 +15,7 @@ Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, even
 
 **Next: the one-time lawyer review, then M2**, which starts only when the operator says so; M5 does not start before the operator says so either. Milestone order: M0 → M1 → M3 → M4 → S → one-time lawyer review → M2 → M4b → … (PLAN §20, D32, D38, D39). The whole site stays private until M2 (D32); at M2 only the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public (with a reduced header and footer, and email in place of the suggest and report forms, D41), and jobs and the other sections stay private until the M6 launch, once the §3.4 gate is met; how they stay private is set up at M2 (D39, D41).
 
-The production server: Hosting Türkiye Micro Paket, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM, `45.144.214.78` and `2a0f:85c1:7f5:6e::1`. `deploy/README.md` is its runbook. Log in as `gliagora` (SSH key only, sudo without a password); root and passwords cannot log in. Change the server only through the files in `deploy/` (so it can be rebuilt from them) and deploy only through the Deploy workflow. Anything that touches the server still needs the operator's go-ahead (rule a below). Never print, copy or log the site-wide password (`/root/site-password`), the backup password (`/opt/gliagora/backup/restic-password`) or any value in `/opt/gliagora/.env`; to use one in a check, read it on the server or pipe it without showing it.
+The production server: Hosting Türkiye Micro Paket, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM, `45.144.214.78` and `2a0f:85c1:7f5:6e::1`. `deploy/README.md` is its runbook. Log in as `gliagora` (SSH key only, sudo without a password); root and passwords cannot log in. Change the server only through the files in `deploy/` (so it can be rebuilt from them) and deploy only through the Deploy workflow: until M2, every CI run of a push to `main` that passes is deployed by itself, so a merge goes live (behind the site-wide password) about a quarter of an hour later; from M2 on, only release tags are (D43). Anything that touches the server still needs the operator's go-ahead (rule a below). Never print, copy or log the site-wide password (`/root/site-password`), the backup password (`/opt/gliagora/backup/restic-password`) or any value in `/opt/gliagora/.env`; to use one in a check, read it on the server or pipe it without showing it.
 
 ## Stack (PLAN §11)
 
@@ -106,7 +106,7 @@ Fill these in as the project grows.
 - `pnpm tr:review` — regenerate `docs/tr-strings-review.md`, the table of every Turkish interface string for the native speaker's review (D40), after changing `messages/*.json`; a unit test fails when the file is out of date or a new key has no "where it appears" in `src/scripts/tr-strings-review-areas.ts`
 - `docker compose --profile mail up -d mailpit` — local mail server for testing emails: set `SMTP_HOST=127.0.0.1` and `SMTP_PORT=1025` in `.env` (see `.env.example`) and read the messages at http://127.0.0.1:8025; nothing leaves the computer. Stop it with `docker compose --profile mail rm --stop --force mailpit`
 - `E2E_EDITOR_PASSWORD=… pnpm e2e:editor` — add (or reset) the test editor `e2e-editor@example.org` that the admin API and access end-to-end tests use (one sign-in per run, `tests/e2e/editor.ts`: parallel sign-ins as one user drop each other's session); pass the same `E2E_EDITOR_PASSWORD` to `pnpm test:e2e` (without it the admin API test is skipped locally and the access test uses small IDs; CI always has it). It refuses to run where `PAYLOAD_JOBS_AUTORUN` is `true` (production)
-- `gh workflow run deploy.yml --ref main -f tag=main` (or GitHub → Actions → Deploy) — deploy to production, only when the operator asks: `main` or `sha-` plus 7 characters of a commit; a new image that does not become healthy is rolled back by itself (`deploy/README.md`, "How deploys work")
+- `gh workflow run deploy.yml --ref main -f tag=sha-1234567` (or GitHub → Actions → Deploy) — deploy by hand, only when the operator asks (a rollback, say): `main` or `sha-` plus 7 characters of a commit; merges to `main` deploy by themselves until M2, release tags `v…` from M2 on (D43); a new image that does not become healthy is rolled back by itself (`deploy/README.md`, "How deploys work")
 - `ssh gliagora@45.144.214.78` — the production server (only when the operator asks); `cd /opt/gliagora && docker compose -f compose.prod.yml ps` shows the stack, and `deploy/README.md` has the backup, restore and rollback commands
 
 ## Target repository layout

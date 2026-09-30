@@ -15,7 +15,7 @@ Everything the production server runs is described in this folder (PLAN §11.5),
 | Log in | `ssh gliagora@45.144.214.78` with the operator's key (`gliagora-linux` or `gliagora-prod`) |
 | Show the site-wide password (user `editor`) | `ssh -t gliagora@45.144.214.78 sudo cat /root/site-password` |
 | Show the backup password | `ssh -t gliagora@45.144.214.78 sudo cat /opt/gliagora/backup/restic-password` |
-| Deploy | GitHub → Actions → Deploy → Run workflow (`main`), or `gh workflow run deploy.yml --ref main -f tag=main` |
+| Deploy | Automatic after every green CI run on `main` until M2, then on release tags `v…` (D43); by hand: GitHub → Actions → Deploy → Run workflow (`main`), or `gh workflow run deploy.yml --ref main -f tag=main` |
 
 | File | What it is |
 | --- | --- |
@@ -52,7 +52,17 @@ On the server, everything lives in `/opt/gliagora`:
 
 ## How deploys work
 
-Deploys run from GitHub: **Actions → Deploy → Run workflow** on `main`, with an image tag: `main`, or `sha-` plus the first 7 characters of a commit, as shown in the CI log of that commit (`.github/workflows/deploy.yml`, D27).
+Deploys run from GitHub, through the **Deploy** workflow (`.github/workflows/deploy.yml`, D27, D43), in one of three ways:
+
+| When | How | Repository variable `DEPLOY_AUTO` |
+| --- | --- | --- |
+| **Now, while the site is private (until M2)** | Automatically after every CI run of a push to `main` that passes: the image of exactly that commit (`sha-` plus its first 7 characters) | `main` |
+| **From M2 on** | Automatically when a release tag is pushed, only for a commit on `main` whose CI run passed: `git tag v2026.11.3 <commit> && git push origin v2026.11.3` (the name must start with `v`) | `tags` |
+| **Any time** (also to roll back on purpose) | By hand: **Actions → Deploy → Run workflow** on `main`, with an image tag: `main`, or `sha-` plus the first 7 characters of a commit | any |
+
+At M2, switch from the first row to the second: **Settings → Secrets and variables → Actions → Variables**, `DEPLOY_AUTO` = `tags` (or `gh variable set DEPLOY_AUTO --body tags`). Any other value (or none) leaves only the manual way. A run that may not deploy stops with a notice ("Deploy skipped") and changes nothing. Deploys never overlap; when several wait, only the newest runs.
+
+Each deploy then goes like this:
 
 1. The workflow connects over SSH as `deploy`, with its own key, and checks the server's host key against the one pinned in a secret. On the server, that key's line in `/home/deploy/.ssh/authorized_keys` starts with `restrict,command="sudo -n /opt/gliagora/deploy-remote.sh"`: it can run nothing else, get no shell and forward nothing.
 2. It sends the job's own `GITHUB_TOKEN` (valid only while the job runs) on stdin. `deploy-remote.sh` accepts only `deploy main` or `deploy sha-<7 characters>`, logs in to GHCR with the token in a temporary Docker config, pulls the images and deletes that config. **No registry login is stored on the server.**
@@ -62,7 +72,7 @@ Deploys run from GitHub: **Actions → Deploy → Run workflow** on `main`, with
    - a wait (at most 5 minutes) until every service is healthy. The app applies database migrations when it starts.
 4. If that fails before the app was restarted (for example, the backup fails), `.env` goes back to the previous image and nothing else changed. **If the new image started but did not become healthy, the script switches back to the previous image by itself** (it is still on the server) and waits for it (D42). The workflow then fails with "Rolled back to …", so you see it. Database migrations are not undone; if the new version's migrations broke something, restore the `pre-update` snapshot (step 7).
 
-Until the repository variable `DEPLOY_ENABLED` is `true`, the workflow stops with a notice ("Deploy skipped") and changes nothing. It also refuses to run from any branch other than `main`.
+Until the repository variable `DEPLOY_ENABLED` is `true`, the workflow stops with a notice ("Deploy skipped") and changes nothing, whatever `DEPLOY_AUTO` says: it is the main switch. Run by hand, it also refuses any branch other than `main`.
 
 ## Before you start
 
@@ -187,7 +197,7 @@ GitHub Free has no environments (with branch rules and required reviewers) for a
    | `DEPLOY_KNOWN_HOSTS` | The output of `ssh-keyscan -t ed25519 <server-ip>` run on your computer, with the same IP as `DEPLOY_HOST` |
 
    Check `DEPLOY_KNOWN_HOSTS` before saving it: on the server, `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` shows the fingerprint, and `ssh-keygen -lf <(ssh-keyscan -t ed25519 <server-ip>)` on your computer must show the same one. The workflow refuses any other host key. If the IP changes, redo both secrets.
-2. **Settings → Secrets and variables → Actions → Variables → New repository variable** `DEPLOY_ENABLED` = `true`. This switches the workflow on. Set it to anything else to switch deploys off again.
+2. **Settings → Secrets and variables → Actions → Variables → New repository variable** `DEPLOY_ENABLED` = `true`. This switches the workflow on. Set it to anything else to switch deploys off again. Then `DEPLOY_AUTO` (see "How deploys work"): `main` while the site is private, `tags` from M2 on.
 3. Delete your local copy of the private key (`rm ~/.ssh/gliagora-deploy`). If the key is ever lost or exposed, make a new one, run `setup-server.sh` again with the new `DEPLOY_PUBLIC_KEY` (it replaces the old key) and update `DEPLOY_SSH_KEY`.
 
 ## 5. First deploy (once)
@@ -210,7 +220,7 @@ The app's scheduled jobs (`PAYLOAD_JOBS_AUTORUN` in `compose.prod.yml`) run from
 
 ## 6. Update and roll back
 
-CI pushes a new image for every merge to `main`, tagged `main` and `sha-` plus the first 7 characters of the commit. To update, run the Deploy workflow with `main`, or with the `sha-` tag of a specific merge. `.env` then names the exact `sha-` tag that is running.
+CI pushes a new image for every merge to `main`, tagged `main` and `sha-` plus the first 7 characters of the commit. Until M2 it is deployed by itself once CI passes; from M2 on, push a release tag (see "How deploys work"). By hand, run the Deploy workflow with `main`, or with the `sha-` tag of a specific merge. `.env` then names the exact `sha-` tag that is running.
 
 If the new image does not become healthy, the deploy switches back to the previous one by itself (see "How deploys work"). To go back to an older version on purpose, run the Deploy workflow with its `sha-` tag. On the server, without GitHub, `cd /opt/gliagora && cp .env.previous .env && sudo ./update.sh --no-pull` goes back to the image that ran before the last deploy; it is still on the server. Migrations are not undone automatically. If one damaged data, restore the `pre-update` snapshot (below).
 
