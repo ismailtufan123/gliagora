@@ -1,4 +1,4 @@
-import { ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react'
+import { Icon } from '@/components/Icon'
 import { getTranslations } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
@@ -94,7 +94,7 @@ function Filter({
     <details className="filter disclosure" data-disclosure open={open}>
       <summary className="filter-button">
         {count > 0 ? t('button', { label, count }) : label}
-        <ChevronDown aria-hidden="true" size={16} className="chevron" />
+        <Icon name="chevronDown" size={16} className="chevron" />
       </summary>
       <div className="filter-panel">
         {children}
@@ -176,14 +176,14 @@ export async function JobFilterForm({
           placeholder={t('search')}
         />
         <button type="submit" className="button button-secondary px-3">
-          <Search aria-hidden="true" size={18} />
+          <Icon name="search" size={18} />
           <span className="sr-only">{t('searchButton')}</span>
         </button>
       </div>
 
       <details className="filter-sheet disclosure" data-disclosure data-modal open={!!rangeInput}>
         <summary className="button button-secondary">
-          <SlidersHorizontal aria-hidden="true" size={18} />
+          <Icon name="filters" size={18} />
           {t('open', { count: active })}
         </summary>
         <div className="sheet-panel" role="group" aria-labelledby="job-filters-title">
@@ -197,7 +197,7 @@ export async function JobFilterForm({
               data-disclosure-close
               aria-label={t('close')}
             >
-              <X aria-hidden="true" size={20} />
+              <Icon name="close" size={20} />
             </button>
           </div>
 

@@ -1,4 +1,4 @@
-import { ChevronDown, Globe, Search } from 'lucide-react'
+import { Icon } from '@/components/Icon'
 import { getTranslations } from 'next-intl/server'
 
 import { Lockup } from '@/components/Lockup'
@@ -70,7 +70,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                 {window.menu && (
                   <details className="disclosure" data-disclosure>
                     <summary className="disclosure-button size-7" aria-label={window.menuLabel}>
-                      <ChevronDown aria-hidden="true" size={16} className="chevron" />
+                      <Icon name="chevronDown" size={16} className="chevron" />
                     </summary>
                     <div className="menu-panel start-0 w-max max-w-[36rem]">
                       <ul
@@ -105,7 +105,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             className="button button-secondary search-trigger whitespace-nowrap max-[22.5rem]:hidden"
             data-search-open
           >
-            <Search aria-hidden="true" size={18} />
+            <Icon name="search" size={18} />
             <span className="sr-only">{t('search.trigger')}</span>
             <span className="search-hint" aria-hidden="true">
               <kbd data-key="ctrl">{t('search.shortcutCtrl')}</kbd>
@@ -117,8 +117,8 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
             locale={locale}
             labels={localeLabels}
             icons={{
-              globe: <Globe aria-hidden="true" size={18} />,
-              chevron: <ChevronDown aria-hidden="true" size={16} className="chevron" />,
+              globe: <Icon name="globe" size={18} />,
+              chevron: <Icon name="chevronDown" size={16} className="chevron" />,
             }}
           />
           {/* A longer label wraps within 15rem: two lines for one 40% longer than the English. */}

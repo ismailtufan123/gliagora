@@ -530,7 +530,7 @@ Rules: sentence case everywhere; no all-caps labels; no single word styled diffe
 | Grid | 12 columns desktop, 4 mobile; gutters 16/24/32 |
 | Z-index | header 100, dropdown 200, sheet 300, dialog 400 |
 
-Icons: Lucide (ISC licence), 20/24px, always paired with text except close and search buttons, which have accessible names. Compact header controls (built in M1) use 16–18px icons: the chevron buttons that open the mega-menus (named, e.g., "Jobs menu"), the language button (globe and code, named "Language: English (EN)") and, below 480px, the menu button (named "Menu"). Imagery: CC0 / CC BY / CC BY-SA micrographs and photos only, with creator, source, licence and changes stored in the Media collection and shown as a caption; no institution logos, no stock photos of people, no AI images presented as real micrographs.
+Icons: Lucide's shapes (ISC licence), drawn on the server as plain SVG by `src/components/Icon.tsx` since D45 (no icon library in the browser), 20/24px, always paired with text except close and search buttons, which have accessible names. Compact header controls (built in M1) use 16–18px icons: the chevron buttons that open the mega-menus (named, e.g., "Jobs menu"), the language button (globe and code, named "Language: English (EN)") and, below 480px, the menu button (named "Menu"). Imagery: CC0 / CC BY / CC BY-SA micrographs and photos only, with creator, source, licence and changes stored in the Media collection and shown as a caption; no institution logos, no stock photos of people, no AI images presented as real micrographs.
 
 ### 7.5 Component inventory
 
@@ -1320,7 +1320,7 @@ The texts are Markdown files in `content/{locale}/` (D28). Each stays a draft (v
 |---|---|
 | HTML (list pages) | ≤60 KB gzip |
 | CSS (total) | ≤35 KB gzip |
-| JavaScript on ordinary pages (initial, incl. framework runtime) | ≤140 KB gzip (D29). Measured at M1: 135 KB on every template, of which about 132 KB is React and Next.js themselves; the header's own script is about 3 KB. The map and hero chunks below have their own budgets and load only on their own routes |
+| JavaScript on ordinary pages (initial, incl. framework runtime) | ≤140 KB gzip (D29). Measured at M1: 135 KB on every template, of which about 132 KB is React and Next.js themselves; the header's own script is about 3 KB. After the savings pass of D45 (2026-10-01): 134.58 KB on every page and 136.33 KB on the jobs list (was 139.90), which now has a budget of its own, ≤137 KB (`budgets.spec.ts`), so the saving stays. Of the 134.58 KB, 131.84 KB are React, Next.js 16.3 and Turbopack's runtime (chunks that hold nothing else; a webpack build was no smaller) and 2.74 KB the header's script; the jobs list adds 1.75 KB of its own (0.7 KB of it its error state). The ≤130 KB D45 asked for the jobs list is therefore below what the framework alone needs; the operator decides what replaces it (M6 report). The map and hero chunks below have their own budgets and load only on their own routes |
 | Hero chunk (home only, after `load`) | ≤230 KB gzip |
 | Map chunk (on demand) | ≤330 KB gzip (approved after M5, D45; measured: about 323 KB, of which MapLibre GL JS 6 with its worker is 308 KB; the earlier unverified estimate was 280 KB), plus MapLibre's stylesheet (about 10 KB); loaded only where a map is shown, after the page |
 | Fonts | 2 families; ≤4 files preloaded; ≤120 KB total |
@@ -1532,7 +1532,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 - **Measured** (`tests/e2e/budgets.spec.ts`, the map templates have their own budget):
   - the map page: 458.6 KB of JavaScript, of which MapLibre with its worker is 307.8 KB;
   - the map's own code: about 323 KB against PLAN's unverified 280 KB, so §17.3 now says ≤330 KB (approved, D45);
-  - the jobs list: 139.91 of 140 KB. Before the next change to the list's own client code, find savings there first.
+  - the jobs list: 139.91 of 140 KB. Before the next change to the list's own client code, find savings there first (done after M5: 136.33 KB, §17.3, D45).
 - **Tests:** 1044 unit, 48 database (8 email tests need Docker locally) and 602 end-to-end tests pass on 34 templates. The map tests load MapLibre, its worker and the basemap under the exact CSP of `deploy/Caddyfile`, with nothing from other domains.
 - **The basemap on the server** (2026-10-01, with the operator's go-ahead):
   - the new `Caddyfile`, `compose.prod.yml` and `deploy/basemap/` were copied (the files checked against `main`, the Caddyfile validated by Caddy);

@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react'
+import { Icon } from '@/components/Icon'
 import type { ReactNode } from 'react'
 
 import { SEARCH_MAX_LENGTH } from '@/lib/search/parse'
@@ -40,7 +40,7 @@ export function SearchForm({
           enterKeyHint="search"
         />
         <button type="submit" className="button button-primary">
-          <Search aria-hidden="true" size={18} />
+          <Icon name="search" size={18} />
           {submit}
         </button>
       </div>

@@ -68,8 +68,10 @@ test.describe('size budgets', () => {
         `${template.name}: JavaScript ${kb.script.toFixed(2)} KB, CSS ${kb.stylesheet.toFixed(2)} KB, HTML ${htmlKb.toFixed(2)} KB (gzip), fonts ${kb.font.toFixed(1)} KB${map ? `; of these, MapLibre ${maplibreKb.toFixed(2)} KB` : ''}`,
       )
 
+      // The jobs list has a tighter budget of its own since its savings pass (D45, PLAN §17.3).
+      const scriptKb = 'scriptKb' in template ? template.scriptKb : BUDGET_KB.script
       expect(kb.script, 'JavaScript, KB gzip').toBeLessThanOrEqual(
-        BUDGET_KB.script + (map ? MAP_BUDGET_KB.script : 0),
+        scriptKb + (map ? MAP_BUDGET_KB.script : 0),
       )
       expect(kb.stylesheet, 'CSS, KB gzip').toBeLessThanOrEqual(
         BUDGET_KB.stylesheet + (map ? MAP_BUDGET_KB.stylesheet : 0),
