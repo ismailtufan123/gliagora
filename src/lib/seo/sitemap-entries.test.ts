@@ -47,12 +47,14 @@ const JOBS: SitemapJob[] = [
 ]
 
 describe('pageEntries', () => {
-  it('lists the home page, the jobs list, Suggest a listing and the content pages that are not drafts', () => {
+  it('lists the home page, the jobs list, the map, Suggest a listing and the content pages that are not drafts', () => {
     const entries = pageEntries([])
     const published = Object.values(CONTENT_PAGES).filter((page) => !page.draft)
     expect(entries.map((entry) => entry.path)).toEqual([
       '/en/',
       '/en/jobs/',
+      // The world map is indexed (PLAN §2.2) since it is built (M5).
+      '/en/map/',
       '/en/suggest/',
       ...published.map((page) => page.path),
     ])
@@ -64,6 +66,7 @@ describe('pageEntries', () => {
     // The home page and the lists change with the listings: no date is guessed for them.
     expect(entries.find((entry) => entry.path === '/en/')?.lastmod).toBeUndefined()
     expect(entries.find((entry) => entry.path === '/en/jobs/')?.lastmod).toBeUndefined()
+    expect(entries.find((entry) => entry.path === '/en/map/')?.lastmod).toBeUndefined()
   })
 
   it('never lists a draft text, a placeholder or a filtered list', () => {
@@ -71,7 +74,7 @@ describe('pageEntries', () => {
     for (const page of Object.values(CONTENT_PAGES).filter((p) => p.draft)) {
       expect(paths).not.toContain(page.path)
     }
-    for (const path of ['/en/events/', '/en/map/', '/en/suggest/sent/', '/en/gone/']) {
+    for (const path of ['/en/events/', '/en/suggest/sent/', '/en/gone/']) {
       expect(paths).not.toContain(path)
     }
     expect(paths.some((path) => path.includes('?'))).toBe(false)

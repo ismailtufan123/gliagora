@@ -17,6 +17,9 @@ export const contentPageIndexed = (page: { draft: boolean }) => !page.draft
 export const jobsListIndexed = (query: URLSearchParams) =>
   isUnfiltered(JOB_FILTERS, parseJobFilters(query)) && !invalidDeadlineRange(query)
 
+/** The world map (PLAN §2.2): indexed, like the unfiltered jobs list it shows on a map. */
+export const mapPageIndexed = (): boolean => true
+
 /** A job: while it is open; closed jobs are `noindex` until they answer 410 (PLAN §2.5). */
 export const jobIndexed = (state: ListingState) => state === 'open'
 

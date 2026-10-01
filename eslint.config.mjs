@@ -72,5 +72,7 @@ export default defineConfig([
     'src/payload-types.ts',
     'src/migrations/**',
     'src/app/(payload)/admin/importMap.js',
+    // MapLibre GL JS, copied from node_modules at build time (src/scripts/vendor-maplibre.mjs)
+    'public/map/maplibre-gl/**',
   ]),
 ])

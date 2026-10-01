@@ -354,6 +354,50 @@
       "retry": "Yeniden dene"
     }
   },
+  "map": {
+    "title": "Sinirbilim pozisyonları haritası",
+    "description": "Dünyanın dört bir yanında açık sinirbilim pozisyonu olan kurumlar, harita üzerinde ve her birindeki pozisyonlarla.",
+    "intro": "Her iğne açık pozisyonu olan bir kurumdur; üzerindeki sayı kaç pozisyon olduğunu gösterir. Pozisyonlarını görmek için bir kurum seçin; haritanın altındaki liste aynı kurumları içerir.",
+    "filterLink": "Haritadaki pozisyonları filtreleyin",
+    "region": "Açık pozisyonu olan kurumların haritası",
+    "skip": "Haritayı atla",
+    "loading": "Harita yükleniyor…",
+    "failed": "Harita yüklenemedi. Aşağıdaki liste aynı kurumları içerir.",
+    "noWebgl": "Bu tarayıcı haritayı çizemiyor. Aşağıdaki liste aynı kurumları içerir.",
+    "noJs": "Harita için JavaScript gerekir. Yukarıdaki liste aynı kurumları içerir.",
+    "listAll": "Açık pozisyonu olan kurumlar",
+    "listFailed": "Kurumlar şu anda yüklenemedi. Lütfen birkaç dakika sonra yeniden deneyin.",
+    "listInView": "Görünen kurumlar",
+    "listCount": "({total} kurumdan {shown})",
+    "listMore": "{count} kurum daha var: burada görmek için yakınlaştırın.",
+    "positions": "{count, plural, one {# açık pozisyon} other {# açık pozisyon}}",
+    "positionsOne": "{count} açık pozisyon",
+    "positionsOther": "{count} açık pozisyon",
+    "unmapped": "Konumu bilinmeyen kurumlardaki pozisyonlar haritada yok: {count}. Pozisyon listesinde yer alıyorlar.",
+    "sources": "Harita verileri <osm>© OpenStreetMap katkıcıları</osm>, Open Database License kapsamında; altlık harita <protomaps>Protomaps</protomaps>; çizim <maplibre>MapLibre</maplibre>. Kurumlar ve konumları <ror>ROR</ror> (Research Organization Registry) kaynaklıdır.",
+    "credits": {
+      "osm": "© OpenStreetMap katkıcıları",
+      "protomaps": "Protomaps",
+      "maplibre": "MapLibre"
+    },
+    "controls": {
+      "title": "Harita",
+      "zoomIn": "Yakınlaştır",
+      "zoomOut": "Uzaklaştır",
+      "credits": "Harita kaynaklarını göster veya gizle",
+      "windowsHelp": "Haritayı yakınlaştırmak için Ctrl + kaydırma kullanın",
+      "macHelp": "Haritayı yakınlaştırmak için ⌘ + kaydırma kullanın",
+      "mobileHelp": "Haritayı hareket ettirmek için iki parmağınızı kullanın"
+    },
+    "panel": {
+      "close": "Kapat",
+      "website": "Web sitesi",
+      "ror": "ROR kaydı",
+      "openPositions": "Açık pozisyonlar ({count})",
+      "institutionPage": "Kurum sayfası",
+      "inList": "Bu pozisyonlar listede"
+    }
+  },
   "unavailable": {
     "text": "Gliagora şu anda geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra yeniden deneyin."
   },

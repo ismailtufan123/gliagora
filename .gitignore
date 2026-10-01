@@ -34,3 +34,6 @@ next-env.d.ts
 # Deploy key pair, if someone creates it in the repository folder by mistake
 gliagora-deploy
 gliagora-deploy.pub
+
+# MapLibre GL JS, copied from node_modules at build time (src/scripts/vendor-maplibre.mjs)
+/public/map/maplibre-gl/

@@ -31,6 +31,8 @@ export const PAGES = [
   { path: '/en/jobs/?type=phd&q=no+such+position', name: 'jobs list (empty)' },
   { path: jobPath(FIXED_JOBS.open), name: 'job (open)' },
   { path: jobPath(FIXED_JOBS.expiredRecently), name: 'job (closed)' },
+  // The world map (M5): MapLibre and its data load after the page; `map` gives it the map budget.
+  { path: '/en/map/', name: 'map', map: true },
   { path: '/en/search/', name: 'search (empty)' },
   // Positions, institutions and subfields on the CI data; "See all" too (more than 10 positions).
   { path: '/en/search/?q=neuro', name: 'search (results)' },

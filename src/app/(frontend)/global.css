@@ -1393,4 +1393,193 @@
     content: '…' / '';
     color: var(--text-muted);
   }
+
+  /*
+   * The map (PLAN §9.3, §9.6, §14): a frame of fixed height (nothing moves while it loads), the
+   * institution's panel over its right side (a bottom sheet on phones), and the list of
+   * institutions in view beside it on wide screens and below it on others.
+   */
+  .map-view {
+    --map-height: clamp(20rem, 62vh, 42rem);
+    display: grid;
+    gap: var(--space-6);
+    position: relative;
+  }
+
+  @media (width >= 64rem) {
+    .map-view {
+      grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+      align-items: start;
+    }
+
+    .map-view .map-list {
+      max-block-size: var(--map-height);
+      overflow-y: auto;
+    }
+  }
+
+  /* Hidden until it has focus, then over the map's top corner. */
+  .map-skip:not(:focus) {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .map-skip:focus {
+    position: absolute;
+    inset-block-start: var(--space-2);
+    inset-inline-start: var(--space-2);
+    z-index: var(--z-dropdown);
+    padding: var(--space-2) var(--space-4);
+    background: var(--surface);
+    border-radius: var(--corner-control);
+  }
+
+  .map-frame {
+    position: relative;
+    block-size: var(--map-height);
+    overflow: hidden;
+    background: var(--surface-sunken);
+    border: 1px solid var(--line);
+    border-radius: var(--corner-overlay);
+  }
+
+  /* MapLibre's own stylesheet (unlayered, so it wins) makes this `position: relative`. */
+  .map-canvas {
+    block-size: 100%;
+  }
+
+  .map-message {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline: var(--space-4);
+    translate: 0 -50%;
+    margin: 0 auto;
+    max-inline-size: var(--measure);
+    padding: var(--space-3) var(--space-4);
+    text-align: center;
+    background: var(--surface);
+    border-radius: var(--corner-control);
+  }
+
+  .map-message-static {
+    max-inline-size: var(--measure);
+  }
+
+  .map-panel {
+    position: absolute;
+    z-index: var(--z-dropdown);
+    inset-block: var(--space-3);
+    inset-inline-end: var(--space-3);
+    inline-size: min(25rem, calc(100% - 2 * var(--space-3)));
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    overflow-y: auto;
+    padding: var(--space-4);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--corner-overlay);
+    box-shadow: var(--elevation-overlay);
+  }
+
+  @media (width < 48rem) {
+    .map-panel {
+      inset: auto 0 0;
+      inline-size: auto;
+      max-block-size: 65%;
+      border-end-start-radius: 0;
+      border-end-end-radius: 0;
+    }
+  }
+
+  .map-panel-head {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  /* "Close" keeps its word whole; a longer label still wraps between words. */
+  .map-panel-head > button {
+    flex: none;
+    max-inline-size: 50%;
+    overflow-wrap: normal;
+  }
+
+  .map-panel-links,
+  .map-panel-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .map-panel-jobs {
+    display: grid;
+    border-block: 1px solid var(--line);
+  }
+
+  .map-panel-jobs > li {
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-2);
+  }
+
+  .map-panel-jobs > li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  .map-list {
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+  }
+
+  .map-list > ul {
+    display: grid;
+    border-block: 1px solid var(--line);
+  }
+
+  .map-list > ul > li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  .map-list-item {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-3);
+    inline-size: 100%;
+    padding: var(--space-2) var(--space-1);
+    text-align: start;
+    color: inherit;
+  }
+
+  button.map-list-item:hover,
+  .map-list-item[aria-pressed='true'] {
+    background: var(--surface-sunken);
+  }
+
+  .map-list-item[aria-pressed='true'] > span:first-child {
+    font-weight: 700;
+  }
+
+  .map-sources {
+    max-inline-size: var(--measure);
+    font-size: var(--step--1);
+  }
+
+  /* MapLibre's own controls and credits in the site's type and colours. */
+  .map-frame .maplibregl-ctrl-attrib,
+  .map-frame .maplibregl-ctrl-attrib a {
+    font-family: var(--font-body-stack);
+    color: var(--text);
+  }
+
+  .map-frame .maplibregl-ctrl-attrib {
+    background: var(--surface);
+  }
 }

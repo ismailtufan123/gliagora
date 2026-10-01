@@ -1132,7 +1132,7 @@ Order checklist: data centre in Türkiye; renewal price after any campaign perio
 | Basemap | Protomaps basemap (OpenStreetMap data) as a single PMTiles file on our server, served by Caddy with HTTP range requests; glyphs (SIL OFL) and sprites (MIT) self-hosted from `protomaps/basemaps-assets`. The z0–15 planet was 138 GB on 2026-09-30 and the maxzoom-10 extract of that build measured 3.8 GB (one contiguous download); MapLibre over-zooms to street level for context. As built in M5.1: `deploy/basemap/fetch-basemap.sh` puts it in `/opt/gliagora/basemap/public` in versioned folders, and `/basemap/current.json` (never cached) names the current tiles, fonts and sprites, so a refresh needs no deploy and can be rolled back; the tests use a 2.3 MB Istanbul fixture of the same layout |
 | Why not OSM's tiles | The OSMF tile servers are donation-funded, best effort, may block heavy users without notice, and warn commercial or donation-seeking services that access can be withdrawn `[V]` |
 | Style | Minimal custom style from the Protomaps flavours, tokenised for light (paper) and dark (night); English labels with fallback; localized labels later |
-| Data | `/api/map/institutions?{filters}` returns GeoJSON (institution ID, name, city, country, counts of positions and events) using the shared `FilterState`; cached 10 minutes per filter combination |
+| Data | `/api/map/institutions?{filters}` returns GeoJSON (institution ID, name, city, country, counts of positions and events) using the shared `FilterState`; cached 10 minutes per filter combination. As built in M5.2: the pins carry only the ID and the count; the panel's text (each position with its deadline in words) comes in the same answer, keyed by institution, and the list and the map resolve the filters with the same code (`src/lib/records.ts`), so they always count the same positions |
 | Clustering | GeoJSON source with clustering (radius ~50 px, stops at zoom 12), summed counts; clicking a cluster zooms to its expansion zoom |
 | Pins | Circle with count; ring style shows positions, events or both; the panel repeats this in text (never colour alone) |
 | Zoom story | World → country (click a country in the list or map to fit its bounds) → institution → panel with its positions and events → detail page |
@@ -1141,7 +1141,7 @@ Order checklist: data centre in Türkiye; renewal price after any campaign perio
 | Accessibility | Map region labelled with a "Skip map" link; never a keyboard trap; "Institutions in view" list as the keyboard and screen-reader alternative; no geolocation prompt; reduced motion jumps instead of flying |
 | Attribution | "© OpenStreetMap contributors" (ODbL, links to the copyright page), Protomaps and MapLibre in the attribution control; ROR credited on the map page; the ODbL notice for deadline time zones derived from OpenStreetMap borders (§11.3) is settled here too |
 | Events | Pinned at the host institution or at the venue's city; never at an individual's address |
-| Fallback | No WebGL → list + static preview image + short message |
+| Fallback | No WebGL → list + short message (M5.2: no static preview image; a picture made earlier would not show the current pins, while the list next to it does); no JavaScript → the same list, each institution linked to its page |
 | Updates | Basemap refreshed twice a year; institution data monthly with the ROR import |
 
 ---
@@ -1322,7 +1322,7 @@ The texts are Markdown files in `content/{locale}/` (D28). Each stays a draft (v
 | CSS (total) | ≤35 KB gzip |
 | JavaScript on ordinary pages (initial, incl. framework runtime) | ≤140 KB gzip (D29). Measured at M1: 135 KB on every template, of which about 132 KB is React and Next.js themselves; the header's own script is about 3 KB. The map and hero chunks below have their own budgets and load only on their own routes |
 | Hero chunk (home only, after `load`) | ≤230 KB gzip |
-| Map chunk (on demand) | ≤280 KB gzip `[U]` |
+| Map chunk (on demand) | ≤330 KB gzip (M5, measured: about 323 KB, of which MapLibre GL JS 6 with its worker is 308 KB; the earlier unverified estimate was 280 KB), plus MapLibre's stylesheet (about 10 KB); loaded only where a map is shown, after the page |
 | Fonts | 2 families; ≤4 files preloaded; ≤120 KB total |
 | Images | AVIF/WebP, responsive `srcset`, explicit dimensions, lazy below the fold |
 | Third-party requests | 0 |

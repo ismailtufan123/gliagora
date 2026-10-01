@@ -76,11 +76,11 @@ test.describe('sitemaps', () => {
     expect(await (await request.get('/sitemap.xml')).text()).not.toContain('subfields.xml')
   })
 
-  test('the pages sitemap lists the home page, the jobs list and About, and no draft', async ({
+  test('the pages sitemap lists the home page, the jobs list, the map and About, and no draft', async ({
     request,
   }) => {
     const paths = locs(await getXml(request, '/sitemaps/pages.xml')).map(pathOf)
-    expect(paths).toEqual(['/en/', '/en/jobs/', '/en/suggest/', '/en/about/'])
+    expect(paths).toEqual(['/en/', '/en/jobs/', '/en/map/', '/en/suggest/', '/en/about/'])
   })
 
   test('the jobs sitemap lists the open jobs, and no closed, gone, withdrawn or draft one', async ({

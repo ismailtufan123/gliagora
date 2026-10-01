@@ -344,69 +344,67 @@ export type JobsList = {
 }
 
 /**
- * The jobs list for these filters: one query each for the taxonomy terms (options, slugs and
- * their descendants), the countries with open jobs, the chosen institutions and countries, the
- * number of open jobs, and the page of matching jobs with their total. Unknown and retired
- * values match nothing (PLAN §2.4); a filter with no known value skips the jobs query.
+ * The jobs list's filters resolved against the database, shared by the list and the map (so both
+ * always show the same positions): one query each for the taxonomy terms (options, slugs and
+ * their descendants), the countries with open jobs, the chosen institutions and countries, and the
+ * free text. `where` is the query for the matching open jobs, or null when nothing can match:
+ * unknown and retired values match nothing (PLAN §2.4).
  */
-export async function jobsList(filters: JobFilters, locale: Locale): Promise<JobsList> {
+async function resolveJobFilters(filters: JobFilters, locale: Locale, now: Date) {
   const payload = await getPayload({ config })
-  const now = requestTime()
   const open = openJobsWhere(now)
   const rorIds = filters.institution.filter((id) => id.length === 9)
   const shortIds = filters.institution.filter((id) => id.length !== 9)
-  const [terms, openCountries, openCount, institutions, chosenCountries, search] =
-    await Promise.all([
-      payload.find({
-        collection: 'terms',
-        where: {
-          vocabulary: { in: Object.values(TERM_PARAMS) },
-          // Unset counts as active, as in src/lib/detail-lookup.ts.
-          isActive: { not_equals: false },
-        },
-        select: { vocabulary: true, slug: true, label: true, parent: true, group: true },
-        sort: ['sortOrder', 'id'],
-        locale,
-        pagination: false,
-        depth: 0,
-      }),
-      payload.findDistinct({
-        collection: 'jobs',
-        field: 'country',
-        where: open,
-        locale,
-        depth: 1,
-        populate: { countries: { name: true, region: true } },
-      }),
-      payload.count({ collection: 'jobs', where: open }),
-      filters.institution.length > 0
-        ? payload.find({
-            collection: 'institutions',
-            where: {
-              or: [
-                ...(rorIds.length > 0 ? [{ rorId: { in: rorIds } }] : []),
-                ...(shortIds.length > 0 ? [{ shortId: { in: shortIds } }] : []),
-              ],
-            },
-            select: { name: true, rorId: true, shortId: true },
-            locale,
-            pagination: false,
-            depth: 0,
-          })
-        : null,
-      filters.country.length > 0
-        ? payload.find({
-            collection: 'countries',
-            where: { id: { in: filters.country } },
-            select: { name: true, region: true },
-            locale,
-            pagination: false,
-            depth: 0,
-          })
-        : null,
-      // Free text: the open positions the site search finds (src/lib/search), by ID.
-      filters.q ? matchingJobIds(filters.q, now) : null,
-    ])
+  const [terms, openCountries, institutions, chosenCountries, search] = await Promise.all([
+    payload.find({
+      collection: 'terms',
+      where: {
+        vocabulary: { in: Object.values(TERM_PARAMS) },
+        // Unset counts as active, as in src/lib/detail-lookup.ts.
+        isActive: { not_equals: false },
+      },
+      select: { vocabulary: true, slug: true, label: true, parent: true, group: true },
+      sort: ['sortOrder', 'id'],
+      locale,
+      pagination: false,
+      depth: 0,
+    }),
+    payload.findDistinct({
+      collection: 'jobs',
+      field: 'country',
+      where: open,
+      locale,
+      depth: 1,
+      populate: { countries: { name: true, region: true } },
+    }),
+    filters.institution.length > 0
+      ? payload.find({
+          collection: 'institutions',
+          where: {
+            or: [
+              ...(rorIds.length > 0 ? [{ rorId: { in: rorIds } }] : []),
+              ...(shortIds.length > 0 ? [{ shortId: { in: shortIds } }] : []),
+            ],
+          },
+          select: { name: true, rorId: true, shortId: true },
+          locale,
+          pagination: false,
+          depth: 0,
+        })
+      : null,
+    filters.country.length > 0
+      ? payload.find({
+          collection: 'countries',
+          where: { id: { in: filters.country } },
+          select: { name: true, region: true },
+          locale,
+          pagination: false,
+          depth: 0,
+        })
+      : null,
+    // Free text: the open positions the site search finds (src/lib/search), by ID.
+    filters.q ? matchingJobIds(filters.q, now) : null,
+  ])
 
   const filterTerms: FilterTerm[] = terms.docs.map((term) => ({
     id: term.id,
@@ -446,6 +444,22 @@ export async function jobsList(filters: JobFilters, locale: Locale): Promise<Job
     },
     now,
   )
+  return { payload, where, filterTerms, countries: [...withOpenJobs, ...chosenOnly], institutions }
+}
+
+/**
+ * The jobs list for these filters: the resolved filters (above), the number of open jobs, and the
+ * page of matching jobs with their total. A filter with no known value skips the jobs query.
+ */
+export async function jobsList(filters: JobFilters, locale: Locale): Promise<JobsList> {
+  const now = requestTime()
+  const [resolved, openCount] = await Promise.all([
+    resolveJobFilters(filters, locale, now),
+    getPayload({ config }).then((payload) =>
+      payload.count({ collection: 'jobs', where: openJobsWhere(now) }),
+    ),
+  ])
+  const { payload, where, filterTerms, countries, institutions } = resolved
   const found = where
     ? await payload.find({
         collection: 'jobs',
@@ -474,7 +488,7 @@ export async function jobsList(filters: JobFilters, locale: Locale): Promise<Job
     open: openCount.totalDocs,
     options: filterOptions(
       filterTerms,
-      [...withOpenJobs, ...chosenOnly],
+      countries,
       filters.region,
       new Intl.Collator(intlLocale(locale)),
     ),
@@ -484,6 +498,109 @@ export async function jobsList(filters: JobFilters, locale: Locale): Promise<Job
       ),
     ),
   }
+}
+
+/** At most this many matching positions go on the map (PLAN §3.4 expects hundreds). */
+export const MAP_MAX_JOBS = 5000
+
+/** An institution on the map (PLAN §14): where it is, and its positions that match the filters. */
+export type MapInstitution = {
+  id: number
+  /** The value of the `institution` filter: the ROR ID, or the short ID of one added by hand. */
+  key: string
+  name: string
+  city: string | null
+  country: string | null
+  lng: number
+  lat: number
+  /** The institution page. */
+  path: string
+  website: string | null
+  rorId: string | null
+  /** Its matching open positions, soonest deadline first. */
+  jobs: JobCard[]
+}
+
+export type MapData = {
+  institutions: MapInstitution[]
+  /** Matching positions at institutions without coordinates: in the list, not on the map. */
+  unmapped: number
+}
+
+/**
+ * The map's data for these filters (PLAN §14): the institutions with matching open positions, each
+ * with its positions. Pins are institutions only, never individuals; a position is pinned at its
+ * institution even when it names another place.
+ */
+export async function mapInstitutions(filters: JobFilters, locale: Locale): Promise<MapData> {
+  const now = requestTime()
+  const { payload, where } = await resolveJobFilters(filters, locale, now)
+  if (!where) return { institutions: [], unmapped: 0 }
+  const found = await payload.find({
+    collection: 'jobs',
+    where,
+    sort: JOBS_SORT.deadline,
+    select: JOB_CARD_SELECT,
+    populate: JOB_POPULATE,
+    locale,
+    limit: MAP_MAX_JOBS,
+    depth: 1,
+  })
+  if (found.totalDocs > MAP_MAX_JOBS) {
+    console.warn(`The map shows ${MAP_MAX_JOBS} of ${found.totalDocs} matching positions.`)
+  }
+  const jobsByInstitution = new Map<number, JobCard[]>()
+  for (const doc of found.docs) {
+    const card = toJobCard(doc as JobDoc)
+    if (!card?.institution) continue
+    const jobs = jobsByInstitution.get(card.institution.id) ?? []
+    jobs.push(card)
+    jobsByInstitution.set(card.institution.id, jobs)
+  }
+  if (jobsByInstitution.size === 0) return { institutions: [], unmapped: 0 }
+  const places = await payload.find({
+    collection: 'institutions',
+    where: { id: { in: [...jobsByInstitution.keys()] } },
+    select: {
+      name: true,
+      slug: true,
+      rorId: true,
+      shortId: true,
+      city: true,
+      country: true,
+      lat: true,
+      lng: true,
+      website: true,
+    },
+    populate: { countries: { name: true } },
+    locale,
+    pagination: false,
+    depth: 1,
+  })
+  const institutions: MapInstitution[] = []
+  let unmapped = 0
+  for (const doc of places.docs) {
+    const jobs = jobsByInstitution.get(doc.id) ?? []
+    const key = doc.rorId || doc.shortId
+    if (typeof doc.lat !== 'number' || typeof doc.lng !== 'number' || !key || !doc.slug) {
+      unmapped += jobs.length
+      continue
+    }
+    institutions.push({
+      id: doc.id,
+      key,
+      name: doc.name,
+      city: doc.city ?? null,
+      country: typeof doc.country === 'object' && doc.country ? doc.country.name || null : null,
+      lng: doc.lng,
+      lat: doc.lat,
+      path: institutionPath(doc.slug, key),
+      website: doc.website ?? null,
+      rorId: doc.rorId ?? null,
+      jobs,
+    })
+  }
+  return { institutions, unmapped }
 }
 
 /** Job rows for these IDs, in the same order (the search's ranking). */

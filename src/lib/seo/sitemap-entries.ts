@@ -7,6 +7,7 @@ import {
   institutionIndexed,
   jobIndexed,
   jobsListIndexed,
+  mapPageIndexed,
   subfieldIndexIndexed,
 } from '@/lib/indexing'
 import { type ListingDates, isOpen, listingState } from '@/lib/jobs/deadline'
@@ -68,6 +69,7 @@ export function pageEntries(subfields: readonly SitemapSubfield[]): SitemapEntry
   return [
     entry(paths.home()),
     ...(jobsListIndexed(new URLSearchParams()) ? [entry(JOB_FILTERS.path)] : []),
+    ...(mapPageIndexed() ? [entry(paths.section('map'))] : []),
     // "Suggest a listing" is indexed (PLAN §2.2); its confirmation page is not.
     entry(paths.section('suggest')),
     ...(subfieldIndexIndexed(subfields) ? [entry(SUBFIELDS_PATH)] : []),
