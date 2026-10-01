@@ -7,7 +7,7 @@ Instructions for Claude Code in this repository. Read this file first, then `PLA
 Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, events, funding, papers, news, resources, a world map and a monthly newsletter, **Glia Notes**. Tagline: "Where neuroscience meets".
 
 - Data controller and editor: Nuray Sancar (natural person, Türkiye). The team has no professional web-development background: explain choices briefly and prefer boring, well-documented tools.
-- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D43). If a task conflicts with `PLAN.md`, stop and ask.
+- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D45). If a task conflicts with `PLAN.md`, stop and ask.
 
 ## Current milestone
 

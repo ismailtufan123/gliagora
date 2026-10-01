@@ -31,7 +31,7 @@ export const CONTENT_PAGES = {
     messages: 'about',
     path: '/en/about/',
     file: 'en/about.md',
-    updated: '2026-09-27',
+    updated: '2026-10-01',
     draft: false,
   },
   // Legal texts (PLAN §15.4): drafts for the operator's review, written in M1 and, for the
