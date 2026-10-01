@@ -15,8 +15,9 @@ import { type CurrentMember, currentMember } from '@/lib/members/session'
 // Sign in (M4b, D49; the M4b design §5): the ways to sign in that are on (SignInPanel), or, for a
 // member who is signed in, who they are, with the way to their account and a Sign out button.
 // `?next=` is where sign-in leads afterwards; `?error=` an outcome from the routes (an expired
-// link, a failure with its reference), shown in both cases: a member may open a link while still
-// signed in, to change accounts. Rendered for each request: it reads the session and gives the
+// link, a Google or ORCID sign-in that was cancelled, took too long or was refused, a failure with
+// its reference), shown in both cases: a member may sign in again while still signed in, to change
+// accounts. Rendered for each request: it reads the session and gives the
 // form its own spam-check challenge. Never indexed.
 export const dynamic = 'force-dynamic'
 
@@ -43,7 +44,17 @@ export default async function Page({ searchParams }: Props) {
     return <MemberUnavailable title={t('title')} name="Sign-in page" error={error} />
   }
 
-  const outcome = readOutcome(params, { error: ['link-expired', 'failed'] })
+  const outcome = readOutcome(params, {
+    error: [
+      'link-expired',
+      'failed',
+      'expired',
+      'cancelled-google',
+      'cancelled-orcid',
+      'create-limited',
+      'email-has-other-google',
+    ],
+  })
   if (current) {
     const account = await getTranslations({ locale: 'en', namespace: 'account' })
     return (

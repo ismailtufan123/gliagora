@@ -218,12 +218,14 @@ jobs:
           E2E_MEMBER_TOKEN: e2e-test-only
       # The end-to-end tests need what the smoke test leaves out (M4b): a mail server, for the
       # emails the tests read back (Mailpit, the image compose.yaml pins, only on this machine's
-      # loopback), so the app is made again with SMTP_HOST, on the host's network: the app, the
-      # browser and Mailpit then meet on 127.0.0.1, so the mail server is local to the app (no TLS
-      # needed) and the app's own address is the browser's http://localhost:3000. The same secrets
-      # as the smoke test. This also starts the app afresh, which the home page's figures need: it
-      # keeps them for up to 10 minutes (src/lib/home.ts), and the smoke test read them from the
-      # empty database.
+      # loopback), and the fake Google and ORCID (tests/fake-oidc/server.ts, which Playwright
+      # starts on this machine at 127.0.0.1:9400 for the end-to-end step). So the app is made again
+      # with SMTP_HOST and AUTH_TEST_ISSUER, on the host's network: the app, the browser, Mailpit
+      # and the fake providers then meet on 127.0.0.1, so the mail server is local to the app (no
+      # TLS needed), the app and the browser use one issuer address, and the app's own address is
+      # the browser's http://localhost:3000. The same secrets as the smoke test. This also starts
+      # the app afresh, which the home page's figures need: it keeps them for up to 10 minutes
+      # (src/lib/home.ts), and the smoke test read them from the empty database.
       - name: Re-create the app with the test settings
         if: needs.tested.outputs.run == ''
         run: |
@@ -238,11 +240,12 @@ jobs:
             -e PAYLOAD_SECRET="$APP_PAYLOAD_SECRET" \
             -e ALTCHA_HMAC_KEY="$APP_ALTCHA_HMAC_KEY" \
             -e SMTP_HOST=127.0.0.1 -e SMTP_PORT=1025 \
+            -e AUTH_TEST_ISSUER=http://127.0.0.1:9400 \
             gliagora:ci
           for i in $(seq 1 60); do curl -fsS http://localhost:3000/health/ && break; sleep 2; done
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8025/readyz && break; sleep 1; done
           echo
-          logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email on, google off, orcid off' <<<"$logs"
+          logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email on, google on, orcid on' <<<"$logs"
       # Tests against a real PostgreSQL (pnpm test:db), on scratch databases dropped afterwards:
       # search (src/lib/search/search.db.test.ts, owned by a throwaway role that is not a superuser,
       # as on the server) and the scheduled tasks (tests/integration/, M4.7, on a migrated scratch
@@ -264,6 +267,7 @@ jobs:
           E2E_EDITOR_PASSWORD: e2e-test-only
           E2E_MEMBER_TOKEN: e2e-test-only
           MAILPIT_URL: http://127.0.0.1:8025
+          AUTH_TEST_ISSUER: http://127.0.0.1:9400
 
       # Records that this tree passed every check and test, for the push to main that merges it
       # (job `tested`). Only a pull request run that got this far uploads it. A failure here only

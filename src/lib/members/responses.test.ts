@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { SESSION_COOKIE, SIGN_IN_COOKIE, clearedCookie, sessionCookie } from './cookies'
-import { forbidden, formValue, readForm, seeOther } from './responses'
+import {
+  SESSION_COOKIE,
+  SIGN_IN_COOKIE,
+  clearedCookie,
+  sessionCookie,
+  signInCookie,
+} from './cookies'
+import { forbidden, formValue, readForm, seeOther, toProvider } from './responses'
 
 // The answers of the member POST routes (src/lib/members/responses.ts): a 303 with a relative
 // address, never stored, with the cookies it sets.
@@ -26,6 +32,26 @@ describe('seeOther', () => {
     'refuses to lead off the site: %s',
     (path) => {
       expect(() => seeOther(path)).toThrow()
+    },
+  )
+})
+
+describe('toProvider', () => {
+  it("answers 303 to the provider's page, with the sign-in cookie, never stored", () => {
+    const url = new URL('https://accounts.google.com/o/oauth2/v2/auth?state=x')
+    const response = toProvider(url, [signInCookie('v1.sealed')])
+    expect(response.status).toBe(303)
+    expect(response.headers.get('location')).toBe(url.href)
+    expect(response.headers.get('cache-control')).toBe('no-store')
+    expect(response.headers.getSetCookie()).toEqual([
+      `${SIGN_IN_COOKIE}=v1.sealed; Path=/; Max-Age=900; HttpOnly; Secure; SameSite=Lax`,
+    ])
+  })
+
+  it.each(['javascript:alert(1)', 'data:text/html,x', 'ftp://example.org/'])(
+    'refuses anything but a web address: %s',
+    (address) => {
+      expect(() => toProvider(new URL(address))).toThrow()
     },
   )
 })

@@ -60,6 +60,12 @@ const pendingAccount = z.strictObject({
   sub: z.string().min(1).max(255),
   /** A Google address, only where Google is authoritative for it (identity.ts). */
   email: z.string().max(254).optional(),
+  /**
+   * An address Google sent that the account does not take (not verified, or not one Google
+   * manages): only for the confirm page's note, never stored or matched (the M4b design §7.2).
+   */
+  ignoredEmail: z.string().max(254).optional(),
+  ignoredReason: z.enum(['unverified', 'not-managed']).optional(),
   /** The name on the ORCID record, kept only if the member ticks the box. */
   name: z.string().max(200).optional(),
   next,

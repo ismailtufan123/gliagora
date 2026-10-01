@@ -11,8 +11,30 @@ const ALL = { done: DONE_CODES, error: ERROR_CODES }
 
 describe('readOutcome', () => {
   it.each([
-    [{ done: 'created' }, { kind: 'done', code: 'created' }],
-    [{ done: 'signed-in' }, { kind: 'done', code: 'signed-in' }],
+    [{ done: 'created' }, { kind: 'done', code: 'created', othersEnded: false }],
+    [{ done: 'signed-in' }, { kind: 'done', code: 'signed-in', othersEnded: false }],
+    [
+      { done: 'linked-orcid', others: 'ended' },
+      { kind: 'done', code: 'linked-orcid', othersEnded: true },
+    ],
+    [
+      { done: 'unlinked-google', others: 'yes' },
+      { kind: 'done', code: 'unlinked-google', othersEnded: false },
+    ],
+    [
+      { error: 'cancelled-google', others: 'ended' },
+      { kind: 'error', code: 'cancelled-google', reference: null },
+    ],
+    [{ error: 'cancelled-orcid' }, { kind: 'error', code: 'cancelled-orcid', reference: null }],
+    [{ error: 'link-not-started' }, { kind: 'error', code: 'link-not-started', reference: null }],
+    [
+      { done: 'signed-in-linked-google', others: 'ended' },
+      { kind: 'done', code: 'signed-in-linked-google', othersEnded: true },
+    ],
+    [
+      { error: 'orcid-elsewhere', ref: '3F2A9C01D4' },
+      { kind: 'error', code: 'orcid-elsewhere', reference: '3F2A9C01D4' },
+    ],
     [{ error: 'link-expired' }, { kind: 'error', code: 'link-expired', reference: null }],
     [
       { error: 'failed', ref: '3F2A9C01D4' },
@@ -33,6 +55,8 @@ describe('readOutcome', () => {
     { error: '<script>' },
     { done: ['created', 'created'] },
     { error: 'Failed' },
+    // The single code of before PR 3: each provider has its own now.
+    { error: 'cancelled' },
   ])('shows nothing for %j', (params) => {
     expect(readOutcome(params, ALL)).toBeNull()
   })
@@ -72,6 +96,25 @@ describe('outcomePath', () => {
     expect(outcomePath('/en/sign-in/', { error: 'link-expired', reference: 'bad' })).toBe(
       '/en/sign-in/?error=link-expired#outcome',
     )
+  })
+
+  it('says when other browsers were signed out', () => {
+    expect(outcomePath('/en/account/', { done: 'linked-google', othersEnded: true })).toBe(
+      '/en/account/?done=linked-google&others=ended#outcome',
+    )
+    expect(outcomePath('/en/account/', { done: 'linked-google', othersEnded: false })).toBe(
+      '/en/account/?done=linked-google#outcome',
+    )
+  })
+
+  it('keeps the parameters the page needs besides the outcome, and only those with a value', () => {
+    expect(
+      outcomePath(
+        '/en/sign-in/',
+        { error: 'cancelled-orcid' },
+        { next: '/en/jobs/?type=phd', save: null },
+      ),
+    ).toBe('/en/sign-in/?next=%2Fen%2Fjobs%2F%3Ftype%3Dphd&error=cancelled-orcid#outcome')
   })
 
   it('reads back as what it wrote', () => {

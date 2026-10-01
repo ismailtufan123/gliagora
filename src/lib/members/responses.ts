@@ -19,6 +19,19 @@ export function seeOther(path: string, cookies: readonly MemberCookie[] = []): R
   return new Response(null, { status: 303, headers })
 }
 
+/**
+ * A 303 to a provider's authorization page (Google, ORCID), setting the sign-in cookie: the one
+ * redirect off the site, to an address from the provider's discovery document (oidc.ts).
+ */
+export function toProvider(url: URL, cookies: readonly MemberCookie[] = []): Response {
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+    throw new Error('A provider is reached over https (http only for the test fakes)')
+  }
+  const headers = new Headers({ Location: url.href, 'Cache-Control': NOT_STORED })
+  for (const cookie of cookies) headers.append('Set-Cookie', setCookieHeader(cookie))
+  return new Response(null, { status: 303, headers })
+}
+
 /** A POST that does not come from the site's own pages (`sameOrigin()`), or while sign-in is off. */
 export function forbidden(): Response {
   return new Response('Forbidden', {

@@ -607,10 +607,16 @@
   },
   "signIn": {
     "title": "Oturum aç",
-    "description": "Size e-postayla gönderdiğimiz bir bağlantıyla Gliagora'da oturum açın. Parola yoktur.",
+    "description": "Gliagora'da oturum açın. Gliagora parolası yoktur.",
     "intro": "Üyeler pozisyonları kaydedebilir, iş listesinin ve aylık bültenin önce neyi göstereceğini seçebilir. Parola yoktur.",
     "notAvailable": "Oturum açma henüz kullanılamıyor.",
     "notAvailableContact": "Verilerinizle ilgili sorularınız mı var? <email>privacy@gliagora.com</email> adresine yazın.",
+    "providers": {
+      "heading": "{methods, select, both {Google ya da ORCID ile oturum açın} google {Google ile oturum açın} other {ORCID ile oturum açın}}",
+      "google": "Google ile devam et",
+      "orcid": "ORCID ile devam et",
+      "note": "{methods, select, both {Google'ın ya da ORCID'in kendi sayfasında oturum açar, ardından buraya dönersiniz.} google {Google'ın kendi sayfasında oturum açar, ardından buraya dönersiniz.} other {ORCID'in kendi sayfasında oturum açar, ardından buraya dönersiniz.}}"
+    },
     "emailHeading": "E-posta adresinizle oturum açın",
     "email": {
       "label": "E-posta adresi",
@@ -621,8 +627,8 @@
     "spamNote": "Spam programlarını engellemek için tarayıcınız form gönderilmeden önce küçük bir bulmaca çözer; kaç bağlantı gönderilebileceğini sınırlamak için de IP adresinizin ve e-posta adresinin karma (hash) değerlerini 24 saat saklarız. <link>Formu nasıl koruduğumuz</link>",
     "submit": "Bana oturum açma bağlantısı gönder",
     "sending": "Bağlantı gönderiliyor…",
-    "privacy": "E-posta adresinizi yalnızca oturum açmanız ve hesabınızda seçtikleriniz için kullanırız. <link>Üye hesaplarını nasıl ele aldığımız</link>",
-    "terms": "Henüz bir hesabınız yoksa bağlantı, hesap oluşturmanızı sağlar. Hesap oluşturarak <link>kullanım koşullarını</link> kabul etmiş ve 16 yaşında ya da daha büyük olduğunuzu onaylamış olursunuz.",
+    "privacy": "Oturum açarken kullandığınız bilgileri yalnızca oturumunuzu açmak ve hesabınızda seçtikleriniz için kullanırız. <link>Üye hesaplarını nasıl ele aldığımız</link>",
+    "terms": "{providers, select, none {Henüz bir hesabınız yoksa e-postayla gönderilen bağlantıyla hesap oluşturabilirsiniz.} other {Henüz bir hesabınız yoksa ilk kez oturum açtığınızda hesap oluşturabilirsiniz.}} Hesap oluşturarak <link>kullanım koşullarını</link> kabul etmiş ve 16 yaşında ya da daha büyük olduğunuzu onaylamış olursunuz.",
     "signedIn": {
       "title": "Oturumunuz açık",
       "account": "Hesabınıza gidin",
@@ -661,6 +667,24 @@
       "expired": "Oturum açma bağlantıları 15 dakika boyunca ve yalnızca bir kez çalışır. Bu bağlantıyı kullanmadıysanız yeni bir bağlantı isteyin.",
       "again": "Yeni bağlantı iste"
     },
+    "confirm": {
+      "metaTitle": "Hesabınızı oluşturun",
+      "title": "Gliagora hesabınızı oluşturun",
+      "googleWithEmail": "Yeni hesabınızda oturum açmak için Google hesabınız kullanılacak; hesabın e-posta adresi <strong>{email}</strong> olacak.",
+      "googleWithoutEmail": "Yeni hesabınızda oturum açmak için Google hesabınız kullanılacak. Hesabın şimdilik e-posta adresi olmayacak.",
+      "googleNotManaged": "{email} adresini Google yönetmiyor; bu nedenle adres hesabınıza eklenmez. Adresi, hesabınızdan bir onay bağlantısıyla ekleyebilirsiniz.",
+      "googleUnverified": "Google {email} adresini doğrulamamış; bu nedenle adres hesabınıza eklenmez. Adresi, hesabınızdan bir onay bağlantısıyla ekleyebilirsiniz.",
+      "orcid": "Yeni hesabınızda oturum açmak için <strong>{orcid}</strong> ORCID kimliğiniz kullanılacak. Hesabın şimdilik e-posta adresi olmayacak.",
+      "existing": "Zaten bir Gliagora hesabınız mı var? Bunun yerine <link>o hesapla oturum açın</link> ve hesabınızdan {method, select, google {Google'ı} other {ORCID'i}} bağlayın.",
+      "useName": "ORCID kaydımdaki adı ({name}) görünen adım olarak kullan",
+      "useNameHint": "İsteğe bağlı. Bu seçenek olmadan hesabınızın görünen adı olmaz.",
+      "terms": "Hesap oluşturarak <link>kullanım koşullarını</link> kabul etmiş ve 16 yaşında ya da daha büyük olduğunuzu onaylamış olursunuz.",
+      "button": "Hesap oluştur",
+      "cancel": "Vazgeç",
+      "expiredTitle": "Bu oturum açma işleminin süresi doldu",
+      "expired": "Hesap, oturum açtıktan sonraki 15 dakika içinde ve aynı tarayıcıda oluşturulmalıdır. Lütfen yeniden oturum açın.",
+      "again": "Yeniden oturum aç"
+    },
     "signedOut": {
       "metaTitle": "Oturum kapatıldı",
       "title": "Oturumunuz kapatıldı",
@@ -683,6 +707,7 @@
       "orcid": "<strong>{orcid}</strong> ORCID kimliğiyle oturum açtınız.",
       "google": "Google hesabınızla oturum açtınız."
     },
+    "displayName": "Görünen adınız: <strong>{name}</strong>",
     "methods": {
       "heading": "Oturum açma yolları",
       "email": "E-posta bağlantısı",
@@ -690,7 +715,17 @@
       "orcid": "ORCID",
       "noEmail": "E-posta adresi yok",
       "linked": "Bağlı",
-      "notLinked": "Bağlı değil"
+      "notLinked": "Bağlı değil",
+      "link": {
+        "google": "Google hesabınızı bağlayın",
+        "orcid": "ORCID kimliğinizi bağlayın"
+      },
+      "unlink": {
+        "google": "Google'ı kaldır",
+        "orcid": "ORCID'i kaldır"
+      },
+      "onlyWay": "Hesabınıza girmenin tek yolu bu olduğu için kaldırılamaz.",
+      "note": "{methods, select, both {Bağlarken Google'a ya da ORCID'e gider ve buraya dönersiniz.} google {Bağlarken Google'a gider ve buraya dönersiniz.} other {Bağlarken ORCID'e gider ve buraya dönersiniz.}} Bir oturum açma yolunu bağladığınızda ya da kaldırdığınızda diğer tarayıcılarınızdaki oturumlarınız kapatılır."
     },
     "signOut": {
       "heading": "Oturumu kapatma",
@@ -701,13 +736,31 @@
   "outcome": {
     "done": {
       "signed-in": "Oturumunuz açıldı.",
-      "created": "Hesabınız oluşturuldu ve oturumunuz açıldı."
+      "signed-in-linked-google": "Oturumunuz açıldı. Google hesabınız, aynı e-posta adresine sahip hesabınıza bağlandı; artık onunla da oturum açabilirsiniz.",
+      "created": "Hesabınız oluşturuldu ve oturumunuz açıldı.",
+      "linked-google": "Google hesabınız bağlandı: artık onunla oturum açabilirsiniz.",
+      "linked-orcid": "ORCID kimliğiniz bağlandı: artık onunla oturum açabilirsiniz.",
+      "unlinked-google": "Google kaldırıldı: artık onunla oturum açamazsınız.",
+      "unlinked-orcid": "ORCID kaldırıldı: artık onunla oturum açamazsınız.",
+      "othersEnded": "Oturumunuzun açık olduğu diğer tarayıcılarda oturumunuz kapatıldı."
     },
     "error": {
       "link-expired": "Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış. Aşağıdan yeni bir bağlantı isteyin.",
       "linkExpiredSignedIn": "Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış; bu nedenle oturumunuz önceki gibi açık.",
       "failed": "Bir sorun oluştu. Lütfen yeniden deneyin.",
-      "failedReference": "Bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin."
+      "failedReference": "Bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin.",
+      "expired": "Oturum açma ya da bağlama 15 dakikadan uzun sürdü veya başka bir tarayıcıya ya da eski bir sekmeye döndü; bu nedenle hiçbir şey değişmedi. Lütfen yeniden deneyin.",
+      "cancelled-google": "Google'ın sayfasında vazgeçtiniz; hiçbir şey değişmedi.",
+      "cancelled-orcid": "ORCID'in sayfasında vazgeçtiniz; hiçbir şey değişmedi.",
+      "link-interrupted": "Hiçbir şey bağlanmadı: bağlama tamamlanmadan oturumunuz kapandı ya da başka bir hesapla oturum açtınız. Lütfen yeniden deneyin.",
+      "link-not-started": "Bağlama başlatılamadı. Bu sayfadaki bağlama düğmesine yeniden basın. Bu sorun sürerse tarayıcınızı güncelleyin.",
+      "create-limited": "Kısa süre içinde buradan çok fazla hesap oluşturuldu. Lütfen daha sonra yeniden deneyin.",
+      "email-has-other-google": "Bu adres, başka bir Google hesabına bağlı bir Gliagora hesabına ait. O hesapta bir e-posta bağlantısıyla ya da o hesabın kendi Google hesabıyla oturum açın.",
+      "google-elsewhere": "Bu Google hesabı başka bir Gliagora hesabı tarafından kullanılıyor. Onu buraya bağlamak istiyorsanız önce o hesapla oturum açıp hesabı silin.",
+      "orcid-elsewhere": "Bu ORCID kimliği başka bir Gliagora hesabı tarafından kullanılıyor. Onu buraya bağlamak istiyorsanız önce o kimlikle oturum açıp o hesabı silin.",
+      "google-already-linked": "Hesabınıza zaten başka bir Google hesabı bağlı. Önce onu kaldırın, sonra bunu bağlayın.",
+      "orcid-already-linked": "Hesabınıza zaten başka bir ORCID kimliği bağlı. Önce onu kaldırın, sonra bunu bağlayın.",
+      "last-method": "Hesabınıza girmenin tek yolu bu olduğu için kaldırılamaz. Önce başka bir oturum açma yolu ekleyin."
     }
   },
   "emails": {

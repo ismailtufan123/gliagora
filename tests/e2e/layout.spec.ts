@@ -1,7 +1,16 @@
 import { type Locator, type Page, expect, test } from '@playwright/test'
 
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
-import { asTemplateMember } from './member'
+import { clientAddress } from './forms'
+import {
+  answerAtProvider,
+  asTemplateMember,
+  needsFakeProviders,
+  newAddress,
+  newGoogleSub,
+  newOrcidId,
+  startAt,
+} from './member'
 import { PAGES } from './pages'
 import { hiddenWhenFocused, pseudoLocalise } from './pseudo-locale'
 
@@ -130,6 +139,46 @@ test.describe('reflow at 320px', () => {
       expect(await labelsOverLines(page.locator('main .search-row .button'))).toEqual([])
     })
   }
+
+  // The states of signing in with Google or ORCID that need a pending identity or a member with
+  // two ways in, which no fixed address shows: through the fake providers.
+  test('sign-in with Google and ORCID: no horizontal scroll, with text spacing and at 200%', async ({
+    browser,
+  }) => {
+    needsFakeProviders()
+    const context = await browser.newContext({
+      viewport: { width: 320, height: 640 },
+      extraHTTPHeaders: { 'X-Forwarded-For': clientAddress() },
+    })
+    const page = await context.newPage()
+    const reflows = async (state: string) => {
+      expect(await sidewaysScroll(page), state).toBeLessThanOrEqual(0)
+      await page.addStyleTag({ content: TEXT_SPACING })
+      expect(await sidewaysScroll(page), `${state}, text spacing`).toBeLessThanOrEqual(0)
+      await page.reload()
+      await page.addStyleTag({ content: TEXT_200 })
+      expect(await sidewaysScroll(page), `${state}, text at 200%`).toBeLessThanOrEqual(0)
+    }
+
+    // Create your account after Google, with the note about an address Google does not manage.
+    await startAt(page, 'google', { fields: { sub: newGoogleSub(), email: newAddress(), hd: '' } })
+    await expect(page.getByRole('note')).toBeVisible()
+    await reflows('create your account, Google')
+    // After ORCID, with the box that keeps the record's name.
+    await startAt(page, 'orcid', { fields: { sub: newOrcidId() } })
+    await expect(page.getByRole('checkbox')).toBeVisible()
+    await reflows('create your account, ORCID')
+    // An account with two ways in: ORCID, then Google linked, each with its Remove button.
+    await page.reload()
+    await page.getByRole('button', { name: 'Create account' }).click()
+    await page.getByRole('link', { name: 'Link your Google account' }).click()
+    await answerAtProvider(page, 'google', {
+      fields: { sub: newGoogleSub(), email: newAddress(), hd: 'example.org' },
+    })
+    await expect(page.getByRole('button', { name: 'Remove ORCID' })).toBeVisible()
+    await reflows('account with two ways in')
+    await context.close()
+  })
 
   test('search dialog with text at 200%: the form fits, and the field has room', async ({
     page,

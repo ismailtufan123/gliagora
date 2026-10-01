@@ -51,10 +51,13 @@ export const PAGES = [
   { path: '/en/search/?q=zzqxv', name: 'search (no results)' },
   // Member sign-in (M4b). The sign-in form shows where the app can send email (SMTP_HOST, as in
   // CI); without it, the page says that signing in is not available yet. The pages a valid link
-  // opens are checked in their flow (sign-in.spec.ts); an unknown token shows the expired state.
+  // opens, and the confirm page with a pending Google or ORCID identity, are checked in their
+  // flows (sign-in.spec.ts, oidc.spec.ts; at 320px in layout.spec.ts); an unknown token, or no
+  // sealed sign-in cookie, shows the expired state.
   { path: '/en/sign-in/', name: 'sign in' },
   { path: '/en/sign-in/sent/', name: 'sign-in link sent' },
   { path: '/en/sign-in/link/?token=expired', name: 'sign-in link (expired)' },
+  { path: '/en/sign-in/confirm/', name: 'create your account (expired)' },
   { path: '/en/sign-in/signed-out/', name: 'signed out' },
   { path: '/en/account/', name: 'account (signed out)' },
   { path: '/en/account/', name: 'account (email member)', member: 'email' },

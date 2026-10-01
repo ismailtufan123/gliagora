@@ -3,7 +3,17 @@ import { type Page, type TestInfo, expect, test } from '@playwright/test'
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
 import { clientAddress, summary } from './forms'
 import { signInLinkTo } from './mailpit'
-import { askForLink, needsMailpit, newAddress, ownContext, signInAs } from './member'
+import {
+  askForLink,
+  needsFakeProviders,
+  needsMailpit,
+  newAddress,
+  newGoogleSub,
+  newOrcidId,
+  ownContext,
+  signInAs,
+  startAt,
+} from './member'
 import { PAGES } from './pages'
 import { hiddenWhenFocused, layoutProblems, pseudoLocalise } from './pseudo-locale'
 
@@ -160,6 +170,26 @@ for (const viewport of [
       await expectLayoutHolds(page, testInfo, 'sign-in link, another browser')
       await asking.close()
       await other.close()
+    })
+
+    test('create your account, after Google and after ORCID', async ({ browser }, testInfo) => {
+      needsFakeProviders()
+      const context = await browser.newContext({
+        viewport,
+        extraHTTPHeaders: { 'X-Forwarded-For': clientAddress() },
+      })
+      const page = await context.newPage()
+      // With the note about an address Google does not manage, and the hint for existing accounts.
+      await startAt(page, 'google', {
+        fields: { sub: newGoogleSub(), email: newAddress(), hd: '' },
+      })
+      await expect(page.getByRole('note')).toBeVisible()
+      await expectLayoutHolds(page, testInfo, 'create your account, Google')
+      // With the box that keeps the name on the ORCID record.
+      await startAt(page, 'orcid', { fields: { sub: newOrcidId() } })
+      await expect(page.getByRole('checkbox')).toBeVisible()
+      await expectLayoutHolds(page, testInfo, 'create your account, ORCID')
+      await context.close()
     })
 
     test('account, signed in', async ({ page, baseURL }, testInfo) => {

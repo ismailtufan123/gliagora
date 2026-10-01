@@ -61,8 +61,9 @@ export const memberRequest = cache(
   async (): Promise<{ origin: string | null; methods: SignInMethods }> => {
     const origin = appOrigin(await headers())
     const auth = memberAuthConfig()
-    // Google and ORCID are offered once their sign-in routes exist; until then only the email link.
-    const methods = origin ? { email: auth.email.on, google: false, orcid: false } : NONE
+    const methods = origin
+      ? { email: auth.email.on, google: auth.google.on, orcid: auth.orcid.on }
+      : NONE
     return { origin, methods }
   },
 )

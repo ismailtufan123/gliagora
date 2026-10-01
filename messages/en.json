@@ -607,10 +607,16 @@
   },
   "signIn": {
     "title": "Sign in",
-    "description": "Sign in to Gliagora with a link we email you. There are no passwords.",
+    "description": "Sign in to Gliagora. There are no Gliagora passwords.",
     "intro": "Members can save positions and choose what the jobs list and the monthly digest show first. There are no passwords.",
     "notAvailable": "Signing in is not available yet.",
     "notAvailableContact": "Questions about your data? Write to <email>privacy@gliagora.com</email>.",
+    "providers": {
+      "heading": "{methods, select, both {Sign in with Google or ORCID} google {Sign in with Google} other {Sign in with ORCID}}",
+      "google": "Continue with Google",
+      "orcid": "Continue with ORCID",
+      "note": "{methods, select, both {You sign in on Google's or ORCID's own page, then come back here.} google {You sign in on Google's own page, then come back here.} other {You sign in on ORCID's own page, then come back here.}}"
+    },
     "emailHeading": "Sign in with your email address",
     "email": {
       "label": "Email address",
@@ -621,8 +627,8 @@
     "spamNote": "To keep out spam programs, your browser solves a small puzzle before the form is sent, and we keep scrambled forms of your IP address and of the email address for 24 hours to limit how many links can be sent. <link>How we protect the form</link>",
     "submit": "Email me a sign-in link",
     "sending": "Sending the link…",
-    "privacy": "We use your email address only to sign you in and for what you choose in your account. <link>How we handle member accounts</link>",
-    "terms": "If you do not have an account yet, the link lets you create one. By creating an account, you accept the <link>terms of use</link> and confirm that you are 16 or older.",
+    "privacy": "We use what you sign in with only to sign you in and for what you choose in your account. <link>How we handle member accounts</link>",
+    "terms": "{providers, select, none {If you do not have an account yet, the emailed link lets you create one.} other {If you do not have an account yet, you can create one when you first sign in.}} By creating an account, you accept the <link>terms of use</link> and confirm that you are 16 or older.",
     "signedIn": {
       "title": "You are signed in",
       "account": "Go to your account",
@@ -661,6 +667,24 @@
       "expired": "Sign-in links work for 15 minutes and only once. If you have not used this one, ask for a new link.",
       "again": "Ask for a new link"
     },
+    "confirm": {
+      "metaTitle": "Create your account",
+      "title": "Create your Gliagora account",
+      "googleWithEmail": "Your new account will use your Google account to sign in, with the address <strong>{email}</strong>.",
+      "googleWithoutEmail": "Your new account will use your Google account to sign in. It will have no email address for now.",
+      "googleNotManaged": "Google does not manage {email}, so it is not added to your account. You can add it in your account with a confirmation link.",
+      "googleUnverified": "Google has not verified {email}, so it is not added to your account. You can add it in your account with a confirmation link.",
+      "orcid": "Your new account will use your ORCID iD <strong>{orcid}</strong> to sign in. It will have no email address for now.",
+      "existing": "Already have a Gliagora account? <link>Sign in with it</link> and link {method, select, google {Google} other {ORCID}} in your account instead.",
+      "useName": "Use the name on my ORCID record, {name}, as my display name",
+      "useNameHint": "Optional. Without it, your account has no display name.",
+      "terms": "By creating an account, you accept the <link>terms of use</link> and confirm that you are 16 or older.",
+      "button": "Create account",
+      "cancel": "Cancel",
+      "expiredTitle": "This sign-in has expired",
+      "expired": "An account must be created within 15 minutes of signing in, in the same browser. Please sign in again.",
+      "again": "Sign in again"
+    },
     "signedOut": {
       "metaTitle": "Signed out",
       "title": "You are signed out",
@@ -683,6 +707,7 @@
       "orcid": "You are signed in with the ORCID iD <strong>{orcid}</strong>.",
       "google": "You are signed in with your Google account."
     },
+    "displayName": "Your display name: <strong>{name}</strong>",
     "methods": {
       "heading": "Ways to sign in",
       "email": "Email link",
@@ -690,7 +715,17 @@
       "orcid": "ORCID",
       "noEmail": "No email address",
       "linked": "Linked",
-      "notLinked": "Not linked"
+      "notLinked": "Not linked",
+      "link": {
+        "google": "Link your Google account",
+        "orcid": "Link your ORCID iD"
+      },
+      "unlink": {
+        "google": "Remove Google",
+        "orcid": "Remove ORCID"
+      },
+      "onlyWay": "This is the only way into your account, so it cannot be removed.",
+      "note": "{methods, select, both {Linking takes you to Google or ORCID and back.} google {Linking takes you to Google and back.} other {Linking takes you to ORCID and back.}} When you link or remove a way to sign in, you are signed out in your other browsers."
     },
     "signOut": {
       "heading": "Signing out",
@@ -701,13 +736,31 @@
   "outcome": {
     "done": {
       "signed-in": "You are signed in.",
-      "created": "Your account has been created, and you are signed in."
+      "signed-in-linked-google": "You are signed in. Your Google account has been linked to your account, which has the same email address, so you can now sign in with it.",
+      "created": "Your account has been created, and you are signed in.",
+      "linked-google": "Your Google account has been linked: you can now sign in with it.",
+      "linked-orcid": "Your ORCID iD has been linked: you can now sign in with it.",
+      "unlinked-google": "Google has been removed: you can no longer sign in with it.",
+      "unlinked-orcid": "ORCID has been removed: you can no longer sign in with it.",
+      "othersEnded": "Other browsers where you were signed in have been signed out."
     },
     "error": {
       "link-expired": "This sign-in link has expired or has already been used. Ask for a new link below.",
       "linkExpiredSignedIn": "This sign-in link has expired or has already been used, so you are still signed in as before.",
       "failed": "Something went wrong. Please try again.",
-      "failedReference": "Something went wrong. Please try again, or write to privacy@gliagora.com and mention reference {reference}."
+      "failedReference": "Something went wrong. Please try again, or write to privacy@gliagora.com and mention reference {reference}.",
+      "expired": "Signing in or linking took more than 15 minutes, or came back to another browser or an older tab, so nothing has changed. Please try again.",
+      "cancelled-google": "You cancelled on the Google page, so nothing has changed.",
+      "cancelled-orcid": "You cancelled on the ORCID page, so nothing has changed.",
+      "link-interrupted": "Nothing was linked: you were signed out, or signed in to another account, before linking finished. Please try again.",
+      "link-not-started": "Linking could not start. Press the Link button on this page again. If this keeps happening, update your browser.",
+      "create-limited": "Too many accounts have been created from here recently. Please try again later.",
+      "email-has-other-google": "This address belongs to a Gliagora account that is linked to another Google account. Sign in to that account with an email link, or with its own Google account.",
+      "google-elsewhere": "This Google account is used by another Gliagora account. Sign in with it and delete that account first, if you want to link it here.",
+      "orcid-elsewhere": "This ORCID iD is used by another Gliagora account. Sign in with it and delete that account first, if you want to link it here.",
+      "google-already-linked": "Your account already has another Google account. Remove it first, then link this one.",
+      "orcid-already-linked": "Your account already has another ORCID iD. Remove it first, then link this one.",
+      "last-method": "This is the only way into your account, so it cannot be removed. Add another way to sign in first."
     }
   },
   "emails": {
