@@ -7,7 +7,7 @@ After M1 the drafts had 111 open questions, plus one open point that was only ma
 | Group | What happens | Count |
 |---|---|---|
 | (a) Answerable from PLAN.md | The answer is now written into the draft and its marker is gone. | 49 questions |
-| (b) Needs a lawyer | One review by a lawyer between S and M2, before the texts go live (pre-launch checklist, PLAN §20, D32). | 47 questions, merged into **17** (B1–B17), plus **B18** added on 2026-09-27 (C2) and **B19** added with the açık rıza metni on 2026-09-27: **19** in all |
+| (b) Needs a lawyer | One review by a lawyer between S and M2, before the texts go live (pre-launch checklist, PLAN §20, D32). | 47 questions, merged into **17** (B1–B17), plus **B18** added on 2026-09-27 (C2), **B19** added with the açık rıza metni on 2026-09-27 and **B20** added with the map on 2026-10-01 (M5): **20** in all |
 | (c) Only the operator can decide | Decided by the operator on 2026-09-27 (PLAN D32–D36). The decisions are written into the drafts and their markers are gone. | 13 questions, merged into **5** (C1–C5) |
 
 Five more questions were settled by a default (listed below, with the other defaults the drafts follow). Two questions were split between groups (privacy policy 22 and terms 3), so the tables at the end have 114 rows for 112 questions. In the drafts every remaining marker names its item, for example `[TO DECIDE: B4 – …]` or `[KARAR VERİLECEK: B7 – …]`. A few markers name a milestone or a step instead ("S and M4b", "M4", "M4b", "M2 and the translated-version notice", "before publication", "when the translated-version notice is built", and "before signing" in the processing agreement): they are facts to fill in at that point, not questions.
@@ -217,6 +217,14 @@ Texts: `docs/legal/veri-isleme-sozlesmesi-taslak.md`; the role is described in `
 **Why it matters.** Decides the signup form built for M2: the checkbox label, and whether the Turkish statement must appear on the form. It also decides whether İYS registration must be done before signups open at M2 instead of in Phase 4. PLAN marks the İYS details [U] (§15.1).
 
 Texts: `content/tr/legal/acik-riza-metni.md`; possibly also the newsletter section of `content/en/legal/privacy.md`
+
+### B20. Credit for OpenStreetMap-derived data outside the map (ODbL)
+
+The map credits "© OpenStreetMap contributors" in its corner and under it (ODbL). Job pages show the time zone in which a deadline ends. Unless the posting names one, that zone is worked out from the institution's coordinates with time-zone borders built from OpenStreetMap data (timezone-boundary-builder, ODbL), which the open-source library tz-lookup packs; no other OpenStreetMap data is used outside the map. The terms' "Material from others" now credits this. Is that notice enough under ODbL 4.3 for a Produced Work, or must each job page that shows such a time zone carry its own short notice?
+
+**Why it matters.** Decides whether the job page needs a credit line before the jobs go public at M6 (PLAN §11.3, §14).
+
+Texts: `content/en/legal/terms.md` ("Material from others"); possibly the job page
 
 ## Defaults applied
 

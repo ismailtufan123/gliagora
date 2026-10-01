@@ -89,7 +89,7 @@ export const CONTENT_PAGES = {
     messages: 'terms',
     path: '/en/legal/terms/',
     file: 'en/legal/terms.md',
-    updated: '2026-09-28',
+    updated: '2026-10-01',
     draft: true,
   },
   takedown: {
