@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 
 import * as prettier from 'prettier'
 
-import { AREAS, type Area, TURKISH_PAGES } from './tr-strings-review-areas'
+import { AREAS, type Area, PUBLIC_AT_M2, TURKISH_PAGES } from './tr-strings-review-areas'
 
 // Builds docs/tr-strings-review.md (pnpm tr:review, D40): every Turkish interface string of
 // messages/tr.json with its English original, where it appears and whether it is on the Turkish
@@ -58,6 +58,19 @@ export const missingPlaces = (keys: readonly string[]) => keys.filter((key) => !
 /** Descriptions that no key uses any more (the key was renamed or removed). */
 export const unusedPlaces = (keys: readonly string[]) =>
   PLACES.filter((place) => !keys.some((key) => placeOf(key) === place)).map((place) => place.match)
+
+/** The entry of PUBLIC_AT_M2 for a key (its longest matching key or prefix), if it has one. */
+export function publicAtM2(key: string): { match: string; where: string } | undefined {
+  let best: { match: string; where: string } | undefined
+  for (const [match, where] of Object.entries(PUBLIC_AT_M2)) {
+    if (matches(key, match) && match.length > (best?.match.length ?? -1)) best = { match, where }
+  }
+  return best
+}
+
+/** Entries of PUBLIC_AT_M2 that no key uses (renamed or removed keys). */
+export const unusedPublicAtM2 = (keys: readonly string[]) =>
+  Object.keys(PUBLIC_AT_M2).filter((match) => !keys.some((key) => publicAtM2(key)?.match === match))
 
 /** Keys or prefixes described in more than one area. */
 export const repeatedPlaces = () =>
@@ -173,6 +186,17 @@ export function buildReview({ en, tr, date }: { en: unknown; tr: unknown; date: 
   const total = areas.reduce((sum, { rows }) => sum + rows.length, 0)
   const shown = areas.reduce((sum, { rows }) => sum + rows.filter((row) => row.shown).length, 0)
   const code = (text: string) => codeSpan(text)
+  // The strings public at M2, in the order of PUBLIC_AT_M2, then of the messages.
+  const entries = Object.keys(PUBLIC_AT_M2)
+  const atM2 = flatten(en)
+    .map(([key, english], index) => ({ key, english, index, entry: publicAtM2(key) }))
+    .filter((row): row is typeof row & { entry: { match: string; where: string } } =>
+      Boolean(row.entry),
+    )
+    .sort(
+      (a, b) =>
+        entries.indexOf(a.entry.match) - entries.indexOf(b.entry.match) || a.index - b.index,
+    )
 
   const lines: string[] = [
     '# Turkish interface strings for review',
@@ -183,9 +207,20 @@ export function buildReview({ en, tr, date }: { en: unknown; tr: unknown; date: 
     '',
     `This file is generated from ${code('messages/en.json')} and ${code('messages/tr.json')} by ${code('pnpm tr:review')}; do not edit it by hand. A test fails when it no longer matches the messages.`,
     '',
+    '## Public at M2: review these first',
+    '',
+    `At M2 (D41, D47) the coming-soon page, the newsletter signup, About and the legal texts the operator has approved go public; everything else stays private until the launch. Of these, only the contact page and the two Turkish legal texts (${TURKISH_PAGES.join(', ')}) are in Turkish, each once its text is approved, with a reduced header and footer that link to public pages only. These ${plural(atM2.length, 'string', 'strings')} appear on them; please review them first. About, the newsletter signup and the coming-soon page are in English only at M2, so in Turkish they appear only as the links in that header and footer. The strings below appear again in the full table.`,
+    '',
+    '| Key | English | Turkish | Where it appears at M2 |',
+    '| --- | --- | --- | --- |',
+    ...atM2.map(
+      (row) =>
+        `| ${code(row.key)} | ${messageCell(row.english)} | ${messageCell(turkish.get(row.key) ?? '')} | ${escapeText(row.entry.where)} |`,
+    ),
+    '',
     '## How to review',
     '',
-    `- Start with the strings marked **yes** in the last column: they are on the Turkish site now, on its pages (${TURKISH_PAGES.join(', ')}) with their header, menus and footer. The others belong to pages that exist only in English so far and appear once those pages have Turkish versions; the list of areas below says why.`,
+    `- Start with the section above, then the strings marked **yes** in the last column of the full table: they are on the Turkish site now, on its pages (${TURKISH_PAGES.join(', ')}) with their header, menus and footer. The others belong to pages that exist only in English so far and appear once those pages have Turkish versions; the list of areas below says why.`,
     `- For each correction, note the key (second column) and the corrected Turkish text. Either change the text in ${code('messages/tr.json')} (the key is the path to the text in that file: ${code('jobs.filters.apply')} is ${code('"apply"')} inside ${code('"filters"')} inside ${code('"jobs"')}) and run ${code('pnpm tr:review')}, or send us the list of keys and corrections.`,
     '- Keep the parts in code format as they are (next section).',
     `- Not in this table: the Turkish contact page and the Turkish legal texts (Markdown files in ${code('content/tr/')}), which are reviewed separately, with the legal texts; the About page, which exists only in English so far; and the admin, which is in English only.`,

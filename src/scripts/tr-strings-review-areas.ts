@@ -27,6 +27,53 @@ export const TURKISH_PAGES = [
   '/tr/legal/acik-riza-metni/',
 ]
 
+/**
+ * The Turkish strings that go public at M2 (D41, D47), shown first in the review file so that a
+ * native speaker can review them before then. At M2 the coming-soon page, the newsletter signup,
+ * About and the legal texts the operator has approved go public; of these, only the contact page
+ * and the two Turkish legal texts are in Turkish, and they show the reduced header and footer,
+ * which link to public pages only (no sections, menus or search). About, the newsletter and the
+ * coming-soon page are English only at M2: in Turkish they appear only as links in that header and
+ * footer. The strings of the newsletter signup and of the coming-soon text are written at M2 and
+ * join this list then, if they have Turkish versions. Keys or prefixes of messages/{locale}.json
+ * (as in AREAS), each with where it appears at M2; every one must be on the Turkish site now.
+ */
+export const PUBLIC_AT_M2: Record<string, string> = {
+  'a11y.skipLink': 'Turkish pages - top left, visible only when reached with the Tab key',
+  'brand.name': 'Turkish pages - header - the name after the logo',
+  'brand.descriptor': 'Turkish pages - header - the word after the name, where there is room',
+  'locale.button': 'Turkish pages - header, from 768px - the language button, for screen readers',
+  'locale.short.tr': 'Turkish pages - header, from 768px - the code on the language button',
+  'locale.heading': 'Turkish pages - mobile menu, below 768px - heading of the language list',
+  'locale.names':
+    'Turkish pages - language menu and list - the languages, each in its own language',
+  'locale.moreComing': 'Turkish pages - language menu and list - note under the languages',
+  'header.digest':
+    'Turkish pages - header (from 768px) and mobile menu - button to the newsletter signup',
+  'header.menu': 'Turkish pages - header on phones - Menu button (language list, newsletter)',
+  'sections.about': 'Turkish pages - footer (About column) and mobile menu - link to About',
+  'footer.sitemap': 'Turkish pages - footer - name of the footer navigation, for screen readers',
+  'footer.about': 'Turkish pages - footer - heading of the About column',
+  'footer.contact': 'Turkish pages - footer - link to the contact and legal notice page',
+  'footer.legal': 'Turkish pages - footer - heading of the Legal column',
+  'pages.privacy.title': 'Turkish pages - footer, Legal column - link, once the text is approved',
+  'pages.kvkk.title':
+    'Turkish pages - footer, Legal column - link; heading of the KVKK notice (once approved)',
+  'pages.acikRiza.title':
+    'Turkish pages - footer, Legal column - link; heading of the consent text (once approved)',
+  'pages.cookies.title': 'Turkish pages - footer, Legal column - link, once the text is approved',
+  'pages.terms.title': 'Turkish pages - footer, Legal column - link, once the text is approved',
+  'pages.takedown.title': 'Turkish pages - footer, Legal column - link, once the text is approved',
+  'pages.dataRequests.title':
+    'Turkish pages - footer, Legal column - link, once the text is approved',
+  'pages.contact': 'Turkish contact page (/tr/iletisim/) - heading, tab title and description',
+  'pages.kvkk.description': 'KVKK notice - description in search results and link previews',
+  'pages.acikRiza.description': 'Consent text - description in search results and link previews',
+  'pages.updated': 'Turkish contact page and legal texts - date at the end of the text',
+  'meta.titleTemplate': "Turkish pages - browser tab - the page's title followed by the site name",
+  'meta.siteName': 'Turkish pages - the site name in link previews',
+}
+
 const ENGLISH_ONLY = 'like the rest of the site until the Turkish locale gate (PLAN §3.4)'
 
 export const AREAS: Area[] = [
