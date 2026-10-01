@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import en from '../../messages/en.json'
 import tr from '../../messages/tr.json'
-import { TURKISH_PAGES } from './tr-strings-review-areas'
+import { PUBLIC_AT_M2, TURKISH_PAGES } from './tr-strings-review-areas'
 import {
   DOC_FILE,
   buildReview,
@@ -14,10 +14,12 @@ import {
   messageCell,
   missingPlaces,
   placeOf,
+  publicAtM2,
   repeatedPlaces,
   reviewDate,
   reviewDocument,
   unusedPlaces,
+  unusedPublicAtM2,
 } from './tr-strings-review-doc'
 
 const keys = flatten(en).map(([key]) => key)
@@ -87,15 +89,39 @@ describe('Turkish strings review (docs/tr-strings-review.md, D40)', () => {
     ).toBeNull()
   })
 
-  it('lists every string once, with its Turkish text, in one table', () => {
+  it('starts with the strings public at M2 (D47), each on the Turkish site now', () => {
+    expect(unusedPublicAtM2(keys), 'entries that match no key').toEqual([])
+    const atM2 = keys.filter((key) => publicAtM2(key))
+    expect(atM2.length).toBeGreaterThan(0)
+    // Public in Turkish at M2 means on a Turkish page, so on the Turkish site already.
+    expect(atM2.filter((key) => !placeOf(key)?.shown)).toEqual([])
+    // Drafts stay private (D41): the draft notice is not public at M2.
+    expect(publicAtM2('pages.draftNotice')).toBeUndefined()
+    expect(Object.keys(PUBLIC_AT_M2)).toContain('pages.updated')
+
+    const doc = buildReview({ en, tr, date: '2026-09-28' })
+    const section = doc.slice(
+      doc.indexOf('## Public at M2: review these first'),
+      doc.indexOf('## How to review'),
+    )
+    expect(doc.indexOf('## Public at M2')).toBeLessThan(doc.indexOf('## How to review'))
+    const rows = section.split('\n').filter((line) => /^\| `[^`]+` \|/.test(line))
+    expect(rows).toHaveLength(atM2.length)
+    expect(rows[0]).toBe(
+      '| `a11y.skipLink` | Skip to main content | Ana içeriğe geç | Turkish pages - top left, visible only when reached with the Tab key |',
+    )
+    expect(section).toContain(`These ${atM2.length} strings appear on them`)
+  })
+
+  it('lists every string once, with its Turkish text, in the full table', () => {
     const doc = buildReview({ en, tr, date: '2026-09-28' })
     const lines = doc.split('\n')
     const rows = lines.filter((line) => /^\| [^|]+ \| `[^`]+` \|/.test(line))
     expect(rows).toHaveLength(keys.length)
     expect(
       lines.filter((line) => line.startsWith('| ---')),
-      'one table only',
-    ).toHaveLength(1)
+      'the table of strings public at M2 and the full table',
+    ).toHaveLength(2)
     expect(doc).toContain(`Updated 2026-09-28: ${keys.length} strings`)
     expect(doc).toContain(
       '| 1. Header, menus and search box | `a11y.skipLink` | Skip to main content | Ana içeriğe geç |',

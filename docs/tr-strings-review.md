@@ -6,9 +6,46 @@ Updated 2026-10-01: 483 strings in 18 areas, 74 of them shown on the Turkish sit
 
 This file is generated from `messages/en.json` and `messages/tr.json` by `pnpm tr:review`; do not edit it by hand. A test fails when it no longer matches the messages.
 
+## Public at M2: review these first
+
+At M2 (D41, D47) the coming-soon page, the newsletter signup, About and the legal texts the operator has approved go public; everything else stays private until the launch. Of these, only the contact page and the two Turkish legal texts (/tr/iletisim/, /tr/legal/kvkk-aydinlatma-metni/, /tr/legal/acik-riza-metni/) are in Turkish, each once its text is approved, with a reduced header and footer that link to public pages only. These 30 strings appear on them; please review them first. About, the newsletter signup and the coming-soon page are in English only at M2, so in Turkish they appear only as the links in that header and footer. The strings below appear again in the full table.
+
+| Key | English | Turkish | Where it appears at M2 |
+| --- | --- | --- | --- |
+| `a11y.skipLink` | Skip to main content | Ana içeriğe geç | Turkish pages - top left, visible only when reached with the Tab key |
+| `brand.name` | Gliagora | Gliagora | Turkish pages - header - the name after the logo |
+| `brand.descriptor` | Neuroscience | Neuroscience | Turkish pages - header - the word after the name, where there is room |
+| `locale.button` | Language: `{name}` (`{code}`) | Dil: `{name}` (`{code}`) | Turkish pages - header, from 768px - the language button, for screen readers |
+| `locale.short.tr` | TR | TR | Turkish pages - header, from 768px - the code on the language button |
+| `locale.heading` | Language | Dil | Turkish pages - mobile menu, below 768px - heading of the language list |
+| `locale.names.en` | English | English | Turkish pages - language menu and list - the languages, each in its own language |
+| `locale.names.tr` | Türkçe | Türkçe | Turkish pages - language menu and list - the languages, each in its own language |
+| `locale.moreComing` | More languages coming | Başka diller yakında | Turkish pages - language menu and list - note under the languages |
+| `header.digest` | Get the monthly digest | Aylık bülteni alın | Turkish pages - header (from 768px) and mobile menu - button to the newsletter signup |
+| `header.menu` | Menu | Menü | Turkish pages - header on phones - Menu button (language list, newsletter) |
+| `sections.about` | About | Hakkında | Turkish pages - footer (About column) and mobile menu - link to About |
+| `footer.sitemap` | Site map | Site haritası | Turkish pages - footer - name of the footer navigation, for screen readers |
+| `footer.about` | About | Hakkında | Turkish pages - footer - heading of the About column |
+| `footer.contact` | Contact and legal notice | İletişim ve yasal bilgiler | Turkish pages - footer - link to the contact and legal notice page |
+| `footer.legal` | Legal | Yasal | Turkish pages - footer - heading of the Legal column |
+| `pages.privacy.title` | Privacy policy | Gizlilik politikası (İngilizce) | Turkish pages - footer, Legal column - link, once the text is approved |
+| `pages.kvkk.title` | KVKK notice (in Turkish) | KVKK aydınlatma metni | Turkish pages - footer, Legal column - link; heading of the KVKK notice (once approved) |
+| `pages.acikRiza.title` | Glia Notes consent text (in Turkish) | Glia Notes açık rıza metni | Turkish pages - footer, Legal column - link; heading of the consent text (once approved) |
+| `pages.cookies.title` | Cookies and storage | Çerezler ve depolama (İngilizce) | Turkish pages - footer, Legal column - link, once the text is approved |
+| `pages.terms.title` | Terms of use | Kullanım koşulları (İngilizce) | Turkish pages - footer, Legal column - link, once the text is approved |
+| `pages.takedown.title` | Notice and takedown | Kaldırma ve düzeltme talepleri (İngilizce) | Turkish pages - footer, Legal column - link, once the text is approved |
+| `pages.dataRequests.title` | Data requests | Veri talepleri (İngilizce) | Turkish pages - footer, Legal column - link, once the text is approved |
+| `pages.contact.title` | Contact and legal notice | İletişim ve yasal bilgiler | Turkish contact page (/tr/iletisim/) - heading, tab title and description |
+| `pages.contact.description` | How to contact Gliagora \| Neuroscience, who is responsible for its content, and how to ask for a correction, a removal or your personal data. | Gliagora \| Neuroscience ile nasıl iletişim kurabileceğiniz, içerikten kimin sorumlu olduğu ve düzeltme, kaldırma ya da kişisel veri talebinde nasıl bulunabileceğiniz. | Turkish contact page (/tr/iletisim/) - heading, tab title and description |
+| `pages.kvkk.description` | The information notice under the Turkish Personal Data Protection Law (KVKK), in Turkish. | 6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında Gliagora \| Neuroscience aydınlatma metni. | KVKK notice - description in search results and link previews |
+| `pages.acikRiza.description` | The separate consent text for the Glia Notes newsletter under the Turkish Personal Data Protection Law (KVKK), in Turkish. | Glia Notes bülteni için e-posta adresinizin işlenmesine verdiğiniz açık rıza: hangi veriler, hangi amaçla ve ne kadar süreyle işlenir, açık rızanızı nasıl geri alabilirsiniz. | Consent text - description in search results and link previews |
+| `pages.updated` | Last updated: `{date}` | Son güncelleme: `{date}` | Turkish contact page and legal texts - date at the end of the text |
+| `meta.titleTemplate` | `{title}` – Gliagora \| Neuroscience | `{title}` – Gliagora \| Neuroscience | Turkish pages - browser tab - the page's title followed by the site name |
+| `meta.siteName` | Gliagora \| Neuroscience | Gliagora \| Neuroscience | Turkish pages - the site name in link previews |
+
 ## How to review
 
-- Start with the strings marked **yes** in the last column: they are on the Turkish site now, on its pages (/tr/iletisim/, /tr/legal/kvkk-aydinlatma-metni/, /tr/legal/acik-riza-metni/) with their header, menus and footer. The others belong to pages that exist only in English so far and appear once those pages have Turkish versions; the list of areas below says why.
+- Start with the section above, then the strings marked **yes** in the last column of the full table: they are on the Turkish site now, on its pages (/tr/iletisim/, /tr/legal/kvkk-aydinlatma-metni/, /tr/legal/acik-riza-metni/) with their header, menus and footer. The others belong to pages that exist only in English so far and appear once those pages have Turkish versions; the list of areas below says why.
 - For each correction, note the key (second column) and the corrected Turkish text. Either change the text in `messages/tr.json` (the key is the path to the text in that file: `jobs.filters.apply` is `"apply"` inside `"filters"` inside `"jobs"`) and run `pnpm tr:review`, or send us the list of keys and corrections.
 - Keep the parts in code format as they are (next section).
 - Not in this table: the Turkish contact page and the Turkish legal texts (Markdown files in `content/tr/`), which are reviewed separately, with the legal texts; the About page, which exists only in English so far; and the admin, which is in English only.
