@@ -3,10 +3,12 @@
 # Third-party actions and images are pinned to exact versions (PLAN §18.2).
 #
 # Minutes (PLAN §11.5, D46): a private repository on GitHub Free has 2,000 Actions minutes a month,
-# and when they run out, CI and every deploy stop. A full run costs about 15 of them, so:
+# and when they run out, CI and every deploy stop. A pull request's full run costs about 20 of them
+# (since M4b), so:
 # - a change that touches only documentation runs no CI at all (`paths` below, the same list for
 #   both events): Markdown files and docs/, except those the app or a test reads (content/, the
-#   editor guide the admin shows, the Turkish strings table a unit test compares). Nothing waits
+#   editor guide the admin shows, the Turkish strings table a unit test compares, and the
+#   runbook, whose address-code command a unit test runs). Nothing waits
 #   for the skipped run: the repository has no required checks, and only a CI run of a push to
 #   main starts a deploy (deploy.yml), which a documentation change does not need;
 # - a push to main whose tree a pull request's run has already passed (a squash merge of a branch
@@ -23,6 +25,7 @@ on:
       - 'content/**'
       - 'docs/editor-guide-tr.md'
       - 'docs/tr-strings-review.md'
+      - 'deploy/README.md'
   push:
     branches: [main]
     paths:
@@ -32,6 +35,7 @@ on:
       - 'content/**'
       - 'docs/editor-guide-tr.md'
       - 'docs/tr-strings-review.md'
+      - 'deploy/README.md'
 
 permissions:
   contents: read

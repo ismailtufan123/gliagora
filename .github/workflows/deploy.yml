@@ -86,7 +86,7 @@ jobs:
           # (src/lib/ci-paths.test.ts checks it).
           documentation_only() {
             case "$1" in
-              content/* | docs/editor-guide-tr.md | docs/tr-strings-review.md) return 1 ;;
+              content/* | docs/editor-guide-tr.md | docs/tr-strings-review.md | deploy/README.md) return 1 ;;
               *.md | docs/*) return 0 ;;
               *) return 1 ;;
             esac

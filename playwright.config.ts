@@ -19,10 +19,9 @@ if (existsSync('.env')) process.loadEnvFile('.env')
 const testIssuer = process.env.AUTH_TEST_ISSUER?.replace(/\/+$/, '')
 
 /**
- * Tests that delete data others may be reading (none yet; the tests of a confirmed data request's
- * deletion and of deleting an account will be): they run in a project of their own, after every
- * other test has finished, so a test that counts or samples records (access.spec.ts) never sees
- * them change midway.
+ * Tests that delete data others may be reading (a confirmed data request's deletion, deleting an
+ * account): they run in a project of their own, after every other test has finished, so a test that
+ * counts or samples records (access.spec.ts) never sees them change midway.
  */
 const DESTRUCTIVE = [/\/data-requests\.spec\.ts$/, /\/account-delete\.spec\.ts$/]
 

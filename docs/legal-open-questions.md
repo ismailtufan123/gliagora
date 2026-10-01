@@ -66,6 +66,14 @@ Texts: `content/en/legal/terms.md`, `content/en/legal/privacy.md`, `content/tr/l
 
 To be answered in one review before the texts go live. Each question is written so that it can be sent to the lawyer as it is; "why" says what the answer changes.
 
+**Added with M4b (2026-10-02).** Member accounts and the data-request form are now built (PLAN D49), and the drafts describe them as built; each new point is marked in the drafts with its item. Please also consider:
+
+- **B4:** the legal basis for keeping, for 60 days, a minimal record of a data request that the person never confirmed (its type, its date and a keyed hash of the address; no address, name or details), to be able to show that it arrived.
+- **B5:** the form asks for the email address, the kind of request, details and an optional name, and acts only after the person confirms with an emailed link (24 hours). Is that enough for a KVKK application through the form (Başvuru Tebliği Art. 5), or must it ask for more?
+- **B9:** a new account is created only on a separate "Create your Gliagora account" step, whose button comes with the line "By creating an account, you accept the terms of use and confirm that you are 16 or older" (minimum age: B7); there is no checkbox for the terms. Is that enough to accept them?
+- **B11:** unconfirmed requests are kept 60 days (B4). A confirmed deletion request also deletes a member account with that address and clears the address on problem reports and corrections, but requests about personal rights (Law 5651) keep it for their period: should it clear those too? Deletions are listed by record number only (no personal data) for 7 months, so that they can be repeated if a backup is restored.
+- **B13:** Google tells us an account ID, the address, whether it is verified and, for a Google Workspace address, its domain; we keep the address only where Google manages it (Gmail or Workspace), and never the domain. ORCID tells us the iD and the name, kept only if the member ticks a box.
+
 ### B1. Law 5651: who the content provider is and what the contact page must show
 
 Gliagora is run by one natural person resident in Türkiye (no company, no revenue, no ads or sponsorship at launch). It publishes only editorial content: suggestions are checked and rewritten by her before publication, and there is no user content in Phase 1. (1) Is she the içerik sağlayıcı under Law 5651 Art. 2, and not a yer sağlayıcı for the suggestions she rewrites? (2) Under Art. 3 and Art. 5 of the 2007 regulation, is an email address under an 'İletişim' heading, reachable from the home page, enough at launch, or must her full name and postal address appear from day one? (3) Not needed for launch: once the first revenue arrives, which details does Art. 5 require (name, postal address, telephone, tax number?), and is a virtual-office address acceptable instead of the business address from the tax registration?

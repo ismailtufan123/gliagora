@@ -1,6 +1,6 @@
 # Next task
 
-Status: **open**
+Status: **done**, 2026-10-02 (pull requests #62 and #63; M4b in #64–#70; this wrap-up in #71)
 Written: 2026-10-01, by the operator's planning chat (Claude) on the operator's behalf.
 
 ## How this file works
