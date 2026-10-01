@@ -65,6 +65,13 @@ export type FilterConfig<P extends ParamSpecs> = {
    * those with a mistake the page points out, such as a range of days with a day missing.
    */
   shownAsSent?: (query: URLSearchParams) => boolean
+  /**
+   * Brings parameters that depend on each other in line, after reading a query and before writing
+   * one, so both give the same canonical address: the jobs list keeps `prefs=off` only while no
+   * filter is set (D35).
+   */
+  // A method, so a list's config is still a FilterConfig<ParamSpecs> (canonical.ts lists them).
+  normalise?(state: FilterState<P>): FilterState<P>
 }
 
 /** Parameters that filter the items (not sort, view or page). */
@@ -86,7 +93,7 @@ export function normaliseText(value: string, maxLength: number): string {
 
 /** The filters a query string sets. Invalid values and unknown parameters are dropped. */
 export function parseFilters<P extends ParamSpecs>(
-  { params }: FilterConfig<P>,
+  { params, normalise }: FilterConfig<P>,
   query: URLSearchParams,
 ): FilterState<P> {
   const state: Record<string, unknown> = {}
@@ -119,7 +126,7 @@ export function parseFilters<P extends ParamSpecs>(
       }
     }
   }
-  return state as FilterState<P>
+  return normalise ? normalise(state as FilterState<P>) : (state as FilterState<P>)
 }
 
 /**
@@ -133,15 +140,16 @@ function encode(value: string): string {
 
 /**
  * The canonical query string (without `?`): parameters in the configured order, list values
- * sorted, defaults and empty values left out.
+ * sorted, defaults and empty values left out, after the list's `normalise`.
  */
 export function serializeFilters<P extends ParamSpecs>(
-  { params }: FilterConfig<P>,
+  { params, normalise }: FilterConfig<P>,
   state: FilterState<P>,
 ): string {
   const parts: string[] = []
+  const normalised = normalise ? normalise(state) : state
   for (const [name, spec] of Object.entries(params)) {
-    const value = (state as Record<string, unknown>)[name]
+    const value = (normalised as Record<string, unknown>)[name]
     let written = ''
     if (spec.kind === 'list') {
       written = [...new Set(value as string[])].sort().map(encode).join(',')

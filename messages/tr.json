@@ -232,7 +232,12 @@
       "clearAll": "Tüm filtreleri temizle",
       "suggest": "İlan önerin",
       "pastEnd": "Bu listede {pages, plural, one {yalnızca # sayfa} other {# sayfa}} var.",
-      "firstPage": "İlk sayfaya git"
+      "firstPage": "İlk sayfaya git",
+      "preferred": {
+        "text": "Tercih ettiğiniz alt alanlardaki pozisyonlar gösteriliyor: {subfields}.",
+        "all": "Tüm pozisyonları göster",
+        "change": "Tercih ettiğiniz alt alanları değiştirin"
+      }
     },
     "view": {
       "showMap": "Haritayı göster",
@@ -666,8 +671,17 @@
       "createButton": "Hesap oluştur",
       "otherBrowser": "Bu bağlantı, istendiği tarayıcıdan farklı bir tarayıcıda açıldı. Yalnızca az önce {email} için bir oturum açma bağlantısı istediyseniz devam edin.",
       "expiredTitle": "Bu bağlantının süresi doldu",
-      "expired": "Oturum açma bağlantıları 15 dakika boyunca ve yalnızca bir kez çalışır. Bu bağlantıyı kullanmadıysanız yeni bir bağlantı isteyin.",
-      "again": "Yeni bağlantı iste"
+      "expired": "Oturum açma bağlantıları 15 dakika boyunca ve yalnızca bir kez çalışır. Bu bağlantıyı kullanmadıysanız yeni bir bağlantı isteyin. Hesabınıza e-posta adresi ekleme bağlantısı 24 saat boyunca çalışır; hesap sayfanızdan yeni bir bağlantı isteyin.",
+      "again": "Yeni bağlantı iste",
+      "verifyTitle": "Bu e-posta adresini hesabınıza ekleyin",
+      "verify": "<strong>{email}</strong> adresini Gliagora hesabınıza ekleyin.",
+      "verifyReplaces": "Bu adres <strong>{email}</strong> adresinin yerini alır: bundan sonra yeni adresle oturum açar ve e-postalarımızı yeni adrese alırsınız.",
+      "verifyOthers": "Adresi eklediğinizde diğer tarayıcılarınızdaki oturumlarınız kapatılır.",
+      "verifyButton": "Bu adresi ekle",
+      "verifyOtherTitle": "Bu adresi isteyen hesapla oturum açın",
+      "verifyOther": "Bu bağlantı, bir e-posta adresini onu isteyen Gliagora hesabına ekler. Bu tarayıcıda o hesapla oturum açın, sonra bağlantıyı yeniden açın: bağlantı 24 saat boyunca çalışır.",
+      "verifyOtherSignedIn": "Başka bir hesapla oturum açmış durumdasınız. Önce oturumu kapatın.",
+      "signOut": "Oturumu kapat"
     },
     "confirm": {
       "metaTitle": "Hesabınızı oluşturun",
@@ -712,6 +726,60 @@
       "google": "Google hesabınızla oturum açtınız."
     },
     "displayName": "Görünen adınız: <strong>{name}</strong>",
+    "digest": {
+      "heading": "Glia Notes",
+      "text": "Glia Notes aylık bültendir: yeni pozisyonlar ve yaklaşan son başvuru tarihleri, ayda bir e-posta kutunuzda.",
+      "needsEmail": "Glia Notes, hesabınızın e-posta adresine gönderilir; hesabınızın henüz bir e-posta adresi yok. <link>Önce bir e-posta adresi ekleyin</link>.",
+      "on": "Glia Notes'u <strong>{email}</strong> adresine almayı seçtiniz.",
+      "stop": "Glia Notes'u durdur",
+      "off": "Glia Notes kapalı. Açtığınızda bülten <strong>{email}</strong> adresine gönderilir.",
+      "consent": "Glia Notes'u e-postayla almayı kabul ediyorum.",
+      "consentHint": "Lütfen önce <link>Glia Notes açık rıza metnini (Türkçe)</link> okuyun. Glia Notes'u istediğiniz zaman buradan durdurabilirsiniz.",
+      "start": "Glia Notes'u al"
+    },
+    "subfields": {
+      "heading": "Tercih ettiğiniz alt alanlar",
+      "text": "İş ilanları listesini filtresiz açtığınızda liste bu alt alanlardaki pozisyonları gösterir; bunu, tüm pozisyonlara giden bir bağlantıyla birlikte belirtir. Seçtiğiniz filtreler ve sizinle paylaşılan bağlantılar her zamanki gibi çalışır.",
+      "legend": "Alt alanlarınız",
+      "hint": "En fazla {max} alt alan seçin. Hiçbirini seçmezseniz liste tüm pozisyonları gösterir.",
+      "save": "Tercih ettiğiniz alt alanları kaydet"
+    },
+    "email": {
+      "heading": "E-posta adresi",
+      "current": "Hesabınızın e-posta adresi <strong>{email}</strong>.",
+      "none": "Hesabınızın e-posta adresi yok.",
+      "addHeading": "E-posta adresi ekleyin",
+      "changeHeading": "E-posta adresinizi değiştirin",
+      "label": "E-posta adresi",
+      "newLabel": "Yeni e-posta adresi",
+      "hint": "Bu adrese bir bağlantı göndeririz. Bağlantıyı, oturumunuzun açık olduğu bu tarayıcıda açın; 24 saat boyunca çalışır.",
+      "noscript": "Bu formdaki spam kontrolü JavaScript gerektirir. JavaScript olmadan e-posta adresi ekleyemezsiniz.",
+      "spamNote": "Spam programlarını engellemek için tarayıcınız, form gönderilmeden önce küçük bir bulmaca çözer; gönderilebilecek bağlantı sayısını sınırlamak için IP adresinizin ve e-posta adresinin karıştırılmış biçimlerini 24 saat saklarız. <link>Formu nasıl koruduğumuz</link>",
+      "submit": "Bana onay bağlantısı gönder",
+      "sending": "Bağlantı gönderiliyor…",
+      "unavailable": "E-posta adresi ekleme şu anda kullanılamıyor. Verilerinizle ilgili sorularınız mı var? <email>privacy@gliagora.com</email> adresine yazın.",
+      "errors": {
+        "title": "Bir sorun var",
+        "prefix": "Hata:",
+        "emailMissing": "Eklenecek e-posta adresini girin.",
+        "emailInvalid": "E-posta adresini doğru biçimde girin, örneğin ad@example.org.",
+        "emailTooLong": "En fazla 254 karakterlik bir e-posta adresi girin.",
+        "emailSame": "Bu zaten hesabınızın e-posta adresi.",
+        "needsJs": "Spam kontrolü çalışmadı: sayfa henüz tam yüklenmemişti ya da tarayıcınızda JavaScript kapalı veya engellenmiş. Sayfanın yüklenmesini bekleyip formu yeniden gönderin.",
+        "spamCheck": "Spam kontrolünün süresi doldu veya kontrol tamamlanamadı. Lütfen formu yeniden gönderin.",
+        "rateLimited": "Kısa süre içinde buradan, hesabınızdan ya da bu adres için çok fazla onay bağlantısı istendi. Lütfen daha sonra ya da yarın yeniden deneyin.",
+        "unavailable": "E-postayı şu anda gönderemedik. Lütfen birkaç dakika sonra yeniden deneyin.",
+        "failed": "Bir sorun oluştu ve bağlantı gönderilmedi. Lütfen daha sonra yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin."
+      },
+      "sent": {
+        "metaTitle": "Gelen kutunuza bakın",
+        "title": "Gelen kutunuza bakın",
+        "text": "Girdiğiniz adrese bir onay bağlantısı gönderdik.",
+        "validity": "Bağlantı 24 saat boyunca ve yalnızca bir kez çalışır.",
+        "sameBrowser": "Bağlantıyı, Gliagora'da oturumunuzun açık olduğu bu tarayıcıda açın.",
+        "missing": "E-posta gelmedi mi? Spam klasörünüze bakın ve adresi doğru yazdığınızdan emin olun. Hesap sayfanızdan <link>yeni bir bağlantı isteyebilirsiniz</link>."
+      }
+    },
     "methods": {
       "heading": "Oturum açma yolları",
       "email": "E-posta bağlantısı",
@@ -730,6 +798,12 @@
       },
       "onlyWay": "Hesabınıza girmenin tek yolu bu olduğu için kaldırılamaz.",
       "note": "{methods, select, both {Bağlarken Google'a ya da ORCID'e gider ve buraya dönersiniz.} google {Bağlarken Google'a gider ve buraya dönersiniz.} other {Bağlarken ORCID'e gider ve buraya dönersiniz.}} Bir oturum açma yolunu bağladığınızda ya da kaldırdığınızda diğer tarayıcılarınızdaki oturumlarınız kapatılır."
+    },
+    "name": {
+      "heading": "Görünen ad",
+      "label": "Görünen ad",
+      "hint": "İsteğe bağlı, en fazla {max} karakter. Kaldırmak için alanı boş bırakın.",
+      "save": "Görünen adı kaydet"
     },
     "signOut": {
       "heading": "Oturumu kapatma",
@@ -765,6 +839,13 @@
       "unlinked-google": "Google kaldırıldı: artık onunla oturum açamazsınız.",
       "unlinked-orcid": "ORCID kaldırıldı: artık onunla oturum açamazsınız.",
       "removed": "Pozisyon, kaydettiğiniz pozisyonlardan çıkarıldı.",
+      "email-verified": "E-posta adresi onaylandı: artık hesabınızın adresi bu.",
+      "digest-on": "Glia Notes'u almayı seçtiniz.",
+      "digest-off": "Glia Notes durduruldu: artık almayacaksınız.",
+      "subfields-saved": "Tercih ettiğiniz alt alanlar kaydedildi. İş ilanları listesini filtresiz açtığınızda bu alt alanlardaki pozisyonlar gösterilir.",
+      "subfields-removed": "Artık tercih ettiğiniz alt alan yok: iş ilanları listesi tüm pozisyonları gösterir.",
+      "name-saved": "Görünen adınız kaydedildi.",
+      "name-removed": "Görünen adınız kaldırıldı.",
       "othersEnded": "Oturumunuzun açık olduğu diğer tarayıcılarda oturumunuz kapatıldı."
     },
     "error": {
@@ -785,7 +866,13 @@
       "orcid-already-linked": "Hesabınıza zaten başka bir ORCID kimliği bağlı. Önce onu kaldırın, sonra bunu bağlayın.",
       "last-method": "Hesabınıza girmenin tek yolu bu olduğu için kaldırılamaz. Önce başka bir oturum açma yolu ekleyin.",
       "saved-full": "En fazla 500 pozisyon kaydedilebilir ve bu sayıya ulaştınız. Artık gerekmeyenlerden bazılarını çıkarın, sonra yeniden kaydedin.",
-      "not-public": "Bu pozisyon artık kaydedilemez: son başvuru tarihinin üzerinden 30 günden fazla geçti ya da pozisyon geri çekildi."
+      "not-public": "Bu pozisyon artık kaydedilemez: son başvuru tarihinin üzerinden 30 günden fazla geçti ya da pozisyon geri çekildi.",
+      "email-taken": "Bu adres başka bir Gliagora hesabına ait olduğu için eklenmedi. Adresi buraya eklemek istiyorsanız önce o adresle oturum açıp o hesabı silin.",
+      "verify-expired": "Bu bağlantının süresi dolmuş, bağlantı daha önce kullanılmış ya da başka bir hesap tarafından istenmiş; bu nedenle hiçbir şey değişmedi. E-posta adresi bölümünden yeni bir bağlantı isteyebilirsiniz.",
+      "digest-consent": "Glia Notes açılmadı: almayı kabul ettiğinizi belirtmek için kutuyu işaretleyin, sonra yeniden Glia Notes'u al düğmesine basın.",
+      "digest-needs-email": "Glia Notes için bir e-posta adresi gerekir. Önce hesabınıza bir adres ekleyin.",
+      "subfields-too-many": "En fazla 12 alt alan seçin. Tercih ettiğiniz alt alanlar değişmedi.",
+      "name-invalid": "Görünen ad kaydedilmedi: en fazla 80 karakter kullanın, kontrol karakterleri kullanmayın."
     }
   },
   "emails": {
@@ -827,6 +914,12 @@
       "validity": "Bağlantı 15 dakika boyunca ve yalnızca bir kez çalışır. Bu adres için henüz bir Gliagora hesabı yoksa bağlantı, hesap oluşturmanızı sağlar; bağlantıyı açıp onaylamadıkça hesap oluşturulmaz.",
       "sameBrowser": "Bağlantıyı, onu istediğiniz tarayıcıda açın. Başka bir yerde açarsanız sayfa, devam etmeden önce sizi uyarır.",
       "notYou": "Bu bağlantıyı siz istemediyseniz bu e-postayı dikkate almayın: hiçbir şey olmaz ve hesap oluşturulmaz."
+    },
+    "verifyEmail": {
+      "subject": "Gliagora hesabınızın e-posta adresini onaylayın",
+      "intro": "Bir Gliagora hesabında oturum açmış biri, bu adresin o hesaba eklenmesini istedi. Bunu siz istediyseniz bu bağlantıyı, oturumunuzun açık olduğu tarayıcıda açın:",
+      "validity": "Bağlantı 24 saat boyunca ve yalnızca bir kez çalışır.",
+      "notYou": "Bunu siz istemediyseniz bu e-postayı dikkate almayın: hiçbir şey değişmez."
     }
   }
 }

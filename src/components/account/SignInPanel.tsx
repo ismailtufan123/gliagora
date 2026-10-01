@@ -10,7 +10,7 @@ import { DEFAULT_NEXT, safeNext } from '@/lib/members/return-path'
 import { anyMethod, memberRequest } from '@/lib/members/session'
 import { PRIVACY_EMAIL } from '@/lib/site'
 
-import { SignInForm } from './SignInForm'
+import { EmailLinkForm } from './EmailLinkForm'
 
 // The ways to sign in (M4b, D49; the M4b design §5), on the sign-in page and in place of an
 // account page for visitors who are signed out: "Continue with Google" and "Continue with ORCID"
@@ -93,7 +93,8 @@ export async function SignInPanel({
         <noscript>
           <p className="notice">{t('noscript')}</p>
         </noscript>
-        <SignInForm
+        <EmailLinkForm
+          id="sign-in"
           action={sendSignInLink}
           initial={await initialFormState(emptySignInValues(safe, save), key)}
           permalink={permalink}

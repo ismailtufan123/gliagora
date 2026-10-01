@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { newReference } from '@/lib/forms/public-form'
 
+import en from '../../../messages/en.json'
+import tr from '../../../messages/tr.json'
 import { DONE_CODES, ERROR_CODES, outcomePath, readOutcome } from './outcome'
 
 // The messages after a redirect (src/lib/members/outcome.ts): only known codes, only references in
@@ -125,5 +127,24 @@ describe('outcomePath', () => {
       code: 'failed',
       reference: '0123456789',
     })
+  })
+})
+
+describe('the messages', () => {
+  it('have a text for every code, in every language', () => {
+    for (const messages of [en, tr]) {
+      for (const code of DONE_CODES) expect(messages.outcome.done, code).toHaveProperty([code])
+      for (const code of ERROR_CODES) expect(messages.outcome.error, code).toHaveProperty([code])
+    }
+  })
+
+  it('read the settings outcomes the account page is sent back with', () => {
+    for (const done of ['email-verified', 'digest-on', 'subfields-removed', 'name-saved']) {
+      const query = Object.fromEntries(
+        new URL(outcomePath('/en/account/', { done } as never), 'http://localhost').searchParams,
+      )
+      expect(readOutcome(query, ALL)).toMatchObject({ kind: 'done', code: done })
+    }
+    expect(readOutcome({ error: 'email-taken' }, ALL)).toMatchObject({ code: 'email-taken' })
   })
 })

@@ -9,6 +9,7 @@ import {
   reportAcknowledgement,
   siteUrl,
   suggestionEmail,
+  verifyEmailEmail,
 } from './messages'
 
 const URL_SENT = 'https://www.example.org/jobs/48213?utm_source=list'
@@ -156,6 +157,32 @@ describe('reportAcknowledgement', () => {
     })
     expect(email.text).not.toContain('elsewhere.example.org')
     expect(email.subject).toBe('Bildiriminizi aldık')
+  })
+})
+
+describe('verifyEmailEmail', () => {
+  const LINK = `https://gliagora.com/en/sign-in/link/?token=${'a'.repeat(43)}`
+
+  it('says that someone signed in asked for it, with the link, and what to do if it was not you', () => {
+    const email = verifyEmailEmail({ locale: 'en', link: LINK })
+    expect(email.subject).toBe('Confirm the email address for your Gliagora account')
+    expect(email.text).toContain(
+      `Someone signed in to a Gliagora account asked to add this address to that account. If it was you, open this link in the browser where you are signed in:\n${LINK}\n`,
+    )
+    expect(email.text).toContain('The link works for 24 hours and only once.')
+    expect(email.text).toContain('If it was not you, ignore this email: nothing changes.')
+    expect(email.text).toContain('Gliagora | Neuroscience\nhttps://gliagora.com/')
+  })
+
+  it('names no account and no other address', () => {
+    const { text } = verifyEmailEmail({ locale: 'en', link: LINK })
+    expect(text).not.toMatch(/@(?!gliagora\.com)/)
+  })
+
+  it('has its Turkish text', () => {
+    expect(verifyEmailEmail({ locale: 'tr', link: LINK }).subject).toBe(
+      'Gliagora hesabınızın e-posta adresini onaylayın',
+    )
   })
 })
 

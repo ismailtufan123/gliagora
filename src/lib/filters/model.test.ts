@@ -183,3 +183,28 @@ describe('link helpers', () => {
     ])
   })
 })
+
+describe('normalise', () => {
+  // A list whose `mode` means something only without filters, as the jobs list's `prefs` (D35).
+  const params = { colour: list(lower), mode: choice(['a', 'b'], 'a'), page: page() }
+  const WITH_MODE = {
+    path: '/en/things/',
+    params,
+    normalise(state: { colour: string[]; mode: 'a' | 'b'; page: number }) {
+      return state.colour.length > 0 ? { ...state, mode: 'a' as const } : state
+    },
+  }
+  const parseMode = (query: string) => parseFilters(WITH_MODE, new URLSearchParams(query))
+
+  it('runs after reading a query', () => {
+    expect(parseMode('mode=b')).toEqual({ colour: [], mode: 'b', page: 1 })
+    expect(parseMode('mode=b&colour=red')).toEqual({ colour: ['red'], mode: 'a', page: 1 })
+  })
+
+  it('runs before writing one, so links built from a state are canonical too', () => {
+    const state = { colour: ['red'], mode: 'b' as const, page: 1 }
+    expect(serializeFilters(WITH_MODE, state)).toBe('colour=red')
+    expect(filtersHref(WITH_MODE, { ...state, colour: [] })).toBe('/en/things/?mode=b')
+    expect(isUnfiltered(WITH_MODE, { ...state, colour: [] })).toBe(false)
+  })
+})

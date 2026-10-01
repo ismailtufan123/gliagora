@@ -10,7 +10,6 @@ import {
   type JobFilters,
   QUERY_MAX_LENGTH,
 } from '@/lib/filters/jobs'
-import { clearAllHref } from '@/lib/filters/model'
 import { DEADLINE_DAYS } from '@/lib/filters/values'
 import type { FilterOption, JobFilterOptions } from '@/lib/jobs/query'
 
@@ -25,7 +24,13 @@ type Translate = Awaited<ReturnType<typeof getTranslations<'jobs.filters'>>>
 // nothing is announced twice. All of them are <details data-disclosure> elements: the header's
 // DisclosureEnhancer adds Esc, outside clicks and, for the sheet, the dialog with an inert page;
 // JobsListEnhancer applies each change at once. Only filters that name something are kept: a
-// value that names nothing has no control here, so the next use of the form drops it.
+// value that names nothing has no control here, so the next use of the form drops it. For a
+// member with preferred subfields (D35) the form also says `prefs=off`, which the filter model
+// keeps only when no filter is left: unticking every box then shows all positions, not the
+// member's default again.
+
+/** The input that asks for all positions rather than a member's preferred subfields (D35). */
+const SHOW_ALL = { name: 'prefs', value: 'off' } as const
 
 /** Checkboxes for the options of one parameter; narrower options indented under theirs. */
 function Options({
@@ -122,6 +127,8 @@ export async function JobFilterForm({
   active,
   matches,
   rangeInput,
+  clearHref,
+  showAll = false,
 }: {
   /** The filters without values that name nothing. */
   filters: JobFilters
@@ -135,6 +142,10 @@ export async function JobFilterForm({
    * with the error by the date fields and the filters open on it.
    */
   rangeInput?: { from: string; to: string } | null
+  /** "Clear all": the list without filters (with `prefs=off` for a member with preferences). */
+  clearHref: string
+  /** A member with preferred subfields: the form asks for all positions when nothing is ticked. */
+  showAll?: boolean
 }) {
   const t = await getTranslations({ locale: 'en', namespace: 'jobs.filters' })
   const tList = await getTranslations({ locale: 'en', namespace: 'jobs.list' })
@@ -353,7 +364,7 @@ export async function JobFilterForm({
             <p role="status" className="sr-only">
               {tList('matches', { count: matches })}
             </p>
-            <a href={clearAllHref(JOB_FILTERS)} className="button button-secondary" data-soft>
+            <a href={clearHref} className="button button-secondary" data-soft>
               {t('clearAll')}
             </a>
             <button type="submit" className="button button-primary" data-close-sheet>
@@ -368,6 +379,7 @@ export async function JobFilterForm({
         <input key={id} type="hidden" name="institution" value={id} />
       ))}
       {filters.view !== 'list' && <input type="hidden" name="view" value={filters.view} />}
+      {showAll && <input type="hidden" name={SHOW_ALL.name} value={SHOW_ALL.value} />}
     </form>
   )
 }

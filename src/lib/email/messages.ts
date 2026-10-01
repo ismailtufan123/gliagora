@@ -140,3 +140,25 @@ export function signInEmail({ locale, link }: { locale: Locale; link: string }):
     ),
   }
 }
+
+/**
+ * The link that adds an address to a member's account (M4b, D49; the M4b design §7.4), sent while
+ * the member waits, to the address they typed. It says that someone signed in to an account asked
+ * for it, never which account, and the same whether or not the address belongs to another account:
+ * that is decided when the link is used, by the member who asked, in the browser where they are
+ * signed in. `link` is absolute, on the site's own origin (`appOrigin()`).
+ */
+export function verifyEmailEmail({ locale, link }: { locale: Locale; link: string }): EmailText {
+  const t = translator(locale)
+  return {
+    locale,
+    subject: t('verifyEmail.subject'),
+    text: paragraphs(
+      t('greeting'),
+      `${t('verifyEmail.intro')}\n${link}`,
+      t('verifyEmail.validity'),
+      t('verifyEmail.notYou'),
+      ...closing(t),
+    ),
+  }
+}

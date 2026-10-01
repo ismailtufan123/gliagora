@@ -209,6 +209,32 @@ for (const viewport of [
       await expectLayoutHolds(page, testInfo, 'account')
     })
 
+    // The account's forms (M4b): Glia Notes, the preferred subfields, the address (with the
+    // errors of the add-an-address form) and the display name; and an account without an address.
+    test('account forms, with errors', async ({ page, baseURL }, testInfo) => {
+      needsMailpit()
+      await signInAs(page.context(), 'email', baseURL!)
+      await page.setExtraHTTPHeaders({ 'X-Forwarded-For': clientAddress() })
+      await page.goto('/en/account/')
+      await page.getByRole('button', { name: 'Email me a confirmation link' }).click()
+      await expect(summary(page)).toBeFocused()
+      await expectLayoutHolds(page, testInfo, 'account forms, errors')
+    })
+
+    test('account without an email address', async ({ page, baseURL }, testInfo) => {
+      await signInAs(page.context(), 'orcid', baseURL!)
+      await page.goto('/en/account/')
+      await expect(page.getByRole('heading', { name: 'Add an email address' })).toBeVisible()
+      await expectLayoutHolds(page, testInfo, 'account without an address')
+    })
+
+    test('jobs list with the preferred subfields applied', async ({ page, baseURL }, testInfo) => {
+      await signInAs(page.context(), 'email', baseURL!)
+      await page.goto('/en/jobs/')
+      await expect(page.locator('[data-preferred]')).toBeVisible()
+      await expectLayoutHolds(page, testInfo, 'jobs list, preferred subfields')
+    })
+
     test('search results', async ({ page }, testInfo) => {
       await page.goto('/en/search/?q=neuro')
       await expect(page.locator('.result-list').first()).toBeVisible()

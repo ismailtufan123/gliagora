@@ -32,15 +32,19 @@ import {
 /** The header Next.js adds to a Server Action it forwards from another page. */
 export const FORWARDED_ACTION_HEADER = 'x-action-forwarded'
 
-/** Problems with the whole form rather than a field; messages under `{form}.errors`. */
-export type FormProblem = 'needsJs' | 'spamCheck' | 'rateLimited' | 'unavailable' | 'failed'
+/**
+ * Problems with the whole form rather than a field; messages under `{form}.errors`. `signedOut`:
+ * a form for members only (adding an address to the account) sent without a session.
+ */
+export type FormProblem =
+  'needsJs' | 'spamCheck' | 'rateLimited' | 'unavailable' | 'signedOut' | 'failed'
 
 export type FormOutcome<Values, Errors> =
   | { kind: 'sent' }
   | { kind: 'invalid'; status: 400; errors: Errors; values: Values }
   | {
       kind: 'refused'
-      status: 400 | 429 | 503
+      status: 400 | 401 | 429 | 503
       problem: Exclude<FormProblem, 'failed'>
       values: Values
     }
@@ -79,6 +83,11 @@ export type PublicForm<Values, Data, Errors> = {
   /** The fields as sent: shown again in the form after an error. */
   read: (form: FormData) => Values
   parse: (values: Values, locale: string) => Parse<Data, Errors>
+  /**
+   * For a form that only a signed-in member may send: `signedOut` without a session, which
+   * refuses the form before anything is checked, counted, stored or sent.
+   */
+  gate?: () => 'signedOut' | null
 }
 
 /** A form field's text; anything else (a file, a missing field) counts as empty. */
@@ -138,6 +147,8 @@ export async function handlePublicForm<Values, Data, Errors>(
   }
   const values = spec.read(form)
   const { locale, altcha, honeypot } = readControls(form)
+  const gate = spec.gate?.() ?? null
+  if (gate) return { kind: 'refused', status: 401, problem: gate, values }
   if (!deps.altchaKey || !deps.secret) {
     return { kind: 'refused', status: 503, problem: 'unavailable', values }
   }
@@ -198,7 +209,7 @@ export type FormState<Values> = {
   values: Values
   fieldErrors: Partial<Record<keyof Values, string>>
   formError: string | null
-  /** 400, 429, 500 or 503, like the HTTP status an API would answer; 200 before sending. */
+  /** 400, 401, 429, 500 or 503, like the HTTP status an API would answer; 200 before sending. */
   status: number
   challenge: SpamChallenge | null
   attempt: number

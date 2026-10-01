@@ -12,7 +12,9 @@ import { OUTCOME_ID } from './paths'
  * What a redirect reports as done. Messages under `outcome.done`. `signed-in-linked-google`: a
  * Google sign-in that found the account by the address Google manages, and so added Google to it
  * (the M4b design §7.3). `removed`: a saved position removed on the saved page without JavaScript,
- * whose row is then gone.
+ * whose row is then gone. The account's settings (§7.4): an address added by its link
+ * (`email-verified`), Glia Notes switched on or off, the preferred subfields saved or all removed,
+ * the display name saved or removed.
  */
 export const DONE_CODES = [
   'signed-in',
@@ -23,6 +25,13 @@ export const DONE_CODES = [
   'unlinked-google',
   'unlinked-orcid',
   'removed',
+  'email-verified',
+  'digest-on',
+  'digest-off',
+  'subfields-saved',
+  'subfields-removed',
+  'name-saved',
+  'name-removed',
 ] as const
 /**
  * What a redirect reports as gone wrong. Messages under `outcome.error`. Besides the email link's
@@ -33,7 +42,11 @@ export const DONE_CODES = [
  * opened from elsewhere); too many accounts created from one connection (`create-limited`); and
  * the refusals of the account rules (src/lib/members/identity.ts, `Refusal`); and a Save refused
  * because the member has saved the most there may be (`saved-full`) or the position is no longer
- * public (`not-public`), shown on the saved page.
+ * public (`not-public`), shown on the saved page. The account's settings: an address that belongs
+ * to another account (`email-taken`), a link to add an address that expired or was used
+ * (`verify-expired`), Glia Notes without the consent box ticked (`digest-consent`) or without an
+ * address (`digest-needs-email`), more preferred subfields than there may be
+ * (`subfields-too-many`), and a display name that cannot be stored (`name-invalid`).
  */
 export const ERROR_CODES = [
   'link-expired',
@@ -52,6 +65,12 @@ export const ERROR_CODES = [
   'last-method',
   'saved-full',
   'not-public',
+  'email-taken',
+  'verify-expired',
+  'digest-consent',
+  'digest-needs-email',
+  'subfields-too-many',
+  'name-invalid',
 ] as const
 
 export type DoneCode = (typeof DONE_CODES)[number]

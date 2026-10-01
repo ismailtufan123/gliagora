@@ -12,6 +12,7 @@ import * as constraints from '@/migrations/20261001_142246_member_constraints'
 import { orcidCheckCharacter } from './orcid-id'
 import { redeemSignInLink } from './sign-in-link'
 import { hashToken, newBinding, newToken } from './tokens'
+import { redeemVerifyLink } from './verify-email'
 import {
   type MemberDb,
   type MemberRecord,
@@ -34,8 +35,12 @@ import {
   isUniqueViolation,
   listSavedJobs,
   markEmailVerified,
+  preferredSubfields,
   saveJob,
   savedJobIds,
+  setDigest,
+  setDisplayName,
+  setPreferredSubfields,
   touchMember,
   unsaveJob,
 } from './store'
@@ -931,6 +936,180 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       const old = await link(email())
       expect(await redeemSignInLink(store, old, at(1))).toBeNull()
       expect(await redeemSignInLink(store, 'not a token', NOW)).toBeNull()
+    })
+  })
+
+  describe('settings', () => {
+    it('switch Glia Notes on only for an account with an address, and off in one statement', async () => {
+      const member = await newMember()
+      expect(await setDigest(store, member.id, { optIn: true, version: '2026-09-27' }, NOW)).toBe(
+        true,
+      )
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestOptIn: true,
+        digestChangedAt: NOW,
+        digestConsentVersion: '2026-09-27',
+      })
+      expect(await setDigest(store, member.id, { optIn: false }, at(1))).toBe(true)
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestOptIn: false,
+        digestChangedAt: at(1),
+        // The text agreed to stays with the record of the choice.
+        digestConsentVersion: '2026-09-27',
+      })
+      const orcidOnly = await newMember({ orcidId: orcid() })
+      expect(
+        await setDigest(store, orcidOnly.id, { optIn: true, version: '2026-09-27' }, NOW),
+      ).toBe(false)
+      expect(await findMember(store, { id: orcidOnly.id })).toMatchObject({ digestOptIn: false })
+      await expect(setDigest(store, member.id, { optIn: true, version: '' }, NOW)).rejects.toThrow(
+        MemberStoreError,
+      )
+    })
+
+    it('store the preferred subfields that are active subfields, at most 12, and replace them', async () => {
+      const member = await newMember()
+      const slugs = await rows<{ slug: string }>(sql`
+        select slug from terms where vocabulary = 'subfield' order by sort_order, id limit 13`)
+      const [first, second, third] = slugs.map((row) => row.slug)
+      // Another vocabulary's slug, and one that names nothing, are not stored.
+      expect(
+        await setPreferredSubfields(store, member.id, [second!, first!, 'phd', 'no-such'], NOW),
+      ).toBe(2)
+      expect((await preferredSubfields(store, member.id)).map((row) => row.slug)).toEqual([
+        first,
+        second,
+      ])
+      // Payload's own rows for the field, in its order.
+      expect(
+        await rows(sql`select "order", path from members_rels where parent_id = ${member.id}
+          order by "order"`),
+      ).toEqual([
+        { order: 1, path: 'subfieldPrefs' },
+        { order: 2, path: 'subfieldPrefs' },
+      ])
+      expect(await setPreferredSubfields(store, member.id, [third!], NOW)).toBe(1)
+      expect((await preferredSubfields(store, member.id)).map((row) => row.slug)).toEqual([third])
+      await expect(
+        setPreferredSubfields(
+          store,
+          member.id,
+          slugs.map((row) => row.slug),
+          NOW,
+        ),
+      ).rejects.toThrow(MemberStoreError)
+      expect(await setPreferredSubfields(store, member.id, [], NOW)).toBe(0)
+      expect(await preferredSubfields(store, member.id)).toEqual([])
+      await expect(setPreferredSubfields(store, 999_999, [first!], NOW)).rejects.toThrow(
+        MemberStoreError,
+      )
+    })
+
+    it('leave out a retired subfield from the preferences, without deleting it', async () => {
+      const member = await newMember()
+      const [term] = await rows<{ id: number; slug: string }>(sql`
+        select id, slug from terms where vocabulary = 'subfield' order by sort_order desc limit 1`)
+      expect(await setPreferredSubfields(store, member.id, [term!.slug], NOW)).toBe(1)
+      await db.execute(sql`update terms set is_active = false where id = ${term!.id}`)
+      try {
+        expect(await preferredSubfields(store, member.id)).toEqual([])
+        expect(await setPreferredSubfields(store, member.id, [term!.slug], NOW)).toBe(0)
+      } finally {
+        await db.execute(sql`update terms set is_active = true where id = ${term!.id}`)
+      }
+    })
+
+    it('set and remove the display name, refusing what cannot be stored', async () => {
+      const member = await newMember()
+      expect(await setDisplayName(store, member.id, 'Josiah Carberry', NOW)).toBe(true)
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        displayName: 'Josiah Carberry',
+      })
+      expect(await setDisplayName(store, member.id, null, NOW)).toBe(true)
+      expect(await findMember(store, { id: member.id })).toMatchObject({ displayName: null })
+      for (const name of ['', 'a'.repeat(81), 'Bell\u0007']) {
+        await expect(setDisplayName(store, member.id, name, NOW)).rejects.toThrow(MemberStoreError)
+      }
+    })
+  })
+
+  describe('redeeming a link to add an address (verify-email.ts)', () => {
+    const link = async (memberId: number, address: string, now = NOW) =>
+      (
+        await createEmailToken(
+          store,
+          { purpose: 'verify-email', email: address, memberId, locale: 'en' },
+          now,
+        )
+      ).token
+
+    it('adds the address to the member who asked, or replaces theirs', async () => {
+      const orcidOnly = await newMember({ orcidId: orcid() })
+      const address = email()
+      expect(
+        await redeemVerifyLink(store, await link(orcidOnly.id, address), orcidOnly.id, NOW),
+      ).toEqual({ kind: 'verified', changed: true })
+      expect(await findMember(store, { id: orcidOnly.id })).toMatchObject({
+        email: address,
+        emailVerifiedBy: 'link',
+        emailVerifiedAt: NOW,
+      })
+      const replacement = email()
+      expect(
+        await redeemVerifyLink(
+          store,
+          await link(orcidOnly.id, replacement, at(1)),
+          orcidOnly.id,
+          at(1),
+        ),
+      ).toEqual({ kind: 'verified', changed: true })
+      expect(await findMember(store, { id: orcidOnly.id })).toMatchObject({ email: replacement })
+      // Its own address again: nothing changes.
+      expect(
+        await redeemVerifyLink(
+          store,
+          await link(orcidOnly.id, replacement, at(1)),
+          orcidOnly.id,
+          at(1),
+        ),
+      ).toEqual({ kind: 'verified', changed: false })
+    })
+
+    it('works only for the member who asked: anyone else leaves the link usable', async () => {
+      const member = await newMember()
+      const other = await newMember()
+      const token = await link(member.id, email())
+      expect(await redeemVerifyLink(store, token, other.id, NOW)).toBeNull()
+      expect(await findEmailToken(store, token, NOW)).not.toBeNull()
+      expect(await redeemVerifyLink(store, token, member.id, NOW)).toMatchObject({
+        kind: 'verified',
+      })
+      // Used once.
+      expect(await redeemVerifyLink(store, token, member.id, NOW)).toBeNull()
+    })
+
+    it('never takes an address from another account: the two are never merged', async () => {
+      const holder = await newMember()
+      const member = await newMember({ orcidId: orcid() })
+      expect(
+        await redeemVerifyLink(store, await link(member.id, holder.email!), member.id, NOW),
+      ).toEqual({ kind: 'refused', reason: 'email-taken' })
+      expect(await findMember(store, { id: member.id })).toMatchObject({ email: null })
+      expect(await findMember(store, { id: holder.id })).toMatchObject({ email: holder.email })
+    })
+
+    it('uses no sign-in link and none that has expired', async () => {
+      const member = await newMember()
+      const { token: signIn } = await createEmailToken(
+        store,
+        { purpose: 'sign-in', email: email(), locale: 'en' },
+        NOW,
+      )
+      expect(await redeemVerifyLink(store, signIn, member.id, NOW)).toBeNull()
+      expect(await findEmailToken(store, signIn, NOW)).not.toBeNull()
+      expect(
+        await redeemVerifyLink(store, await link(member.id, email()), member.id, at(1.01)),
+      ).toBeNull()
     })
   })
 

@@ -40,7 +40,20 @@ export const PAGES = [
   { path: jobPath(FIXED_JOBS.expiredRecently), name: 'job (closed)' },
   // Saved positions (M4b): the rows' Save buttons as a member, who has saved three of the fixed
   // jobs (pnpm e2e:member): open, closed recently and withdrawn. The jobs list keeps its budget.
-  { path: '/en/jobs/', name: 'jobs list (member)', member: 'email', scriptKb: 137 },
+  // The member prefers two subfields (D35): the list without filters shows theirs, with a notice;
+  // `prefs=off` shows all positions.
+  {
+    path: '/en/jobs/',
+    name: 'jobs list (member, preferred subfields)',
+    member: 'email',
+    scriptKb: 137,
+  },
+  {
+    path: '/en/jobs/?prefs=off',
+    name: 'jobs list (member, all positions)',
+    member: 'email',
+    scriptKb: 137,
+  },
   { path: jobPath(FIXED_JOBS.open), name: 'job (open, member)', member: 'email' },
   { path: '/en/account/saved/', name: 'saved positions', member: 'email' },
   { path: '/en/account/saved/', name: 'saved positions (signed out)' },
@@ -72,6 +85,7 @@ export const PAGES = [
   { path: '/en/account/', name: 'account (signed out)' },
   { path: '/en/account/', name: 'account (email member)', member: 'email' },
   { path: '/en/account/', name: 'account (ORCID member)', member: 'orcid' },
+  { path: '/en/account/email/sent/', name: 'address link sent' },
   { path: '/en/sign-in/', name: 'sign in (signed in)', member: 'email' },
   {
     path: '/en/sign-in/?error=link-expired',

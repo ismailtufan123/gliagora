@@ -29,6 +29,8 @@ describe('canonical list addresses', () => {
       // Campaign tags on our own links, wherever they are (PLAN §13, §16.4).
       '/en/jobs/?deadline=14d&utm_source=glia-notes&utm_medium=email',
       '/en/jobs/?utm_source=linkedin&type=phd',
+      '/en/jobs/?prefs=off',
+      '/en/jobs/?prefs=off&sort=newest&view=map&page=2',
     ]) {
       expect(redirectFor(url), url).toBeNull()
     }
@@ -54,6 +56,19 @@ describe('canonical list addresses', () => {
       ['/en/jobs/?type=', '/en/jobs/'],
       ['/en/jobs/?q=++two++words', '/en/jobs/?q=two+words'],
       ['/en/jobs/?view=list', '/en/jobs/'],
+      // D35: `prefs=off` means something only without filters; `on` is the default.
+      ['/en/jobs/?prefs=off&type=phd', '/en/jobs/?type=phd'],
+      ['/en/jobs/?type=phd&prefs=off&utm_source=x', '/en/jobs/?type=phd&utm_source=x'],
+      ['/en/jobs/?prefs=on', '/en/jobs/'],
+      ['/en/jobs/?prefs=OFF', '/en/jobs/?prefs=off'],
+      ['/en/jobs/?sort=newest&prefs=off', '/en/jobs/?prefs=off&sort=newest'],
+      // The filter form of a member with preferred subfields, without JavaScript, nothing ticked.
+      [
+        '/en/jobs/?q=&deadline=&deadline-from=&deadline-to=&prefs=off&sort=deadline',
+        '/en/jobs/?prefs=off',
+      ],
+      // The same form with a box ticked.
+      ['/en/jobs/?q=&subfield=glia&deadline=&prefs=off&sort=deadline', '/en/jobs/?subfield=glia'],
     ]
     for (const [from, to] of cases) expect(redirectFor(from), from).toBe(to)
   })

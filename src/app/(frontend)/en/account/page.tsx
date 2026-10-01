@@ -1,26 +1,42 @@
+import config from '@payload-config'
 import type { Metadata } from 'next'
 import { unstable_rethrow } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { getPayload } from 'payload'
 
 import { AccountNav, SignOutForm } from '@/components/account/AccountNav'
+import {
+  DigestSettings,
+  DisplayNameSettings,
+  EmailSettings,
+  SubfieldSettings,
+} from '@/components/account/AccountSettings'
 import { MemberUnavailable } from '@/components/account/MemberUnavailable'
 import { OutcomeMessage } from '@/components/account/OutcomeMessage'
 import { SignInPanel } from '@/components/account/SignInPanel'
 import { SignedInAs } from '@/components/account/SignedInAs'
+import { altchaKey } from '@/lib/forms/altcha'
 import { memberPageIndexed } from '@/lib/indexing'
 import { readOutcome } from '@/lib/members/outcome'
 import { MEMBER_PATHS, providerStartPath } from '@/lib/members/paths'
 import { type CurrentMember, currentMember, memberRequest } from '@/lib/members/session'
+import { memberDb, preferredSubfields } from '@/lib/members/store'
+import { activeSubfields } from '@/lib/records'
 
-// The account (M4b, D49; the M4b design §2, §5): who is signed in, the ways to sign in (Google and
-// ORCID can be linked, through their start routes with `link=1`, and removed, unless one is the
-// last way in), and signing out everywhere. For a visitor who is signed out, the same address
-// shows the sign-in panel (200, not a redirect: the header links here, and every header link must
-// lead to a page). `?done=` and `?error=` are the outcomes of the routes that lead here
-// (OutcomeMessage). Rendered for each request, never indexed.
+// The account (M4b, D49; the M4b design §2, §5, §7.4): who is signed in; Glia Notes; the preferred
+// subfields, the jobs list's default filter (D35); the email address, added or changed through an
+// emailed link; the ways to sign in (Google and ORCID can be linked, through their start routes
+// with `link=1`, and removed, unless one is the last way in); the display name; and signing out
+// everywhere. For a visitor who is signed out, the same address shows the sign-in panel (200, not
+// a redirect: the header links here, and every header link must lead to a page). `?done=` and
+// `?error=` are the outcomes of the routes and links that lead here (OutcomeMessage). Rendered for
+// each request, never indexed.
 export const dynamic = 'force-dynamic'
 
-/** The outcomes of the routes that lead here: signing in, linking and removing a method. */
+/**
+ * The outcomes of the routes that lead here: signing in, linking and removing a method, the
+ * settings, and the link that adds an address.
+ */
 const ACCOUNT_OUTCOMES = {
   done: [
     'signed-in',
@@ -30,6 +46,13 @@ const ACCOUNT_OUTCOMES = {
     'linked-orcid',
     'unlinked-google',
     'unlinked-orcid',
+    'email-verified',
+    'digest-on',
+    'digest-off',
+    'subfields-saved',
+    'subfields-removed',
+    'name-saved',
+    'name-removed',
   ],
   error: [
     'failed',
@@ -43,6 +66,12 @@ const ACCOUNT_OUTCOMES = {
     'google-already-linked',
     'orcid-already-linked',
     'last-method',
+    'email-taken',
+    'verify-expired',
+    'digest-consent',
+    'digest-needs-email',
+    'subfields-too-many',
+    'name-invalid',
   ],
 } as const
 
@@ -70,8 +99,19 @@ export default async function Page({ searchParams }: Props) {
   const t = await getTranslations({ locale: 'en', namespace: 'account' })
   const params = await searchParams
   let current: CurrentMember | null
+  let subfields: { slug: string; label: string }[] = []
+  let chosen: string[] = []
   try {
     current = await currentMember()
+    if (current) {
+      const db = memberDb(await getPayload({ config }))
+      const [all, preferred] = await Promise.all([
+        activeSubfields('en'),
+        preferredSubfields(db, current.member.id),
+      ])
+      subfields = all.map((term) => ({ slug: term.slug, label: term.label || term.slug }))
+      chosen = preferred.map((subfield) => subfield.slug)
+    }
   } catch (error) {
     unstable_rethrow(error)
     return <MemberUnavailable title={t('title')} name="Account page" error={error} />
@@ -147,6 +187,10 @@ export default async function Page({ searchParams }: Props) {
           )}
         </div>
 
+        <DigestSettings member={member} />
+        <SubfieldSettings subfields={subfields} chosen={chosen} />
+        <EmailSettings member={member} available={methods.email} altchaKey={altchaKey()} />
+
         <section aria-labelledby="methods-heading" className="grid gap-4">
           <h2 id="methods-heading" className="text-h2">
             {t('methods.heading')}
@@ -172,6 +216,8 @@ export default async function Page({ searchParams }: Props) {
             </p>
           )}
         </section>
+
+        <DisplayNameSettings member={member} />
 
         <section aria-labelledby="sign-out-heading" className="grid justify-items-start gap-4">
           <h2 id="sign-out-heading" className="text-h2">

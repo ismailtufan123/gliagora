@@ -25,6 +25,9 @@ import { jobsListIndexed } from '@/lib/indexing'
 import { MAP_DATA_PATH, mapQuery } from '@/lib/map/data'
 import { jobChips } from '@/lib/jobs/chips'
 import { formatDay } from '@/lib/jobs/format'
+import { preferredView } from '@/lib/jobs/preferred'
+import { ACCOUNT_SECTIONS, MEMBER_PATHS } from '@/lib/members/paths'
+import { memberPreferredSubfields } from '@/lib/members/preferences'
 import { saveContext } from '@/lib/members/save-context'
 import { type JobsList, jobsList, requestTime } from '@/lib/records'
 import { FEED_PATH } from '@/lib/seo/feed'
@@ -38,7 +41,10 @@ import { paths } from '@/lib/site'
 // src/lib/indexing.ts). Every variant links to the jobs feed. A top-level window page: no
 // breadcrumbs, like the other windows. The map view (`view=map`, M5) shows the list until then.
 // Each row has a Save control once a way of signing in is on (src/lib/members/save-context.ts),
-// which returns to this address.
+// which returns to this address. A signed-in member's preferred subfields apply to the list
+// without filters, with a notice that names them (D35, src/lib/jobs/preferred.ts): the page then
+// queries, shows and links from those filters (`effective`, `links`), while its address, canonical
+// page and Save controls stay those of the request.
 export const dynamic = 'force-dynamic'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
@@ -70,10 +76,16 @@ export default async function Page({ searchParams }: Props) {
   setRequestLocale('en')
   const query = await queryOf(searchParams)
   const filters = parseJobFilters(query)
+  const rangeInput = invalidDeadlineRange(query)
   const t = await getTranslations({ locale: 'en', namespace: 'jobs' })
+  const { effective, links, applied, escape } = preferredView(
+    filters,
+    await memberPreferredSubfields(),
+    { shownAsSent: rangeInput !== null },
+  )
   let list: JobsList
   try {
-    list = await jobsList(filters, 'en')
+    list = await jobsList(effective, 'en')
   } catch (error) {
     unstable_rethrow(error)
     // The error state is drawn here, on the server, so it shows without JavaScript (error.tsx is
@@ -98,7 +110,7 @@ export default async function Page({ searchParams }: Props) {
       </>
     )
   }
-  const { chips, known } = jobChips(filters, list, {
+  const { chips, known } = jobChips(links, list, {
     region: (region) => t(`filters.regions.${region}`),
     deadline: (deadline) =>
       deadline.kind === 'within'
@@ -111,7 +123,7 @@ export default async function Page({ searchParams }: Props) {
             }),
     search: (q) => t('filters.chipSearch', { q }),
   })
-  const active = activeFilters(JOB_FILTERS, filters)
+  const active = activeFilters(JOB_FILTERS, links)
   // The empty state's way back, besides "Clear all". Values that name nothing (a retired term, an
   // unknown country or institution) have no chip and match nothing, so it drops those. Otherwise
   // it removes the last value with a chip in the address: the canonical address keeps no record
@@ -126,10 +138,20 @@ export default async function Page({ searchParams }: Props) {
     back = { href: last.href, label: t('list.removeLast', { label: last.label }) }
   }
   const pastEnd = list.matches > 0 && filters.page > list.pages
-  // "Clear all" removes the filters and keeps the view: the map stays open.
-  const clearHref = filtersHref(JOB_FILTERS, { ...emptyFilters(JOB_FILTERS), view: filters.view })
+  // "Clear all" removes the filters and keeps the view: the map stays open. For a member with
+  // preferred subfields it says `prefs=off`, or it would lead back to the default (D35).
+  const clearHref = filtersHref(JOB_FILTERS, {
+    ...emptyFilters(JOB_FILTERS),
+    view: filters.view,
+    prefs: links.prefs,
+  })
   const mapView = filters.view === 'map'
-  const canonicalQuery = serializeFilters(JOB_FILTERS, filters)
+  // What the list shows, which the filter form's script brings the form in line with.
+  const canonicalQuery = serializeFilters(JOB_FILTERS, effective)
+  // The preferred subfields the default applies, by name, in the subfields' order (the chips').
+  const appliedNames = applied
+    ? chips.filter((chip) => chip.name === 'subfield').map((chip) => chip.label)
+    : []
   const save =
     list.jobs.length > 0
       ? await saveContext(
@@ -176,6 +198,27 @@ export default async function Page({ searchParams }: Props) {
               instead of moving them about, and nothing above them changes size, so an answer that
               arrives late shifts nothing on the page (CLS, PLAN §17.1). */}
       <div key={canonicalQuery} className="grid gap-6">
+        {appliedNames.length > 0 && (
+          <div className="notice" data-preferred>
+            <p>
+              {t('list.preferred.text', {
+                subfields: new Intl.ListFormat('en', { type: 'conjunction' }).format(appliedNames),
+              })}
+            </p>
+            <ul role="list" className="flex flex-wrap gap-x-6 gap-y-2">
+              <li>
+                <a href={jobsHref({ ...filters, prefs: 'off', page: 1 })} data-soft>
+                  {t('list.preferred.all')}
+                </a>
+              </li>
+              <li>
+                <a href={`${MEMBER_PATHS.account}#${ACCOUNT_SECTIONS.subfields}`}>
+                  {t('list.preferred.change')}
+                </a>
+              </li>
+            </ul>
+          </div>
+        )}
         {chips.length > 0 && (
           <div className="filter-status">
             <ul role="list" aria-label={t('filters.chips')} className="chips">
@@ -245,7 +288,7 @@ export default async function Page({ searchParams }: Props) {
         {pastEnd && (
           <p className="flex flex-wrap gap-x-2">
             <span>{t('list.pastEnd', { pages: list.pages })}</span>
-            <a href={pageHref(JOB_FILTERS, filters, 1)}>{t('list.firstPage')}</a>
+            <a href={pageHref(JOB_FILTERS, links, 1)}>{t('list.firstPage')}</a>
           </p>
         )}
 
@@ -253,7 +296,7 @@ export default async function Page({ searchParams }: Props) {
           locale="en"
           page={filters.page}
           pages={list.pages}
-          href={(page) => pageHref(JOB_FILTERS, filters, page)}
+          href={(page) => pageHref(JOB_FILTERS, links, page)}
         />
       </div>
     </section>
@@ -272,11 +315,13 @@ export default async function Page({ searchParams }: Props) {
         options={list.options}
         active={chips.filter((chip) => chip.name !== 'q').length}
         matches={list.matches}
-        rangeInput={invalidDeadlineRange(query)}
+        rangeInput={rangeInput}
+        clearHref={filtersHref(JOB_FILTERS, { ...emptyFilters(JOB_FILTERS), prefs: links.prefs })}
+        showAll={escape}
       />
 
       <p>
-        <a href={jobsHref({ ...filters, view: mapView ? 'list' : 'map' })} data-soft>
+        <a href={jobsHref({ ...links, view: mapView ? 'list' : 'map' })} data-soft>
           {t(mapView ? 'view.hideMap' : 'view.showMap')}
         </a>
       </p>
@@ -286,7 +331,7 @@ export default async function Page({ searchParams }: Props) {
           {results}
           <div className="jobs-split-map">
             <LazyMapView
-              dataPath={`${MAP_DATA_PATH}?${mapQuery(filters)}`}
+              dataPath={`${MAP_DATA_PATH}?${mapQuery(effective)}`}
               library={MAP_LIBRARY}
               texts={await mapViewTexts()}
               hoverScope={`#${RESULTS_ID}`}

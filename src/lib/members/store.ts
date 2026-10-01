@@ -11,6 +11,7 @@ import {
   DATA_REQUEST_LINK_HOURS,
   INACTIVITY_GRACE_DAYS,
   INACTIVITY_MONTHS,
+  MAX_PREFERRED_SUBFIELDS,
   MAX_SAVED_ITEMS,
   MAX_SESSIONS,
   SESSION_DAYS,
@@ -131,6 +132,11 @@ export type MemberRecord = {
   googleId: string | null
   orcidId: string | null
   displayName: string | null
+  /** Glia Notes: the member's choice, stored now and synced to listmonk at M2 (PLAN §13). */
+  digestOptIn: boolean
+  digestChangedAt: Date | null
+  /** The date of the consent text the member agreed to when they last chose the digest. */
+  digestConsentVersion: string | null
   lastSeenAt: Date
   deletionWarnedAt: Date | null
   warningRefusedAt: Date | null
@@ -145,6 +151,9 @@ type MemberRow = {
   google_id: string | null
   orcid_id: string | null
   display_name: string | null
+  digest_opt_in: boolean | null
+  digest_changed_at: unknown
+  digest_consent_version: string | null
   last_seen_at: unknown
   deletion_warned_at: unknown
   warning_refused_at: unknown
@@ -152,7 +161,7 @@ type MemberRow = {
 }
 
 const MEMBER_COLUMNS = sql.raw(
-  'm.id, m.email, m.email_verified_at, m.email_verified_by, m.google_id, m.orcid_id, m.display_name, m.last_seen_at, m.deletion_warned_at, m.warning_refused_at, m.created_at',
+  'm.id, m.email, m.email_verified_at, m.email_verified_by, m.google_id, m.orcid_id, m.display_name, m.digest_opt_in, m.digest_changed_at, m.digest_consent_version, m.last_seen_at, m.deletion_warned_at, m.warning_refused_at, m.created_at',
 )
 
 const toMember = (row: MemberRow): MemberRecord => ({
@@ -163,6 +172,9 @@ const toMember = (row: MemberRow): MemberRecord => ({
   googleId: row.google_id,
   orcidId: row.orcid_id,
   displayName: row.display_name,
+  digestOptIn: row.digest_opt_in === true,
+  digestChangedAt: toDate(row.digest_changed_at),
+  digestConsentVersion: row.digest_consent_version,
   lastSeenAt: toDate(row.last_seen_at) as Date,
   deletionWarnedAt: toDate(row.deletion_warned_at),
   warningRefusedAt: toDate(row.warning_refused_at),
@@ -298,6 +310,134 @@ export function touchMember(db: MemberDb, memberId: number, now: Date): Promise<
         updated_at = ${iso(now)}
       WHERE id = ${checked(id, memberId, 'id')}
         AND last_seen_at < ${iso(new Date(now.getTime() - DAY_MS))}
+      RETURNING id`)
+    return rows.length === 1
+  })
+}
+
+// ---------------------------------------------------------------------------------------------
+// Settings: Glia Notes, preferred subfields, display name
+
+/** A display name as the settings store it: at most 80 characters, no control characters. */
+export const DISPLAY_NAME_MAX = 80
+
+/** A subfield's slug, as the settings form sends it. */
+const subfieldSlug = z
+  .string()
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+  .max(100)
+
+export type DigestChoice =
+  /** `version`: the date of the consent text the member agreed to (`CONTENT_PAGES.acikRiza`). */
+  { optIn: true; version: string } | { optIn: false }
+
+/**
+ * Glia Notes on or off for the member (the M4b design §7.4). On only for an account with an email
+ * address, which is always one the member proved (an email link, or Google for an address it
+ * manages): that address stands for the confirmation step a newsletter form sends (PLAN §13).
+ * Records when the choice was made and, when switched on, which consent text was agreed to. Only
+ * stored until M2, when listmonk receives it. Returns whether the row changed (false: no such
+ * member, or on without an address).
+ */
+export function setDigest(
+  db: MemberDb,
+  memberId: number,
+  choice: DigestChoice,
+  now: Date,
+): Promise<boolean> {
+  return guarded(async () => {
+    const member = checked(id, memberId, 'id')
+    const at = iso(now)
+    const { rows } = choice.optIn
+      ? await db.execute<{ id: number }>(sql`
+          UPDATE members
+          SET digest_opt_in = true, digest_changed_at = ${at},
+            digest_consent_version = ${checked(z.string().min(1).max(40), choice.version, 'version')},
+            updated_at = ${at}
+          WHERE id = ${member} AND email IS NOT NULL AND email_verified_at IS NOT NULL
+          RETURNING id`)
+      : await db.execute<{ id: number }>(sql`
+          UPDATE members SET digest_opt_in = false, digest_changed_at = ${at}, updated_at = ${at}
+          WHERE id = ${member}
+          RETURNING id`)
+    return rows.length === 1
+  })
+}
+
+/**
+ * The member's preferred subfields (D35) that are still active, in the subfields' own order: the
+ * default filter of the jobs list, and the ticked boxes of the account page. A retired subfield
+ * stays stored but no longer counts.
+ */
+export function preferredSubfields(
+  db: MemberDb,
+  memberId: number,
+): Promise<{ id: number; slug: string }[]> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{ id: number; slug: string }>(sql`
+      SELECT t.id, t.slug
+      FROM members_rels r JOIN terms t ON t.id = r.terms_id
+      WHERE r.parent_id = ${checked(id, memberId, 'id')} AND r.path = 'subfieldPrefs'
+        AND t.vocabulary = 'subfield' AND t.is_active IS NOT FALSE
+      ORDER BY t.sort_order, t.id`)
+    return rows.map((row) => ({ id: Number(row.id), slug: row.slug }))
+  })
+}
+
+/**
+ * Replaces the member's preferred subfields with the active subfields among `slugs` (at most
+ * MAX_PREFERRED_SUBFIELDS; any other value is ignored, so a retired subfield cannot be chosen).
+ * The rows are Payload's own for the `subfieldPrefs` field (`members_rels`), written in one
+ * transaction while the member's row is locked. Returns how many are stored now. An empty list
+ * removes them all: the jobs list then shows every position again.
+ */
+export function setPreferredSubfields(
+  db: MemberDb,
+  memberId: number,
+  slugs: readonly string[],
+  now: Date,
+): Promise<number> {
+  return guarded(() =>
+    db.transaction(async (tx) => {
+      const member = checked(id, memberId, 'id')
+      const wanted = checked(
+        z.array(subfieldSlug).max(MAX_PREFERRED_SUBFIELDS),
+        [...new Set(slugs)],
+        'subfields',
+      )
+      const { rows: found } = await tx.execute<{ id: number }>(sql`
+        UPDATE members SET updated_at = ${iso(now)} WHERE id = ${member} RETURNING id`)
+      if (found.length === 0) throw new MemberStoreError('gone', 'members')
+      await tx.execute(sql`
+        DELETE FROM members_rels WHERE parent_id = ${member} AND path = 'subfieldPrefs'`)
+      if (wanted.length === 0) return 0
+      const { rows } = await tx.execute<{ id: number }>(sql`
+        INSERT INTO members_rels ("order", parent_id, path, terms_id)
+        SELECT row_number() OVER (ORDER BY t.sort_order, t.id), ${member}, 'subfieldPrefs', t.id
+        FROM terms t
+        WHERE t.vocabulary = 'subfield' AND t.is_active IS NOT FALSE
+          AND t.slug IN (${sql.join(
+            wanted.map((slug) => sql`${slug}`),
+            sql`, `,
+          )})
+        RETURNING id`)
+      return rows.length
+    }),
+  )
+}
+
+/** Sets the member's display name, or removes it (null). Returns whether the member exists. */
+export function setDisplayName(
+  db: MemberDb,
+  memberId: number,
+  name: string | null,
+  now: Date,
+): Promise<boolean> {
+  return guarded(async () => {
+    const value = name === null ? null : checked(displayName.min(1), name, 'displayName')
+    const { rows } = await db.execute<{ id: number }>(sql`
+      UPDATE members SET display_name = ${value}, updated_at = ${iso(now)}
+      WHERE id = ${checked(id, memberId, 'id')}
       RETURNING id`)
     return rows.length === 1
   })

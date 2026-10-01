@@ -10,7 +10,14 @@ import {
   jobsHref,
   parseJobFilters,
 } from './jobs'
-import { emptyFilters, filtersHref, serializeFilters, withValue, withoutValue } from './model'
+import {
+  activeFilters,
+  emptyFilters,
+  filtersHref,
+  serializeFilters,
+  withValue,
+  withoutValue,
+} from './model'
 
 const parse = (query: string) => parseJobFilters(new URLSearchParams(query))
 const canonical = (query: string) => serializeFilters(JOB_FILTERS, parse(query))
@@ -45,6 +52,7 @@ describe('the jobs filters (PLAN §2.4)', () => {
       deadline: '30d',
       institution: ['05dxps055'],
       q: 'calcium',
+      prefs: 'on',
       sort: 'newest',
       view: 'map',
       page: 2,
@@ -250,5 +258,50 @@ describe('adding and removing values', () => {
     expect(
       filtersHref(JOB_FILTERS, withoutValue(JOB_FILTERS, parse('deadline=7d'), 'deadline')),
     ).toBe('/en/jobs/')
+  })
+})
+
+describe('prefs: all positions instead of a member’s preferred subfields (D35)', () => {
+  it('reads `off`, and leaves out the default', () => {
+    expect(parse('prefs=off').prefs).toBe('off')
+    expect(parse('prefs=OFF').prefs).toBe('off')
+    expect(parse('prefs=on').prefs).toBe('on')
+    expect(parse('prefs=maybe').prefs).toBe('on')
+    expect(canonical('prefs=on')).toBe('')
+    expect(canonical('prefs=off')).toBe('prefs=off')
+  })
+
+  it('is not a filter: no chip, and the list is still without filters', () => {
+    expect(activeFilters(JOB_FILTERS, parse('prefs=off'))).toEqual([])
+  })
+
+  it('is kept only while no filter is set', () => {
+    expect(parse('prefs=off&type=phd').prefs).toBe('on')
+    expect(canonical('prefs=off&type=phd')).toBe('type=phd')
+    expect(canonical('prefs=off&q=calcium')).toBe('q=calcium')
+    expect(canonical('prefs=off&deadline=14d')).toBe('deadline=14d')
+    // Sorting, the view and the page are not filters.
+    expect(canonical('page=2&view=map&sort=newest&prefs=off')).toBe(
+      'prefs=off&sort=newest&view=map&page=2',
+    )
+  })
+
+  it('stands after q and before sort in the canonical order', () => {
+    expect(canonical('sort=newest&prefs=off')).toBe('prefs=off&sort=newest')
+  })
+
+  it('is dropped by links that keep a filter, and kept by links back to the bare list', () => {
+    expect(jobsHref({ prefs: 'off' })).toBe('/en/jobs/?prefs=off')
+    expect(jobsHref({ prefs: 'off', type: ['phd'] })).toBe('/en/jobs/?type=phd')
+    const member = { ...parse('subfield=cognitive,glia'), prefs: 'off' as const }
+    expect(filtersHref(JOB_FILTERS, withoutValue(JOB_FILTERS, member, 'subfield', 'glia'))).toBe(
+      '/en/jobs/?subfield=cognitive',
+    )
+    const last = withoutValue(JOB_FILTERS, { ...member, subfield: ['glia'] }, 'subfield', 'glia')
+    expect(filtersHref(JOB_FILTERS, last)).toBe('/en/jobs/?prefs=off')
+  })
+
+  it('is not one of the filter form’s values: its hidden input keeps its own', () => {
+    expect(jobFormValues(parse('prefs=off'))).not.toHaveProperty('prefs')
   })
 })
