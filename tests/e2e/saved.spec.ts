@@ -99,15 +99,47 @@ test.describe('with JavaScript', () => {
     await context.close()
   })
 
+  test('the announcement keeps the language of the position’s title', async ({ browser }) => {
+    const { context, page } = await freshMember(browser)
+    await page.goto(LIST)
+    const button = saveButton(page, OPEN)
+    // As for a posting in Arabic (the fake jobs are all in English): the title in the button's
+    // name then has its language and direction (SaveControl).
+    await button.locator('.sr-only > span').evaluate((title) => {
+      title.setAttribute('lang', 'ar')
+      title.setAttribute('dir', 'rtl')
+    })
+    await button.click()
+    await expect(status(page)).toHaveText(`Saved: ${OPEN.title}`)
+    const title = status(page).locator('span')
+    await expect(title).toHaveText(OPEN.title)
+    await expect(title).toHaveAttribute('lang', 'ar')
+    await expect(title).toHaveAttribute('dir', 'rtl')
+    await context.close()
+  })
+
   test('signed out meanwhile: Save leads to signing in, which will save it', async ({
     browser,
   }) => {
     const { context, page } = await freshMember(browser)
     await page.goto(LIST)
+    const toggles: { type: string; method: string; accept: string | undefined }[] = []
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname === '/en/account/saved/toggle/') {
+        toggles.push({
+          type: request.resourceType(),
+          method: request.method(),
+          accept: request.headers()['accept'],
+        })
+      }
+    })
     await context.clearCookies()
     await saveButton(page, OPEN).click()
     await expect(page).toHaveURL(endsWith(SIGN_IN_TO_SAVE))
     await expect(page.getByText('After you sign in, we save this position for you')).toBeVisible()
+    // The script's request only: its JSON 401 led here (location.assign). The form sent again
+    // (what the script does with any other answer) would show as a second, 'document', request.
+    expect(toggles).toEqual([{ type: 'fetch', method: 'POST', accept: 'application/json' }])
     await context.close()
   })
 })
@@ -147,6 +179,8 @@ test.describe('signed out', () => {
     await expect(link).toHaveAttribute('href', SIGN_IN_TO_SAVE)
     await expect(link).toHaveAttribute('rel', 'nofollow')
     await expect(link).toHaveAccessibleDescription('You need to sign in to save positions.')
+    // Only the links' description: never read on its own, before the page's heading.
+    await expect(page.locator('#save-signin-note')).toBeHidden()
     await expect(status(page)).toHaveCount(0)
   })
 
@@ -167,6 +201,10 @@ test.describe('signed out', () => {
     await page.getByRole('button', { name: 'Email me a sign-in link' }).click()
     await expect(page).toHaveURL(/\/en\/sign-in\/sent\/$/)
     await page.goto(await signInLinkTo(address))
+    // The page the link opens names it too, as every step that ends in saving it does.
+    await expect(page.getByText('After you sign in, we save this position for you')).toContainText(
+      OPEN.title,
+    )
     await page.getByRole('button', { name: 'Create account' }).click()
     await expect(page).toHaveURL(endsWith(`${LIST}#job-${OPEN.shortId}`))
     await expect(saveButton(page, OPEN)).toHaveAttribute('aria-pressed', 'true')
@@ -184,10 +222,39 @@ test.describe('signed out', () => {
     await answerAtProvider(page, 'google', {
       fields: { sub: newGoogleSub(), email: newAddress(), hd: 'example.org' },
     })
+    // "Create your Gliagora account" names it too.
+    await expect(page.getByText('After you sign in, we save this position for you')).toContainText(
+      OPEN.title,
+    )
     await page.getByRole('button', { name: 'Create account' }).click()
     await expect(page).toHaveURL(endsWith(`${jobPath(OPEN)}#save`))
     await expect(pageSave(page)).toHaveAttribute('aria-pressed', 'true')
     await context.close()
+  })
+
+  test('signing in with ORCID to save, started elsewhere: the sign-in page names it first', async ({
+    page,
+    request,
+  }) => {
+    needsFakeProviders()
+    const start = `/en/sign-in/orcid/?next=${encodeURIComponent(LIST)}&save=job%3A${OPEN.shortId}`
+    // From another site, a subdomain, or an email or the address bar (`none`): not on to ORCID,
+    // which may answer without a page of its own, so nothing would have named the position.
+    for (const site of ['cross-site', 'same-site', 'none']) {
+      const answer = await request.get(start, {
+        headers: { 'Sec-Fetch-Site': site },
+        maxRedirects: 0,
+      })
+      expect(answer.status(), site).toBe(303)
+      expect(answer.headers().location, site).toBe(SIGN_IN_TO_SAVE)
+      expect(answer.headers()['set-cookie'], site).toBeUndefined()
+    }
+    // Opened from the address bar: the browser lands on the sign-in page, which names it.
+    await page.goto(start)
+    await expect(page).toHaveURL(endsWith(SIGN_IN_TO_SAVE))
+    await expect(page.getByText('After you sign in, we save this position for you')).toContainText(
+      OPEN.title,
+    )
   })
 
   test('a link to save a position that is no longer public saves nothing', async ({ page }) => {

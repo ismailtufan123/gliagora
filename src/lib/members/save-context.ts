@@ -4,7 +4,10 @@ import { cache } from 'react'
 
 import { errorSummary } from '@/lib/errors'
 import { newReference } from '@/lib/forms/public-form'
+import { jobForSaving, requestTime } from '@/lib/records'
 
+import { parseSave } from './return-path'
+import { isSavable } from './saved'
 import { anyMethod, currentMember, memberRequest } from './session'
 import { countSavedItems, memberDb, savedJobIds } from './store'
 
@@ -41,6 +44,36 @@ export async function saveContext(
     const reference = newReference()
     console.error(`Save controls left out (reference ${reference}): ${errorSummary(error)}`)
     return null
+  }
+}
+
+/** A position as its Save control, and the line that names it before signing in, draw it. */
+export type SaveJob = {
+  id: number
+  shortId: string
+  title: string
+  /** ISO 639-1 code of the posting's language (the title's). */
+  originalLanguage: string
+}
+
+/**
+ * The position a `save` value names (`job:k3f9a`: from a Save link, or carried through signing
+ * in), while it can be saved, or null. Every page that leads to saving it names it (the sign-in
+ * page, "Create your Gliagora account", the page an emailed sign-in link opens), so that a crafted
+ * link never saves a position unseen; one that can no longer be saved is not named, and signing in
+ * then leads to the saved page, which says why (saveAfterSignIn). Throws when the database cannot
+ * be read.
+ */
+export async function positionToSave(value: unknown): Promise<SaveJob | null> {
+  const ref = parseSave(typeof value === 'string' ? value : null)
+  if (!ref) return null
+  const job = await jobForSaving(ref.shortId)
+  if (!job?.title || !job.shortId || !isSavable(job, requestTime())) return null
+  return {
+    id: job.id,
+    shortId: job.shortId,
+    title: job.title,
+    originalLanguage: job.originalLanguage ?? 'en',
   }
 }
 

@@ -67,3 +67,20 @@ export function sameOrigin(headers: Headers, env: Env = process.env): boolean {
 export function startedHere(headers: Headers): boolean {
   return headers.get('sec-fetch-site') === 'same-origin'
 }
+
+/**
+ * What a start of signing in with Google or ORCID does with the position it carries to save
+ * afterwards (`save`, the M4b design §3). Google or ORCID may answer without showing anything (a
+ * person signed in there who has allowed Gliagora before), so the save must have been named on a
+ * page of ours first: the sign-in page, the only page whose links carry `save`. `keep` it when the
+ * start came from the site's own pages (Sec-Fetch-Site `same-origin`); `ask` first when it came
+ * from anywhere else (another site, `same-site`, or `none`: an email, the address bar, a
+ * bookmark), by sending the browser to the sign-in page, which names the position; `drop` it when
+ * the browser does not say (older browsers), and sign in without saving: the sign-in page's own
+ * links arrive without the header too, so sending them there would never end.
+ */
+export function saveAtStart(headers: Headers): 'keep' | 'ask' | 'drop' {
+  const site = headers.get('sec-fetch-site')
+  if (site === null) return 'drop'
+  return site === 'same-origin' ? 'keep' : 'ask'
+}

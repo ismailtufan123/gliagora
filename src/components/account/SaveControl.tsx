@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { Icon } from '@/components/Icon'
 import { textDirection } from '@/lib/jobs/languages'
 import { MEMBER_PATHS } from '@/lib/members/paths'
-import type { SaveContext } from '@/lib/members/save-context'
+import type { SaveContext, SaveJob } from '@/lib/members/save-context'
 import { SAVE_INPUTS, SAVE_NOTE_ID, SAVE_STATUS_ID, signInToSave } from '@/lib/members/saved'
 
 // The Save control of a position (M4b, D49; the M4b design §3, PLAN §7.5), drawn on the server
@@ -19,15 +19,12 @@ import { SAVE_INPUTS, SAVE_NOTE_ID, SAVE_STATUS_ID, signInToSave } from '@/lib/m
 // style and another icon (a bookmark with a tick), so not by colour alone and also in forced
 // colours. Its name starts with the visible word and adds the position's title for screen readers
 // (WCAG 2.5.3), in the title's own language. The texts the script announces come from the
-// messages, in data attributes, so the script holds no text.
+// messages, in data attributes, so the script holds no text; it gives the title in them the
+// language of the button's own title.
 
-export type SaveJob = {
-  id: number
-  shortId: string
-  title: string
-  /** ISO 639-1 code of the posting's language (the title's). */
-  originalLanguage: string
-}
+/** The `lang` of a position's title: its posting's language, left out for English (the page's). */
+const titleLanguage = (job: SaveJob) =>
+  job.originalLanguage !== 'en' ? job.originalLanguage : undefined
 
 export async function SaveControl({
   job,
@@ -41,7 +38,7 @@ export async function SaveControl({
 }) {
   const t = await getTranslations({ locale: 'en', namespace: 'save' })
   const saved = context.signedIn && context.saved.has(job.id)
-  const lang = job.originalLanguage !== 'en' ? job.originalLanguage : undefined
+  const lang = titleLanguage(job)
   const label = t.rich('label', {
     hidden: (chunks: ReactNode) => <span className="sr-only">{chunks}</span>,
     job: (chunks: ReactNode) => (
@@ -90,16 +87,42 @@ export async function SaveControl({
 
 /**
  * Once on a page with Save controls: for members, the live region the script writes "Saved: …"
- * into (empty until then); for visitors who are signed out, the hidden note the Save links point
- * to ("You need to sign in to save positions").
+ * into (empty until then); for visitors who are signed out, the note the Save links point to
+ * ("You need to sign in to save positions"). The note is `hidden`, not only visually hidden: it is
+ * read as each Save link's description (`aria-describedby` reads hidden elements too) and never on
+ * its own, which on the jobs list would be before the page's heading.
  */
 export async function SaveRegion({ context }: { context: SaveContext | null }) {
   if (!context) return null
   if (context.signedIn) return <p id={SAVE_STATUS_ID} role="status" className="sr-only" />
   const t = await getTranslations({ locale: 'en', namespace: 'save' })
   return (
-    <p id={SAVE_NOTE_ID} className="sr-only">
+    <p id={SAVE_NOTE_ID} hidden>
       {t('signInNote')}
+    </p>
+  )
+}
+
+/**
+ * The line that names the position signing in will save ("After you sign in, we save this
+ * position for you: …"), on every page that leads to saving it: the sign-in page, "Create your
+ * Gliagora account" and the page an emailed sign-in link opens. For a member who is signed in and
+ * opened a Save link (`signedIn`), the line above that position's Save button instead. The title
+ * is in bold, in its own language and direction (WCAG 3.1.2).
+ */
+export async function SaveNotice({ job, signedIn = false }: { job: SaveJob; signedIn?: boolean }) {
+  const t = await getTranslations({ locale: 'en', namespace: 'signIn' })
+  const lang = titleLanguage(job)
+  return (
+    <p>
+      {t.rich(signedIn ? 'signedIn.save' : 'save', {
+        title: job.title,
+        strong: (chunks) => (
+          <strong className="wrap-anywhere" lang={lang} dir={textDirection(lang)}>
+            {chunks}
+          </strong>
+        ),
+      })}
     </p>
   )
 }

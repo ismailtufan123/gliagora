@@ -798,7 +798,7 @@ export const AREAS: Area[] = [
       'signIn.description': 'Sign in - description in link previews',
       'signIn.intro': 'Sign in - first paragraph under the heading',
       'signIn.save':
-        'Sign in, opened from a Save button while signed out - line under the first paragraph, naming the position that signing in will save',
+        'Sign in, opened from a Save button while signed out - line under the first paragraph, naming the position that signing in will save; also on the "Create your Gliagora account" page and the page an emailed sign-in link opens, when signing in will save a position',
       'signIn.notAvailable':
         'Sign in, and the account page when signed out - shown instead of the form while signing in is switched off',
       'signIn.notAvailableContact':
@@ -1002,11 +1002,11 @@ export const AREAS: Area[] = [
     note: `The Save buttons are on the jobs list and the job pages, and the saved positions on /en/account/saved/, all only in English, ${ENGLISH_ONLY}. They show only once a way of signing in is switched on.`,
     places: {
       'save.label':
-        "Jobs list (each position), job page (under the heading) and saved positions - the Save button; screen readers hear the position's title after it",
+        "Jobs list (each position), job page (under the heading) and saved positions - the Save button; screen readers hear the position's title after it; also on the sign-in page (/en/sign-in/), when already signed in and opened from a Save button's link",
       'save.savedStatus':
-        'Jobs list, job page and saved positions - read by screen readers after pressing Save, when the position has been saved',
+        "Jobs list, job page and saved positions - read by screen readers after pressing Save, when the position has been saved; also on the sign-in page (/en/sign-in/), when already signed in and opened from a Save button's link",
       'save.removedStatus':
-        'Jobs list, job page and saved positions - read by screen readers after pressing Save again, when the position has been removed',
+        "Jobs list, job page and saved positions - read by screen readers after pressing Save again, when the position has been removed; also on the sign-in page (/en/sign-in/), when already signed in and opened from a Save button's link",
       'save.signInNote':
         'Jobs list and job page, when signed out - read by screen readers with each Save button, which leads to the sign-in page',
       'saved.title': 'Saved positions (/en/account/saved/) - heading and browser tab',

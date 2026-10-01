@@ -14,13 +14,13 @@ import {
   oauthErrorCode,
   verifyCallback,
 } from './oidc'
-import { appOrigin, startedHere } from './origin'
+import { appOrigin, saveAtStart, startedHere } from './origin'
 import { type ErrorCode, outcomePath } from './outcome'
 import { MEMBER_PATHS, providerCallbackPath } from './paths'
 import { linkProvider, rotateSession, signInWithProvider } from './provider-sign-in'
 import { seeOther, toProvider } from './responses'
 import { DEFAULT_NEXT, parseSave, safeNext, saveValue } from './return-path'
-import { saveAfterSignIn } from './saved'
+import { saveAfterSignIn, signInToSave } from './saved'
 import { saveStore } from './saved-store'
 import { sealSignIn } from './seal'
 import { findSession, memberDb } from './store'
@@ -79,10 +79,13 @@ const signInOutcome = (
 /**
  * GET `/en/sign-in/{provider}/`: seals this flow into the sign-in cookie and sends the browser to
  * the provider. `next` (where to go afterwards) and `save` (a position to save then) travel in
- * the cookie. `link=1` adds the provider to the signed-in account instead: only from the site's own
- * pages (Sec-Fetch-Site), so another site cannot start it in a signed-in browser (a browser that
- * does not send the header, or an address opened from elsewhere, is told so on the account page),
- * and only while signed in. With the method off, or no known origin, back to the sign-in page.
+ * the cookie; `save` only from the sign-in page, which names the position (from anywhere else the
+ * browser goes there first, `saveAtStart`), since the provider may answer without a page of its
+ * own and the callback, which always arrives from the provider, cannot tell where the flow began.
+ * `link=1` adds the provider to the signed-in account instead: only from the site's own pages
+ * (Sec-Fetch-Site), so another site cannot start it in a signed-in browser (a browser that does
+ * not send the header, or an address opened from elsewhere, is told so on the account page), and
+ * only while signed in. With the method off, or no known origin, back to the sign-in page.
  */
 export async function startProviderSignIn(provider: Provider, request: Request) {
   const origin = appOrigin(request.headers)
@@ -107,7 +110,13 @@ export async function startProviderSignIn(provider: Provider, request: Request) 
     }
   }
   const next = link ? DEFAULT_NEXT : safeNext(query.get('next'), origin)
-  const save = link ? null : parseSave(query.get('save'))
+  let save = link ? null : parseSave(query.get('save'))
+  if (save) {
+    // Saved afterwards only once a page of ours has named the position (saveAtStart).
+    const rule = saveAtStart(request.headers)
+    if (rule === 'ask') return seeOther(signInToSave(next, save))
+    if (rule === 'drop') save = null
+  }
   try {
     const { url, flow } = await authorizationRequest(
       provider,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { appOrigin, sameOrigin, startedHere } from './origin'
+import { appOrigin, sameOrigin, saveAtStart, startedHere } from './origin'
 
 const headers = (values: Record<string, string>) => new Headers(values)
 
@@ -83,5 +83,20 @@ describe('startedHere', () => {
     expect(startedHere(headers({ 'sec-fetch-site': 'same-origin' }))).toBe(true)
     expect(startedHere(headers({ 'sec-fetch-site': 'cross-site' }))).toBe(false)
     expect(startedHere(headers({}))).toBe(false)
+  })
+})
+
+describe('saveAtStart', () => {
+  it.each([
+    // The sign-in page's own provider links, which name the position.
+    ['same-origin', 'keep'],
+    // Another site, a subdomain, an email, the address bar or a bookmark: named first.
+    ['cross-site', 'ask'],
+    ['same-site', 'ask'],
+    ['none', 'ask'],
+    // A browser that does not say: no saving, since asking again would never end.
+    [null, 'drop'],
+  ] as const)('Sec-Fetch-Site %s: %s', (site, rule) => {
+    expect(saveAtStart(headers(site === null ? {} : { 'sec-fetch-site': site }))).toBe(rule)
   })
 })

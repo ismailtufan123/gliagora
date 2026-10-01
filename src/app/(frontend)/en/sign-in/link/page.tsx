@@ -7,9 +7,11 @@ import { getPayload } from 'payload'
 import type { ReactNode } from 'react'
 
 import { MemberUnavailable } from '@/components/account/MemberUnavailable'
+import { SaveNotice } from '@/components/account/SaveControl'
 import { memberPageIndexed } from '@/lib/indexing'
 import { SIGN_IN_COOKIE } from '@/lib/members/cookies'
 import { MEMBER_LEGAL_LINKS, MEMBER_PATHS } from '@/lib/members/paths'
+import { type SaveJob, positionToSave } from '@/lib/members/save-context'
 import { openSignIn } from '@/lib/members/seal'
 import { type EmailTokenRecord, findEmailToken, findMember, memberDb } from '@/lib/members/store'
 import { bindingMatches, isToken } from '@/lib/members/tokens'
@@ -19,10 +21,11 @@ import { requestTime } from '@/lib/records'
 // the link up: mail scanners and link previews may open it any number of times, and nothing is
 // used or changed until the person presses the button, which posts to /en/sign-in/link/use/. The
 // page says which address the link is for, and whether pressing it signs in or creates the
-// account (with the terms and age line). When this browser does not hold the binding the link was
-// made with (the sealed sign-in cookie of the browser that asked), it warns first: someone may
-// have sent a link they asked for, to sign the reader in to their account. The button stays,
-// since opening an email on another device is common. Never indexed.
+// account (with the terms and age line), and which position it will save, if the link carries one
+// (a Save link's). When this browser does not hold the binding the link was made with (the sealed
+// sign-in cookie of the browser that asked), it warns first: someone may have sent a link they
+// asked for, to sign the reader in to their account. The button stays, since opening an email on
+// another device is common. Never indexed.
 export const dynamic = 'force-dynamic'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
@@ -37,7 +40,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
 type Landing =
   | { state: 'expired' }
-  | { state: 'ready'; token: string; email: string; known: boolean; sameBrowser: boolean }
+  | {
+      state: 'ready'
+      token: string
+      email: string
+      known: boolean
+      sameBrowser: boolean
+      toSave: SaveJob | null
+    }
 
 async function landing(token: unknown): Promise<Landing> {
   if (!isToken(token)) return { state: 'expired' }
@@ -59,6 +69,7 @@ async function landing(token: unknown): Promise<Landing> {
     email: link.email,
     known,
     sameBrowser: binding !== null && bindingMatches(binding.bind, link.browserHash),
+    toSave: await positionToSave(link.save),
   }
 }
 
@@ -89,7 +100,7 @@ export default async function Page({ searchParams }: Props) {
     )
   }
 
-  const { email, known, sameBrowser, token } = found
+  const { email, known, sameBrowser, token, toSave } = found
   // An address can be long, with no place to break: it may break anywhere.
   const strong = (chunks: ReactNode) => <strong className="wrap-anywhere">{chunks}</strong>
   return (
@@ -102,6 +113,7 @@ export default async function Page({ searchParams }: Props) {
           </p>
         )}
         <p>{t.rich(known ? 'signIn' : 'create', { email, strong })}</p>
+        {toSave && <SaveNotice job={toSave} />}
         {!known && (
           <p>
             {t.rich('terms', {

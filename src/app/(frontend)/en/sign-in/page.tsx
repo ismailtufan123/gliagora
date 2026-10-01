@@ -5,17 +5,15 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { SignOutForm } from '@/components/account/AccountNav'
 import { MemberUnavailable } from '@/components/account/MemberUnavailable'
 import { OutcomeMessage } from '@/components/account/OutcomeMessage'
-import { SaveControl, type SaveJob, SaveRegion } from '@/components/account/SaveControl'
+import { SaveControl, SaveNotice, SaveRegion } from '@/components/account/SaveControl'
 import { SignInPanel } from '@/components/account/SignInPanel'
 import { SignedInAs } from '@/components/account/SignedInAs'
 import { memberPageIndexed } from '@/lib/indexing'
 import { readOutcome } from '@/lib/members/outcome'
 import { MEMBER_PATHS } from '@/lib/members/paths'
-import { DEFAULT_NEXT, parseSave, safeNext, saveValue } from '@/lib/members/return-path'
-import { saveContext } from '@/lib/members/save-context'
-import { isSavable } from '@/lib/members/saved'
+import { DEFAULT_NEXT, safeNext, saveValue } from '@/lib/members/return-path'
+import { type SaveJob, positionToSave, saveContext } from '@/lib/members/save-context'
 import { type CurrentMember, currentMember, memberRequest } from '@/lib/members/session'
-import { jobForSaving, requestTime } from '@/lib/records'
 
 // Sign in (M4b, D49; the M4b design §5): the ways to sign in that are on (SignInPanel), or, for a
 // member who is signed in, who they are, with the way to their account and a Sign out button.
@@ -23,25 +21,12 @@ import { jobForSaving, requestTime } from '@/lib/records'
 // link, a Google or ORCID sign-in that was cancelled, took too long or was refused, a failure with
 // its reference), shown in both cases: a member may sign in again while still signed in, to change
 // accounts. `?save=job:{shortId}` comes from a Save link: the page names the position that signing
-// in will save (only while it is public, so a crafted link cannot save anything unseen), and
+// in will save (only while it is public, so a crafted link cannot save anything unseen; a start of
+// signing in with Google or ORCID that carries one from anywhere else is sent here first), and
 // carries it through each way of signing in; a member who is signed in gets that position's Save
 // button instead. Rendered for each request: it reads the session and gives the form its own
 // spam-check challenge. Never indexed.
 export const dynamic = 'force-dynamic'
-
-/** The position `?save=` names, while it can be saved, or null. */
-async function positionToSave(value: unknown): Promise<SaveJob | null> {
-  const ref = parseSave(typeof value === 'string' ? value : null)
-  if (!ref) return null
-  const job = await jobForSaving(ref.shortId)
-  if (!job?.title || !job.shortId || !isSavable(job, requestTime())) return null
-  return {
-    id: job.id,
-    shortId: job.shortId,
-    title: job.title,
-    originalLanguage: job.originalLanguage ?? 'en',
-  }
-}
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -95,12 +80,7 @@ export default async function Page({ searchParams }: Props) {
           <SignedInAs member={current.member} />
           {toSave && save && (
             <div className="grid justify-items-start gap-3">
-              <p>
-                {t.rich('signedIn.save', {
-                  title: toSave.title,
-                  strong: (chunks) => <strong className="wrap-anywhere">{chunks}</strong>,
-                })}
-              </p>
+              <SaveNotice job={toSave} signedIn />
               <SaveControl job={toSave} context={save} />
               <SaveRegion context={save} />
             </div>
@@ -123,14 +103,7 @@ export default async function Page({ searchParams }: Props) {
         <h1 className="text-h1">{t('title')}</h1>
         <OutcomeMessage outcome={outcome} />
         <p className="text-card">{t('intro')}</p>
-        {toSave && (
-          <p>
-            {t.rich('save', {
-              title: toSave.title,
-              strong: (chunks) => <strong className="wrap-anywhere">{chunks}</strong>,
-            })}
-          </p>
-        )}
+        {toSave && <SaveNotice job={toSave} />}
         <SignInPanel
           next={next}
           path={MEMBER_PATHS.signIn}

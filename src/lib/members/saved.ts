@@ -27,7 +27,7 @@ export const jobRowId = (shortId: string) => `job-${shortId}`
 export const SAVE_CONTROL_ID = 'save'
 /** The page's live region, which the script fills with "Saved: …" (save-toggle.ts). */
 export const SAVE_STATUS_ID = 'save-status'
-/** The visually hidden note that a Save link leads to signing in. */
+/** The note that a Save link leads to signing in: hidden, read only as the link's description. */
 export const SAVE_NOTE_ID = 'save-signin-note'
 
 /** The input names of a Save form. */
@@ -43,11 +43,15 @@ function isJobPage(path: string, shortId: string): boolean {
 export const atSaveControl = (path: string, shortId: string) =>
   `${path}#${isJobPage(path, shortId) ? SAVE_CONTROL_ID : jobRowId(shortId)}`
 
-/** The sign-in page that returns to `next` and saves `ref` on the way. */
+/**
+ * The sign-in page that returns to `next` and saves `ref` on the way (`next` left out when it is
+ * where sign-in leads anyway).
+ */
 export function signInToSave(next: string, ref: SaveRef | null): string {
-  const query = new URLSearchParams({ next })
+  const query = new URLSearchParams()
+  if (next !== DEFAULT_NEXT) query.set('next', next)
   if (ref) query.set('save', saveValue(ref))
-  return `${MEMBER_PATHS.signIn}?${query.toString()}`
+  return query.size > 0 ? `${MEMBER_PATHS.signIn}?${query.toString()}` : MEMBER_PATHS.signIn
 }
 
 /** Whether a job may be saved: public, that is open or closed less than 30 days ago. */

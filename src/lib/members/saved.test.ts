@@ -311,6 +311,11 @@ describe('helpers', () => {
       '/en/sign-in/?next=%2Fen%2Fjobs%2F%3Ftype%3Dphd%26page%3D2&save=job%3Ak3f9a',
     )
     expect(signInToSave('/en/jobs/', null)).toBe('/en/sign-in/?next=%2Fen%2Fjobs%2F')
+    // Where sign-in leads anyway (a start of signing in without `next`, provider-routes.ts).
+    expect(signInToSave('/en/account/', { type: 'job', shortId: 'k3f9a' })).toBe(
+      '/en/sign-in/?save=job%3Ak3f9a',
+    )
+    expect(signInToSave('/en/account/', null)).toBe('/en/sign-in/')
   })
 
   it('atSaveControl names the row, or the control on the job’s own page', () => {
