@@ -7,6 +7,9 @@
 #   while the repository variable DEPLOY_AUTO is `main` (while the site is private, until M2);
 # - automatically for a pushed release tag `v…` on a commit whose CI run on `main` passed, while
 #   DEPLOY_AUTO is `tags` (from M2 on). Any other value of DEPLOY_AUTO: by hand only.
+# A push to main that changes only documentation runs no CI (ci.yml, `paths`), so it builds no
+# image and deploys nothing; the server keeps the image of the last commit whose CI passed. A
+# release tag on such a commit deploys that image.
 # Setup: deploy/README.md, "How deploys work" and "4. Connect GitHub (once)".
 #
 # No long-lived registry credentials: the job's own GITHUB_TOKEN (valid only while the job runs)
@@ -70,6 +73,24 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
             exit 0
           }
+          fail() {
+            echo "::error title=Not deployed::$1 Nothing was deployed."
+            exit 1
+          }
+          # The CI runs of a push to main for one commit that passed (0 if none).
+          passed() {
+            gh api "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$1&event=push&branch=main&status=success" --jq '.total_count'
+          }
+          # A file whose change runs no CI (ci.yml, `paths`, D46): Markdown files and docs/, except
+          # those the app or a test reads. Keep this in step with both `paths` lists in ci.yml
+          # (src/lib/ci-paths.test.ts checks it).
+          documentation_only() {
+            case "$1" in
+              content/* | docs/editor-guide-tr.md | docs/tr-strings-review.md) return 1 ;;
+              *.md | docs/*) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
           if [[ "$DEPLOY_ENABLED" != true ]]; then
             skip "Deploys are not enabled (repository variable DEPLOY_ENABLED is not true)."
           fi
@@ -87,14 +108,36 @@ jobs:
               if [[ "$RUN_CONCLUSION" != success || "$RUN_EVENT" != push || "$RUN_BRANCH" != main || "$RUN_REPO" != "$REPO" ]]; then
                 skip "CI run: $RUN_CONCLUSION, $RUN_EVENT on $RUN_BRANCH of $RUN_REPO; only a green push to main deploys."
               fi
+              # A re-run of an older commit's run must not replace a newer deploy: only the newest
+              # commit of main whose CI passed is deployed.
+              newest=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?branch=main&event=push&status=success&per_page=1" --jq '.workflow_runs[0].head_sha')
+              [[ "$newest" == "$RUN_SHA" ]] || skip "CI of a newer commit of main (${newest:0:7}) has passed since ${RUN_SHA:0:7}; that one is deployed."
               tag="sha-${RUN_SHA:0:7}"
               ;;
             push)
               [[ "$DEPLOY_AUTO" == tags ]] || skip "Release-tag deploys are off (DEPLOY_AUTO is not tags)."
-              # The tag must name a commit that CI built and tested on main (so its image exists).
-              green=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$SHA&event=push&branch=main&status=success" --jq '.total_count')
-              [[ "$green" -gt 0 ]] || skip "No green CI run of a push to main for ${SHA:0:7}; tag a commit on main after its CI has passed."
-              tag="sha-${SHA:0:7}"
+              # The tag must name a commit of main. Its image is the one CI built and tested for it.
+              # A commit that changed only documentation has no CI run and no image (ci.yml,
+              # `paths`, D46): then the image of the newest commit before it whose CI passed, if
+              # every change since is documentation too. Anything else fails, so that a release
+              # tag that deploys nothing shows red.
+              on_main=$(gh api "repos/$REPO/compare/$SHA...main" --jq '.status')
+              [[ "$on_main" == behind || "$on_main" == identical ]] || fail "${SHA:0:7} is not a commit of main."
+              build="$SHA"
+              if [[ "$(passed "$SHA")" -eq 0 ]]; then
+                ran=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$SHA&event=push&branch=main" --jq '.total_count')
+                [[ "$ran" -eq 0 ]] || fail "CI of ${SHA:0:7} on main has not passed (it is still running, or it failed); tag a commit after its CI has passed."
+                build=''
+                for commit in $(gh api "repos/$REPO/commits?sha=$SHA&per_page=30" --jq '.[1:][].sha'); do
+                  if [[ "$(passed "$commit")" -gt 0 ]]; then build="$commit"; break; fi
+                done
+                [[ -n "$build" ]] || fail "None of the 30 commits before ${SHA:0:7} has a CI run on main that passed."
+                while IFS= read -r file; do
+                  documentation_only "$file" || fail "${SHA:0:7} has no CI run, but $file changed since ${build:0:7}, the last commit whose CI passed."
+                done < <(gh api "repos/$REPO/compare/$build...$SHA" --jq '.files[].filename')
+                echo "::notice title=Image of an earlier commit::${SHA:0:7} changed only documentation since ${build:0:7}, so the image of ${build:0:7} is deployed."
+              fi
+              tag="sha-${build:0:7}"
               ;;
             *)
               echo "::error title=Unexpected event::$EVENT"

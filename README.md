@@ -93,6 +93,12 @@ Every pull request and every push to `main` runs `.github/workflows/ci.yml`:
 3. On `main` only: pushes the image to `ghcr.io/ismailtufan123/gliagora` with the tags `main` and
    `sha-<commit>`.
 
+To save Actions minutes (2,000 a month on GitHub Free; PLAN §11.5, D46), a change that touches only
+documentation (Markdown files and `docs/`, except `content/`, `docs/editor-guide-tr.md` and
+`docs/tr-strings-review.md`, which the app or a test reads) runs no CI, and a push to `main` whose
+tree already passed in its pull request skips steps 1 and 2's tests: it builds, smoke-tests and
+pushes the image only.
+
 The image applies pending migrations when it starts (`src/lib/startup.ts`). If the database is
 unreachable or a migration fails, it exits and Docker restarts it. `/health/` returns 200 when the
 database is reachable.

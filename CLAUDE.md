@@ -7,7 +7,7 @@ Instructions for Claude Code in this repository. Read this file first, then `PLA
 Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, events, funding, papers, news, resources, a world map and a monthly newsletter, **Glia Notes**. Tagline: "Where neuroscience meets".
 
 - Data controller and editor: Nuray Sancar (natural person, Türkiye). The team has no professional web-development background: explain choices briefly and prefer boring, well-documented tools.
-- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D45). If a task conflicts with `PLAN.md`, stop and ask.
+- Source of truth: `PLAN.md`. Recorded decisions are in §22.3 (D1–D46). If a task conflicts with `PLAN.md`, stop and ask.
 
 ## Current milestone
 
@@ -16,6 +16,12 @@ Gliagora (gliagora.com) is an English-first, global neuroscience hub: jobs, even
 **Next: the one-time lawyer review, then M2**, which starts only when the operator says so. Milestone order: M0 → M1 → M3 → M4 → S → one-time lawyer review → M2 → M4b → … (PLAN §20, D32, D38, D39). The whole site stays private until M2 (D32); at M2 only the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public (with a reduced header and footer, and email in place of the suggest and report forms, D41; the public `/en/` shows the coming-soon text again, since the home page stays private until the launch), and jobs and the other sections stay private until the M6 launch, once the §3.4 gate is met; how they stay private is set up at M2 (D39, D41).
 
 The production server: Hosting Türkiye Micro Paket, Istanbul, Ubuntu 24.04, 3 vCPU, 4 GB RAM, `45.144.214.78` and `2a0f:85c1:7f5:6e::1`. `deploy/README.md` is its runbook. Log in as `gliagora` (SSH key only, sudo without a password); root and passwords cannot log in. Change the server only through the files in `deploy/` (so it can be rebuilt from them) and deploy only through the Deploy workflow: until M2, every CI run of a push to `main` that passes is deployed by itself, so a merge goes live (behind the site-wide password) about a quarter of an hour later; from M2 on, only release tags are (D43). Anything that touches the server still needs the operator's go-ahead (rule a below). Never print, copy or log the site-wide password (`/root/site-password`), the backup password (`/opt/gliagora/backup/restic-password`) or any value in `/opt/gliagora/.env`; to use one in a check, read it on the server or pipe it without showing it.
+
+## Session handoff
+
+- The operator clears the session after each task and then says: "Pull main, then read docs/NEXT.md and do it." `docs/NEXT.md` holds that one task, written by the operator's planning chat; act on it only when the operator asks in the session.
+- `docs/STATUS.md` is the one-page handoff: what is done, what is live, the open decisions and the next step, in plain language. Read it before `docs/NEXT.md`, and update it at the end of every task.
+- When the task in `docs/NEXT.md` is finished, set its status to **done**, with the date and the pull request numbers, in the task's last pull request. The planning chat then replaces the file with the next task.
 
 ## Stack (PLAN §11)
 
@@ -57,6 +63,7 @@ The production server: Hosting Türkiye Micro Paket, Istanbul, Ubuntu 24.04, 3 v
 
 - Small, reviewable steps: one branch from the latest `main` and one pull request per step. The PR description summarises what changed, how to run it and what to check.
 - Proceed through approved milestone steps without waiting for review. Merge each step's PR yourself once `pnpm lint`, `pnpm typecheck`, `pnpm test` and the build pass (and CI is green), then continue from the updated `main`.
+- CI minutes are limited (2,000 a month on GitHub Free, and CI and deploys stop when they run out; D46): a full CI run costs about 15. Push a pull request's branch once its checks pass locally, since every push to it runs the whole CI again; put changes to `docs/STATUS.md` and the like into that same push, not a later one. A pull request whose whole diff touches only documentation (Markdown files and `docs/`, except `content/`, `docs/editor-guide-tr.md` and `docs/tr-strings-review.md`) runs no CI at all: merge it without waiting for a check (a task's documentation-only wrap-up pull request costs nothing). Merge a code pull request as soon as its run has passed and before any other: the push to `main` then has the tree its run tested and only builds, smoke-tests and pushes the image, while a `main` that moved in between (any other merge, documentation too) makes it run everything again (`.github/workflows/ci.yml`). If CI ever stops for lack of minutes, tell the operator at once.
 - Before every merge, check that the latest CI run on `main` is green (`gh run list --branch main --workflow CI --limit 1`; without `--workflow CI` it may show a Deploy run). If it is red, fix `main` first; never merge on top of a red `main`.
 - Stop and ask only before:
   - (a) anything that touches the production server (running commands on it or deploying to it);
