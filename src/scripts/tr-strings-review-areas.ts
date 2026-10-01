@@ -1206,7 +1206,7 @@ export const AREAS: Area[] = [
     note: 'Each email goes out in the language of the form the person used, and those forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).',
     places: {
       'emails.greeting':
-        'Every automatic email (the outcome of a suggestion, the confirmation of a report, a sign-in link, a link to add an address) - first line',
+        'Every automatic email (the outcome of a suggestion, the confirmation of a report, a sign-in link, a link to add an address, the emails about deleting an account) - first line',
       'emails.suggestion.subjectPublished':
         'Email about the outcome of a suggestion, when it was published - subject',
       'emails.suggestion.subjectNotAdded':
