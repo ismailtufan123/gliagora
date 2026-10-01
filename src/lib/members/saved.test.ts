@@ -253,7 +253,9 @@ describe('handleSaveToggle', () => {
     expect(await asJson.json()).toEqual({ error: 'failed' })
     const logged = log.mock.calls.flat().join(' ')
     expect(logged).toMatch(/Save failed \(reference [0-9A-F]{10}\)/)
-    expect(logged).not.toContain('42')
+    // Not the error's message, which quotes the values (the random reference may contain any digits).
+    expect(logged).not.toContain('(42, 1)')
+    expect(logged).not.toContain('violates')
     expect(logged).not.toContain('member_id')
   })
 })
