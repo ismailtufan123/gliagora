@@ -9,9 +9,17 @@ Written: 2026-10-01, by the operator's planning chat (Claude) on the operator's 
 - `docs/STATUS.md` is your one-page handoff: what is done, what is live, open decisions and the next step. Read it before this file, and update it at the end of every task.
 - When the task below is finished, set the status above to **done**, with the date and the pull request numbers, in your last pull request. The planning chat then replaces this file with the next task.
 
-## Task: decisions after M6, the handoff files, then M4b
+## Task: CI minutes, decisions after M6, the handoff files, then M4b
 
 Start by reading `CLAUDE.md` and `PLAN.md`, especially the latest notes in §20 (M5 and M6).
+
+### 0. CI minutes first
+
+The repository is private, so GitHub Actions has a monthly allowance of 2,000 minutes on the Free plan, and when it runs out, CI and with it every deploy stops. From the run history: about 1,070 minutes in September and about 450 on 1 October alone, mostly two full runs of about 15 minutes for every change (the pull request, then `main`). Before M4b, cut this without weakening the checks:
+
+- Do not run CI for changes that touch only documentation (Markdown files, `docs/`), except files the app or a test reads (`content/`, `docs/editor-guide-tr.md`, `docs/tr-strings-review.md`). Make sure nothing waits for a check that no longer runs, and that the deploy after a green run on `main` still works.
+- Do not run the full test suite twice for the same code: when a push to `main` contains exactly the tree that passed in its pull request, build and push the image without repeating the tests (or an equivalent saving).
+- Record the change in PLAN, and give the minutes per pull request before and after in your report. If CI ever stops for lack of minutes, tell the operator at once.
 
 ### 1. Decisions from the M6 report
 
