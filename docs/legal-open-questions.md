@@ -224,6 +224,8 @@ The map credits "© OpenStreetMap contributors" in its corner and under it (ODbL
 
 **Why it matters.** Decides whether the job page needs a credit line before the jobs go public at M6 (PLAN §11.3, §14).
 
+Until it is answered (D45, 2026-10-01): the credit is in the terms' "Material from others" and on the About page ("Data and credits"), and job pages carry no notice of their own.
+
 Texts: `content/en/legal/terms.md` ("Material from others"); possibly the job page
 
 ## Defaults applied

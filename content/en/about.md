@@ -21,6 +21,12 @@ Gliagora is for students and early-career neuroscientists looking for their next
 
 We list positions published by the employers themselves, such as universities, institutes and companies, and not advertisements from recruitment agencies. Job boards help us find positions, but we always link to the employer's own page. Papers of the month are chosen from openly licensed papers (CC BY, CC BY-SA or CC0); now and then we may add another paper as our own summary with a link to it. If AI tools are later used to help draft summaries, a person will still check every item against its source and approve it before it is published. There are no paid placements. The full sources and editorial policy will be published before the site opens.
 
+## Data and credits
+
+- Institution names, places and identifiers come from the [Research Organization Registry (ROR)](https://ror.org/), released under CC0.
+- Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), available under the Open Database License (ODbL). The maps are drawn with [Protomaps](https://protomaps.com/) and [MapLibre](https://maplibre.org/).
+- The time zone in which a deadline ends is worked out from the institution's location, with time-zone borders made from OpenStreetMap data ([timezone-boundary-builder](https://github.com/evansiroky/timezone-boundary-builder)), © OpenStreetMap contributors, available under the Open Database License (ODbL).
+
 ## Who runs Gliagora
 
 Gliagora is run and edited by Nuray Sancar, MSc in Neuroscience. You can write to us at [hello@gliagora.com](mailto:hello@gliagora.com). The [contact and legal notice](/en/contact/) page has the details.
