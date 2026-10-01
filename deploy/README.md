@@ -59,10 +59,10 @@ Deploys run from GitHub, through the **Deploy** workflow (`.github/workflows/dep
 | When | How | Repository variable `DEPLOY_AUTO` |
 | --- | --- | --- |
 | **Now, while the site is private (until M2)** | Automatically after every CI run of a push to `main` that passes: the image of exactly that commit (`sha-` plus its first 7 characters) | `main` |
-| **From M2 on** | Automatically when a release tag is pushed, only for a commit on `main` whose CI run passed: `git tag v2026.11.3 <commit> && git push origin v2026.11.3` (the name must start with `v`) | `tags` |
+| **From M2 on** | Automatically when a release tag is pushed, only for a commit on `main` whose CI run passed: `git tag v2026.11.3 <commit> && git push origin v2026.11.3` (the name must start with `v`). A commit that changed only documentation has no CI run and no image of its own (D46): its tag deploys the image of the newest commit before it whose CI passed, if only documentation changed since; a tag that cannot be deployed fails with a message | `tags` |
 | **Any time** (also to roll back on purpose) | By hand: **Actions → Deploy → Run workflow** on `main`, with an image tag: `main`, or `sha-` plus the first 7 characters of a commit | any |
 
-At M2, switch from the first row to the second: **Settings → Secrets and variables → Actions → Variables**, `DEPLOY_AUTO` = `tags` (or `gh variable set DEPLOY_AUTO --body tags`). Any other value (or none) leaves only the manual way. A run that may not deploy stops with a notice ("Deploy skipped") and changes nothing. Deploys never overlap; when several wait, only the newest runs.
+At M2, switch from the first row to the second: **Settings → Secrets and variables → Actions → Variables**, `DEPLOY_AUTO` = `tags` (or `gh variable set DEPLOY_AUTO --body tags`). Any other value (or none) leaves only the manual way. A run that may not deploy stops with a notice ("Deploy skipped") and changes nothing; so does a re-run of an older commit's CI after a newer one has passed. Deploys never overlap; when several wait, only the newest runs.
 
 Each deploy then goes like this:
 
@@ -224,7 +224,7 @@ The app's scheduled jobs (`PAYLOAD_JOBS_AUTORUN` in `compose.prod.yml`) run from
 
 ## 6. Update and roll back
 
-CI pushes a new image for every merge to `main`, tagged `main` and `sha-` plus the first 7 characters of the commit. Until M2 it is deployed by itself once CI passes; from M2 on, push a release tag (see "How deploys work"). By hand, run the Deploy workflow with `main`, or with the `sha-` tag of a specific merge. `.env` then names the exact `sha-` tag that is running.
+CI pushes a new image for every merge to `main`, tagged `main` and `sha-` plus the first 7 characters of the commit (except a merge that changed only documentation, which runs no CI, D46). Until M2 it is deployed by itself once CI passes; from M2 on, push a release tag (see "How deploys work"). By hand, run the Deploy workflow with `main`, or with the `sha-` tag of a specific merge. `.env` then names the exact `sha-` tag that is running.
 
 If the new image does not become healthy, the deploy switches back to the previous one by itself (see "How deploys work"). To go back to an older version on purpose, run the Deploy workflow with its `sha-` tag. On the server, without GitHub, `cd /opt/gliagora && cp .env.previous .env && sudo ./update.sh --no-pull` goes back to the image that ran before the last deploy; it is still on the server. Migrations are not undone automatically. If one damaged data, restore the `pre-update` snapshot (below).
 

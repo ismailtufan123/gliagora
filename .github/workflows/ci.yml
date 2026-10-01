@@ -1,12 +1,37 @@
 # Checks every pull request and every push to main. On main, the Docker image is also pushed to
 # GHCR (ghcr.io/<owner>/<repo>), where the server pulls it from (PLAN §11.5, §11.7.1).
 # Third-party actions and images are pinned to exact versions (PLAN §18.2).
+#
+# Minutes (PLAN §11.5, D46): a private repository on GitHub Free has 2,000 Actions minutes a month,
+# and when they run out, CI and every deploy stop. A full run costs about 15 of them, so:
+# - a change that touches only documentation runs no CI at all (`paths` below, the same list for
+#   both events): Markdown files and docs/, except those the app or a test reads (content/, the
+#   editor guide the admin shows, the Turkish strings table a unit test compares). Nothing waits
+#   for the skipped run: the repository has no required checks, and only a CI run of a push to
+#   main starts a deploy (deploy.yml), which a documentation change does not need;
+# - a push to main whose tree a pull request's run has already passed (a squash merge of a branch
+#   that is up to date with main) does not repeat the checks and tests: it only builds the image,
+#   smoke-tests it and pushes it (job `tested`).
 name: CI
 
 on:
   pull_request:
+    paths:
+      - '**'
+      - '!**.md'
+      - '!docs/**'
+      - 'content/**'
+      - 'docs/editor-guide-tr.md'
+      - 'docs/tr-strings-review.md'
   push:
     branches: [main]
+    paths:
+      - '**'
+      - '!**.md'
+      - '!docs/**'
+      - 'content/**'
+      - 'docs/editor-guide-tr.md'
+      - 'docs/tr-strings-review.md'
 
 permissions:
   contents: read
@@ -20,8 +45,57 @@ env:
   POSTGRES_IMAGE: postgres:18.6@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722
 
 jobs:
+  # On a push to main: has a pull request's run already passed with exactly this tree? Each pull
+  # request run that passes records the tree it tested (the merge of the branch into main) as an
+  # artifact named tested-tree-<tree> (the last step of `image`). Squash-merging a branch that is up
+  # to date with main gives main that same tree; then the checks and tests would only repeat, and
+  # the run builds, smoke-tests and pushes the image only. When in doubt (no such artifact, a run
+  # that did not pass, any error), `run` stays empty and everything runs.
+  tested:
+    name: Find a passed run of this tree
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # Whatever happens here (an error, a stalled API call, a runner that does not start), the run
+    # does not fail because of it: `run` stays empty and everything runs.
+    continue-on-error: true
+    permissions:
+      actions: read
+    outputs:
+      run: ${{ steps.find.outputs.run }}
+    steps:
+      - id: find
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TREE: ${{ github.event.head_commit.tree_id }}
+        run: |
+          run=''
+          if [[ "$TREE" =~ ^[0-9a-f]{40}$ ]]; then
+            ids=$(gh api "repos/$REPO/actions/artifacts?name=tested-tree-$TREE&per_page=30" \
+              --jq '.artifacts[] | select(.expired | not) | .workflow_run.id') || ids=''
+            for id in $ids; do
+              # Only a pull request run of this workflow, in this repository, that passed.
+              found=$(gh api "repos/$REPO/actions/runs/$id" --jq "select(.conclusion == \"success\"
+                and .event == \"pull_request\" and .path == \".github/workflows/ci.yml\"
+                and .head_repository.full_name == \"$REPO\") | .id") || found=''
+              if [[ -n "$found" ]]; then run="$found"; break; fi
+            done
+          fi
+          if [[ -n "$run" ]]; then
+            echo "::notice title=Tests not repeated::Run $run passed with this tree ($TREE) in its pull request: building, smoke-testing and pushing the image only."
+          else
+            echo "No passed pull request run of tree $TREE: running every check and test."
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
   checks:
     name: Lint, typecheck, test
+    needs: tested
+    # Runs on pull requests (where `tested` is skipped) and on main unless the tree passed already.
+    if: ${{ !cancelled() && needs.tested.outputs.run == '' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -44,7 +118,11 @@ jobs:
 
   image:
     name: Build, test and push image
-    needs: checks
+    needs: [tested, checks]
+    # After the checks passed, or without them when this tree passed in its pull request already.
+    if: >-
+      ${{ !cancelled() && (needs.checks.result == 'success' ||
+      (needs.checks.result == 'skipped' && needs.tested.outputs.run != '')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -94,18 +172,24 @@ jobs:
           echo "Smoke test passed"
 
       # PLAN §17.2: axe, keyboard paths and HTTP behaviour against the image that was just built.
+      # Each of the steps up to the end-to-end tests is left out on a push to main whose tree
+      # passed them in its pull request (job `tested`).
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        if: needs.tested.outputs.run == ''
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: needs.tested.outputs.run == ''
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - if: needs.tested.outputs.run == ''
+        run: pnpm install --frozen-lockfile
       # Institutions for the institution pages: 21 records from a ROR release (CC0), imported with
       # the same code as the nightly import. The taxonomy and countries come with the migrations.
       # Then fake jobs at those institutions, including the fixed ones the jobs tests rely on
       # (src/scripts/fake-jobs-fixed.ts), and the editor account the admin API tests sign in with
       # (src/scripts/e2e-editor.ts; an example.org address, in this throwaway database only).
       - name: Load test data
+        if: needs.tested.outputs.run == ''
         run: |
           pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip
           pnpm fake:jobs
@@ -117,6 +201,7 @@ jobs:
       # The app keeps the home page's figures for up to 10 minutes (src/lib/home.ts), and the smoke
       # test read them from the empty database: start it again so the tests see the test data.
       - name: Restart the app with the test data
+        if: needs.tested.outputs.run == ''
         run: |
           docker restart app
           for i in $(seq 1 60); do curl -fsS http://localhost:3000/health/ && break; sleep 2; done
@@ -125,17 +210,41 @@ jobs:
       # as on the server) and the scheduled tasks (tests/integration/, M4.7, on a migrated scratch
       # database, with a throwaway Mailpit container for the emails).
       - name: Database tests
+        if: needs.tested.outputs.run == ''
         run: pnpm test:db
         env:
           TEST_DATABASE_URL: postgres://gliagora:smoke-test-only@localhost:5432/gliagora
           PAYLOAD_SECRET: test-data-only
       - name: Install Chromium for Playwright
+        if: needs.tested.outputs.run == ''
         run: pnpm exec playwright install --with-deps chromium
       - name: End-to-end tests (Playwright + axe)
+        if: needs.tested.outputs.run == ''
         run: pnpm test:e2e
         env:
           BASE_URL: http://localhost:3000
           E2E_EDITOR_PASSWORD: e2e-test-only
+
+      # Records that this tree passed every check and test, for the push to main that merges it
+      # (job `tested`). Only a pull request run that got this far uploads it. A failure here only
+      # means that main runs the tests again, so it never turns the run red.
+      - name: Record the tested tree
+        id: tree
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        run: |
+          git rev-parse 'HEAD^{tree}' > tested-tree.txt
+          echo "tree=$(cat tested-tree.txt)" >> "$GITHUB_OUTPUT"
+      - name: Upload the tested tree
+        if: github.event_name == 'pull_request' && steps.tree.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tested-tree-${{ steps.tree.outputs.tree }}
+          path: tested-tree.txt
+          retention-days: 14
+          if-no-files-found: error
+          overwrite: true
 
       - name: Show container logs
         if: failure()
@@ -159,7 +268,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Rebuilds from the cache filled above, so this pushes the image that was just tested.
+      # Rebuilds from the cache filled above, so this pushes the image that was just tested (or, when
+      # its tree passed in the pull request, the image that was just built and smoke-tested).
       - name: Push image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
