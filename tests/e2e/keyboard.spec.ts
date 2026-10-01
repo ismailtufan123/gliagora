@@ -24,7 +24,8 @@ for (const page of PAGES) {
 }
 
 // The account's own navigation (M4b): the current page is marked, and Tab goes on to Sign out and
-// then into the page. Nothing is pressed: the test member's session is shared with other tests.
+// then into the page: the links that add Google and ORCID (where they are on), then Sign out
+// everywhere. Nothing is pressed: the test member's session is shared with other tests.
 test('account navigation by keyboard', async ({ page, isMobile, baseURL }) => {
   test.skip(isMobile, 'keyboard paths are checked on desktop')
   await signInAs(page.context(), 'email', baseURL!)
@@ -35,6 +36,12 @@ test('account navigation by keyboard', async ({ page, isMobile, baseURL }) => {
   await current.focus()
   await page.keyboard.press('Tab')
   await expect(nav.getByRole('button', { name: 'Sign out' })).toBeFocused()
+  for (const name of ['Link your Google account', 'Link your ORCID iD']) {
+    const link = page.getByRole('link', { name })
+    if (!(await link.isVisible())) continue
+    await page.keyboard.press('Tab')
+    await expect(link).toBeFocused()
+  }
   await page.keyboard.press('Tab')
   await expect(page.getByRole('button', { name: 'Sign out everywhere' })).toBeFocused()
 })

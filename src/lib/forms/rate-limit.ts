@@ -33,6 +33,13 @@ export const REPORT_LIMIT: LimitBucket = { name: 'report', perWindow: 5 }
  */
 export const SIGN_IN_LIMIT: LimitBucket = { name: 'signin', perWindow: 10 }
 
+/**
+ * "Create account" after signing in with Google or ORCID (M4b, D49): 10 accounts an hour per
+ * address. No spam check there (the provider's sign-in is the proof), so this limit alone keeps a
+ * script with many provider accounts from filling the members table.
+ */
+export const CREATE_ACCOUNT_LIMIT: LimitBucket = { name: 'create', perWindow: 10 }
+
 export const SUGGESTIONS_PER_WINDOW = SUGGEST_LIMIT.perWindow
 export const LIMIT_WINDOW_MS = HOUR_MS
 

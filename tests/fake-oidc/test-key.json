@@ -1,0 +1,15 @@
+{
+  "testOnly": "TEST ONLY. The signing key of the fake Google and ORCID in tests/fake-oidc/server.ts, public in this repository. The app trusts it only through AUTH_TEST_ISSUER, which is honoured on this computer only and never where PAYLOAD_JOBS_AUTORUN is true (src/lib/members/config.ts). Never use it for anything else.",
+  "kid": "gliagora-fake-oidc-test-1",
+  "privateJwk": {
+    "kty": "RSA",
+    "n": "r57qaXH6ffzK5I3yoeuE2Yeedc7Y5TyZDf2Po1-Y_tDVcr8VZvEdGXBf9VDGzZPswFIgh3XzVBSbunyVj60SDpZkReGUHpjQNIApyIIQbWpCdJP--sxi7Xkn2Iet6kb4jVktwr4Q1eOkIOKU-aTqLFg5CtvKLN3ww1MqFVDOd39mp4O_pWjTqu2JUffJ68EpKvvVczy3-nx59M2UymEIQuBo6wMVlUotJ5WdkzsSpcD2ulI78_fmpJKktTR2xj1AWu51uSOayZxhk_ghzbixhng4hHARAgRg_qSJewzV4qDP66d-SR1MhJYxIqhwKSy3WgtJDbw4L6hVGfhG9Iy9hw",
+    "e": "AQAB",
+    "d": "EBxlMcYwg3VONvhkrVZZ_3YHDeoAu3WQhELiIKEzpmYJvCHrzd_0Wkc_rlVk34AgryX5m6Ow7mIzmms1HJNKfZxuAiZ8ZvAq4t4XtzAOChOTmXaS5Mwc498s-MVoVCktl736H4w90XlgLwTKQ4_4TELNp4GGmGYbNmKp5imzFILXGdvuqQvdW7d6h-6Je9f3dCozDvu-tzIv8676vTygsiMDH7pyq8tkR_VrpfCTP6msF29_Rs5bGdLmqGx2wT9ZLEdOiZ1lOWsstFi7k_BUs74GyI58fWPKrfFm5lcWptyTqa1DhITmqss6Amo5Q0W3aqWzVfGe6vVUE0WSZi2D0Q",
+    "p": "1Ds4Ce_Ckm1TJmgQehiec4j2CliN3CG-IwHMBhG69GhtkBAkvjf1p0w5HeUbOUcydgpHbMmlBUSCiejApjB5rOfAXmu7RcIC1RQRSriZf8bsyiU9aeXbB23FUOagzw9kiYL9b6W64c2t8QWVjO1YjMqUx_0QviKLilPFrAl_EdE",
+    "q": "09bWXy4fTsN2FUz4i9b2e_k6SuFHaJO_CTIreVnXm8IpcROTSmcZhHyKYbAziqR0o3T-ZSfiSasIV3Y3B-bsvYcvwm3OkwjYlXDJ0ywIsRThTOSiE49tvO5pDZlMROjMvB5SebHED065jFcr-y2fPOsXPQ7lwsvcoROjTthLF9c",
+    "dp": "0vY-oRn0Rktn4QCGiGeacewN7oDSGqRr9S5fGRVcyoBXkGGLtI25oWASUpYftpMAJPfYwdm7MH5GaEG15jy_ZlFEFlduY0wUNqxo9-aBptMdI19bKb3zN_I0tlNaPBjn7g0IUYfjOXuTUMclPl3brK_eruDuWKHMJWdaUcVqy1E",
+    "dq": "pPapC4ekM7a8jsvYxTUJzvL-9O7Hp-VeH7Ak8KQI5a9mjDrdOVReJ7DAJmCLUozMk7l4nZdYfVul7E4PfqTSeKj8hSDze8aoun8Re9PPlO6YoENu_2Jy52yU_FUDcqoDPP8z5LaM4grBLUt44WnelhbQiui9_Vq5nenoA28l0xM",
+    "qi": "GQG0CGUvvQ3bDqPqkAWRLi5twKPJdQI_hclNwk_ybixge5N-_r3yNj88IwHcAbVS709jY0RJSKN4X0PJWygo4pBW7xaTtWIGNm06Bz8VJPCaR1Lsj-qYp-wSD4_9hTw-nR82TDAIV7aoehObzzRjPRNiyS2-TrYPvuNHnFJonlk"
+  }
+}

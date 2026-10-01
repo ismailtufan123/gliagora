@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto'
 import { type Browser, type BrowserContext, type Page, expect, test } from '@playwright/test'
 
 import { type E2eMember, e2eMemberToken } from '../../src/scripts/e2e-member-account'
+import { fakeOrcidId } from '../fake-oidc/server'
 import { clientAddress } from './forms'
 import { mailpitUrl, signInLinkTo } from './mailpit'
 
@@ -101,4 +102,107 @@ export async function freshMember(browser: Browser) {
   const page = await context.newPage()
   const address = await signInByLink(page)
   return { context, page, address }
+}
+
+// Signing in with Google and ORCID (M4b): through the fake providers of tests/fake-oidc/,
+// which the app uses where AUTH_TEST_ISSUER is set (playwright.config.ts starts them). Each test
+// makes its own members, with a Google account ID or an ORCID iD of their own and an example.org
+// address, in a context with its own client address.
+
+/** Where the fake providers are (the same value as the app's AUTH_TEST_ISSUER). */
+export const testIssuer = process.env.AUTH_TEST_ISSUER?.replace(/\/+$/, '')
+
+/** Skips locally without the fake providers; CI always has them, so there it fails instead. */
+export function needsFakeProviders() {
+  test.skip(
+    !testIssuer && !process.env.CI,
+    'needs the fake Google and ORCID (AUTH_TEST_ISSUER, for the app and the tests)',
+  )
+  expect(testIssuer, 'AUTH_TEST_ISSUER').toBeTruthy()
+}
+
+export type FakeProviderName = 'google' | 'orcid'
+
+/** A new Google account ID (21 digits, as Google's). */
+export const newGoogleSub = () =>
+  `1${Array.from(randomBytes(20), (byte) => String(byte % 10)).join('')}`
+
+/** A new ORCID iD with a valid check character, starting 9999 (never a real one). */
+export const newOrcidId = fakeOrcidId
+
+export type ProviderAnswer = {
+  /** The fake's form fields (`sub`, `email`, `hd`, `email_verified`, `name`, …). */
+  fields?: Record<string, string | boolean>
+  /** What the ID token does wrong (tests/fake-oidc/server.ts `FAULTS`). */
+  fault?: string
+  decision?: 'allow' | 'deny'
+}
+
+/** Answers the fake provider's form, on its page, as a person would. */
+export async function answerAtProvider(
+  page: Page,
+  provider: FakeProviderName,
+  { fields = {}, fault, decision = 'allow' }: ProviderAnswer = {},
+) {
+  const issuer = testIssuer!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  await expect(page).toHaveURL(new RegExp(`^${issuer}/${provider}/authorize\\?`))
+  for (const [name, value] of Object.entries(fields)) {
+    const field = page.locator(`form [name="${name}"]`)
+    if (typeof value === 'boolean') await field.setChecked(value)
+    else await field.fill(value)
+  }
+  if (fault) await page.locator('select[name="fault"]').selectOption(fault)
+  await page.getByRole('button', { name: decision === 'deny' ? 'Deny' : 'Continue' }).click()
+}
+
+/** Starts signing in with a provider from the sign-in page (`from`, with its `next`). */
+export async function startAt(
+  page: Page,
+  provider: FakeProviderName,
+  answer: ProviderAnswer = {},
+  from = '/en/sign-in/',
+) {
+  await page.goto(from)
+  await page
+    .getByRole('link', {
+      name: provider === 'google' ? 'Continue with Google' : 'Continue with ORCID',
+    })
+    .click()
+  await answerAtProvider(page, provider, answer)
+}
+
+/** Whether the account page shows a member (its "Sign out everywhere" button). */
+export async function isSignedIn(page: Page) {
+  await page.goto('/en/account/')
+  return page.getByRole('button', { name: 'Sign out everywhere' }).isVisible()
+}
+
+/**
+ * A new member made through a fake provider ("Create account" on the confirm page), signed in in a
+ * context of its own: Google with an address Google manages (a Workspace domain) unless `email` is
+ * null, or ORCID with its name kept when `useName`.
+ */
+export async function providerMember(
+  browser: Browser,
+  provider: FakeProviderName,
+  {
+    sub = provider === 'google' ? newGoogleSub() : undefined,
+    email = provider === 'google' ? newAddress() : null,
+    useName = false,
+  }: { sub?: string; email?: string | null; useName?: boolean } = {},
+) {
+  needsFakeProviders()
+  const context = await ownContext(browser)
+  const page = await context.newPage()
+  const id = sub ?? fakeOrcidId()
+  const fields: Record<string, string> =
+    provider === 'google'
+      ? { sub: id, email: email ?? '', hd: email ? 'example.org' : '' }
+      : { sub: id, name: 'Josiah Carberry' }
+  await startAt(page, provider, { fields })
+  await expect(page).toHaveURL(/\/en\/sign-in\/confirm\/$/)
+  if (useName) await page.getByRole('checkbox').check()
+  await page.getByRole('button', { name: 'Create account' }).click()
+  await expect(page).toHaveURL(/\/en\/account\/\?done=created#outcome$/)
+  return { context, page, sub: id, email }
 }

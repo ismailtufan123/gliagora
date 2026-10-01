@@ -9,15 +9,46 @@ import { OUTCOME_ID } from './paths'
 // `autofocus` when the address names a fragment).
 
 /** What a redirect reports as done. Messages under `outcome.done`. */
-export const DONE_CODES = ['signed-in', 'created'] as const
-/** What a redirect reports as gone wrong. Messages under `outcome.error`. */
-export const ERROR_CODES = ['link-expired', 'failed'] as const
+export const DONE_CODES = [
+  'signed-in',
+  'created',
+  'linked-google',
+  'linked-orcid',
+  'unlinked-google',
+  'unlinked-orcid',
+] as const
+/**
+ * What a redirect reports as gone wrong. Messages under `outcome.error`. Besides the email link's
+ * and a failure's: signing in with Google or ORCID that took too long or lost its cookie
+ * (`expired`), was declined at the provider (`cancelled`), or lost its session while linking
+ * (`link-interrupted`); too many accounts created from one connection (`create-limited`); and the
+ * refusals of the account rules (src/lib/members/identity.ts, `Refusal`).
+ */
+export const ERROR_CODES = [
+  'link-expired',
+  'failed',
+  'expired',
+  'cancelled',
+  'link-interrupted',
+  'create-limited',
+  'email-has-other-google',
+  'google-elsewhere',
+  'orcid-elsewhere',
+  'google-already-linked',
+  'orcid-already-linked',
+  'last-method',
+] as const
 
 export type DoneCode = (typeof DONE_CODES)[number]
 export type ErrorCode = (typeof ERROR_CODES)[number]
 
 export type Outcome =
-  { kind: 'done'; code: DoneCode } | { kind: 'error'; code: ErrorCode; reference: string | null }
+  /**
+   * `othersEnded`: the change of sign-in methods also signed the account out in other browsers
+   * (`&others=ended`, the M4b design §7.3), which the message then says.
+   */
+  | { kind: 'done'; code: DoneCode; othersEnded: boolean }
+  | { kind: 'error'; code: ErrorCode; reference: string | null }
 
 /** The form of `newReference()` (src/lib/forms/public-form.ts): 5 bytes in upper-case hex. */
 export const REFERENCE_PATTERN = /^[0-9A-F]{10}$/
@@ -47,17 +78,27 @@ export function readOutcome(
   }
   const done = single(params.done)
   const doneCode = allowed.done?.find((code) => code === done)
-  return doneCode ? { kind: 'done', code: doneCode } : null
+  return doneCode
+    ? { kind: 'done', code: doneCode, othersEnded: single(params.others) === 'ended' }
+    : null
 }
 
-/** A page's address with an outcome, for a redirect: `/en/account/?done=created#outcome`. */
+/**
+ * A page's address with an outcome, for a redirect: `/en/account/?done=created#outcome`. `keep`
+ * adds parameters the page reads besides the outcome (the sign-in page's `next`, so that trying
+ * again still leads where the person was going).
+ */
 export function outcomePath(
   path: string,
-  outcome: { done: DoneCode } | { error: ErrorCode; reference?: string },
+  outcome: { done: DoneCode; othersEnded?: boolean } | { error: ErrorCode; reference?: string },
+  keep: Record<string, string | null | undefined> = {},
 ): string {
   const query = new URLSearchParams()
-  if ('done' in outcome) query.set('done', outcome.done)
-  else {
+  for (const [name, value] of Object.entries(keep)) if (value) query.set(name, value)
+  if ('done' in outcome) {
+    query.set('done', outcome.done)
+    if (outcome.othersEnded) query.set('others', 'ended')
+  } else {
     query.set('error', outcome.error)
     if (outcome.reference && REFERENCE_PATTERN.test(outcome.reference)) {
       query.set('ref', outcome.reference)

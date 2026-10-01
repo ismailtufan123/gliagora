@@ -86,6 +86,23 @@ describe('the sealed sign-in cookie', () => {
     expect(openSignIn(email, SECRET, NOW, 'confirm')).toBeNull()
   })
 
+  it('keeps the address Google sent but the account does not take, for the confirm page only', () => {
+    const pending = {
+      kind: 'confirm' as const,
+      p: 'google' as const,
+      sub: '108234567890123456789',
+      ignoredEmail: 'm-0123456789ab@example.org',
+      ignoredReason: 'not-managed' as const,
+      next: '/en/account/',
+    }
+    expect(openSignIn(sealSignIn(pending, SECRET, NOW), SECRET, NOW, 'confirm')).toMatchObject(
+      pending,
+    )
+    expect(() =>
+      sealSignIn({ ...pending, ignoredReason: 'other' as 'unverified' }, SECRET, NOW),
+    ).toThrow()
+  })
+
   it('refuses to seal what a flow never holds', () => {
     expect(() => sealSignIn({ ...oauth, next: 'x'.repeat(1001) }, SECRET, NOW)).toThrow()
     expect(() => sealSignIn({ ...oauth, memberId: -1 }, SECRET, NOW)).toThrow()

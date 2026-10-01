@@ -18,7 +18,26 @@ export const MEMBER_PATHS = {
   signOut: '/en/sign-out/',
   /** The account overview, or the sign-in panel when signed out. */
   account: '/en/account/',
+  /** "Create your Gliagora account" after signing in with Google or ORCID for the first time. */
+  signInConfirm: '/en/sign-in/confirm/',
+  /** The POST route behind "Create account" on that page. */
+  signInCreate: '/en/sign-in/create/',
+  /** The POST route of the account's settings (`intent=`): removing Google or ORCID, for now. */
+  accountSettings: '/en/account/settings/',
 } as const
+
+/**
+ * Where signing in with Google or ORCID starts (`?next=`, `?save=`, or `?link=1` to add it to the
+ * signed-in account): a GET, which redirects to the provider.
+ */
+export const providerStartPath = (provider: 'google' | 'orcid') => `/en/sign-in/${provider}/`
+
+/**
+ * Where the provider sends the browser back: the redirect URI registered with Google and ORCID
+ * (`https://gliagora.com/en/sign-in/google/callback/`, `…/orcid/callback/`).
+ */
+export const providerCallbackPath = (provider: 'google' | 'orcid') =>
+  `/en/sign-in/${provider}/callback/`
 
 /** The element an outcome message is (and its redirects' fragment): the browser focuses it. */
 export const OUTCOME_ID = 'outcome'

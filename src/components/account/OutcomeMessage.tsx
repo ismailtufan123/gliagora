@@ -7,9 +7,10 @@ import { OUTCOME_ID } from '@/lib/members/paths'
 // content, as `#outcome`. Redirects that carry an outcome end in `#outcome`, so the browser scrolls
 // to the message and moves focus to it (it can take focus, `tabIndex={-1}`); `autofocus` would not
 // work, since Chromium skips it when the address names a fragment. A success is a status message,
-// an error an alert. The codes are allow-listed (src/lib/members/outcome.ts). `signedIn`: the page
-// shows a member who is signed in, so an expired link left that sign-in as it was (and there is no
-// form to ask for a new link).
+// an error an alert. The codes are allow-listed (src/lib/members/outcome.ts). After a change of
+// sign-in methods that signed the account out elsewhere, a second sentence says so. `signedIn`:
+// the page shows a member who is signed in, so an expired link left that sign-in as it was (and
+// there is no form to ask for a new link).
 
 export async function OutcomeMessage({
   outcome,
@@ -28,6 +29,8 @@ export async function OutcomeMessage({
         : outcome.code === 'link-expired' && signedIn
           ? t('error.linkExpiredSignedIn')
           : t(`error.${outcome.code}`)
+  const message =
+    outcome.kind === 'done' && outcome.othersEnded ? `${text} ${t('done.othersEnded')}` : text
   return (
     <p
       id={OUTCOME_ID}
@@ -35,7 +38,7 @@ export async function OutcomeMessage({
       tabIndex={-1}
       className={outcome.kind === 'error' ? 'outcome outcome-error' : 'outcome'}
     >
-      {text}
+      {message}
     </p>
   )
 }

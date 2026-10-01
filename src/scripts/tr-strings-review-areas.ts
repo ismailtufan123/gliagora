@@ -801,6 +801,14 @@ export const AREAS: Area[] = [
         'Sign in, and the account page when signed out - shown instead of the form while signing in is switched off',
       'signIn.notAvailableContact':
         'Sign in, and the account page when signed out - paragraph under that, while signing in is switched off',
+      'signIn.providers.heading':
+        'Sign in, and the account page when signed out - heading above the Google and ORCID buttons (it names the ways that are on: both, only Google or only ORCID)',
+      'signIn.providers.google':
+        'Sign in, and the account page when signed out - button that leads to Google to sign in',
+      'signIn.providers.orcid':
+        'Sign in, and the account page when signed out - button that leads to ORCID to sign in',
+      'signIn.providers.note':
+        'Sign in, and the account page when signed out - line under the Google and ORCID buttons',
       'signIn.emailHeading':
         'Sign in, and the account page when signed out - heading above the form',
       'signIn.email.label': 'Sign-in form - label of the email field',
@@ -862,6 +870,33 @@ export const AREAS: Area[] = [
         'The page a sign-in link opens, when the link has expired or was used - paragraph',
       'signIn.link.again':
         'The page a sign-in link opens, when the link has expired or was used - button to the sign-in page',
+      'signIn.confirm.metaTitle':
+        'Create your account (/en/sign-in/confirm/, after signing in with Google or ORCID for the first time) - browser tab',
+      'signIn.confirm.title': 'Create your account - heading',
+      'signIn.confirm.googleWithEmail':
+        'Create your account, after Google with an address Google manages (Gmail or Google Workspace) - paragraph under the heading',
+      'signIn.confirm.googleWithoutEmail':
+        'Create your account, after Google with no address Google manages - paragraph under the heading',
+      'signIn.confirm.googleNotManaged':
+        'Create your account, after Google with an address Google does not manage (such as a university address) - note under the first paragraph',
+      'signIn.confirm.googleUnverified':
+        'Create your account, after Google with an address Google has not verified - note under the first paragraph',
+      'signIn.confirm.orcid':
+        'Create your account, after ORCID - paragraph under the heading, with the ORCID iD',
+      'signIn.confirm.existing':
+        'Create your account, when the new account would have no email address - hint for people who already have an account (the link leads to the sign-in page)',
+      'signIn.confirm.useName':
+        'Create your account, after ORCID - label of the checkbox (not ticked) that keeps the name on the ORCID record',
+      'signIn.confirm.useNameHint': 'Create your account, after ORCID - hint under that checkbox',
+      'signIn.confirm.terms':
+        'Create your account - line about the terms of use and the minimum age, above the button',
+      'signIn.confirm.button': 'Create your account - button that creates the account',
+      'signIn.confirm.cancel': 'Create your account - button beside it, back to the sign-in page',
+      'signIn.confirm.expiredTitle':
+        'Create your account, when more than 15 minutes have passed or the page is opened in another browser - heading',
+      'signIn.confirm.expired': 'Create your account, when it has expired - paragraph',
+      'signIn.confirm.again':
+        'Create your account, when it has expired - button to the sign-in page',
       'signIn.signedOut.metaTitle': 'Signed out (/en/sign-in/signed-out/) - browser tab',
       'signIn.signedOut.title': 'Signed out - heading',
       'signIn.signedOut.text': 'Signed out - paragraph',
@@ -881,6 +916,8 @@ export const AREAS: Area[] = [
         'Account, and the sign-in page when signed in - who is signed in, for an account with an ORCID iD and no email address',
       'account.who.google':
         'Account, and the sign-in page when signed in - who is signed in, for an account with only Google',
+      'account.displayName':
+        'Account - line under who is signed in, when the account has a display name (the name from the ORCID record, if the member chose it)',
       'account.methods.heading': 'Account - heading of the ways to sign in',
       'account.methods.email': 'Account - ways to sign in - the email link',
       'account.methods.google': 'Account - ways to sign in - Google',
@@ -890,6 +927,18 @@ export const AREAS: Area[] = [
       'account.methods.linked': 'Account - ways to sign in - beside Google, when it is linked',
       'account.methods.notLinked':
         'Account - ways to sign in - beside Google or ORCID, when it is not linked',
+      'account.methods.link.google':
+        'Account - ways to sign in - button under Google, when it is not linked (it leads to Google)',
+      'account.methods.link.orcid':
+        'Account - ways to sign in - button under ORCID, when it is not linked (it leads to ORCID)',
+      'account.methods.unlink.google':
+        'Account - ways to sign in - button under Google, when it is linked',
+      'account.methods.unlink.orcid':
+        'Account - ways to sign in - button under ORCID, when it is linked',
+      'account.methods.onlyWay':
+        'Account - ways to sign in - under Google or ORCID instead of the remove button, when it is the only way into the account',
+      'account.methods.note':
+        'Account - ways to sign in - line under the list, while Google or ORCID sign-in is on',
       'account.signOut.heading': 'Account - heading of the section about signing out',
       'account.signOut.text': 'Account - paragraph about signing out everywhere',
       'account.signOut.everywhere': 'Account - Sign out everywhere button',
@@ -897,10 +946,36 @@ export const AREAS: Area[] = [
         'Account - message at the top after signing in with an emailed link',
       'outcome.done.created':
         'Account - message at the top after creating an account with an emailed link',
+      'outcome.done.linked-google': 'Account - message at the top after linking a Google account',
+      'outcome.done.linked-orcid': 'Account - message at the top after linking an ORCID iD',
+      'outcome.done.unlinked-google': 'Account - message at the top after removing Google',
+      'outcome.done.unlinked-orcid': 'Account - message at the top after removing ORCID',
+      'outcome.done.othersEnded':
+        'Account - second sentence of the message at the top, after linking or removing a way to sign in, when the account was signed in in other browsers too',
       'outcome.error.link-expired':
         'Sign in - message at the top when an emailed link had expired or was used',
       'outcome.error.linkExpiredSignedIn':
         'Sign in, when already signed in - message at the top when an emailed link had expired or was used (the browser stays signed in to the same account)',
+      'outcome.error.expired':
+        'Sign in - message at the top when signing in with Google or ORCID took more than 15 minutes, or came back to another browser',
+      'outcome.error.cancelled':
+        'Sign in, or the account page - message at the top when the person cancelled on the Google or ORCID page',
+      'outcome.error.link-interrupted':
+        'Account - message at the top when linking Google or ORCID ended after the browser was signed out or signed in to another account',
+      'outcome.error.create-limited':
+        'Sign in - message at the top when too many accounts were created from one connection within an hour',
+      'outcome.error.email-has-other-google':
+        'Sign in - message at the top when the Google address belongs to an account that has another Google account',
+      'outcome.error.google-elsewhere':
+        'Account - message at the top when the Google account to link belongs to another Gliagora account',
+      'outcome.error.orcid-elsewhere':
+        'Account - message at the top when the ORCID iD to link belongs to another Gliagora account',
+      'outcome.error.google-already-linked':
+        'Account - message at the top when the account already has another Google account',
+      'outcome.error.orcid-already-linked':
+        'Account - message at the top when the account already has another ORCID iD',
+      'outcome.error.last-method':
+        'Account - message at the top when removing the only way into the account was refused',
       'outcome.error.failed':
         'Sign-in and account pages - message at the top when something went wrong',
       'outcome.error.failedReference':
