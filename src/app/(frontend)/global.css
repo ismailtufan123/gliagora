@@ -1567,6 +1567,59 @@
     font-weight: 700;
   }
 
+  /*
+   * A map that stands above its list, in a column: the jobs list's map view (PLAN §9.3, §9.4).
+   * On wide screens the list of positions is on the left and the map stays in view on the right;
+   * on phones the map comes first, almost the screen's height, and the positions follow.
+   */
+  .map-view[data-layout='column'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .jobs-split {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .jobs-split-map .map-view {
+    --map-height: calc(100svh - var(--header-height) - var(--space-16));
+  }
+
+  .jobs-split-map .map-pending {
+    block-size: calc(100svh - var(--header-height) - var(--space-16));
+  }
+
+  @media (width < 64rem) {
+    .jobs-split-map {
+      order: -1;
+    }
+  }
+
+  @media (width >= 64rem) {
+    .jobs-split {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .jobs-split-map {
+      position: sticky;
+      inset-block-start: calc(var(--header-height) + var(--space-4));
+    }
+
+    .jobs-split-map .map-view {
+      --map-height: calc(65svh - var(--header-height));
+    }
+
+    .jobs-split-map .map-pending {
+      block-size: calc(65svh - var(--header-height));
+    }
+
+    .jobs-split-map .map-list {
+      max-block-size: calc(35svh - var(--space-16));
+      overflow-y: auto;
+    }
+  }
+
   .map-sources {
     max-inline-size: var(--measure);
     font-size: var(--step--1);

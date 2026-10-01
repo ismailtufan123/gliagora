@@ -8,17 +8,20 @@ import { JobFilterForm } from '@/components/jobs/list/JobFilterForm'
 import { JobsListEnhancer } from '@/components/jobs/list/JobsListEnhancer'
 import { ListError } from '@/components/jobs/list/ListError'
 import { FILTER_FORM_ID, RESULTS_HEADING_ID, RESULTS_ID } from '@/components/jobs/list/ids'
+import { LazyMapView } from '@/components/map/LazyMapView'
+import { MAP_LIBRARY, mapViewTexts } from '@/components/map/texts'
 import { Pagination } from '@/components/Pagination'
 import { errorSummary } from '@/lib/errors'
-import { JOB_FILTERS, invalidDeadlineRange, parseJobFilters } from '@/lib/filters/jobs'
+import { JOB_FILTERS, invalidDeadlineRange, jobsHref, parseJobFilters } from '@/lib/filters/jobs'
 import {
   activeFilters,
-  clearAllHref,
+  emptyFilters,
   filtersHref,
   pageHref,
   serializeFilters,
 } from '@/lib/filters/model'
 import { jobsListIndexed } from '@/lib/indexing'
+import { MAP_DATA_PATH, mapQuery } from '@/lib/map/data'
 import { jobChips } from '@/lib/jobs/chips'
 import { formatDay } from '@/lib/jobs/format'
 import { type JobsList, jobsList, requestTime } from '@/lib/records'
@@ -119,7 +122,131 @@ export default async function Page({ searchParams }: Props) {
     back = { href: last.href, label: t('list.removeLast', { label: last.label }) }
   }
   const pastEnd = list.matches > 0 && filters.page > list.pages
+  // "Clear all" removes the filters and keeps the view: the map stays open.
+  const clearHref = filtersHref(JOB_FILTERS, { ...emptyFilters(JOB_FILTERS), view: filters.view })
+  const mapView = filters.view === 'map'
   const canonicalQuery = serializeFilters(JOB_FILTERS, filters)
+
+  const results = (
+    <section
+      id={RESULTS_ID}
+      aria-labelledby={RESULTS_HEADING_ID}
+      className="job-results grid gap-6"
+    >
+      <div className="results-head">
+        {/* A live region: with JavaScript, the new count is announced when the results change. */}
+        <div role="status">
+          <h2 id={RESULTS_HEADING_ID} className="text-h3" tabIndex={-1}>
+            {t('list.matches', { count: list.matches })}
+          </h2>
+        </div>
+        <div className="sort">
+          <label htmlFor="job-sort">{t('filters.sort')}</label>
+          <select
+            id="job-sort"
+            name="sort"
+            form={FILTER_FORM_ID}
+            className="input"
+            defaultValue={filters.sort}
+          >
+            <option value="deadline">{t('filters.sortDeadline')}</option>
+            <option value="newest">{t('filters.sortNewest')}</option>
+          </select>
+          {/* With JavaScript the order changes as soon as it is chosen. */}
+          <noscript>
+            <button type="submit" form={FILTER_FORM_ID} className="button button-secondary">
+              {t('filters.apply')}
+            </button>
+          </noscript>
+        </div>
+      </div>
+
+      {/* New for each address: when a change arrives, its chips and rows replace the old ones
+              instead of moving them about, and nothing above them changes size, so an answer that
+              arrives late shifts nothing on the page (CLS, PLAN §17.1). */}
+      <div key={canonicalQuery} className="grid gap-6">
+        {chips.length > 0 && (
+          <div className="filter-status">
+            <ul role="list" aria-label={t('filters.chips')} className="chips">
+              {chips.map((chip) => (
+                <li key={`${chip.name}:${chip.value}`}>
+                  <a
+                    href={chip.href}
+                    className="chip chip-remove"
+                    aria-label={t('filters.removeFilter', { label: chip.label })}
+                    data-soft
+                    data-chip
+                  >
+                    {chip.label}
+                    <X aria-hidden="true" size={14} className="flex-none" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <a href={clearHref} data-soft>
+              {t('filters.clearAll')}
+            </a>
+          </div>
+        )}
+
+        {list.jobs.length > 0 && (
+          <JobList jobs={list.jobs} now={requestTime()} locale="en" headingLevel={3} />
+        )}
+
+        {list.matches === 0 && (
+          <div className="grid max-w-(--measure) gap-4">
+            <p>{t('list.emptyText')}</p>
+            <ul role="list" className="flex flex-wrap gap-3">
+              {back && (
+                <li>
+                  <a
+                    href={back.href}
+                    className="button button-secondary whitespace-normal"
+                    data-soft
+                  >
+                    {back.label}
+                  </a>
+                </li>
+              )}
+              {active.length > 0 && (
+                <li>
+                  <a
+                    href={clearHref}
+                    className="button button-secondary whitespace-normal"
+                    data-soft
+                  >
+                    {t('list.clearAll')}
+                  </a>
+                </li>
+              )}
+              <li>
+                <a
+                  href={paths.section('suggest')}
+                  className="button button-secondary whitespace-normal"
+                >
+                  {t('list.suggest')}
+                </a>
+              </li>
+            </ul>
+          </div>
+        )}
+
+        {pastEnd && (
+          <p className="flex flex-wrap gap-x-2">
+            <span>{t('list.pastEnd', { pages: list.pages })}</span>
+            <a href={pageHref(JOB_FILTERS, filters, 1)}>{t('list.firstPage')}</a>
+          </p>
+        )}
+
+        <Pagination
+          locale="en"
+          page={filters.page}
+          pages={list.pages}
+          href={(page) => pageHref(JOB_FILTERS, filters, page)}
+        />
+      </div>
+    </section>
+  )
 
   return (
     <main id="main" className="page-frame grid flex-1 content-start gap-6 py-12">
@@ -136,124 +263,35 @@ export default async function Page({ searchParams }: Props) {
         rangeInput={invalidDeadlineRange(query)}
       />
 
-      <section
-        id={RESULTS_ID}
-        aria-labelledby={RESULTS_HEADING_ID}
-        className="job-results grid gap-6"
-      >
-        <div className="results-head">
-          {/* A live region: with JavaScript, the new count is announced when the results change. */}
-          <div role="status">
-            <h2 id={RESULTS_HEADING_ID} className="text-h3" tabIndex={-1}>
-              {t('list.matches', { count: list.matches })}
-            </h2>
-          </div>
-          <div className="sort">
-            <label htmlFor="job-sort">{t('filters.sort')}</label>
-            <select
-              id="job-sort"
-              name="sort"
-              form={FILTER_FORM_ID}
-              className="input"
-              defaultValue={filters.sort}
+      <p>
+        <a href={jobsHref({ ...filters, view: mapView ? 'list' : 'map' })} data-soft>
+          {t(mapView ? 'view.hideMap' : 'view.showMap')}
+        </a>
+      </p>
+
+      {mapView ? (
+        <div className="jobs-split">
+          {results}
+          <div className="jobs-split-map">
+            <LazyMapView
+              dataPath={`${MAP_DATA_PATH}?${mapQuery(filters)}`}
+              library={MAP_LIBRARY}
+              texts={await mapViewTexts()}
+              hoverScope={`#${RESULTS_ID}`}
+              layout="column"
             >
-              <option value="deadline">{t('filters.sortDeadline')}</option>
-              <option value="newest">{t('filters.sortNewest')}</option>
-            </select>
-            {/* With JavaScript the order changes as soon as it is chosen. */}
-            <noscript>
-              <button type="submit" form={FILTER_FORM_ID} className="button button-secondary">
-                {t('filters.apply')}
-              </button>
-            </noscript>
+              <h2 id="map-list-title" className="text-h3">
+                {t('view.institutions')}
+              </h2>
+              <noscript>
+                <p>{t('view.noJs')}</p>
+              </noscript>
+            </LazyMapView>
           </div>
         </div>
-
-        {/* New for each address: when a change arrives, its chips and rows replace the old ones
-            instead of moving them about, and nothing above them changes size, so an answer that
-            arrives late shifts nothing on the page (CLS, PLAN §17.1). */}
-        <div key={canonicalQuery} className="grid gap-6">
-          {chips.length > 0 && (
-            <div className="filter-status">
-              <ul role="list" aria-label={t('filters.chips')} className="chips">
-                {chips.map((chip) => (
-                  <li key={`${chip.name}:${chip.value}`}>
-                    <a
-                      href={chip.href}
-                      className="chip chip-remove"
-                      aria-label={t('filters.removeFilter', { label: chip.label })}
-                      data-soft
-                      data-chip
-                    >
-                      {chip.label}
-                      <X aria-hidden="true" size={14} className="flex-none" />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-              <a href={clearAllHref(JOB_FILTERS)} data-soft>
-                {t('filters.clearAll')}
-              </a>
-            </div>
-          )}
-
-          {list.jobs.length > 0 && (
-            <JobList jobs={list.jobs} now={requestTime()} locale="en" headingLevel={3} />
-          )}
-
-          {list.matches === 0 && (
-            <div className="grid max-w-(--measure) gap-4">
-              <p>{t('list.emptyText')}</p>
-              <ul role="list" className="flex flex-wrap gap-3">
-                {back && (
-                  <li>
-                    <a
-                      href={back.href}
-                      className="button button-secondary whitespace-normal"
-                      data-soft
-                    >
-                      {back.label}
-                    </a>
-                  </li>
-                )}
-                {active.length > 0 && (
-                  <li>
-                    <a
-                      href={clearAllHref(JOB_FILTERS)}
-                      className="button button-secondary whitespace-normal"
-                      data-soft
-                    >
-                      {t('list.clearAll')}
-                    </a>
-                  </li>
-                )}
-                <li>
-                  <a
-                    href={paths.section('suggest')}
-                    className="button button-secondary whitespace-normal"
-                  >
-                    {t('list.suggest')}
-                  </a>
-                </li>
-              </ul>
-            </div>
-          )}
-
-          {pastEnd && (
-            <p className="flex flex-wrap gap-x-2">
-              <span>{t('list.pastEnd', { pages: list.pages })}</span>
-              <a href={pageHref(JOB_FILTERS, filters, 1)}>{t('list.firstPage')}</a>
-            </p>
-          )}
-
-          <Pagination
-            locale="en"
-            page={filters.page}
-            pages={list.pages}
-            href={(page) => pageHref(JOB_FILTERS, filters, page)}
-          />
-        </div>
-      </section>
+      ) : (
+        results
+      )}
 
       <JobsListEnhancer query={canonicalQuery} />
     </main>

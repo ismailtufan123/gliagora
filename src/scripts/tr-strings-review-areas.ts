@@ -550,6 +550,11 @@ export const AREAS: Area[] = [
       'map.panel.openPositions': "Map - an institution's panel - heading of its open positions",
       'map.panel.institutionPage': "Map - an institution's panel - link to the institution page",
       'map.panel.inList': "Map - an institution's panel - link to the jobs list with its positions",
+      'jobs.view.showMap': 'Jobs list - link above the results that shows the map beside them',
+      'jobs.view.hideMap': "Jobs list's map view - link above the results that hides the map",
+      'jobs.view.institutions':
+        "Jobs list's map view - heading of the list of institutions under the map, before it has loaded",
+      'jobs.view.noJs': "Jobs list's map view - message under the map when JavaScript is off",
     },
   },
   {

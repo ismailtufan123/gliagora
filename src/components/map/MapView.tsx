@@ -42,6 +42,10 @@ type Props = {
   texts: MapViewTexts
   /** The list as the server drew it: shown until the data is here, and without JavaScript. */
   children: ReactNode
+  /** Where rows with `data-institution` mark their pin while the pointer is on them. */
+  hoverScope?: string
+  /** The map's layout: beside its list (the world map) or above it (in a column). */
+  layout?: 'wide' | 'column'
 }
 
 type Status = 'loading' | 'ready' | 'failed' | 'no-webgl'
@@ -49,10 +53,27 @@ type Status = 'loading' | 'ready' | 'failed' | 'no-webgl'
 /** At most this many institutions in the list at once; zooming in narrows it. */
 const LIST_LIMIT = 50
 
+async function fetchMapData(path: string): Promise<MapJson> {
+  const response = await fetch(path)
+  if (!response.ok) {
+    // Unread, the answer would stay open.
+    await response.body?.cancel()
+    throw new Error(`Map data: ${response.status}`)
+  }
+  return (await response.json()) as MapJson
+}
+
 const fill = (text: string, values: Record<string, number>) =>
   text.replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? ''))
 
-export function MapView({ dataPath, library, texts, children }: Props) {
+export function MapView({
+  dataPath,
+  library,
+  texts,
+  children,
+  hoverScope,
+  layout = 'wide',
+}: Props) {
   const root = useRef<HTMLDivElement>(null)
   const container = useRef<HTMLDivElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
@@ -71,19 +92,20 @@ export function MapView({ dataPath, library, texts, children }: Props) {
     engine.current?.highlight(id)
   }, [])
 
+  // The newest data: the first answer makes the map; later ones (new filters) only replace its
+  // data, so the map keeps its place. One that arrives while the map is being made is not lost.
+  const latest = useRef<MapJson | null>(null)
+  const initialPath = useRef(dataPath)
+
   useEffect(() => {
     let cancelled = false
     let created: Engine | null = null
     ;(async () => {
       try {
-        const response = await fetch(dataPath)
-        if (!response.ok) {
-          await response.body?.cancel()
-          throw new Error(`Map data: ${response.status}`)
-        }
-        const json = (await response.json()) as MapJson
+        const json = await fetchMapData(initialPath.current)
         if (cancelled) return
-        setData(json)
+        latest.current ??= json
+        setData(latest.current)
         if (!canDrawMaps()) {
           setStatus('no-webgl')
           return
@@ -93,7 +115,7 @@ export function MapView({ dataPath, library, texts, children }: Props) {
         created = await createEngine({
           container: container.current,
           library,
-          data: json,
+          data: latest.current,
           texts,
           onSelect: (id) => {
             opener.current = container.current?.querySelector('canvas') ?? null
@@ -106,6 +128,7 @@ export function MapView({ dataPath, library, texts, children }: Props) {
           return
         }
         engine.current = created
+        if (latest.current !== json) created.setData(latest.current)
         setStatus('ready')
       } catch (error) {
         if (cancelled) return
@@ -118,9 +141,52 @@ export function MapView({ dataPath, library, texts, children }: Props) {
       created?.destroy()
       engine.current = null
     }
-    // The texts and the library are fixed for the page; a new data address means new filters.
+    // Made once; the texts and the library are fixed for the page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (dataPath === initialPath.current) return
+    let cancelled = false
+    fetchMapData(dataPath)
+      .then((json) => {
+        if (cancelled) return
+        latest.current = json
+        setData(json)
+        // The panel closes when its institution has no matching position any more.
+        setSelected((id) => (id !== null && json.institutions[String(id)] ? id : null))
+        engine.current?.setData(json)
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          console.error('The map data failed:', error instanceof Error ? error.name : error)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
   }, [dataPath])
+
+  // On the jobs list's map view, the row under the pointer marks its institution's pin.
+  useEffect(() => {
+    const scope = hoverScope ? document.querySelector(hoverScope) : null
+    if (!scope || status !== 'ready') return
+    const row = (event: Event) =>
+      (event.target as Element | null)?.closest<HTMLElement>('[data-institution]')
+    const over = (event: Event) => {
+      const id = Number(row(event)?.dataset.institution)
+      if (Number.isInteger(id)) engine.current?.highlight(id)
+    }
+    const out = (event: Event) => {
+      if (row(event)) engine.current?.highlight(selected)
+    }
+    scope.addEventListener('mouseover', over)
+    scope.addEventListener('mouseout', out)
+    return () => {
+      scope.removeEventListener('mouseover', over)
+      scope.removeEventListener('mouseout', out)
+    }
+  }, [hoverScope, status, selected])
 
   const close = useCallback(() => {
     select(null)
@@ -155,7 +221,7 @@ export function MapView({ dataPath, library, texts, children }: Props) {
     : []
 
   return (
-    <div ref={root} className="map-view" data-status={status}>
+    <div ref={root} className="map-view" data-status={status} data-layout={layout}>
       {status !== 'no-webgl' && (
         <>
           <a href="#map-list" className="map-skip">
@@ -211,7 +277,14 @@ export function MapView({ dataPath, library, texts, children }: Props) {
         </>
       )}
       {status === 'no-webgl' && <p className="map-message-static">{texts.noWebgl}</p>}
-      <section id="map-list" className="map-list" aria-labelledby="map-list-title" tabIndex={-1}>
+      <section
+        id="map-list"
+        className="map-list"
+        aria-labelledby="map-list-title"
+        tabIndex={-1}
+        // Set once the map has said which institutions are in view (the list then follows it).
+        data-view-known={inView !== null ? '' : undefined}
+      >
         {data ? (
           <>
             <h2 id="map-list-title" className="text-h3">
