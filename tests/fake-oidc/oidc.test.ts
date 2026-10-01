@@ -1,3 +1,6 @@
+// The OIDC module (src/lib/members/oidc.ts) against the fake providers in this folder. It lives here,
+// not beside the module, because it imports the fake server: the Docker build's context has no
+// tests/ (.dockerignore), and `next build` type-checks every file under src/ (src/lib/image-files.test.ts).
 import { createServer } from 'node:net'
 
 import * as oauth from 'oauth4webapi'
@@ -11,9 +14,9 @@ import {
   type FakeProvider,
   fakeOrcidId,
   startFakeOidc,
-} from '../../../tests/fake-oidc/server'
-import { type ProviderOn, TEST_CLIENT, memberAuthConfig } from './config'
-import { isOrcidId } from './orcid-id'
+} from './server'
+import { type ProviderOn, TEST_CLIENT, memberAuthConfig } from '@/lib/members/config'
+import { isOrcidId } from '@/lib/members/orcid-id'
 import {
   type CallbackResult,
   ClaimError,
@@ -26,8 +29,8 @@ import {
   oauthErrorName,
   orcidName,
   verifyCallback,
-} from './oidc'
-import { sealSignIn } from './seal'
+} from '@/lib/members/oidc'
+import { sealSignIn } from '@/lib/members/seal'
 
 // Signing in with Google and ORCID (src/lib/members/oidc.ts) against the fake providers of the
 // tests (tests/fake-oidc/server.ts), in this process: the real protocol code, every fault the fake
