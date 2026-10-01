@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
   // .next/standalone/node_modules, which the Docker image copies. tests/e2e/admin-api.spec.ts
   // checks this.
   serverExternalPackages: ['payload'],
+  // Files the server reads at run time that no import names, copied into .next/standalone: the
+  // editor guide shown in the admin (src/admin/help.ts).
+  outputFileTracingIncludes: {
+    '/admin/**': ['./docs/editor-guide-tr.md'],
+  },
   // PLAN §2.1: every URL ends with a slash, and `/` goes to the English home page.
   trailingSlash: true,
   async redirects() {

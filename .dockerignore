@@ -14,8 +14,10 @@ playwright-report
 tools
 deploy
 *.md
-# …except the Markdown pages the site is built from (About, legal texts)
+# …except the Markdown pages the site is built from (About, legal texts) and the editor guide
+# that the admin shows (src/admin/help.ts)
 !content/**/*.md
+!docs/editor-guide-tr.md
 
 # End-to-end tests are not part of the image
 tests

@@ -1,6 +1,6 @@
 # Gliagora yönetim paneli: editör rehberi
 
-Bu rehber, Gliagora'ya iş ilanı ekleyen ve gelen önerileri inceleyen editör için yazıldı (M4 sürümü, Ekim 2026). Yönetim paneli İngilizcedir; düğme ve alan adları burada panelde göründükleri gibi, tırnak içinde İngilizce geçer. Panel değiştikçe bu rehber de güncellenir.
+Bu rehber, Gliagora'ya iş ilanı ekleyen ve gelen önerileri inceleyen editör için yazıldı (M4 sürümü, Ekim 2026). Yönetim paneli İngilizcedir; düğme ve alan adları burada panelde göründükleri gibi, tırnak içinde İngilizce geçer. Panel değiştikçe bu rehber de güncellenir. Rehberi panelin içinde de okuyabilirsiniz: sol menünün en altındaki **"Yardım"** bağlantısı onu açar.
 
 ## 1. Giriş
 
