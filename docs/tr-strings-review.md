@@ -2,7 +2,7 @@
 
 Every text of the Gliagora interface in Turkish, next to its English original and where it appears, so that a native speaker can review them all in one pass (PLAN §12, D40). Until then the Turkish texts are drafts.
 
-Updated 2026-10-01: 563 strings in 19 areas, 75 of them shown on the Turkish site now.
+Updated 2026-10-01: 564 strings in 19 areas, 75 of them shown on the Turkish site now.
 
 This file is generated from `messages/en.json` and `messages/tr.json` by `pnpm tr:review`; do not edit it by hand. A test fails when it no longer matches the messages.
 
@@ -80,10 +80,10 @@ The rows of the table are grouped by these areas, in this order.
 - **15. Map**: 40 strings, shown on the Turkish site now: not yet. The map exists only in English (/en/map/, and the jobs list's map view), like the rest of the site until the Turkish locale gate (PLAN §3.4).
 - **16. Suggest a listing**: 56 strings, shown on the Turkish site now: not yet. The form exists only in English (/en/suggest/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
 - **17. Report a problem**: 57 strings, shown on the Turkish site now: not yet. The form exists only in English (/en/report/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
-- **18. Sign-in and account pages**: 74 strings, shown on the Turkish site now: not yet. Sign-in, sign-out and the account pages exist only in English (/en/sign-in/, /en/account/), like the rest of the site until the Turkish locale gate (PLAN §3.4); Turkish pages link to them from the header and the mobile menu.
+- **18. Sign-in and account pages**: 75 strings, shown on the Turkish site now: not yet. Sign-in, sign-out and the account pages exist only in English (/en/sign-in/, /en/account/), like the rest of the site until the Turkish locale gate (PLAN §3.4); Turkish pages link to them from the header and the mobile menu.
 - **19. Automatic emails**: 31 strings, shown on the Turkish site now: not yet. Each email goes out in the language of the form the person used, and those forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).
 
-Total: 563 strings, 75 of them shown on the Turkish site now.
+Total: 564 strings, 75 of them shown on the Turkish site now.
 
 ## Strings
 
@@ -572,7 +572,7 @@ Total: 563 strings, 75 of them shown on the Turkish site now.
 | 18. Sign-in and account pages | `signIn.errors.emailTooLong` | Enter an email address of 254 characters or fewer. | En fazla 254 karakterlik bir e-posta adresi girin. | Sign-in form - error at the email field | not yet |
 | 18. Sign-in and account pages | `signIn.errors.needsJs` | The spam check did not run: the page had not finished loading, or JavaScript is turned off or blocked in your browser. Wait until the page has loaded and send the form again. | Spam kontrolü çalışmadı: sayfa henüz tam yüklenmemişti ya da tarayıcınızda JavaScript kapalı veya engellenmiş. Sayfanın yüklenmesini bekleyip formu yeniden gönderin. | Sign-in form - error at the top of the form, when the spam check did not run | not yet |
 | 18. Sign-in and account pages | `signIn.errors.spamCheck` | The spam check has expired or did not work. Please send the form again. | Spam kontrolünün süresi doldu veya kontrol tamamlanamadı. Lütfen formu yeniden gönderin. | Sign-in form - error at the top of the form, when the spam check failed | not yet |
-| 18. Sign-in and account pages | `signIn.errors.rateLimited` | Too many sign-in links have been asked for in the last hour, from here or for this address. Please try again later. | Son bir saat içinde buradan ya da bu adres için çok fazla oturum açma bağlantısı istendi. Lütfen daha sonra yeniden deneyin. | Sign-in form - error at the top of the form, after too many links in an hour | not yet |
+| 18. Sign-in and account pages | `signIn.errors.rateLimited` | Too many sign-in links have been asked for recently, from here or for this address. Please try again later, or tomorrow. | Kısa süre içinde buradan ya da bu adres için çok fazla oturum açma bağlantısı istendi. Lütfen daha sonra ya da yarın yeniden deneyin. | Sign-in form - error at the top of the form, after too many links asked for from one connection or for one email address (within an hour, or 5 for one email address within a day) | not yet |
 | 18. Sign-in and account pages | `signIn.errors.unavailable` | We could not send the email just now. Please try again in a few minutes. | E-postayı şu anda gönderemedik. Lütfen birkaç dakika sonra yeniden deneyin. | Sign-in form - error at the top of the form, when the email could not be sent or the form is switched off | not yet |
 | 18. Sign-in and account pages | `signIn.errors.failed` | Something went wrong and no link was sent. Please try again later, or write to privacy@gliagora.com and mention reference `{reference}`. | Bir sorun oluştu ve bağlantı gönderilmedi. Lütfen daha sonra yeniden deneyin ya da privacy@gliagora.com adresine yazıp `{reference}` referans kodunu belirtin. | Sign-in form - error at the top of the form, when something went wrong | not yet |
 | 18. Sign-in and account pages | `signIn.sent.metaTitle` | Check your inbox | Gelen kutunuza bakın | Sign-in link sent (/en/sign-in/sent/) - browser tab | not yet |
@@ -619,6 +619,7 @@ Total: 563 strings, 75 of them shown on the Turkish site now.
 | 18. Sign-in and account pages | `outcome.done.signed-in` | You are signed in. | Oturumunuz açıldı. | Account - message at the top after signing in with an emailed link | not yet |
 | 18. Sign-in and account pages | `outcome.done.created` | Your account has been created, and you are signed in. | Hesabınız oluşturuldu ve oturumunuz açıldı. | Account - message at the top after creating an account with an emailed link | not yet |
 | 18. Sign-in and account pages | `outcome.error.link-expired` | This sign-in link has expired or has already been used. Ask for a new link below. | Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış. Aşağıdan yeni bir bağlantı isteyin. | Sign in - message at the top when an emailed link had expired or was used | not yet |
+| 18. Sign-in and account pages | `outcome.error.linkExpiredSignedIn` | This sign-in link has expired or has already been used, so you are still signed in as before. | Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış; bu nedenle oturumunuz önceki gibi açık. | Sign in, when already signed in - message at the top when an emailed link had expired or was used (the browser stays signed in to the same account) | not yet |
 | 18. Sign-in and account pages | `outcome.error.failed` | Something went wrong. Please try again. | Bir sorun oluştu. Lütfen yeniden deneyin. | Sign-in and account pages - message at the top when something went wrong | not yet |
 | 18. Sign-in and account pages | `outcome.error.failedReference` | Something went wrong. Please try again, or write to privacy@gliagora.com and mention reference `{reference}`. | Bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp `{reference}` referans kodunu belirtin. | Sign-in and account pages - message at the top when something went wrong, with the reference that finds it in our log | not yet |
 | 19. Automatic emails | `emails.greeting` | Hello, | Merhaba, | Every automatic email (the outcome of a suggestion, the confirmation of a report, a sign-in link) - first line | not yet |

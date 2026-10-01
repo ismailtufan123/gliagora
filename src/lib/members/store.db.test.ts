@@ -853,6 +853,26 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       expect(used.filter((result) => result.created)).toHaveLength(1)
     })
 
+    it('counts signing in as activity, which cancels a pending inactivity warning', async () => {
+      const member = await newMember()
+      await db.execute(sql`
+        update members set last_seen_at = ${at(-800).toISOString()},
+          deletion_warned_at = ${at(-31).toISOString()}, warning_refused_at = ${at(-40).toISOString()}
+        where id = ${member.id}`)
+      // Wherever the link leads: no page there has to read the session for this.
+      const used = await redeemSignInLink(store, await link(member.email!, '/en/jobs/'), NOW)
+      await createSession(store, used!.memberId, NOW)
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        lastSeenAt: NOW,
+        deletionWarnedAt: null,
+        warningRefusedAt: null,
+      })
+      // So the inactivity rule keeps the account.
+      const inactivity = { reason: 'inactivity', condition: 'warned' } as const
+      expect(await deleteMember(store, member.id, inactivity, NOW)).toBe(false)
+      expect(await findMember(store, { id: member.id })).not.toBeNull()
+    })
+
     it('uses no link of another purpose, and none that has expired', async () => {
       const member = await newMember()
       const { token: verify } = await createEmailToken(

@@ -829,7 +829,7 @@ export const AREAS: Area[] = [
       'signIn.errors.spamCheck':
         'Sign-in form - error at the top of the form, when the spam check failed',
       'signIn.errors.rateLimited':
-        'Sign-in form - error at the top of the form, after too many links in an hour',
+        'Sign-in form - error at the top of the form, after too many links asked for from one connection or for one email address (within an hour, or 5 for one email address within a day)',
       'signIn.errors.unavailable':
         'Sign-in form - error at the top of the form, when the email could not be sent or the form is switched off',
       'signIn.errors.failed':
@@ -899,6 +899,8 @@ export const AREAS: Area[] = [
         'Account - message at the top after creating an account with an emailed link',
       'outcome.error.link-expired':
         'Sign in - message at the top when an emailed link had expired or was used',
+      'outcome.error.linkExpiredSignedIn':
+        'Sign in, when already signed in - message at the top when an emailed link had expired or was used (the browser stays signed in to the same account)',
       'outcome.error.failed':
         'Sign-in and account pages - message at the top when something went wrong',
       'outcome.error.failedReference':

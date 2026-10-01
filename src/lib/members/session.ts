@@ -27,7 +27,8 @@ export type CurrentMember = {
 
 /**
  * The signed-in member, or null. Records activity at most once a day (it cancels a pending
- * inactivity warning, PLAN §18.1). Throws a MemberStoreError when the database cannot be read.
+ * inactivity warning, PLAN §18.1), as signing in itself does (createSession). Throws a
+ * MemberStoreError when the database cannot be read.
  */
 export const currentMember = cache(async (): Promise<CurrentMember | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value

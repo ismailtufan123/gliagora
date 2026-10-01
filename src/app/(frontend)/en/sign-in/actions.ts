@@ -63,9 +63,11 @@ export async function sendSignInLink(previous: SignInState, form: FormData): Pro
         now,
       )
       const link = `${origin}${MEMBER_PATHS.signInLink}?token=${token}`
+      // To the address in the form the link proves and signs in to, never as typed: on a mail
+      // system whose mailbox names differ by case, both must be the same mailbox.
       const delivery = await deliverWhileWaiting(
         payload,
-        data.address,
+        data.email,
         signInEmail({ locale: data.locale, link }),
         'Sign-in link',
       )

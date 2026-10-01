@@ -1,7 +1,7 @@
 import { type BrowserContext, type Page, expect, test } from '@playwright/test'
 
 import { e2eMemberToken } from '../../src/scripts/e2e-member-account'
-import { expectNoSeriousAxeIssues, summary } from './forms'
+import { clientAddress, expectNoSeriousAxeIssues, summary } from './forms'
 import { emailCount, latestEmailTo, signInLinkTo } from './mailpit'
 import {
   SESSION_COOKIE,
@@ -34,10 +34,13 @@ async function cookiesOf(context: BrowserContext) {
 /** The token at the end of a sign-in link. */
 const tokenOf = (link: string) => new URL(link).searchParams.get('token')!
 
-/** The account page's state: signed in (its heading) or the sign-in panel. */
+/**
+ * Whether the account page shows a member: its "Sign out everywhere" button, which neither the
+ * sign-in panel nor the page that says the account cannot be shown just now has.
+ */
 async function signedIn(page: Page) {
   await page.goto('/en/account/')
-  return (await page.getByRole('heading', { level: 1 }).textContent()) === 'Your account'
+  return page.getByRole('button', { name: 'Sign out everywhere' }).isVisible()
 }
 
 test.describe('sign-in form', () => {
@@ -70,14 +73,41 @@ test.describe('sign-in form', () => {
     const page = await context.newPage()
     const [local, domain] = newAddress().split('@')
     for (const tag of ['a', 'b', 'c']) await askForLink(page, `${local}+${tag}@${domain}`)
+    const shouted = `${local!.toUpperCase()}@${domain}`
     await page.goto('/en/sign-in/')
-    await page
-      .getByRole('textbox', { name: 'Email address' })
-      .fill(`${local!.toUpperCase()}@${domain}`)
+    await page.getByRole('textbox', { name: 'Email address' }).fill(shouted)
     await page.getByRole('button', { name: 'Email me a sign-in link' }).click()
     await expect(summary(page)).toBeFocused()
     await expect(summary(page)).toContainText('Too many sign-in links have been asked for')
-    expect(await emailCount(`${local}@${domain}`)).toBe(0)
+    // Counted without case, as Mailpit searches: none went to that mailbox, however written.
+    expect(await emailCount(shouted)).toBe(0)
+    await context.close()
+  })
+
+  test('without JavaScript, a send from an address with an outcome leaves the outcome behind', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      extraHTTPHeaders: { 'X-Forwarded-For': clientAddress() },
+    })
+    const page = await context.newPage()
+    // Where an expired link's button leads, which works without JavaScript.
+    await page.goto(
+      `/en/sign-in/?next=${encodeURIComponent('/en/jobs/')}&error=link-expired#outcome`,
+    )
+    await expect(page.locator('#outcome')).toBeFocused()
+    const address = newAddress()
+    await page.getByRole('textbox', { name: 'Email address' }).fill(address)
+    await page.getByRole('button', { name: 'Email me a sign-in link' }).click()
+    // The form's own address: where to go afterwards, without the old message or its fragment,
+    // so the error summary (the spam check needs JavaScript) is the message that takes focus.
+    await expect(page).toHaveURL(/\/en\/sign-in\/\?next=%2Fen%2Fjobs%2F$/)
+    await expect(page.locator('#outcome')).toHaveCount(0)
+    await expect(summary(page)).toBeFocused()
+    await expect(summary(page)).toContainText('The spam check did not run')
+    await expect(page.getByRole('textbox', { name: 'Email address' })).toHaveValue(address)
+    await expect(page.locator('input[name="next"]')).toHaveValue('/en/jobs/')
     await context.close()
   })
 })
@@ -185,6 +215,24 @@ test.describe('emailed sign-in links', () => {
       expect(again.headers()['location']).toBe('/en/sign-in/?error=link-expired#outcome')
       await page.goto(link)
       await expect(page.getByRole('heading', { level: 1 })).toHaveText('This link has expired')
+    })
+
+    await test.step('signed in, the sign-in page still says what went wrong', async () => {
+      // Where the used link's button led this browser, which is still signed in.
+      await page.goto('/en/sign-in/?error=link-expired#outcome')
+      const outcome = page.locator('#outcome')
+      await expect(outcome).toBeFocused()
+      await expect(outcome).toHaveAttribute('role', 'alert')
+      await expect(outcome).toHaveText(
+        'This sign-in link has expired or has already been used, so you are still signed in as before.',
+      )
+      await expect(page.getByRole('main')).toContainText(`You are signed in as ${address}.`)
+      // A failure shows its reference, and only one in the form the server makes.
+      await page.goto('/en/sign-in/?error=failed&ref=0123456789#outcome')
+      await expect(outcome).toBeFocused()
+      await expect(outcome).toContainText('mention reference 0123456789')
+      await page.goto('/en/sign-in/?error=failed&ref=0123456789ABCDEF#outcome')
+      await expect(outcome).toHaveText('Something went wrong. Please try again.')
     })
 
     await test.step('signed out, a new link for the address says "Sign in as"', async () => {

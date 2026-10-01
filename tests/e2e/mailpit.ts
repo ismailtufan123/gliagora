@@ -12,13 +12,17 @@ type Summary = { ID: string; To: { Address: string }[]; Created: string }
 /** The site's address in the emails, which the tests' app answers at BASE_URL instead. */
 const SITE = 'https://gliagora.com'
 
-/** The messages to `address`, newest first. */
+/**
+ * The messages to `address`, newest first. Compared without case, as Mailpit's search does (it
+ * keeps each recipient as the app wrote it): the tests' addresses are random lower-case hex.
+ */
 async function messagesTo(address: string): Promise<Summary[]> {
   const query = encodeURIComponent(`to:"${address}"`)
   const response = await fetch(`${mailpitUrl}/api/v1/search?query=${query}&limit=50`)
   expect(response.ok, 'Mailpit search').toBe(true)
   const { messages } = (await response.json()) as { messages: Summary[] }
-  return messages.filter((message) => message.To.some((to) => to.Address === address))
+  const wanted = address.toLowerCase()
+  return messages.filter((message) => message.To.some((to) => to.Address.toLowerCase() === wanted))
 }
 
 /**

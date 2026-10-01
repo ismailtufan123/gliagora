@@ -5,7 +5,7 @@ import { sendSignInLink } from '@/app/(frontend)/en/sign-in/actions'
 import { altchaKey } from '@/lib/forms/altcha'
 import { initialFormState } from '@/lib/forms/public-form'
 import { emptySignInValues } from '@/lib/forms/sign-in'
-import { MEMBER_LEGAL_LINKS } from '@/lib/members/paths'
+import { MEMBER_LEGAL_LINKS, MEMBER_PATHS } from '@/lib/members/paths'
 import { safeNext } from '@/lib/members/return-path'
 import { anyMethod, memberRequest } from '@/lib/members/session'
 import { PRIVACY_EMAIL } from '@/lib/site'
@@ -16,9 +16,10 @@ import { SignInForm } from './SignInForm'
 // account page for visitors who are signed out: the email form, the privacy line and the terms
 // and age line. Only the ways that are switched on are offered; with none (production until the
 // operator sets the keys), the panel says that signing in is not available yet. `next` is where
-// sign-in leads afterwards, checked here and again when the link is used.
+// sign-in leads afterwards, checked here and again when the link is used; `path` is the page the
+// panel is on.
 
-export async function SignInPanel({ next }: { next: string | null }) {
+export async function SignInPanel({ next, path }: { next: string | null; path: string }) {
   const t = await getTranslations({ locale: 'en', namespace: 'signIn' })
   const { origin, methods } = await memberRequest()
   const privacyEmail = (chunks: ReactNode) => <a href={`mailto:${PRIVACY_EMAIL}`}>{chunks}</a>
@@ -33,6 +34,13 @@ export async function SignInPanel({ next }: { next: string | null }) {
   }
 
   const key = altchaKey()
+  const safe = next ? safeNext(next, origin) : null
+  // Where the form goes without JavaScript: this page with only the `next` the sign-in page reads
+  // from its address (the account page passes its own), never with an outcome (`?error=`,
+  // `#outcome`), whose old message would come back above the form's errors and, through the
+  // fragment, take the focus their summary should get. The same at that address, as it must be.
+  const permalink =
+    path === MEMBER_PATHS.signIn && safe ? `${path}?${new URLSearchParams({ next: safe })}` : path
   const email =
     methods.email && key ? (
       <section aria-labelledby="sign-in-email-heading" className="grid gap-4">
@@ -45,10 +53,8 @@ export async function SignInPanel({ next }: { next: string | null }) {
         </noscript>
         <SignInForm
           action={sendSignInLink}
-          initial={await initialFormState(
-            emptySignInValues(next ? safeNext(next, origin) : null),
-            key,
-          )}
+          initial={await initialFormState(emptySignInValues(safe), key)}
+          permalink={permalink}
           text={{
             errorTitle: t('errors.title'),
             errorPrefix: t('errors.prefix'),

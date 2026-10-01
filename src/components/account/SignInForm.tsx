@@ -31,16 +31,19 @@ export type SignInText = {
 type Props = {
   action: FormAction<SignInValues>
   initial: SignInState
+  /** Where the form is sent without JavaScript: the page without an outcome (SignInPanel). */
+  permalink: string
   text: SignInText
 }
 
 const ID = 'sign-in'
 const EMAIL = `${ID}-email`
 
-export function SignInForm({ action, initial, text }: Props) {
+export function SignInForm({ action, initial, permalink, text }: Props) {
   const { state, formAction, busy, answer, summary, onSubmit, onFocus } = usePublicForm(
     action,
     initial,
+    permalink,
   )
   const { values, fieldErrors: errors } = state
   const errorId = errors.email && `${EMAIL}-error`

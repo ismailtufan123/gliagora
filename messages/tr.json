@@ -636,7 +636,7 @@
       "emailTooLong": "En fazla 254 karakterlik bir e-posta adresi girin.",
       "needsJs": "Spam kontrolü çalışmadı: sayfa henüz tam yüklenmemişti ya da tarayıcınızda JavaScript kapalı veya engellenmiş. Sayfanın yüklenmesini bekleyip formu yeniden gönderin.",
       "spamCheck": "Spam kontrolünün süresi doldu veya kontrol tamamlanamadı. Lütfen formu yeniden gönderin.",
-      "rateLimited": "Son bir saat içinde buradan ya da bu adres için çok fazla oturum açma bağlantısı istendi. Lütfen daha sonra yeniden deneyin.",
+      "rateLimited": "Kısa süre içinde buradan ya da bu adres için çok fazla oturum açma bağlantısı istendi. Lütfen daha sonra ya da yarın yeniden deneyin.",
       "unavailable": "E-postayı şu anda gönderemedik. Lütfen birkaç dakika sonra yeniden deneyin.",
       "failed": "Bir sorun oluştu ve bağlantı gönderilmedi. Lütfen daha sonra yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin."
     },
@@ -705,6 +705,7 @@
     },
     "error": {
       "link-expired": "Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış. Aşağıdan yeni bir bağlantı isteyin.",
+      "linkExpiredSignedIn": "Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış; bu nedenle oturumunuz önceki gibi açık.",
       "failed": "Bir sorun oluştu. Lütfen yeniden deneyin.",
       "failedReference": "Bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin."
     }

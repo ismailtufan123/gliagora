@@ -27,7 +27,8 @@ const GMAIL_DOMAINS = new Set(['gmail.com', 'googlemail.com'])
  * The canonical form of an address for the limits of the forms that send an email (the M4b
  * design §8): lowercased, without a `+tag` in the local part, and for Gmail without dots and
  * written `gmail.com`. Variants that reach the same mailbox then share one budget. Only for
- * counting: an email always goes to the address as typed.
+ * counting: an email goes to the address in its stored form (normaliseEmail), never to this
+ * counting form.
  */
 export function limitAddress(email: string): string {
   const value = email.trim().normalize('NFC').toLowerCase()

@@ -636,7 +636,7 @@
       "emailTooLong": "Enter an email address of 254 characters or fewer.",
       "needsJs": "The spam check did not run: the page had not finished loading, or JavaScript is turned off or blocked in your browser. Wait until the page has loaded and send the form again.",
       "spamCheck": "The spam check has expired or did not work. Please send the form again.",
-      "rateLimited": "Too many sign-in links have been asked for in the last hour, from here or for this address. Please try again later.",
+      "rateLimited": "Too many sign-in links have been asked for recently, from here or for this address. Please try again later, or tomorrow.",
       "unavailable": "We could not send the email just now. Please try again in a few minutes.",
       "failed": "Something went wrong and no link was sent. Please try again later, or write to privacy@gliagora.com and mention reference {reference}."
     },
@@ -705,6 +705,7 @@
     },
     "error": {
       "link-expired": "This sign-in link has expired or has already been used. Ask for a new link below.",
+      "linkExpiredSignedIn": "This sign-in link has expired or has already been used, so you are still signed in as before.",
       "failed": "Something went wrong. Please try again.",
       "failedReference": "Something went wrong. Please try again, or write to privacy@gliagora.com and mention reference {reference}."
     }

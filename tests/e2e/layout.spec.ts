@@ -74,6 +74,26 @@ const lockupProblems = (page: Page) =>
   })
 
 /**
+ * The visible parts of the header that reach above or below it. Its box is 64px high whatever it
+ * holds (global.css fixes the height), so a label that wraps to more lines shows only here. The
+ * closed menus' panels do not count.
+ */
+const headerOverflow = (page: Page) =>
+  page.locator('.site-header').evaluate((header) => {
+    const box = header.getBoundingClientRect()
+    return [...header.querySelectorAll('.page-frame *')].flatMap((element) => {
+      const rect = element.getBoundingClientRect()
+      if (!rect.width || !rect.height) return []
+      if (element.closest('details:not([open]) > :not(summary)')) return []
+      return rect.top < box.top - 0.5 || rect.bottom > box.bottom + 0.5
+        ? [
+            `${element.tagName.toLowerCase()}.${String(element.className).split(' ')[0]} ${rect.top}–${rect.bottom}px`,
+          ]
+        : []
+    })
+  })
+
+/**
  * The browser's own text size (its default font size, as a person sets it), which rem media
  * queries follow, unlike TEXT_200. A Chromium protocol command; set before the page loads.
  */
@@ -221,6 +241,8 @@ test.describe('header at 1280px with the Account link', () => {
       await page.evaluate(() => document.fonts.ready)
       const header = await page.locator('.site-header').boundingBox()
       expect(header?.height).toBe(64)
+      // The box is fixed; what is in it must fit too.
+      expect(await headerOverflow(page)).toEqual([])
       await expect(page.locator('.site-header .account-link')).toBeVisible()
       expect(await sidewaysScroll(page)).toBeLessThanOrEqual(0)
       expect(await lockupProblems(page)).toEqual([])

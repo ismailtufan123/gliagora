@@ -70,12 +70,11 @@ describe('parseSignIn', () => {
     expect(parse(email)).toEqual({ ok: false, errors: { email: code } })
   })
 
-  it('keeps the address as typed for the email and its stored form for the link', () => {
+  it('uses the stored form of the address for both the email and the link', () => {
     expect(parse('  Someone.Else+news@Example.ORG ', '/en/jobs/?type=phd')).toEqual({
       ok: true,
       data: {
         email: 'someone.else+news@example.org',
-        address: 'Someone.Else+news@Example.ORG',
         next: '/en/jobs/?type=phd',
         locale: 'en',
       },

@@ -48,7 +48,7 @@ export default async function Page({ searchParams }: Props) {
         <div className="grid max-w-(--measure) gap-6">
           <h1 className="text-h1">{t('signedOutTitle')}</h1>
           <OutcomeMessage outcome={readOutcome(params, { error: ['failed'] })} />
-          <SignInPanel next={MEMBER_PATHS.account} />
+          <SignInPanel next={MEMBER_PATHS.account} path={MEMBER_PATHS.account} />
         </div>
       </main>
     )

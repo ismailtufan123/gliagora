@@ -36,10 +36,11 @@ export type SignInValues = {
 }
 
 export type SignInData = {
-  /** The address in its stored form (normaliseEmail): what the link proves. */
+  /**
+   * The address in its stored form (normaliseEmail): where the email goes, and so what the link
+   * proves and signs in to.
+   */
   email: string
-  /** The address as typed (trimmed): where the email goes. */
-  address: string
   next: string | null
   locale: Locale
 }
@@ -68,7 +69,6 @@ export function parseSignIn(values: SignInValues, locale: string): Parse<SignInD
     ok: true,
     data: {
       email,
-      address,
       next: values.next.trim() || null,
       // The form's own hidden field; anything else is read as English, the site's language.
       locale: (locales as readonly string[]).includes(locale) ? (locale as Locale) : 'en',

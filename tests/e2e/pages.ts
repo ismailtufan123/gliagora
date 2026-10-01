@@ -60,6 +60,11 @@ export const PAGES = [
   { path: '/en/account/', name: 'account (email member)', member: 'email' },
   { path: '/en/account/', name: 'account (ORCID member)', member: 'orcid' },
   { path: '/en/sign-in/', name: 'sign in (signed in)', member: 'email' },
+  {
+    path: '/en/sign-in/?error=link-expired',
+    name: 'sign in (signed in, expired link)',
+    member: 'email',
+  },
   { path: '/this-page-does-not-exist/', name: '404', status: 404 },
   { path: '/en/gone-example/', name: '410', status: 410 },
 ] as const
