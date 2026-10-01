@@ -31,6 +31,10 @@ export default defineConfig({
   // Signs in once as the test editor, for the tests that need it (tests/e2e/editor.ts).
   globalSetup: './tests/e2e/editor.ts',
   fullyParallel: true,
+  // GitHub's runners for this private repository have 2 processors, where Playwright's default is
+  // one worker; the tests mostly wait for the app and the browser, so two run side by side and the
+  // run costs fewer Actions minutes (D46). Locally, Playwright's default (half the processors).
+  workers: process.env.CI ? 2 : undefined,
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: process.env.CI ? [['list'], ['github']] : 'list',
