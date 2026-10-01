@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildConfig } from 'payload'
 
+import { HELP_PATH } from './admin/help-path'
 import { COLLECTIONS } from './collections'
 import { Users } from './collections/Users'
 import { GLOBALS } from './globals'
@@ -28,6 +29,16 @@ export default buildConfig({
     components: {
       // The review queue, jobs in review and the deadline tracker above the collections.
       beforeDashboard: ['/admin/ReviewDashboard#ReviewDashboard'],
+      // The Turkish editor guide, "Yardım" at the end of the side menu (src/admin/help.ts, D45).
+      afterNavLinks: ['/admin/HelpNavLink#HelpNavLink'],
+      views: {
+        help: {
+          Component: '/admin/HelpView#HelpView',
+          path: HELP_PATH,
+          exact: true,
+          meta: { title: 'Yardım' },
+        },
+      },
     },
   },
   // Each collection and global states who may do what through the API (src/lib/access.ts);

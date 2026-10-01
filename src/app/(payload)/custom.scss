@@ -42,3 +42,72 @@
     }
   }
 }
+
+// The editor guide at /admin/help/ (src/admin/HelpView.tsx): Markdown rendered as HTML, set in
+// readable lines with Payload's type and colours.
+.editor-guide {
+  max-width: 46rem;
+  padding-block: calc(var(--base) * 1.5) calc(var(--base) * 3);
+  line-height: 1.6;
+
+  h1 {
+    margin: 0 0 var(--base);
+  }
+
+  h2 {
+    margin: calc(var(--base) * 2) 0 calc(var(--base) * 0.5);
+  }
+
+  h3 {
+    margin: calc(var(--base) * 1.5) 0 calc(var(--base) * 0.5);
+  }
+
+  p,
+  ul,
+  ol {
+    margin: 0 0 calc(var(--base) * 0.75);
+  }
+
+  ul,
+  ol {
+    padding-left: calc(var(--base) * 1.25);
+  }
+
+  li + li,
+  li > ul,
+  li > ol {
+    margin-top: calc(var(--base) * 0.25);
+  }
+
+  code {
+    padding: 0 0.25em;
+    border-radius: var(--style-radius-s);
+    background: var(--theme-elevation-100);
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    margin: 0 0 var(--base);
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: calc(var(--base) * 0.25) calc(var(--base) * 0.5);
+    border: 1px solid var(--theme-elevation-150);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  a {
+    text-decoration: underline;
+
+    &:focus-visible {
+      outline: var(--accessibility-outline);
+      outline-offset: var(--accessibility-outline-offset);
+    }
+  }
+}
