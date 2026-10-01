@@ -38,6 +38,16 @@ export const PAGES = [
   { path: '/en/jobs/?view=map', name: 'jobs list (map)', map: true },
   { path: jobPath(FIXED_JOBS.open), name: 'job (open)' },
   { path: jobPath(FIXED_JOBS.expiredRecently), name: 'job (closed)' },
+  // Saved positions (M4b): the rows' Save buttons as a member, who has saved three of the fixed
+  // jobs (pnpm e2e:member): open, closed recently and withdrawn. The jobs list keeps its budget.
+  { path: '/en/jobs/', name: 'jobs list (member)', member: 'email', scriptKb: 137 },
+  { path: jobPath(FIXED_JOBS.open), name: 'job (open, member)', member: 'email' },
+  { path: '/en/account/saved/', name: 'saved positions', member: 'email' },
+  { path: '/en/account/saved/', name: 'saved positions (signed out)' },
+  {
+    path: `/en/sign-in/?next=%2Fen%2Fjobs%2F&save=job%3A${FIXED_JOBS.open.shortId}`,
+    name: 'sign in to save',
+  },
   // The world map (M5): MapLibre and its data load after the page; `map` gives it the map budget.
   { path: '/en/map/', name: 'map', map: true },
   { path: '/en/search/', name: 'search (empty)' },

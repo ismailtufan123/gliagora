@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { unstable_rethrow } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
+import { SaveRegion } from '@/components/account/SaveControl'
 import { JobList } from '@/components/jobs/JobList'
 import { JobFilterForm } from '@/components/jobs/list/JobFilterForm'
 import { JobsListEnhancer } from '@/components/jobs/list/JobsListEnhancer'
@@ -24,6 +25,7 @@ import { jobsListIndexed } from '@/lib/indexing'
 import { MAP_DATA_PATH, mapQuery } from '@/lib/map/data'
 import { jobChips } from '@/lib/jobs/chips'
 import { formatDay } from '@/lib/jobs/format'
+import { saveContext } from '@/lib/members/save-context'
 import { type JobsList, jobsList, requestTime } from '@/lib/records'
 import { FEED_PATH } from '@/lib/seo/feed'
 import { paths } from '@/lib/site'
@@ -35,6 +37,8 @@ import { paths } from '@/lib/site'
 // as their canonical page (PLAN §2.1, §16.1), and only it is in the sitemaps (the same rule,
 // src/lib/indexing.ts). Every variant links to the jobs feed. A top-level window page: no
 // breadcrumbs, like the other windows. The map view (`view=map`, M5) shows the list until then.
+// Each row has a Save control once a way of signing in is on (src/lib/members/save-context.ts),
+// which returns to this address.
 export const dynamic = 'force-dynamic'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
@@ -126,6 +130,13 @@ export default async function Page({ searchParams }: Props) {
   const clearHref = filtersHref(JOB_FILTERS, { ...emptyFilters(JOB_FILTERS), view: filters.view })
   const mapView = filters.view === 'map'
   const canonicalQuery = serializeFilters(JOB_FILTERS, filters)
+  const save =
+    list.jobs.length > 0
+      ? await saveContext(
+          filtersHref(JOB_FILTERS, filters),
+          list.jobs.map((job) => job.id),
+        )
+      : null
 
   const results = (
     <section
@@ -190,7 +201,7 @@ export default async function Page({ searchParams }: Props) {
         )}
 
         {list.jobs.length > 0 && (
-          <JobList jobs={list.jobs} now={requestTime()} locale="en" headingLevel={3} />
+          <JobList jobs={list.jobs} now={requestTime()} locale="en" headingLevel={3} save={save} />
         )}
 
         {list.matches === 0 && (
@@ -250,6 +261,7 @@ export default async function Page({ searchParams }: Props) {
 
   return (
     <main id="main" className="page-frame grid flex-1 content-start gap-6 py-12">
+      <SaveRegion context={save} />
       <div className="jobs-head flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
         <h1 className="jobs-title text-h1">{t('list.title')}</h1>
         <p className="text-card">{t('list.open', { count: list.open })}</p>

@@ -20,6 +20,8 @@ import { MEMBER_PATHS, providerCallbackPath } from './paths'
 import { linkProvider, rotateSession, signInWithProvider } from './provider-sign-in'
 import { seeOther, toProvider } from './responses'
 import { DEFAULT_NEXT, parseSave, safeNext, saveValue } from './return-path'
+import { saveAfterSignIn } from './saved'
+import { saveStore } from './saved-store'
 import { sealSignIn } from './seal'
 import { findSession, memberDb } from './store'
 
@@ -60,13 +62,23 @@ async function hasSession(token: string | undefined, now: Date): Promise<boolean
   }
 }
 
-/** The sign-in page with an outcome, keeping where the person was going. */
-const signInOutcome = (outcome: { error: ErrorCode; reference?: string }, next?: string) =>
-  outcomePath(MEMBER_PATHS.signIn, outcome, { next: next === DEFAULT_NEXT ? null : next })
+/**
+ * The sign-in page with an outcome, keeping where the person was going and the position they
+ * pressed Save on, so that another try (or another way of signing in) still saves it.
+ */
+const signInOutcome = (
+  outcome: { error: ErrorCode; reference?: string },
+  next?: string,
+  save?: string,
+) =>
+  outcomePath(MEMBER_PATHS.signIn, outcome, {
+    next: next === DEFAULT_NEXT ? null : next,
+    save: parseSave(save) ? save : null,
+  })
 
 /**
  * GET `/en/sign-in/{provider}/`: seals this flow into the sign-in cookie and sends the browser to
- * the provider. `next` (where to go afterwards) and `save` (a job to save, from PR 4 on) travel in
+ * the provider. `next` (where to go afterwards) and `save` (a position to save then) travel in
  * the cookie. `link=1` adds the provider to the signed-in account instead: only from the site's own
  * pages (Sec-Fetch-Site), so another site cannot start it in a signed-in browser (a browser that
  * does not send the header, or an address opened from elsewhere, is told so on the account page),
@@ -121,7 +133,7 @@ export async function startProviderSignIn(provider: Provider, request: Request) 
     return seeOther(
       link
         ? outcomePath(MEMBER_PATHS.account, { error: 'failed', reference })
-        : signInOutcome({ error: 'failed', reference }, next),
+        : signInOutcome({ error: 'failed', reference }, next, save ? saveValue(save) : undefined),
     )
   }
 }
@@ -177,7 +189,7 @@ export async function finishProviderSignIn(provider: Provider, request: Request)
     return seeOther(
       linking
         ? outcomePath(MEMBER_PATHS.account, outcome)
-        : signInOutcome(outcome, result.flow.next),
+        : signInOutcome(outcome, result.flow.next, result.flow.save),
       [cleared],
     )
   }
@@ -185,7 +197,8 @@ export async function finishProviderSignIn(provider: Provider, request: Request)
   const { flow, identity } = result
   const current = jar.get(SESSION_COOKIE)?.value
   try {
-    const db = memberDb(await getPayload({ config }))
+    const payload = await getPayload({ config })
+    const db = memberDb(payload)
     if (flow.intent === 'link') {
       const session = await findSession(db, current, now)
       if (!session || session.member.id !== flow.memberId) {
@@ -210,7 +223,7 @@ export async function finishProviderSignIn(provider: Provider, request: Request)
     const signedIn = await signInWithProvider(db, incomingOf(identity), now)
     switch (signedIn.kind) {
       case 'refused':
-        return seeOther(signInOutcome({ error: signedIn.reason }, flow.next), [cleared])
+        return seeOther(signInOutcome({ error: signedIn.reason }, flow.next, flow.save), [cleared])
       case 'confirm': {
         // The identity waits, sealed, for "Create account" (15 minutes).
         const pending = sealSignIn(
@@ -240,13 +253,21 @@ export async function finishProviderSignIn(provider: Provider, request: Request)
           replaces: current,
           endOthers: changed,
         })
+        // The position pressed Save on before signing in, if it is still public.
+        const saved = await saveAfterSignIn(
+          saveStore(payload, now),
+          signedIn.memberId,
+          flow.save,
+          flow.next,
+        )
         const target =
-          flow.next === DEFAULT_NEXT
+          saved ??
+          (flow.next === DEFAULT_NEXT
             ? outcomePath(MEMBER_PATHS.account, {
                 done: changed ? 'signed-in-linked-google' : 'signed-in',
                 othersEnded: othersEnded > 0,
               })
-            : flow.next
+            : flow.next)
         return seeOther(target, [cookie, cleared])
       }
     }
@@ -255,7 +276,7 @@ export async function finishProviderSignIn(provider: Provider, request: Request)
     return seeOther(
       flow.intent === 'link'
         ? outcomePath(MEMBER_PATHS.account, { error: 'failed', reference })
-        : signInOutcome({ error: 'failed', reference }, flow.next),
+        : signInOutcome({ error: 'failed', reference }, flow.next, flow.save),
       [cleared],
     )
   }

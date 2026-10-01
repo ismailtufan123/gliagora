@@ -13,8 +13,8 @@ import { type FormAction, usePublicForm } from '@/components/forms/usePublicForm
 import { FORM_INPUTS } from '@/lib/forms/fields'
 import type { SignInState, SignInValues } from '@/lib/forms/sign-in'
 
-// Asking for a sign-in link (M4b, D49): the email address, with where to go afterwards in a hidden
-// input. Built like the other public forms: the server checks everything and returns the
+// Asking for a sign-in link (M4b, D49): the email address, with where to go afterwards and the
+// position to save then (from a Save link) in hidden inputs. Built like the other public forms: the server checks everything and returns the
 // messages, so the form works the same without JavaScript apart from the spam check, which
 // usePublicForm adds with the busy state and focus. All text comes from messages, through `text`.
 
@@ -67,6 +67,7 @@ export function SignInForm({ action, initial, permalink, text }: Props) {
 
       <input type="hidden" name={FORM_INPUTS.locale} value="en" />
       {values.next && <input type="hidden" name={FORM_INPUTS.next} value={values.next} />}
+      {values.save && <input type="hidden" name={FORM_INPUTS.save} value={values.save} />}
 
       <div className="field">
         <label htmlFor={EMAIL} className="field-label">

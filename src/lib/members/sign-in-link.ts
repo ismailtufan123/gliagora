@@ -22,6 +22,8 @@ export type LinkSignIn = {
   created: boolean
   /** Where the person asked to go afterwards, as the link stored it (safeNext checks it again). */
   next: string | null
+  /** The position a Save link asked to save once signed in (`job:{shortId}`), or null. */
+  save: string | null
 }
 
 /**
@@ -61,5 +63,5 @@ export async function redeemSignInLink(
     throw new MemberStoreError('invalid', 'resolution')
   }
   await deleteSignInTokens(db, link.email)
-  return { memberId, created, next: link.next }
+  return { memberId, created, next: link.next, save: link.save }
 }

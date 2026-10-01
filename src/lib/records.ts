@@ -222,6 +222,33 @@ export const jobForReport = cache(async (shortId: string) => {
 })
 
 /**
+ * What saving a job needs (Save, and saving after sign-in): its ID, title and address, and the
+ * dates that say whether it is public (listingState). Any status; the caller decides.
+ */
+export async function jobForSaving(shortId: string) {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'jobs',
+    where: { shortId: { equals: shortId } },
+    select: {
+      title: true,
+      slug: true,
+      shortId: true,
+      originalLanguage: true,
+      status: true,
+      deadlineKind: true,
+      deadlineAt: true,
+      expiredAt: true,
+      withdrawnAt: true,
+    },
+    limit: 1,
+    pagination: false,
+    depth: 0,
+  })
+  return docs[0] ?? null
+}
+
+/**
  * What "Report a problem" needs of the institution named in its address: its name and address.
  * Found as the institution page finds it (institutionByUrlId), by its ROR ID or short ID.
  */
@@ -721,13 +748,16 @@ export async function mapInstitutions(filters: JobFilters, locale: Locale): Prom
   return { institutions, unmapped }
 }
 
-/** Job rows for these IDs, in the same order (the search's ranking). */
-async function jobCardsByIds(ids: number[], locale: Locale): Promise<JobCard[]> {
+/**
+ * Job rows for these IDs, in the same order (the search's ranking, the saved page's order). Any
+ * status: the caller decides what to show.
+ */
+export async function jobCardsByIds(ids: readonly number[], locale: Locale): Promise<JobCard[]> {
   if (ids.length === 0) return []
   const payload = await getPayload({ config })
   const { docs } = await payload.find({
     collection: 'jobs',
-    where: { id: { in: ids } },
+    where: { id: { in: [...ids] } },
     select: JOB_CARD_SELECT,
     populate: JOB_POPULATE,
     locale,

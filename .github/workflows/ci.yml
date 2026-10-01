@@ -180,6 +180,9 @@ jobs:
           # Member sign-in stays off without its settings, and the account page still answers.
           contains http://localhost:3000/en/sign-in/ 'Signing in is not available yet.'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/en/account/)" = 200
+          # Nor are there Save buttons on the jobs list.
+          jobs="$(curl -fsS http://localhost:3000/en/jobs/)"
+          if grep -qF 'save-button' <<<"$jobs"; then echo 'Save buttons without sign-in'; exit 1; fi
           logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email off, google off, orcid off' <<<"$logs"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/)" = 308
           test "$(docker exec app id -u)" != 0

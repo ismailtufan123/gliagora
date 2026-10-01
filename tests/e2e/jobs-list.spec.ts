@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { type Page, expect, test } from '@playwright/test'
 
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
+import { needsMailpit, signInAs } from './member'
 
 // The jobs list (PLAN §2.4, §3.2, §7.5, §9.3, §9.4). Needs the fake jobs (pnpm fake:jobs): 45 open
 // positions, so the list has two pages of 25.
@@ -696,6 +697,36 @@ test.describe('keyboard', () => {
     expect(reached).toBe(true)
     await expect(page.locator(':focus')).toHaveAccessibleName('Remove filter: MSc')
   })
+
+  // Once a way of signing in is on, each row ends with Save (M4b): a link to sign in for visitors
+  // who are signed out, a toggle for members (pressing it: saved.spec.ts). After it, the next row.
+  for (const member of [false, true]) {
+    test(`each row: its title, the original posting, then Save (${member ? 'member' : 'signed out'})`, async ({
+      page,
+      baseURL,
+    }) => {
+      needsMailpit()
+      if (member) await signInAs(page.context(), 'email', baseURL!)
+      const job = FIXED_JOBS.open
+      await page.goto(`/en/jobs/?institution=${job.institutionRorId}`)
+      const row = page.locator(`#job-${job.shortId}`)
+      await row.getByRole('link', { name: job.title, exact: true }).focus()
+      await page.keyboard.press('Tab')
+      await expect(row.getByRole('link', { name: /^View original posting/ })).toBeFocused()
+      await page.keyboard.press('Tab')
+      await expect(row.getByRole(member ? 'button' : 'link', { name: /^Save/ })).toBeFocused()
+      await page.keyboard.press('Tab')
+      const next = await page.evaluate(() => {
+        const focused = document.activeElement
+        return {
+          title: !!focused?.closest('.job-list > li h3'),
+          row: focused?.closest('.job-list > li')?.id,
+        }
+      })
+      expect(next.title).toBe(true)
+      expect(next.row).not.toBe(`job-${job.shortId}`)
+    })
+  }
 
   test('only one filter is open at a time, and a click outside closes it', async ({ page }) => {
     await page.goto('/en/jobs/')
