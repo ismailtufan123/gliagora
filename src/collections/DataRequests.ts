@@ -105,16 +105,17 @@ const sidebarDate = (name: string, label: string, description: string): Field =>
   })
 
 // PLAN §3.2, §5.1 (DataRequest), §15.1, §18.1; M4b, D8, D49: requests about a person's own data.
-// From the form on /en/legal/data-requests/ (recorded at once, acted on only after the person
-// confirms it with the link in our email), from "Delete my account" in a member's settings (done at
-// once, recorded closed), and from emails to privacy@, which editors record here. A confirmed
-// deletion is done by the site itself; editors answer the other kinds within 30 days and close
-// them with what they did.
+// Now: emails to privacy@, which editors record here and answer within 30 days, closing them with
+// what they did. Later in M4b (the M4b design §7.6, §7.8): the form on /en/legal/data-requests/
+// (recorded at once, acted on only after the person confirms it with the link in our email; a
+// confirmed deletion is done by the site itself) and "Delete my account" in a member's settings
+// (done at once, recorded closed).
 //
-// No versions: a request holds personal data, and the 2-year deletion (the retention task) removes
-// the whole record. Editors never delete one (a request recorded by mistake is closed as "Not
-// applicable"): the record is the proof that the request was handled, and deploy/backup/
-// restore.sh carries the table over a restore.
+// No versions: a request holds personal data, and the 2-year deletion removes the whole record
+// (the retention task, once it covers data requests). Editors never delete one (a request recorded
+// by mistake is closed as "Not applicable"): the record is the proof that the request was handled,
+// and the restore step (deploy/backup/restore.sh, the M4b design §7.9) is to carry the table over a
+// restore.
 export const DataRequests: CollectionConfig = {
   slug: 'data-requests',
   labels: { singular: 'Data request', plural: 'Data requests' },
@@ -124,7 +125,7 @@ export const DataRequests: CollectionConfig = {
     // data (keepOutOfLists, as for reports).
     enableListViewSelectAPI: true,
     defaultColumns: ['kind', 'status', 'respondBy', 'source', 'receivedAt'],
-    description: `Requests about a person's own data, newest first. Requests from the form count only once the person confirms them with the link in our email ("Not confirmed yet" until then; such a record keeps only its kind, its date and a scrambled code of the address, and is deleted after ${UNCONFIRMED_REQUEST_DAYS} days). A confirmed deletion is done by the site itself and closed. Answer the other requests within ${DATA_REQUEST_ANSWER_DAYS} days of receipt, then close them with what you did. To record a request that arrived by email, create one here with the date it arrived. Requests are deleted ${DATA_REQUEST_RETENTION_YEARS} years after they are closed, by the nightly retention task; they are never deleted by hand (close a mistaken one as Not applicable).`,
+    description: `Requests about a person's own data, newest first. To record a request that arrived by email, create one here with the date it arrived. Answer each request within ${DATA_REQUEST_ANSWER_DAYS} days of receipt, then close it with what you did. Requests are kept for ${DATA_REQUEST_RETENTION_YEARS} years after they are closed and are never deleted by hand (close a mistaken one as Not applicable).`,
     pagination: { defaultLimit: 50 },
   },
   defaultSort: '-receivedAt',
@@ -296,7 +297,7 @@ export const DataRequests: CollectionConfig = {
     sidebarDate(
       'purgeAt',
       'Deleted on',
-      `A closed request is deleted ${DATA_REQUEST_RETENTION_YEARS} years after it was closed; one never confirmed, ${UNCONFIRMED_REQUEST_DAYS} days after it arrived. By the nightly retention task.`,
+      `When the request is due to be deleted: ${DATA_REQUEST_RETENTION_YEARS} years after it was closed; for one never confirmed, ${UNCONFIRMED_REQUEST_DAYS} days after it arrived.`,
     ),
     sidebarDate(
       'confirmationSentAt',
@@ -305,7 +306,7 @@ export const DataRequests: CollectionConfig = {
     ),
     bySite({
       // HMAC of the address the form was sent from, so a request can be found from an address
-      // the person gives (deploy/README.md has the command) while it keeps no address itself.
+      // the person gives (src/lib/data-requests/address.ts) while it keeps no address itself.
       name: 'emailHash',
       label: 'Address code',
       type: 'text',

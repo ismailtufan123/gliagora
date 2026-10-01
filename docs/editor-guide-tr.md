@@ -83,6 +83,14 @@ Girişten sonra açılan panonun en üstünde **"Waiting for an editor"** kutusu
 - **Kişilik hakları talepleri** (5651 sayılı Kanun m.9) **24 saat içinde** yanıtlanır; panodaki sayaç bunları gösterir.
 - Bildirimler kapandıktan 2 yıl sonra silinir.
 
+**Veri talepleri ("Data requests")**: kişilerin kendi kişisel verileriyle ilgili talepleri (KVKK m.11). Sol menüde "Review queue" altındadır.
+
+- privacy@ adresine e-postayla gelen bir talebi burada "Create New" ile kaydedin. "What the person asks for" alanında ne istendiğini seçin. Talebin geldiği adresi ("Email", zorunlu) ve e-postanın posta kutusuna ulaştığı zamanı ("Received") girin. Kaynak ("Source") kendiliğinden "Email (recorded by an editor)" olur. Bu bilgiler kaydedildikten sonra değiştirilemez.
+- Durumlar: "New" (henüz yanıtlanmadı), "In progress" (kişiye yanıt verdiniz ya da işe başladınız), "Closed". Talep geri "New" yapılamaz. "Not confirmed yet" yalnızca sitedeki formdan gelen ve kişinin henüz onaylamadığı taleplerdir; bunlara dokunmayın. Site formu henüz kurulmadı (M4b).
+- Talepler, geliş tarihinden itibaren **30 gün içinde** yanıtlanır ("Answer by", sağ sütun).
+- Kapatmak için "What was done" seçilmelidir: "Answered" (istenen yapıldı), "Refused" (kişiye gerekçesi bildirildi) ya da "Not applicable" (spam, yanlışlık ya da bizdeki verilerle ilgisi yok). "Note on what was done" yalnızca editörler içindir.
+- Talepler elle hiç silinmez. Yanlışlıkla açılan bir kaydı "Not applicable" ile kapatın. Kapanan talepler 2 yıl sonra silinir.
+
 ## 4. Kontrol listesi: her madde ne anlama gelir?
 
 Yayımlamak için beş kutunun hepsi işaretli olmalı. Her kutuyu **orijinal sayfaya bakarak** işaretleyin; ezbere işaretlemeyin.

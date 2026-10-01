@@ -1576,7 +1576,7 @@ export interface Report {
   updatedAt: string;
 }
 /**
- * Requests about a person's own data, newest first. Requests from the form count only once the person confirms them with the link in our email ("Not confirmed yet" until then; such a record keeps only its kind, its date and a scrambled code of the address, and is deleted after 60 days). A confirmed deletion is done by the site itself and closed. Answer the other requests within 30 days of receipt, then close them with what you did. To record a request that arrived by email, create one here with the date it arrived. Requests are deleted 2 years after they are closed, by the nightly retention task; they are never deleted by hand (close a mistaken one as Not applicable).
+ * Requests about a person's own data, newest first. To record a request that arrived by email, create one here with the date it arrived. Answer each request within 30 days of receipt, then close it with what you did. Requests are kept for 2 years after they are closed and are never deleted by hand (close a mistaken one as Not applicable).
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "data-requests".
@@ -1635,7 +1635,7 @@ export interface DataRequest {
    */
   closedAt?: string | null;
   /**
-   * A closed request is deleted 2 years after it was closed; one never confirmed, 60 days after it arrived. By the nightly retention task.
+   * When the request is due to be deleted: 2 years after it was closed; for one never confirmed, 60 days after it arrived.
    */
   purgeAt?: string | null;
   /**

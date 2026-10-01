@@ -12,12 +12,12 @@ import { isLoopbackHostname } from './origin'
 //   ever reaches the production database);
 // - email links: a mail server (SMTP_HOST) and the spam check (ALTCHA_HMAC_KEY), as the other
 //   forms that send email.
-// AUTH_TEST_ISSUER points both providers at the fake ones of the tests (tests/fake-oidc/, CI and
-// local runs). It is honoured only on this computer's addresses and never where
-// PAYLOAD_JOBS_AUTORUN is "true" (the production server, which never names it either: a unit test
-// reads deploy/compose.prod.yml and deploy/.env.example). Unusable settings switch a method off
-// with a problem that names the variable, never its value; the app never stops for them (a crash
-// would trigger the automatic rollback of a deploy).
+// AUTH_TEST_ISSUER points both providers at the fake ones of the tests (CI and local runs; they
+// come with Google and ORCID sign-in, in tests/fake-oidc/). It is honoured only on this
+// computer's addresses and never where PAYLOAD_JOBS_AUTORUN is "true" (the production server,
+// which never names it either: a unit test reads deploy/compose.prod.yml and deploy/.env.example).
+// Unusable settings switch a method off with a problem that names the variable, never its value;
+// the app never stops for them (a crash would trigger the automatic rollback of a deploy).
 
 type Env = Record<string, string | undefined>
 
@@ -27,7 +27,7 @@ export const GOOGLE_ISSUER = 'https://accounts.google.com'
 export const ORCID_ISSUER = 'https://orcid.org'
 export const ORCID_SANDBOX_ISSUER = 'https://sandbox.orcid.org'
 
-/** The client the fake providers know (tests/fake-oidc/): test-only values, not secrets. */
+/** The client the tests' fake providers know: test-only values, not secrets. */
 export const TEST_CLIENT = { id: 'gliagora-test', secret: 'test-secret' } as const
 
 export type OffReason =

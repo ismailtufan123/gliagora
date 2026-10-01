@@ -654,17 +654,21 @@ export type MemberDeletion =
    * activity since; `without-email`, 24 months and 30 days after the last activity.
    */
   | { reason: 'inactivity'; condition: 'warned' | 'without-email' }
-  /** Repeating a logged deletion after a restore: not logged a second time. */
-  | { reason: 'reapply' }
+  /**
+   * Repeating a logged deletion after a restore, at `loggedAt` (the log row's `at`): not logged a
+   * second time. A restore also sets the ID sequences back, so a member who joined after it can
+   * have a logged ID; only a member created no later than the logged deletion is deleted.
+   */
+  | { reason: 'reapply'; loggedAt: Date }
 
 /**
  * Deletes a member and everything that is theirs, in one transaction: saved items, sessions, the
  * sign-in and address links by member and by address (a pending data-request link stays: a copy of
  * one's data asked for minutes earlier survives the account), the member (whose preferred subfields
  * go with it, `members_rels`), and a row in the deletion log, so the deletion is repeated if a
- * backup is ever restored. Returns false, changing nothing, when there is no such member or the
- * inactivity condition no longer holds. A database test checks that every table referring to
- * members is covered here.
+ * backup is ever restored. Returns false, changing nothing, when there is no such member, the
+ * inactivity condition no longer holds, or (repeating a logged deletion) the member is newer than
+ * the deletion. A database test checks that every table referring to members is covered here.
  */
 export function deleteMember(
   db: MemberDb,
@@ -686,6 +690,9 @@ export function deleteMember(
                   addMonthsUtc(now, -INACTIVITY_MONTHS).getTime() - INACTIVITY_GRACE_DAYS * DAY_MS,
                 ),
               )}`
+      } else if (deletion.reason === 'reapply') {
+        const loggedAt = checked(z.date(), deletion.loggedAt, 'loggedAt')
+        condition = sql` AND created_at <= ${iso(loggedAt)}`
       }
       const { rows } = await tx.execute<{ id: number; email: string | null }>(sql`
         SELECT id, email FROM members WHERE id = ${member}${condition} FOR UPDATE`)

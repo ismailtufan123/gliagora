@@ -6,6 +6,7 @@ import { drizzle } from '@payloadcms/db-postgres/drizzle/node-postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { migrations } from '@/migrations'
+import * as members from '@/migrations/20261001_142245_members'
 import * as constraints from '@/migrations/20261001_142246_member_constraints'
 
 import { orcidCheckCharacter } from './orcid-id'
@@ -485,7 +486,8 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       expect((await findMember(store, { email: address }))?.id).toBe(created.id)
       expect((await findMember(store, { googleId: '110169484474386276334' }))?.id).toBe(created.id)
       expect((await findMember(store, { id: created.id }))?.email).toBe(address)
-      expect(await findMember(store, { orcidId: '0000-0002-1825-0097' })).toBeNull()
+      // A valid iD that orcid() never makes.
+      expect(await findMember(store, { orcidId: '9999-0001-0000-0008' })).toBeNull()
     })
 
     it('meet a concurrent create with the same address at the unique index, without its value', async () => {
@@ -513,9 +515,9 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
         {},
         { email: 'Someone@Example.org', emailVerifiedBy: 'link' as const },
         { email: email() },
-        { orcidId: '0000-0002-1825-0098' },
+        { orcidId: '9999-0000-0000-0018' },
         { googleId: 'has space' },
-        { orcidId: '0000-0002-1825-0097', displayName: 'x'.repeat(81) },
+        { orcidId: '9999-0000-0000-0019', displayName: 'x'.repeat(81) },
       ]) {
         await expect(createMember(store, account, NOW), JSON.stringify(account)).rejects.toThrow(
           MemberStoreError,
@@ -709,13 +711,48 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
     })
 
     it('repeats a logged deletion after a restore without logging it again', async () => {
+      // Created at NOW, the deletion logged a day later; the restore brought the member back.
       const member = await newMember()
-      expect(await deleteMember(store, member.id, { reason: 'reapply' }, NOW)).toBe(true)
+      const reapply = { reason: 'reapply', loggedAt: at(1) } as const
+      expect(await deleteMember(store, member.id, reapply, at(2))).toBe(true)
+      expect(await findMember(store, { id: member.id })).toBeNull()
       expect(
         await count(sql`
           select count(*)::int as n from deletion_log
           where target_collection = 'members' and target_id = ${member.id}`),
       ).toBe(0)
+    })
+
+    it('never repeats a logged deletion on a newer member who got the same ID after a restore', async () => {
+      const member = await newMember()
+      expect(await deleteMember(store, member.id, { reason: 'request' }, at(1))).toBe(true)
+      const [logged] = await rows<{ at: string | Date }>(sql`
+        select at from deletion_log
+        where target_collection = 'members' and target_id = ${member.id}`)
+      // A restore set the sequence back, and someone else joined the next day with the same ID.
+      const joined = at(2).toISOString()
+      await db.execute(sql`
+        insert into members (id, email, email_verified_at, email_verified_by, digest_opt_in,
+          last_seen_at, created_at, updated_at)
+        values (${member.id}, ${email()}, ${joined}, 'link', false, ${joined}, ${joined}, ${joined})`)
+      const session = await createSession(store, member.id, at(2))
+      await saveJob(store, member.id, jobs[0]!, at(2))
+
+      const reapply = { reason: 'reapply', loggedAt: new Date(logged!.at) } as const
+      expect(await deleteMember(store, member.id, reapply, at(3))).toBe(false)
+      expect(await findMember(store, { id: member.id })).not.toBeNull()
+      expect(await findSession(store, session.token, at(3))).not.toBeNull()
+      expect(await countSavedItems(store, member.id)).toBe(1)
+      // A logged time that is not a date is refused, never read as "no condition".
+      await expect(
+        deleteMember(
+          store,
+          member.id,
+          { reason: 'reapply', loggedAt: new Date(Number.NaN) },
+          at(3),
+        ),
+      ).rejects.toThrow(MemberStoreError)
+      expect(await findMember(store, { id: member.id })).not.toBeNull()
     })
 
     it('for inactivity, keeps a member who came back between selection and deletion', async () => {
@@ -760,6 +797,32 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       await db.execute(sql`
         update members set last_seen_at = ${at(-2000).toISOString()} where id = ${withEmail.id}`)
       expect(await deleteMember(store, withEmail.id, condition, NOW)).toBe(false)
+    })
+  })
+
+  // Last: it drops the member tables and makes them again, empty.
+  describe('the migrations', () => {
+    it('can be undone and redone, the constraints first', async () => {
+      const tables = () =>
+        rows<{ table_name: string }>(sql`
+          select table_name from information_schema.tables
+          where table_schema = 'public' and table_name in ('members', 'members_rels',
+            'member_sessions', 'email_tokens', 'saved_items', 'deletion_log', 'data_requests')
+          order by table_name`)
+      const lockColumn = () =>
+        count(sql`
+          select count(*)::int as n from information_schema.columns
+          where table_name = 'payload_locked_documents_rels' and column_name = 'data_requests_id'`)
+      expect(await tables()).toHaveLength(7)
+      await constraints.down({ db } as never)
+      await members.down({ db } as never)
+      expect(await tables()).toEqual([])
+      expect(await lockColumn()).toBe(0)
+      await members.up({ db } as never)
+      await constraints.up({ db } as never)
+      expect(await tables()).toHaveLength(7)
+      expect(await lockColumn()).toBe(1)
+      expect(await newMember()).toMatchObject({ id: expect.any(Number) })
     })
   })
 })

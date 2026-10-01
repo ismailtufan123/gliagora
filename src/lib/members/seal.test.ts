@@ -43,7 +43,7 @@ describe('the sealed sign-in cookie', () => {
       {
         kind: 'confirm',
         p: 'orcid',
-        sub: '0000-0002-1825-0097',
+        sub: '9999-0000-0000-0019',
         name: 'Josiah Carberry',
         next: '/en/account/',
       },
@@ -51,7 +51,7 @@ describe('the sealed sign-in cookie', () => {
       NOW,
     )
     const text = Buffer.from(sealed.slice(3), 'base64url').toString('latin1')
-    for (const secret of ['Carberry', '0000-0002', '/en/account/', 'confirm']) {
+    for (const secret of ['Carberry', '9999-0000', '/en/account/', 'confirm']) {
       expect(text).not.toContain(secret)
     }
     expect(openSignIn(sealed, 'another-secret', NOW, 'confirm')).toBeNull()

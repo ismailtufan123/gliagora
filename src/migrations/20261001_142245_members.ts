@@ -157,8 +157,13 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
 }
 
 export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+  // The generated statements dropped the table with CASCADE first, which also drops the foreign
+  // key from payload_locked_documents_rels, so the next statement failed. The column goes first.
   await db.execute(sql`
-   ALTER TABLE "data_requests" DISABLE ROW LEVEL SECURITY;
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_data_requests_fk";
+  DROP INDEX "payload_locked_documents_rels_data_requests_id_idx";
+  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "data_requests_id";
+  ALTER TABLE "data_requests" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "members" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "members_rels" DISABLE ROW LEVEL SECURITY;
   ALTER TABLE "member_sessions" DISABLE ROW LEVEL SECURITY;
@@ -172,10 +177,6 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "email_tokens" CASCADE;
   DROP TABLE "saved_items" CASCADE;
   DROP TABLE "deletion_log" CASCADE;
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_data_requests_fk";
-  
-  DROP INDEX "payload_locked_documents_rels_data_requests_id_idx";
-  ALTER TABLE "payload_locked_documents_rels" DROP COLUMN "data_requests_id";
   DROP TYPE "public"."enum_data_requests_kind";
   DROP TYPE "public"."enum_data_requests_locale";
   DROP TYPE "public"."enum_data_requests_status";

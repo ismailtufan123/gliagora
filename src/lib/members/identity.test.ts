@@ -15,8 +15,9 @@ import {
 // The decision table of the M4b design §7.3, row by row, and the rule behind it: two existing
 // accounts are never merged.
 
-const ORCID_A = '0000-0002-1825-0097'
-const ORCID_B = '0000-0001-5109-3700'
+// Fake iDs: checksum-valid, starting with 9999, outside ORCID's issued ranges.
+const ORCID_A = '9999-0000-0000-0019'
+const ORCID_B = '9999-0000-0000-0027'
 
 const member = (id: number, fields: Partial<MemberIdentity> = {}): MemberIdentity => ({
   id,
@@ -393,6 +394,6 @@ describe('provider claims', () => {
     expect(isGoogleSubject('')).toBe(false)
     expect(isGoogleSubject(12345)).toBe(false)
     expect(isOrcidSubject(ORCID_A)).toBe(true)
-    expect(isOrcidSubject('0000-0002-1825-0098')).toBe(false)
+    expect(isOrcidSubject('9999-0000-0000-0018')).toBe(false)
   })
 })
