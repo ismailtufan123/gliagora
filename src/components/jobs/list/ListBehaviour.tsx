@@ -96,6 +96,10 @@ export default function ListBehaviour({ query, takeOver }: { query: string; take
       arrowKey = false
     }
 
+    // Changes the reader made before this script arrived (below): the form already shows them, so
+    // they apply together, once, rather than one by one from a form that has moved on.
+    let keptChanges: { apply: boolean; later: Event[] } | null = null
+
     // On the document: the sort order belongs to the form (form="…") but sits outside it.
     // `arrow`: whether an arrow key made the change (one that came before this script did).
     const onChange = (event: Event, arrow = arrowKey) => {
@@ -103,13 +107,19 @@ export default function ListBehaviour({ query, takeOver }: { query: string; take
       if (field.form !== form) return
       const day = field.name === DEADLINE_FROM || field.name === DEADLINE_TO
       const { option } = rangeOf(form)
-      if (day && option) option.checked = true
+      // A day checks "Between these dates", unless a deadline option was chosen after it.
+      const overridden = keptChanges?.later.some(
+        (next) => (next.target as HTMLInputElement).name === 'deadline',
+      )
+      if (day && option && !overridden) option.checked = true
       // The range's error goes once the days are right or another option is chosen.
       if ((day || field.name === 'deadline') && !rangeOf(form).invalid) showRangeError(form, false)
       // The range applies with Apply, once both days are there.
       if (day || field.value === DEADLINE_RANGE) return
       if (field.type === 'radio' && arrow) return
-      if (field.name && field.type !== 'search') go(formHref())
+      if (!field.name || field.type === 'search') return
+      if (keptChanges) keptChanges.apply = true
+      else go(formHref())
     }
 
     const onSubmit = (event: SubmitEvent) => {
@@ -161,12 +171,30 @@ export default function ListBehaviour({ query, takeOver }: { query: string; take
     form.addEventListener('input', onInput)
     document.addEventListener('click', onClick)
     // From here on the listeners above answer; then what came before them is done, in order.
-    for (const { event, arrowKey: arrow } of takeOver()) {
-      if (event.type === 'change') onChange(event, arrow)
-      else if (event.type === 'submit') onSubmit(event as SubmitEvent)
-      else if (event.type === 'input') onInput(event)
+    const kept = takeOver()
+    for (const [index, { event, arrowKey: arrow }] of kept.entries()) {
+      if (event.type === 'change') {
+        keptChanges ??= { apply: false, later: [] }
+        keptChanges.later = kept
+          .slice(index + 1)
+          .flatMap((next) => (next.event.type === 'change' ? [next.event] : []))
+        onChange(event, arrow)
+        continue
+      }
+      if (event.type === 'input') {
+        onInput(event)
+        continue
+      }
+      // A submitted form or a clicked link goes where it leads, after the changes before it.
+      const changes = keptChanges as { apply: boolean } | null
+      keptChanges = null
+      if (changes?.apply) go(formHref())
+      if (event.type === 'submit') onSubmit(event as SubmitEvent)
       else if (event.type === 'click') onClick(event as MouseEvent)
     }
+    const changes = keptChanges as { apply: boolean } | null
+    if (changes?.apply) go(formHref())
+    keptChanges = null
     return () => {
       document.removeEventListener('change', onChange)
       form.removeEventListener('keydown', onKeyDown)

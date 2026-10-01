@@ -25,10 +25,15 @@ export const PAGES = [
   { path: '/en/subfields/glia/', name: 'subfield hub' },
   // From the ROR test data that CI loads (pnpm ror:import tests/fixtures/ror/…-sample.zip).
   { path: '/en/institutions/california-institute-of-technology-05dxps055/', name: 'institution' },
-  // From the fake jobs (pnpm fake:jobs, src/scripts/fake-jobs-fixed.ts).
-  { path: '/en/jobs/', name: 'jobs list' },
-  { path: '/en/jobs/?subfield=glia&type=phd,postdoc&deadline=90d', name: 'jobs list (filtered)' },
-  { path: '/en/jobs/?type=phd&q=no+such+position', name: 'jobs list (empty)' },
+  // From the fake jobs (pnpm fake:jobs, src/scripts/fake-jobs-fixed.ts). The jobs list keeps the
+  // saving of D45 (budgets.spec.ts): `scriptKb` is its own JavaScript budget.
+  { path: '/en/jobs/', name: 'jobs list', scriptKb: 137 },
+  {
+    path: '/en/jobs/?subfield=glia&type=phd,postdoc&deadline=90d',
+    name: 'jobs list (filtered)',
+    scriptKb: 137,
+  },
+  { path: '/en/jobs/?type=phd&q=no+such+position', name: 'jobs list (empty)', scriptKb: 137 },
   { path: '/en/jobs/?view=map', name: 'jobs list (map)', map: true },
   { path: jobPath(FIXED_JOBS.open), name: 'job (open)' },
   { path: jobPath(FIXED_JOBS.expiredRecently), name: 'job (closed)' },
