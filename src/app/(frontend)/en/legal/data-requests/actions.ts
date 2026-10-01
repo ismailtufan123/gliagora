@@ -7,10 +7,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 
-import { DATA_REQUEST_PATHS } from '@/lib/data-requests/paths'
-import { discardDataRequest, recordDataRequest } from '@/lib/data-requests/record'
-import { deliverWhileWaiting } from '@/lib/email/deliver'
-import { dataRequestConfirmEmail } from '@/lib/email/messages'
+import { recordAndSendDataRequest } from '@/lib/data-requests/record'
 import { canSendEmail } from '@/lib/email/settings'
 import { altchaKey } from '@/lib/forms/altcha'
 import {
@@ -25,10 +22,10 @@ import { appOrigin } from '@/lib/members/origin'
 // The Server Action behind the data-request form (M4b, D49; the M4b design §7.8). The checks are
 // those of every public form (src/lib/forms/data-request.ts); once they pass, this records the
 // request with only its kind, date and address hash, keeps what the person wrote with the
-// confirmation link (src/lib/data-requests/record.ts), and emails the link while the person waits.
-// That email is also the acknowledgement that the request arrived. If the mail server does not
-// take it within 20 seconds, the record and the link are deleted again and the form says it could
-// not send the email. Every address gets the same answer.
+// confirmation link, and emails the link while the person waits (`recordAndSendDataRequest`,
+// src/lib/data-requests/record.ts). That email is also the acknowledgement that the request
+// arrived. If the mail server does not take it within 20 seconds, the record and the link are
+// deleted again and the form says it could not send the email. Every address gets the same answer.
 
 export async function sendDataRequest(
   previous: DataRequestState,
@@ -47,21 +44,11 @@ export async function sendDataRequest(
     headers: requestHeaders,
     now,
     limits: async () => postgresLimitStore(await getPayload({ config })),
-    save: async (data) => {
-      const payload = await getPayload({ config })
-      const { requestId, token } = await recordDataRequest(payload, data, secret, now)
-      const link = `${origin}${DATA_REQUEST_PATHS.confirm}?token=${token}`
-      const delivery = await deliverWhileWaiting(
-        payload,
-        data.email,
-        dataRequestConfirmEmail({ locale: data.locale, kind: data.kind, link }),
-        'Data request',
-      )
-      if (delivery !== 'sent') {
-        await discardDataRequest(payload, requestId, token)
-        return 'unavailable'
-      }
-    },
+    // Without an origin the form is off (no key above), so `save` is never reached then.
+    save: async (data) =>
+      origin
+        ? recordAndSendDataRequest(await getPayload({ config }), data, { origin, secret, now })
+        : 'unavailable',
   })
   // Also when the hidden field was filled in: the same answer as for a real request.
   if (outcome.kind === 'sent') {

@@ -109,7 +109,7 @@ export async function eraseByAddress(
   const accountDeleted =
     member && (await deleteMember(db, member.id, { reason: 'request' }, now)) ? 1 : 0
 
-  await eraseNewsletter(email)
+  const newsletterRemoved = (await eraseNewsletter(email)) > 0 ? 1 : 0
 
   // In SQL, as `applyDeletionLog` repeats it: the report's fields from the form are fixed for every
   // save (fixedFieldHooks), and reports keep no versions, so this clears the only copy.
@@ -132,6 +132,7 @@ export async function eraseByAddress(
   return {
     suggestionsDeleted,
     accountDeleted,
+    newsletterRemoved,
     reportAddressesCleared: cleared.length,
     personalRightsReportsKept: Number(kept[0]?.n ?? 0),
   }

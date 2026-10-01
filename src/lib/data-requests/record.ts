@@ -2,10 +2,13 @@ import { sql } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
 
 import { inTransaction } from '@/jobs/maintenance/task'
+import { deliverWhileWaiting } from '@/lib/email/deliver'
+import { dataRequestConfirmEmail } from '@/lib/email/messages'
 import type { DataRequestData } from '@/lib/forms/data-request-schema'
 import { createEmailToken, deleteEmailToken } from '@/lib/members/store'
 
 import { requestAddressHash } from './address'
+import { DATA_REQUEST_PATHS } from './paths'
 
 // Recording a request from the data-request form (M4b, D49; the M4b design §7.8 step 2). Every
 // request that passes the form's checks leaves a minimal record at once: its kind, the date and a
@@ -77,4 +80,30 @@ export async function discardDataRequest(
       sql`DELETE FROM data_requests WHERE id = ${requestId} AND status = 'unconfirmed'`,
     )
   })
+}
+
+/**
+ * What the form does once its checks pass (the Server Action, src/app/(frontend)/en/legal/
+ * data-requests/actions.ts): records the request with its link, and emails the link while the
+ * person waits. That email is also the acknowledgement that the request arrived. If the mail
+ * server does not take it (it refuses it, cannot be reached or takes longer than 20 seconds), the
+ * record and the link are deleted again and the form says it could not send the email:
+ * 'unavailable'. `origin` is the site's own (`appOrigin`), which the link starts with.
+ */
+export async function recordAndSendDataRequest(
+  payload: Payload,
+  data: DataRequestData,
+  { origin, secret, now }: { origin: string; secret: string; now: Date },
+): Promise<void | 'unavailable'> {
+  const { requestId, token } = await recordDataRequest(payload, data, secret, now)
+  const link = `${origin}${DATA_REQUEST_PATHS.confirm}?token=${token}`
+  const delivery = await deliverWhileWaiting(
+    payload,
+    data.email,
+    dataRequestConfirmEmail({ locale: data.locale, kind: data.kind, link }),
+    'Data request',
+  )
+  if (delivery === 'sent') return
+  await discardDataRequest(payload, requestId, token)
+  return 'unavailable'
 }

@@ -10,7 +10,7 @@ type DataField = Field & {
   validate?: (value: unknown, options: Record<string, unknown>) => unknown
   access?: {
     create?: () => boolean
-    update?: (args: { doc?: Record<string, unknown> }) => boolean
+    update?: (args: { doc?: Record<string, unknown>; req?: { user: object | null } }) => boolean
   }
   admin?: { disableListColumn?: boolean; readOnly?: boolean }
 }
@@ -59,10 +59,29 @@ async function prepare(
   return result
 }
 
-/** Runs the beforeChange guards (fixed fields), as Payload does. */
-function guard(data: Record<string, unknown>, originalDoc: Record<string, unknown>) {
+/** The messages of the save `run` refuses, or null when it goes through. */
+function refusal(run: () => void): string[] | null {
+  try {
+    run()
+  } catch (error) {
+    return (
+      (error as { data?: { errors?: { message: string }[] } }).data?.errors?.map(
+        ({ message }) => message,
+      ) ?? ['(not a validation error)']
+    )
+  }
+  return null
+}
+
+/** Runs the beforeChange guards (fixed fields, the minimal unconfirmed record), as Payload does. */
+function guard(
+  data: Record<string, unknown>,
+  originalDoc?: Record<string, unknown>,
+  user: object | null = EDITOR,
+) {
+  const operation = originalDoc ? 'update' : 'create'
   for (const hook of DataRequests.hooks?.beforeChange ?? []) {
-    hook({ data, operation: 'update', originalDoc, req: request(EDITOR) } as never)
+    hook({ data, operation, originalDoc, req: request(user) } as never)
   }
 }
 
@@ -99,8 +118,19 @@ describe('DataRequests: access', () => {
       expect(field(name).access?.create, name).toBeUndefined()
       expect(field(name).access?.update?.({}), name).toBe(false)
     }
-    for (const name of ['status', 'action', 'actionNote']) {
-      expect(field(name).access, name).toBeUndefined()
+    expect(field('status').access).toBeUndefined()
+  })
+
+  it('lets editors say what was done only once a request is confirmed', () => {
+    for (const name of ['action', 'actionNote']) {
+      const rule = field(name).access?.update
+      const req = { user: EDITOR }
+      expect(field(name).access?.create, name).toBeUndefined()
+      expect(rule?.({ doc: { status: 'unconfirmed' }, req }), name).toBe(false)
+      for (const status of ['new', 'in-progress', 'closed']) {
+        expect(rule?.({ doc: { status }, req }), `${name} ${status}`).toBe(true)
+        expect(rule?.({ doc: { status }, req: { user: null } }), `${name} signed out`).toBe(false)
+      }
     }
   })
 
@@ -276,5 +306,47 @@ describe('DataRequests: handling', () => {
       { operation: 'update', originalDoc: stored, user: EDITOR },
     )
     expect(restored).toMatchObject({ email: 'someone@example.org', kind: 'access', source: 'form' })
+  })
+
+  it('keeps an unconfirmed request free of notes and actions, whoever saves it', () => {
+    const unconfirmed = { id: 7, kind: 'access', source: 'form', status: 'unconfirmed' }
+    for (const user of [EDITOR, null]) {
+      for (const change of [
+        { actionNote: 'Sent by someone, asked to resend.' },
+        { action: 'not-applicable' },
+        { status: 'unconfirmed', actionNote: 'A note.' },
+      ]) {
+        expect(
+          refusal(() => guard({ ...change }, unconfirmed, user)),
+          JSON.stringify(change),
+        ).toEqual([
+          'An unconfirmed request holds nothing but its kind, its date and its address code.',
+        ])
+      }
+      // Nor when the site records one.
+      expect(
+        refusal(() =>
+          guard(
+            { kind: 'deletion', status: 'unconfirmed', actionNote: 'A note.' },
+            undefined,
+            user,
+          ),
+        ),
+      ).toEqual([
+        'An unconfirmed request holds nothing but its kind, its date and its address code.',
+      ])
+    }
+    // An empty note is no note.
+    const empty = { actionNote: '', action: null }
+    expect(() => guard(empty, unconfirmed)).not.toThrow()
+    expect(empty.actionNote).toBeNull()
+    expect(() => guard({ status: 'unconfirmed' }, unconfirmed)).not.toThrow()
+    // The site's confirmation stores the action of a deletion it did; editors note confirmed ones.
+    expect(() =>
+      guard({ status: 'closed', action: 'deleted-automatically' }, unconfirmed, null),
+    ).not.toThrow()
+    expect(() =>
+      guard({ actionNote: 'Answered by email.' }, { ...unconfirmed, status: 'new' }),
+    ).not.toThrow()
   })
 })

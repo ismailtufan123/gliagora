@@ -9,6 +9,7 @@ import { migrations } from '@/migrations'
 import * as members from '@/migrations/20261001_142245_members'
 import * as constraints from '@/migrations/20261001_142246_member_constraints'
 import * as memberTasks from '@/migrations/20261001_201739_member_tasks'
+import * as requestGuards from '@/migrations/20261002_090000_data_request_guards'
 
 import { orcidCheckCharacter } from './orcid-id'
 import { redeemSignInLink } from './sign-in-link'
@@ -236,6 +237,22 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
           insert into data_requests (kind, status, source, locale, details)
           values ('access', 'unconfirmed', 'form', 'en', 'Some text')`),
       ).toBe('23514')
+      // Nor an editor's note, an action or an outcome (20261002_090000_data_request_guards).
+      expect(
+        await failure(sql`
+          insert into data_requests (kind, status, source, locale, action_note)
+          values ('access', 'unconfirmed', 'form', 'en', 'Sent by someone, asked to resend.')`),
+      ).toBe('23514')
+      expect(
+        await failure(sql`
+          insert into data_requests (kind, status, source, locale, action)
+          values ('access', 'unconfirmed', 'form', 'en', 'not-applicable')`),
+      ).toBe('23514')
+      expect(
+        await failure(sql`
+          insert into data_requests (kind, status, source, locale, outcome)
+          values ('deletion', 'unconfirmed', 'form', 'en', '{"accountDeleted": 1}'::jsonb)`),
+      ).toBe('23514')
       expect(
         await failure(sql`
           insert into data_requests (kind, status, source, locale, email_hash)
@@ -261,9 +278,12 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
             and conrelid::regclass::text in ('members', 'member_sessions', 'email_tokens', 'data_requests')
           order by conname`)
       expect(await names()).toHaveLength(10)
+      // The later migration that widens one of them first, as the migrations run backwards.
+      await requestGuards.down({ db } as never)
       await constraints.down({ db } as never)
       expect(await names()).toEqual([])
       await constraints.up({ db } as never)
+      await requestGuards.up({ db } as never)
       expect(await names()).toHaveLength(10)
     })
   })
@@ -1152,6 +1172,48 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       await memberTasks.up({ db } as never)
       expect(await trigger()).toBe(1)
       expect(await taskNames()).toBe(8)
+    })
+
+    it('of the data-request guards can be undone and redone', async () => {
+      const trigger = () =>
+        count(sql`
+          select count(*)::int as n from pg_trigger where tgname = 'data_requests_stay_confirmed'`)
+      const noted = () =>
+        failure(sql`
+          insert into data_requests (kind, status, source, locale, action_note)
+          values ('access', 'unconfirmed', 'form', 'en', 'A note.')`)
+      expect(await trigger()).toBe(1)
+      expect(await noted()).toBe('23514')
+
+      // A confirmed request never goes back to unconfirmed, and keeps what was stored.
+      const { rows: created } = await db.execute<{ id: number }>(sql`
+        insert into data_requests (kind, source, status, locale, email, details, received_at)
+        values ('access', 'email', 'new', 'en', 'kept@example.org', 'A copy, please.', now())
+        returning id`)
+      const id = created[0]!.id
+      expect(
+        await failure(sql`
+          update data_requests set status = 'unconfirmed', email = null, details = null
+          where id = ${id}`),
+      ).toBe('23514')
+      await db.execute(sql`update data_requests set email = null, details = null where id = ${id}`)
+      expect(
+        await rows<{ email: string; details: string }>(sql`
+          select email, details from data_requests where id = ${id}`),
+      ).toEqual([{ email: 'kept@example.org', details: 'A copy, please.' }])
+
+      await requestGuards.down({ db } as never)
+      expect(await trigger()).toBe(0)
+      expect(await noted()).toBe('no error')
+      // Up again: the note written meanwhile goes first, then the check holds again.
+      await requestGuards.up({ db } as never)
+      expect(await trigger()).toBe(1)
+      expect(await noted()).toBe('23514')
+      expect(
+        await count(sql`
+          select count(*)::int as n from data_requests
+          where status = 'unconfirmed' and action_note is not null`),
+      ).toBe(0)
     })
 
     it('can be undone and redone, the constraints first', async () => {

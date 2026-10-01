@@ -16,6 +16,7 @@ import * as migration_20260928_143415_institution_time_zone from './20260928_143
 import * as migration_20261001_142245_members from './20261001_142245_members';
 import * as migration_20261001_142246_member_constraints from './20261001_142246_member_constraints';
 import * as migration_20261001_201739_member_tasks from './20261001_201739_member_tasks';
+import * as migration_20261002_090000_data_request_guards from './20261002_090000_data_request_guards';
 
 export const migrations = [
   {
@@ -107,5 +108,10 @@ export const migrations = [
     up: migration_20261001_201739_member_tasks.up,
     down: migration_20261001_201739_member_tasks.down,
     name: '20261001_201739_member_tasks'
+  },
+  {
+    up: migration_20261002_090000_data_request_guards.up,
+    down: migration_20261002_090000_data_request_guards.down,
+    name: '20261002_090000_data_request_guards',
   },
 ];

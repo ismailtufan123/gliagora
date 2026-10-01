@@ -1,12 +1,14 @@
 import { randomBytes } from 'node:crypto'
 
-import { type Browser, type Page, expect, test } from '@playwright/test'
+import { type Browser, type Page, type TestInfo, expect, test } from '@playwright/test'
 
 import { FAKE_QUEUE_NOTE } from '../../src/scripts/fake-queue-data'
 import { editorHeaders, editorPassword } from './editor'
 import { clientAddress, expectNoSeriousAxeIssues, summary } from './forms'
+import { TEXT_200, TEXT_SPACING, sidewaysScroll } from './layout'
 import { latestEmailTo } from './mailpit'
 import { isSignedIn, needsMailpit, providerMember } from './member'
+import { expectLayoutHolds } from './pseudo-locale'
 
 // The data-request form and its confirmation (M4b, D49; the M4b design §7.8). In the `destructive`
 // project, which runs after every other test (playwright.config.ts): a confirmed deletion deletes
@@ -16,6 +18,11 @@ import { isSignedIn, needsMailpit, providerMember } from './member'
 // links arrive in Mailpit; the final email after a deletion is sent by a task the app under test
 // never runs (tests/integration/data-requests.db.test.ts covers it). Three emails in all, of the
 // site-wide 50 an hour.
+//
+// The link's page with a valid link (a deletion, another request) and after a failure cannot be a
+// fixed address in pages.ts, as each needs a link of its own: the flows below check them for
+// reflow at 320px (with text spacing and at 200%) and in the pseudo-locale at 320 and 1280px, with
+// the links they already have (opening one changes nothing).
 
 const PAGE = '/en/legal/data-requests/'
 const SENT = '/en/legal/data-requests/sent/'
@@ -82,6 +89,34 @@ async function confirmationLink(address: string) {
   return { link: link!, text }
 }
 
+/**
+ * The link's page at `url` (in the `state` it shows) reflows at 320px, also with text spacing and
+ * with text at 200%, and holds in the pseudo-locale at 320 and 1280px (layout.spec.ts and
+ * pseudo-locale.spec.ts check the fixed pages so). Only opens the link, which changes nothing.
+ */
+async function linkPageHolds(browser: Browser, testInfo: TestInfo, url: string, state: string) {
+  for (const viewport of [
+    { width: 320, height: 640 },
+    { width: 1280, height: 800 },
+  ]) {
+    const context = await browser.newContext({ viewport })
+    const page = await context.newPage()
+    await page.goto(url)
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    if (viewport.width === 320) {
+      expect(await sidewaysScroll(page), state).toBeLessThanOrEqual(0)
+      await page.addStyleTag({ content: TEXT_SPACING })
+      expect(await sidewaysScroll(page), `${state}, text spacing`).toBeLessThanOrEqual(0)
+      await page.reload()
+      await page.addStyleTag({ content: TEXT_200 })
+      expect(await sidewaysScroll(page), `${state}, text at 200%`).toBeLessThanOrEqual(0)
+      await page.reload()
+    }
+    await expectLayoutHolds(page, testInfo, state)
+    await context.close()
+  }
+}
+
 /** Documents of a collection, read through the editors' API. */
 async function read<T>(page: Page, collection: string, where: Record<string, string>) {
   const query = new URLSearchParams({ depth: '0', limit: '20', ...where })
@@ -127,7 +162,7 @@ test('shows the server’s messages in a summary that takes focus, at the fields
 
 test('an unconfirmed request leaves a record with only its kind, date and address code', async ({
   browser,
-}) => {
+}, testInfo) => {
   needsMailpit()
   const start = new Date(Date.now() - 1000).toISOString()
   const page = await openForm(browser)
@@ -176,12 +211,13 @@ test('an unconfirmed request leaves a record with only its kind, date and addres
   )
   await page.goto(link)
   await expect(page.getByRole('button', { name: 'Confirm my request' })).toBeVisible()
+  await linkPageHolds(browser, testInfo, link, 'data request link (other request)')
   await page.context().close()
 })
 
 test('a confirmed deletion deletes suggestions, the account and report addresses, but not personal-rights requests', async ({
   browser,
-}) => {
+}, testInfo) => {
   needsMailpit()
   const address = newAddress()
   // The forms keep the address as typed; the deletion finds it whatever its case.
@@ -231,6 +267,16 @@ test('a confirmed deletion deletes suggestions, the account and report addresses
   await expect(main).toContainText('Your address on the problem reports and corrections you sent')
   await expect(main.getByRole('heading', { name: 'What stays' })).toBeVisible()
   await expectNoSeriousAxeIssues(page)
+  await linkPageHolds(browser, testInfo, link, 'data request link (deletion)')
+  // After a failure: the same page, with the message and its reference, and the link still works.
+  const failed = `${link}&error=failed&ref=0123456789`
+  await page.goto(failed)
+  const outcome = page.locator('#outcome')
+  await expect(outcome).toHaveAttribute('role', 'alert')
+  await expect(outcome).toContainText('mention reference 0123456789')
+  await expect(page.getByRole('button', { name: 'Delete my data' })).toBeVisible()
+  await linkPageHolds(browser, testInfo, failed, 'data request link (failed)')
+  await page.goto(link)
   await page.getByRole('button', { name: 'Delete my data' }).click()
   await page.waitForURL('/en/legal/data-requests/done/')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your data has been deleted')
@@ -262,6 +308,7 @@ test('a confirmed deletion deletes suggestions, the account and report addresses
     outcome: {
       suggestionsDeleted: 1,
       accountDeleted: 1,
+      newsletterRemoved: 0,
       reportAddressesCleared: 1,
       personalRightsReportsKept: 1,
     },

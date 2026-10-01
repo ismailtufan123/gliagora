@@ -1602,7 +1602,7 @@ export interface DataRequest {
    */
   details?: string | null;
   /**
-   * For editors only; never shown on the site or sent to the person. Say what you checked and what you answered.
+   * For editors only; never shown on the site or sent to the person. Say what you checked and what you answered. Not for a request that is not confirmed yet, which holds nothing but its kind, its date and its address code.
    */
   actionNote?: string | null;
   /**

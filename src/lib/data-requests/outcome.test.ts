@@ -8,12 +8,14 @@ describe('deletionOutcome', () => {
       deletionOutcome({
         suggestionsDeleted: 2,
         accountDeleted: 1,
+        newsletterRemoved: 1,
         reportAddressesCleared: 3,
         personalRightsReportsKept: 1,
       }),
     ).toEqual({
       suggestionsDeleted: 2,
       accountDeleted: 1,
+      newsletterRemoved: 1,
       reportAddressesCleared: 3,
       personalRightsReportsKept: 1,
     })
@@ -23,6 +25,7 @@ describe('deletionOutcome', () => {
     const none = {
       suggestionsDeleted: 0,
       accountDeleted: 0,
+      newsletterRemoved: 0,
       reportAddressesCleared: 0,
       personalRightsReportsKept: 0,
     }
@@ -33,6 +36,7 @@ describe('deletionOutcome', () => {
       deletionOutcome({
         suggestionsDeleted: -1,
         accountDeleted: 7,
+        newsletterRemoved: true,
         reportAddressesCleared: 1.5,
         personalRightsReportsKept: '3',
       }),

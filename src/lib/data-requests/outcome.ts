@@ -7,6 +7,8 @@ export type DeletionOutcome = {
   suggestionsDeleted: number
   /** A member account with the address, deleted (0 or 1). */
   accountDeleted: 0 | 1
+  /** The Glia Notes subscription of the address, removed (0 or 1; none until M2). */
+  newsletterRemoved: 0 | 1
   /** Reports sent with the address whose address was cleared. */
   reportAddressesCleared: number
   /** Requests about personal rights (Law No. 5651) sent with the address, which keep it. */
@@ -22,6 +24,7 @@ export function deletionOutcome(value: unknown): DeletionOutcome {
   return {
     suggestionsDeleted: count(stored.suggestionsDeleted),
     accountDeleted: count(stored.accountDeleted) > 0 ? 1 : 0,
+    newsletterRemoved: count(stored.newsletterRemoved) > 0 ? 1 : 0,
     reportAddressesCleared: count(stored.reportAddressesCleared),
     personalRightsReportsKept: count(stored.personalRightsReportsKept),
   }

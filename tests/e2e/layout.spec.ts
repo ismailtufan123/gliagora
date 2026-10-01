@@ -11,6 +11,7 @@ import {
   newOrcidId,
   startAt,
 } from './member'
+import { TEXT_200, TEXT_SPACING, sidewaysScroll } from './layout'
 import { PAGES } from './pages'
 import { hiddenWhenFocused, pseudoLocalise } from './pseudo-locale'
 
@@ -18,27 +19,6 @@ import { hiddenWhenFocused, pseudoLocalise } from './pseudo-locale'
 // text at 200%, WCAG 1.4.4), the header fits with the browser's text size enlarged, nothing
 // shifts while the web fonts load, and the logo follows dark mode. Longer text (other languages)
 // is checked by pseudo-locale.spec.ts.
-
-const TEXT_SPACING =
-  '* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }'
-
-// Text at 200%: everything is sized in rem, so doubling the root size doubles all text. Media
-// queries still see a 320px screen (they are measured in the browser's default size), which is
-// harder than zooming the page; container queries see the new size (the header's lockup,
-// global.css).
-const TEXT_200 = 'html { font-size: 200% !important; }'
-
-/**
- * How far the page scrolls sideways: its content against the width of the layout (the <html>
- * box). Not against clientWidth, which includes the scrollbar's space that
- * `scrollbar-gutter: stable` keeps (15px where the scrollbar is hidden, as in these tests).
- */
-const sidewaysScroll = (page: Page) =>
-  page.evaluate(
-    () =>
-      document.documentElement.scrollWidth -
-      Math.round(document.documentElement.getBoundingClientRect().width),
-  )
 
 /** The texts of these buttons that run over more than one line, such as "Searc" / "h". */
 const labelsOverLines = (buttons: Locator) =>

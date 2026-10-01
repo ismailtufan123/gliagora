@@ -103,6 +103,7 @@ export function DataRequestForm({ action, initial, permalink, text }: Props) {
           type="email"
           autoComplete="email"
           spellCheck={false}
+          required
           defaultValue={values.email}
           aria-invalid={errors.email ? true : undefined}
           aria-describedby={describedBy(`${ID}-email-hint`, errorId('email'))}

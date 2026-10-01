@@ -1412,6 +1412,8 @@ export const AREAS: Area[] = [
         'Email after a confirmed deletion - a point of the list: the suggestions deleted ({count}: their number)',
       'emails.dataRequest.deleted.account':
         'Email after a confirmed deletion - a point of the list: the account deleted',
+      'emails.dataRequest.deleted.newsletter':
+        'Email after a confirmed deletion - a point of the list: the Glia Notes subscription removed (from M2)',
       'emails.dataRequest.deleted.reports':
         'Email after a confirmed deletion - a point of the list: the reports whose address was removed ({count}: their number)',
       'emails.dataRequest.deleted.nothing':

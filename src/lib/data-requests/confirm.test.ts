@@ -45,6 +45,7 @@ function post(token: string | null = TOKEN, headers: Record<string, string> = { 
 const NONE = {
   suggestionsDeleted: 0,
   accountDeleted: 0,
+  newsletterRemoved: 0,
   reportAddressesCleared: 0,
   personalRightsReportsKept: 0,
 } as const

@@ -613,7 +613,7 @@
   "dataRequest": {
     "heading": "Send a request",
     "intro": "Use this form to have your data deleted, or for any other request about your personal data. We email you a link to confirm that the request is yours, and we act on it only after you confirm it.",
-    "kept": "Until you confirm, we keep only the type of request, its date and a scrambled code of your email address, for 60 days, to be able to show that a request arrived. If you do not confirm, what you write here is deleted after 24 hours. <link>How we handle data requests</link>",
+    "kept": "Until you confirm, your email address and what you write here are kept only with the confirmation link, and are deleted with it after 24 hours if you do not confirm. For a request you do not confirm, we keep only its type, its date and a scrambled code of your email address, for 60 days, to be able to show that a request arrived. <link>How we handle data requests</link>",
     "unavailable": "The form is temporarily unavailable. Please write to <email>privacy@gliagora.com</email> instead.",
     "noscript": "The spam check on this form needs JavaScript. Without JavaScript, write to <email>privacy@gliagora.com</email> instead.",
     "email": {
@@ -1135,15 +1135,16 @@
         },
         "act": "We act on it only after you confirm that it is yours. To confirm it, open this link:",
         "validity": "The link works for 24 hours and only once.",
-        "notYou": "If you did not send this request, ignore this email: nothing happens. We keep only a note that a request arrived (its type, its date and a scrambled code of this address) for 60 days, to be able to show that it arrived, and then delete it."
+        "notYou": "If you did not send this request, ignore this email: nothing happens. The link, and what was written in the form, are deleted after 24 hours. We keep only a note that a request arrived (its type, its date and a scrambled code of this address) for 60 days, to be able to show that it arrived, and then delete it."
       },
       "deleted": {
         "subject": "Your data has been deleted from Gliagora",
         "text": "As you confirmed, we have deleted the data that Gliagora | Neuroscience held under this email address:",
         "suggestions": "{count, plural, one {# suggestion you sent, with its link and note} other {# suggestions you sent, with their links and notes}}",
         "account": "your Gliagora account, with your saved positions and settings",
+        "newsletter": "your Glia Notes subscription",
         "reports": "{count, plural, one {your address on # problem report or correction you sent} other {your address on # problem reports and corrections you sent}}",
-        "nothing": "As you confirmed, we looked for data that Gliagora | Neuroscience held under this email address. We found no suggestion, account or problem report with it, so there was nothing to delete.",
+        "nothing": "As you confirmed, we looked for data that Gliagora | Neuroscience held under this email address. We found no suggestion, account, newsletter subscription or problem report with it, so there was nothing to delete.",
         "kept": "{count, plural, one {We keep this address on # request about your personal rights that you sent us: we handle such requests under Law No. 5651 and keep them, with the address, for 2 years after they are closed, to be able to show how we handled them.} other {We keep this address on # requests about your personal rights that you sent us: we handle such requests under Law No. 5651 and keep them, with the address, for 2 years after they are closed, to be able to show how we handled them.}}",
         "record": "We keep a record of your request, with this email address, for 2 years, to show that we handled it. Our backups may hold the deleted data for up to 6 months; if a backup is ever restored, it is deleted again. How we handle your data: {privacyUrl}"
       }

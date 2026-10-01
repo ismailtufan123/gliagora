@@ -1,6 +1,8 @@
-import type { Page } from '@playwright/test'
+import { type Page, type TestInfo, expect } from '@playwright/test'
 
-// Helpers for the pseudo-locale tests (pseudo-locale.spec.ts, PLAN §12): they run in the page.
+// Helpers for the pseudo-locale tests (pseudo-locale.spec.ts, PLAN §12, and the states only a
+// flow reaches, such as the data-request link's page in data-requests.spec.ts): they run in the
+// page.
 
 /**
  * Replaces the page's text in place: every text node (visible text, and text for screen readers
@@ -193,3 +195,32 @@ export const hiddenWhenFocused = (page: Page) =>
     ;(document.activeElement as HTMLElement | null)?.blur()
     return hidden
   })
+
+/** Pseudo-localises the page as it is now, attaches a screenshot and checks the layout. */
+export async function expectLayoutHolds(
+  page: Page,
+  testInfo: TestInfo,
+  state: string,
+  { modal = false }: { modal?: boolean } = {},
+) {
+  await pseudoLocalise(page)
+  // Measured in the web fonts, as people see the page, and once transitions have ended (a chevron
+  // turning as its menu opens sticks out of its button while it turns).
+  await page.evaluate(() => document.fonts.ready)
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().endTime !== Infinity)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    ),
+  )
+  const { width, height } = page.viewportSize()!
+  // A dialog or menu that covers the screen is shown as the screen is; other states in full.
+  await testInfo.attach(`${state} at ${width}×${height}`, {
+    body: await page.screenshot({ fullPage: !modal }),
+    contentType: 'image/png',
+  })
+  expect(await layoutProblems(page), state).toEqual([])
+  expect(await hiddenWhenFocused(page), state).toEqual([])
+}

@@ -147,13 +147,13 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 
 - **Veriler:**
   - talebin türü;
-  - e-posta adresiniz, verirseniz adınız ve açıklamanız (formla yapılan bir silme talebinde adınız ve açıklamanız saklanmaz; yalnızca kaç kaydın silindiği saklanır);
+  - e-posta adresiniz, verirseniz adınız ve açıklamanız (formla yapılan bir silme talebinde adınızı ve açıklamanızı saklamayız, ancak kaç kaydın silindiğini saklarız);
   - talebin alındığı tarih ve yanıt için son tarih;
   - talebin durumu ve sonuçlandığı tarih;
   - formla gönderilip onaylanmayan bir talep için yalnızca talebin türü, tarihi ve e-posta adresinizden üretilen karıştırılmış bir kod (karma değer); adresin kendisi ve yazdıklarınız saklanmaz.
 - **Nereden ve nasıl:** Sizden: [veri talebi sayfasındaki](/en/legal/data-requests/) formdan (İngilizce), e-postayla veya üyeyseniz hesap ayarlarındaki araçlarla. Hesabınızı ayarlardan sildiğinizde bu da bir talep olarak kaydedilir.
-  - Formla gönderdiğiniz talebi onaylamanız için size 24 saat geçerli bir bağlantı göndeririz. Yalnızca onaylanan talepleri işleme alırız. Siz onaylayana kadar yazdıklarınız yalnızca bu bağlantıyla birlikte tutulur ve onaylamazsanız 24 saat sonra bağlantıyla birlikte silinir.
-  - Bir talebin geldiğini gösterebilmek için, formla gönderilen her talebin türünü, tarihini ve adres kodunu 60 gün saklarız. [KARAR VERİLECEK: B4 – onaylanmayan taleplerin kaydı için hukuki sebep]
+  - Formla gönderdiğiniz talebi onaylamanız için size 24 saat geçerli bir bağlantı göndeririz. Yalnızca onaylanan talepleri işleme alırız. Siz onaylayana kadar e-posta adresiniz ve yazdıklarınız yalnızca bu bağlantıyla birlikte tutulur ve onaylamazsanız 24 saat sonra bağlantıyla birlikte silinir.
+  - Onaylamadığınız bir talep için, bir talebin geldiğini gösterebilmek amacıyla yalnızca türünü, tarihini ve adres kodunu 60 gün saklarız; adresin kendisini ve yazdıklarınızı saklamayız. [KARAR VERİLECEK: B4 – onaylanmayan taleplerin kaydı için hukuki sebep]
 - **Amaç:** KVKK m.11 kapsamındaki başvurunuzu sonuçlandırmak, size yanıt vermek ve yanıt sürelerini izlemek.
 - **Hukuki sebep:** Hukuki yükümlülüğümüzü yerine getirmek için zorunlu olması (KVKK m.5/2 (ç)). KVKK m.13, başvurulara yanıt vermemizi gerektirir.
 - **Saklama:** Talep kapandıktan sonra 2 yıl. Bu süre, sitenin veritabanındaki kayıtları ve e-posta yazışmalarını kapsar. Onaylanmayan talepler, geldikten 60 gün sonra silinir. [KARAR VERİLECEK: B11 – süre teyit edilecek; onaylanmayan talepler için 60 gün]

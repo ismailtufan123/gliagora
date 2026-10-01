@@ -302,6 +302,7 @@ describe('dataDeletedEmail', () => {
   const none = {
     suggestionsDeleted: 0,
     accountDeleted: 0,
+    newsletterRemoved: 0,
     reportAddressesCleared: 0,
     personalRightsReportsKept: 0,
   } as const
@@ -309,13 +310,20 @@ describe('dataDeletedEmail', () => {
   it('lists what was deleted, from the counts', () => {
     const email = dataDeletedEmail({
       locale: 'en',
-      outcome: { ...none, suggestionsDeleted: 2, accountDeleted: 1, reportAddressesCleared: 1 },
+      outcome: {
+        ...none,
+        suggestionsDeleted: 2,
+        accountDeleted: 1,
+        newsletterRemoved: 1,
+        reportAddressesCleared: 1,
+      },
     })
     expect(email.subject).toBe('Your data has been deleted from Gliagora')
     expect(email.text).toContain(
       'As you confirmed, we have deleted the data that Gliagora | Neuroscience held under this email address:\n' +
         '- 2 suggestions you sent, with their links and notes\n' +
         '- your Gliagora account, with your saved positions and settings\n' +
+        '- your Glia Notes subscription\n' +
         '- your address on 1 problem report or correction you sent\n',
     )
     expect(email.text).not.toContain('personal rights')
@@ -338,8 +346,16 @@ describe('dataDeletedEmail', () => {
 
   it('says so when nothing was found', () => {
     const { text } = dataDeletedEmail({ locale: 'en', outcome: none })
-    expect(text).toContain('We found no suggestion, account or problem report with it')
+    expect(text).toContain(
+      'We found no suggestion, account, newsletter subscription or problem report with it',
+    )
     expect(text).not.toContain('\n- ')
+  })
+
+  it('names a newsletter subscription that was all there was (from M2)', () => {
+    const { text } = dataDeletedEmail({ locale: 'en', outcome: { ...none, newsletterRemoved: 1 } })
+    expect(text).toContain('held under this email address:\n- your Glia Notes subscription\n')
+    expect(text).not.toContain('We found no')
   })
 
   it('has a Turkish draft that points to the KVKK notice', () => {

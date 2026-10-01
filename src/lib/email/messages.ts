@@ -266,6 +266,7 @@ export function dataDeletedEmail({
       ? t('dataRequest.deleted.suggestions', { count: outcome.suggestionsDeleted })
       : null,
     outcome.accountDeleted > 0 ? t('dataRequest.deleted.account') : null,
+    outcome.newsletterRemoved > 0 ? t('dataRequest.deleted.newsletter') : null,
     outcome.reportAddressesCleared > 0
       ? t('dataRequest.deleted.reports', { count: outcome.reportAddressesCleared })
       : null,

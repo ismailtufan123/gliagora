@@ -613,7 +613,7 @@
   "dataRequest": {
     "heading": "Talep gönderin",
     "intro": "Verilerinizin silinmesi veya kişisel verilerinizle ilgili başka bir talep için bu formu kullanın. Talebin size ait olduğunu onaylamanız için size bir bağlantı göndeririz ve talebi ancak siz onayladıktan sonra işleme alırız.",
-    "kept": "Siz onaylayana kadar, bir talep geldiğini gösterebilmek için yalnızca talebin türünü, tarihini ve e-posta adresinizin karıştırılmış bir kodunu 60 gün saklarız. Onaylamazsanız buraya yazdıklarınız 24 saat sonra silinir. <link>Veri taleplerini nasıl ele alıyoruz</link>",
+    "kept": "Siz onaylayana kadar e-posta adresiniz ve buraya yazdıklarınız yalnızca onay bağlantısıyla birlikte tutulur; onaylamazsanız 24 saat sonra bağlantıyla birlikte silinir. Onaylamadığınız bir talep için, bir talep geldiğini gösterebilmek amacıyla yalnızca talebin türünü, tarihini ve e-posta adresinizin karıştırılmış bir kodunu 60 gün saklarız. <link>Veri taleplerini nasıl ele alıyoruz</link>",
     "unavailable": "Form geçici olarak kullanılamıyor. Lütfen bunun yerine <email>privacy@gliagora.com</email> adresine yazın.",
     "noscript": "Bu formdaki spam denetimi JavaScript gerektirir. JavaScript olmadan <email>privacy@gliagora.com</email> adresine yazabilirsiniz.",
     "email": {
@@ -632,7 +632,7 @@
       },
       "correction": {
         "label": "Verilerimi düzeltin",
-        "hint": "Neyin yanlış olduğunu ve doğrusunun ne olması gerektiğini yazın. Bir ilanı düzeltmek için ilanın sayfasındaki Sorun bildirin bağlantısını kullanın."
+        "hint": "Neyin yanlış olduğunu ve doğrusunun ne olması gerektiğini yazın. Bir ilanı düzeltmek için bunun yerine ilanın sayfasındaki “Sorun bildir” bağlantısını kullanın."
       },
       "objection": {
         "label": "Verilerimin kullanılmasına itiraz ediyorum",
@@ -679,7 +679,7 @@
       "spamCheck": "Spam denetiminin süresi doldu veya denetim çalışmadı. Lütfen formu yeniden gönderin.",
       "rateLimited": "Son zamanlarda buradan veya bu adrese çok fazla talep gönderildi. Lütfen daha sonra yeniden deneyin ya da privacy@gliagora.com adresine yazın.",
       "unavailable": "Onay e-postasını şu anda gönderemedik. Lütfen birkaç dakika sonra yeniden deneyin ya da privacy@gliagora.com adresine yazın.",
-      "failed": "Bir sorun oluştu ve talebiniz gönderilmedi. Lütfen daha sonra yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans numarasını belirtin."
+      "failed": "Bir sorun oluştu ve talebiniz gönderilmedi. Lütfen daha sonra yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin."
     },
     "sent": {
       "metaTitle": "Gelen kutunuza bakın",
@@ -741,7 +741,7 @@
         "backups": "Silinen verileri en fazla 6 ay daha içerebilecek yedeklerimiz. Bir yedek geri yüklenirse veriler yeniden silinir."
       },
       "more": "Verilerinizle ilgili diğer konular için <link>veri talepleri</link> sayfasına bakın.",
-      "jobs": "İlanlara göz atın",
+      "jobs": "Pozisyonlara göz atın",
       "home": "Ana sayfaya gidin"
     },
     "received": {
@@ -751,7 +751,7 @@
       "answer": "Talebinize, bize ulaştığı tarihten itibaren 30 gün içinde, ücretsiz olarak ve verdiğiniz adrese e-postayla yanıt veririz. Bir talebi reddedersek gerekçesini açıklarız.",
       "record": "Talebinizin kaydını, yazdıklarınızla birlikte, nasıl ele aldığımızı gösterebilmek için talep kapandıktan sonra 2 yıl saklarız.",
       "more": "Talepleri nasıl ele aldığımız <link>veri talepleri</link> sayfasında anlatılır.",
-      "jobs": "İlanlara göz atın",
+      "jobs": "Pozisyonlara göz atın",
       "home": "Ana sayfaya gidin"
     }
   },
@@ -1052,7 +1052,7 @@
       "deleteFailed": "Hesabınız silinmedi: bir sorun oluştu. Lütfen yeniden deneyin.",
       "deleteFailedReference": "Hesabınız silinmedi: bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin.",
       "requestFailed": "Talebiniz onaylanmadı: bir sorun oluştu. Lütfen yeniden deneyin.",
-      "requestFailedReference": "Talebiniz onaylanmadı: bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans numarasını belirtin.",
+      "requestFailedReference": "Talebiniz onaylanmadı: bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin.",
       "expired": "Oturum açma ya da bağlama 15 dakikadan uzun sürdü veya başka bir tarayıcıya ya da eski bir sekmeye döndü; bu nedenle hiçbir şey değişmedi. Lütfen yeniden deneyin.",
       "cancelled-google": "Google'ın sayfasında vazgeçtiniz; hiçbir şey değişmedi.",
       "cancelled-orcid": "ORCID'in sayfasında vazgeçtiniz; hiçbir şey değişmedi.",
@@ -1133,17 +1133,18 @@
           "withdraw-consent": "Bu e-posta adresiyle, Gliagora | Neuroscience'a verdiğiniz bir açık rızanın geri alınması için bir talep aldık.",
           "other": "Bu e-posta adresiyle Gliagora | Neuroscience'a gönderilen, kişisel verilerle ilgili bir talep aldık."
         },
-        "act": "Talebi ancak size ait olduğunu onayladıktan sonra işleme alırız. Onaylamak için bu bağlantıyı açın:",
+        "act": "Talebi ancak size ait olduğunu siz onayladıktan sonra işleme alırız. Onaylamak için bu bağlantıyı açın:",
         "validity": "Bağlantı 24 saat geçerlidir ve yalnızca bir kez kullanılabilir.",
-        "notYou": "Bu talebi siz göndermediyseniz bu e-postayı dikkate almayın: hiçbir şey olmaz. Bir talep geldiğini gösterebilmek için yalnızca talebin türünü, tarihini ve bu adresin karıştırılmış bir kodunu 60 gün saklar, sonra sileriz."
+        "notYou": "Bu talebi siz göndermediyseniz bu e-postayı dikkate almayın: hiçbir şey olmaz. Bağlantı ve formda yazılanlar 24 saat sonra silinir. Bir talep geldiğini gösterebilmek için yalnızca talebin türünü, tarihini ve bu adresin karıştırılmış bir kodunu 60 gün saklar, sonra sileriz."
       },
       "deleted": {
         "subject": "Verileriniz Gliagora'dan silindi",
         "text": "Onayladığınız üzere, Gliagora | Neuroscience'ın bu e-posta adresiyle tuttuğu verileri sildik:",
         "suggestions": "{count, plural, one {gönderdiğiniz # ilan önerisi, bağlantısı ve notuyla birlikte} other {gönderdiğiniz # ilan önerisi, bağlantıları ve notlarıyla birlikte}}",
         "account": "Gliagora hesabınız, kaydettiğiniz ilanlar ve ayarlarınızla birlikte",
+        "newsletter": "Glia Notes aboneliğiniz",
         "reports": "{count, plural, one {gönderdiğiniz # sorun bildirimindeki veya düzeltme talebindeki adresiniz} other {gönderdiğiniz # sorun bildirimindeki ve düzeltme talebindeki adresiniz}}",
-        "nothing": "Onayladığınız üzere, Gliagora | Neuroscience'ın bu e-posta adresiyle tuttuğu verileri aradık. Bu adresle bir ilan önerisi, hesap veya sorun bildirimi bulamadık; bu nedenle silinecek bir şey yoktu.",
+        "nothing": "Onayladığınız üzere, Gliagora | Neuroscience'ın bu e-posta adresiyle tuttuğu verileri aradık. Bu adresle bir ilan önerisi, hesap, bülten aboneliği veya sorun bildirimi bulamadık; bu nedenle silinecek bir şey yoktu.",
         "kept": "{count, plural, one {Kişilik haklarınızla ilgili bize gönderdiğiniz # talepteki bu adresi saklıyoruz: bu talepleri 5651 sayılı Kanun kapsamında ele alır ve nasıl ele aldığımızı gösterebilmek için adresle birlikte, kapandıktan sonra 2 yıl saklarız.} other {Kişilik haklarınızla ilgili bize gönderdiğiniz # talepteki bu adresi saklıyoruz: bu talepleri 5651 sayılı Kanun kapsamında ele alır ve nasıl ele aldığımızı gösterebilmek için adresle birlikte, kapandıktan sonra 2 yıl saklarız.}}",
         "record": "Talebinizi yerine getirdiğimizi gösterebilmek için talebinizin kaydını bu e-posta adresiyle birlikte 2 yıl saklarız. Yedeklerimiz silinen verileri en fazla 6 ay daha içerebilir; bir yedek geri yüklenirse veriler yeniden silinir. Verilerinizi nasıl işlediğimiz: {privacyUrl}"
       }

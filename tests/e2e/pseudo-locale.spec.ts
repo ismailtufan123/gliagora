@@ -1,4 +1,4 @@
-import { type Page, type TestInfo, expect, test } from '@playwright/test'
+import { type Page, expect, test } from '@playwright/test'
 
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
 import { clientAddress, summary } from './forms'
@@ -15,7 +15,7 @@ import {
   startAt,
 } from './member'
 import { PAGES } from './pages'
-import { hiddenWhenFocused, layoutProblems, pseudoLocalise } from './pseudo-locale'
+import { expectLayoutHolds } from './pseudo-locale'
 
 // PLAN §12 (text expansion) and §17.1: components are designed for text 35% longer than English.
 // These tests put the page into a pseudo-locale in the browser, which makes every text longer
@@ -30,35 +30,6 @@ import { hiddenWhenFocused, layoutProblems, pseudoLocalise } from './pseudo-loca
 // differ between machines and browser versions, so pixel comparisons would fail on another
 // machine without any layout problem (and pass problems that fall below their threshold). What the
 // tests assert are measurements of the layout, which do not depend on how glyphs are drawn.
-
-/** Pseudo-localises the page as it is now, attaches a screenshot and checks the layout. */
-async function expectLayoutHolds(
-  page: Page,
-  testInfo: TestInfo,
-  state: string,
-  { modal = false }: { modal?: boolean } = {},
-) {
-  await pseudoLocalise(page)
-  // Measured in the web fonts, as people see the page, and once transitions have ended (a chevron
-  // turning as its menu opens sticks out of its button while it turns).
-  await page.evaluate(() => document.fonts.ready)
-  await page.evaluate(() =>
-    Promise.all(
-      document
-        .getAnimations()
-        .filter((animation) => animation.effect?.getComputedTiming().endTime !== Infinity)
-        .map((animation) => animation.finished.catch(() => undefined)),
-    ),
-  )
-  const { width, height } = page.viewportSize()!
-  // A dialog or menu that covers the screen is shown as the screen is; other states in full.
-  await testInfo.attach(`${state} at ${width}×${height}`, {
-    body: await page.screenshot({ fullPage: !modal }),
-    contentType: 'image/png',
-  })
-  expect(await layoutProblems(page), state).toEqual([])
-  expect(await hiddenWhenFocused(page), state).toEqual([])
-}
 
 // Chips, cards and two pages: 7 filter values, 31 positions of the fake jobs.
 const FILTERED_LIST =
