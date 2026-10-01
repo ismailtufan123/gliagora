@@ -354,6 +354,50 @@
       "retry": "Try again"
     }
   },
+  "map": {
+    "title": "Map of neuroscience positions",
+    "description": "Institutions around the world with open neuroscience positions, on a map, with the positions at each.",
+    "intro": "Each pin is an institution with open positions, and its number says how many. Choose one to see its positions; the list under the map has the same institutions.",
+    "filterLink": "Filter the positions on the map",
+    "region": "Map of institutions with open positions",
+    "skip": "Skip the map",
+    "loading": "Loading the map…",
+    "failed": "The map could not be loaded. The list below has the same institutions.",
+    "noWebgl": "This browser cannot draw the map. The list below has the same institutions.",
+    "noJs": "The map needs JavaScript. The list above has the same institutions.",
+    "listAll": "Institutions with open positions",
+    "listFailed": "The institutions could not be loaded just now. Please try again in a few minutes.",
+    "listInView": "Institutions in view",
+    "listCount": "({shown} of {total})",
+    "listMore": "And {count} more: zoom in to see them here.",
+    "positions": "{count, plural, one {# open position} other {# open positions}}",
+    "positionsOne": "{count} open position",
+    "positionsOther": "{count} open positions",
+    "unmapped": "Positions at institutions without a known location are not on the map: {count}. They are in the list of positions.",
+    "sources": "Map data <osm>© OpenStreetMap contributors</osm>, under the Open Database License; basemap by <protomaps>Protomaps</protomaps>; drawn with <maplibre>MapLibre</maplibre>. Institutions and their locations from <ror>ROR</ror>, the Research Organization Registry.",
+    "credits": {
+      "osm": "© OpenStreetMap contributors",
+      "protomaps": "Protomaps",
+      "maplibre": "MapLibre"
+    },
+    "controls": {
+      "title": "Map",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "credits": "Show or hide the map’s credits",
+      "windowsHelp": "Use Ctrl + scroll to zoom the map",
+      "macHelp": "Use ⌘ + scroll to zoom the map",
+      "mobileHelp": "Use two fingers to move the map"
+    },
+    "panel": {
+      "close": "Close",
+      "website": "Website",
+      "ror": "ROR record",
+      "openPositions": "Open positions ({count})",
+      "institutionPage": "Institution page",
+      "inList": "These positions in the list"
+    }
+  },
   "unavailable": {
     "text": "Gliagora is temporarily unavailable. Please try again in a few minutes."
   },

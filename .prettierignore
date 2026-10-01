@@ -13,3 +13,6 @@ src/app/(payload)/admin/importMap.js
 
 # Test data copied as is from its source
 tests/fixtures/
+
+# MapLibre GL JS, copied from node_modules at build time
+public/map/maplibre-gl/
