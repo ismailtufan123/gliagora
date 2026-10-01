@@ -4,9 +4,10 @@ import { DATA_REQUEST_ANSWER_DAYS, UNCONFIRMED_REQUEST_DAYS } from '@/lib/retent
 // How a data request is handled and how long it is kept (M4b, D49; the M4b design §6, §7.8). A
 // request from the form is recorded at once but acted on only after the person confirms it with
 // the link in our email: until then it is "unconfirmed" and holds only its kind, its date and a
-// keyed hash of the address (the database refuses more), and it is deleted 60 days later. Once
-// confirmed it is answered within 30 days of receipt (KVKK Art. 13) and, like a report, deleted 2
-// years after it is closed (the report helpers in src/lib/reports/status.ts).
+// keyed hash of the address (the database refuses anything more, an editor's note or action
+// included, and never lets a confirmed request become unconfirmed again), and it is deleted 60
+// days later. Once confirmed it is answered within 30 days of receipt (KVKK Art. 13) and, like a
+// report, deleted 2 years after it is closed (the report helpers in src/lib/reports/status.ts).
 
 export const DATA_REQUEST_STATUSES = [
   { value: 'unconfirmed', label: 'Not confirmed yet' },

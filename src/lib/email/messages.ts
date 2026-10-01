@@ -2,6 +2,8 @@ import { createTranslator } from 'next-intl'
 
 import { type Locale, defaultLocale, locales } from '@/i18n/routing'
 import { CONTENT_PAGES } from '@/lib/content'
+import type { DataRequestKind } from '@/lib/data-requests/kinds'
+import type { DeletionOutcome } from '@/lib/data-requests/outcome'
 import { matchDetailRoute } from '@/lib/detail-routes'
 import { formatDay } from '@/lib/jobs/format'
 import { MEMBER_PATHS } from '@/lib/members/paths'
@@ -208,6 +210,79 @@ export function inactivityWarningEmail({
       `${t('account.inactiveWarning.text', { date })}\n${siteUrl(MEMBER_PATHS.signIn)}`,
       t('account.inactiveWarning.after'),
       t('account.inactiveWarning.why', { privacyUrl: privacyUrl(locale) }),
+      ...closing(t),
+    ),
+  }
+}
+
+/**
+ * The link that confirms a request from the data-request form (M4b, D49; the M4b design §7.8, §9),
+ * sent while the person waits, to the address they typed. It is also the acknowledgement that the
+ * request arrived. It names the kind of request (one of the form's choices), never what the person
+ * wrote, says that nothing is done until the link is used, and what stays if it never is (the
+ * request's type, date and a scrambled code of the address, for 60 days). `link` is absolute, on
+ * the site's own origin (`appOrigin()`).
+ */
+export function dataRequestConfirmEmail({
+  locale,
+  kind,
+  link,
+}: {
+  locale: Locale
+  kind: DataRequestKind
+  link: string
+}): EmailText {
+  const t = translator(locale)
+  return {
+    locale,
+    subject: t('dataRequest.confirm.subject'),
+    text: paragraphs(
+      t('greeting'),
+      t(`dataRequest.confirm.types.${kind}`),
+      `${t('dataRequest.confirm.act')}\n${link}`,
+      t('dataRequest.confirm.validity'),
+      t('dataRequest.confirm.notYou'),
+      ...closing(t),
+    ),
+  }
+}
+
+/**
+ * The one email after a confirmed deletion from the data-request form (M4b, D49; the M4b design
+ * §7.8, §9), sent by `sendRequestEmails` from the request's record within minutes: what was deleted
+ * (from the counts in its `outcome`, never what the records said), which requests about personal
+ * rights keep the address and why, and what stays (the record of the request, the backups).
+ */
+export function dataDeletedEmail({
+  locale,
+  outcome,
+}: {
+  locale: Locale
+  outcome: DeletionOutcome
+}): EmailText {
+  const t = translator(locale)
+  const deleted = [
+    outcome.suggestionsDeleted > 0
+      ? t('dataRequest.deleted.suggestions', { count: outcome.suggestionsDeleted })
+      : null,
+    outcome.accountDeleted > 0 ? t('dataRequest.deleted.account') : null,
+    outcome.newsletterRemoved > 0 ? t('dataRequest.deleted.newsletter') : null,
+    outcome.reportAddressesCleared > 0
+      ? t('dataRequest.deleted.reports', { count: outcome.reportAddressesCleared })
+      : null,
+  ].filter((line): line is string => line !== null)
+  return {
+    locale,
+    subject: t('dataRequest.deleted.subject'),
+    text: paragraphs(
+      t('greeting'),
+      deleted.length > 0
+        ? `${t('dataRequest.deleted.text')}\n${deleted.map((line) => `- ${line}`).join('\n')}`
+        : t('dataRequest.deleted.nothing'),
+      outcome.personalRightsReportsKept > 0
+        ? t('dataRequest.deleted.kept', { count: outcome.personalRightsReportsKept })
+        : null,
+      t('dataRequest.deleted.record', { privacyUrl: privacyUrl(locale) }),
       ...closing(t),
     ),
   }

@@ -13,7 +13,16 @@ export const PAGES = [
   { path: '/en/legal/cookies/', name: 'cookies and storage' },
   { path: '/en/legal/terms/', name: 'terms of use' },
   { path: '/en/legal/takedown/', name: 'notice and takedown' },
+  // With the data-request form at its end (M4b), where the app can send email (as in CI);
+  // without a mail server it says the form is unavailable. The pages after it: an unknown link is
+  // expired. The link's page with a valid link (a deletion, another request) and after a failure
+  // needs a link of its own, so its flows (data-requests.spec.ts) check those states for reflow and
+  // in the pseudo-locale, as layout.spec.ts and pseudo-locale.spec.ts check these.
   { path: '/en/legal/data-requests/', name: 'data requests' },
+  { path: '/en/legal/data-requests/sent/', name: 'data request sent' },
+  { path: '/en/legal/data-requests/confirm/?token=expired', name: 'data request link (expired)' },
+  { path: '/en/legal/data-requests/done/', name: 'data deleted' },
+  { path: '/en/legal/data-requests/received/', name: 'data request confirmed' },
   { path: '/en/events/', name: 'placeholder (window)' },
   { path: '/en/suggest/', name: 'suggest a listing' },
   { path: '/en/suggest/sent/', name: 'suggestion sent' },

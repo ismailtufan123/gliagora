@@ -248,8 +248,9 @@ export const FAKE_REPORTS: FakeReport[] = [
 
 /**
  * A data request (M4b, D49), as the form, the account settings or an editor recorded it, and how
- * far it has been handled. Every one is marked by its action note (the editors' own field), so the
- * next run finds them, also the unconfirmed ones, which hold no address or text of their own.
+ * far it has been handled. Every confirmed one is marked by its action note (the editors' own
+ * field), so the next run finds them; an unconfirmed one holds no note, address or text of its
+ * own, and is found by the hash of its fake address (src/scripts/fake-queue.ts).
  */
 export type FakeDataRequest = {
   kind: DataRequestKind

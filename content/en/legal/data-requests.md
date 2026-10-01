@@ -10,27 +10,37 @@ You can ask us whether we hold data about you and ask for a copy of it. You can 
 
 - **Unsubscribe from Glia Notes:** use the one-click link in any Glia Notes email, or the newsletter switch in your account settings. It takes effect immediately.
 - **Download your data (members):** "Download my data" in your account settings gives you a JSON file, a common file format.
-- **Delete your account (members):** use "Delete my account" in your account settings. When you confirm, we delete your account, saved items, settings and newsletter subscription at once. Your consent records are unlinked from you. We then send you one final email to confirm the deletion.
+- **Delete your account (members):** use "Delete my account" in your account settings. When you confirm, we delete your account, saved items, settings and newsletter subscription at once. Your consent records are unlinked from you. If your account has an email address, we then send you one final email to confirm the deletion. We record the deletion as a request (see "Records of your request").
 
-## If you are not a member
+## Delete your data with the form
 
-1. Enter your email address in the form on this page.
-2. We send a verification link to that address.
-3. When you click it, we automatically delete your newsletter subscription and the email address on any suggestion you sent, and unlink your consent records from you. Then we send you a confirmation.
+You do not need an account to have your data deleted. Members can use the form too.
 
-Whether you use this form or delete your account, some records stay for the periods set in the privacy policy: the records of your requests, our email correspondence with you and our logs. Deleted data, including a deleted account, disappears from our backups within 6 months.
+1. In the [form on this page](#request-form), choose "Delete my data" and enter your email address.
+2. We send a link to that address. It works for 24 hours and only once.
+3. When you open it and confirm, we delete at once:
+   - each suggestion you sent with that address, with its link, note and address;
+   - a Gliagora account with that address, if there is one, with its saved items and settings;
+   - the newsletter subscription of that address, if there is one;
+   - your address on the problem reports and corrections you sent with it.
+
+   We also unlink your consent records from you. Then we send you one email that says what we deleted.
+
+Requests about your personal rights that you sent through "Report a problem" keep your address: we handle them under Turkish Law No. 5651 and keep them for 2 years after they are closed, to be able to show how we handled them. [TO DECIDE: B11 – whether a confirmed deletion request should also clear the address on requests about personal rights]
+
+Whether you use this form or delete your account, some records stay for the periods set in the privacy policy: the records of your requests, our email correspondence with you and our logs. Deleted data, including a deleted account, disappears from our backups within 6 months. If we ever restore a backup, we delete it again.
 
 ## Other requests
 
-For anything else, such as a correction, an objection or a copy of your data if you are not a member, use the form on this page or write to [privacy@gliagora.com](mailto:privacy@gliagora.com). Tell us your name, the email address you use with Gliagora and what you are asking for. If you write by email, write from that address. You can also email us a request signed with a secure electronic or mobile signature. You can write in English or Turkish. [TO DECIDE: B5 – KVKK application channels without a postal address]
+For anything else, such as a correction, an objection or a copy of your data if you are not a member, use the [form on this page](#request-form) or write to [privacy@gliagora.com](mailto:privacy@gliagora.com). In the form, enter the email address you use with Gliagora, choose what you are asking for and describe it under "Details". Your name is optional: give it if it helps us find your data. If you write by email, tell us your name, the email address you use with Gliagora and what you are asking for, and write from that address. You can also email us a request signed with a secure electronic or mobile signature. You can write in English or Turkish. [TO DECIDE: B5 – KVKK application channels without a postal address, and whether a request through the form needs more than an optional name (KVKK application communiqué, Art. 5)]
 
-If you use the form, you get an automatic acknowledgement by email at once. We answer free of charge within 30 days under KVKK (Art. 13), or within one month under the GDPR (Art. 12). [TO DECIDE: B10 – answer period] If we refuse a request, we explain why.
+If you use the form, we email you at once. This email is our acknowledgement, and it asks you to confirm the request with a link that works for 24 hours. We act only on confirmed requests. Once you confirm a request, we answer it free of charge within 30 days of receiving it under KVKK (Art. 13), or within one month under the GDPR (Art. 12). [TO DECIDE: B10 – answer period] If we refuse a request, we explain why.
 
 To have content about you corrected or removed from a listing, use the [notice and takedown page](/en/legal/takedown/).
 
 ## How we check that a request is yours
 
-Before we act, we check that the request comes from you, so that no one else can see or delete your data. Usually a verification link sent to your email address is enough. If it is not, we may ask you for more information, but only what we need for this check. [TO DECIDE: B5 – which identification details a request must contain, and whether we may ever ask for a copy of an identity document]
+Before we act, we check that the request comes from you, so that no one else can see or delete your data. Usually the link we send to your email address is enough: only the person who reads that mailbox can confirm the request. If it is not, we may ask you for more information, but only what we need for this check. [TO DECIDE: B5 – which identification details a request must contain, and whether we may ever ask for a copy of an identity document]
 
 ## Data we cannot find
 
@@ -48,4 +58,8 @@ If you are not satisfied with our answer, you can complain:
 
 ## Records of your request
 
-We keep a record of each request: its type, your email address, the details you give us, the date we received it, the date our answer is due, the date we closed it, its status and our email correspondence with you. We keep it for 2 years after the request is closed, in our database and our mailbox, to be able to show how we handled it. [TO DECIDE: B11 – 2-year period] The details and the legal basis are under "[Data requests](/en/legal/privacy/#data-requests)" in the privacy policy.
+We keep a record of each request: its type, your email address, your name if you give it, the details you give us, the date we received it, the date our answer is due, the date we closed it, its status and our email correspondence with you. For a deletion done through the form, we keep neither your name nor the details, but we keep how many records were deleted. We keep the record for 2 years after the request is closed, in our database and our mailbox, to be able to show how we handled it.
+
+If you send the form but do not confirm the request, we keep only its type, the date and a scrambled code made from your email address (a hash), for 60 days, to be able to show that a request arrived. We do not keep the address itself. What you wrote in the form is kept only with the link, and is deleted with it after 24 hours. [TO DECIDE: B11 – 2-year period, and 60 days for requests that are not confirmed]
+
+The details and the legal basis are under "[Data requests](/en/legal/privacy/#data-requests)" in the privacy policy.

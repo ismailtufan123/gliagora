@@ -31,6 +31,19 @@ const DAY_MS = 86_400_000
 const ids = (values: unknown[]) =>
   values.map((value) => idOf(value)).filter((id): id is number => typeof id === 'number')
 
+/** The address hash of a fake request from the form (the same key as the site's). */
+const fakeAddressHash = (email: string | null) =>
+  requestAddressHash(email ?? '', process.env.PAYLOAD_SECRET ?? '')
+
+/**
+ * The address hashes of the fake requests from the form: an unconfirmed one holds no note of its
+ * own (src/collections/DataRequests.ts), so the next run finds it by its hash.
+ */
+const fakeFormHashes = () =>
+  FAKE_DATA_REQUESTS.filter((request) => request.source === 'form')
+    .map((request) => fakeAddressHash(request.email))
+    .filter((hash): hash is string => Boolean(hash))
+
 /**
  * Removes the fake suggestions, candidates, reports and data requests of an earlier run (including
  * the reports the end-to-end tests sent), and the draft jobs made by accepting candidates. Returns how many
@@ -38,10 +51,18 @@ const ids = (values: unknown[]) =>
  */
 export async function removeFakeQueue(payload: Payload) {
   // Data requests are never deleted by editors; the local API (which bypasses access control)
-  // removes the fake ones, found by the marker in their action note.
+  // removes the fake ones, found by the marker in their action note, or, while unconfirmed (they
+  // hold no note then), by the address hash of a fake address.
   const dataRequests = await payload.delete({
     collection: 'data-requests',
-    where: { actionNote: { contains: FAKE_QUEUE_NOTE } },
+    where: {
+      or: [
+        { actionNote: { contains: FAKE_QUEUE_NOTE } },
+        {
+          and: [{ status: { equals: 'unconfirmed' } }, { emailHash: { in: fakeFormHashes() } }],
+        },
+      ],
+    },
     depth: 0,
   })
   const reports = await payload.delete({
@@ -101,8 +122,9 @@ export async function removeFakeQueue(payload: Payload) {
 
 /**
  * Adds one fake data request the way the site and the editors make them: a request from the form
- * is recorded unconfirmed (kind, date, address hash) and then confirmed, which stores what the
- * person wrote; an emailed one is recorded as New; then each is handled as an editor would.
+ * is recorded unconfirmed (kind, date, address hash, nothing else) and then confirmed, which
+ * stores what the person wrote, and the marker note with it; an emailed one is recorded as New;
+ * then each is handled as an editor would.
  */
 async function addFakeDataRequest(payload: Payload, request: FakeDataRequest, now: Date) {
   const actionNote = `${FAKE_QUEUE_NOTE} Fake data request.`
@@ -130,10 +152,9 @@ async function addFakeDataRequest(payload: Payload, request: FakeDataRequest, no
   }
   let created: DataRequest
   if (request.source === 'form') {
-    const emailHash = requestAddressHash(request.email ?? '', process.env.PAYLOAD_SECRET ?? '')
     created = await payload.create({
       collection: 'data-requests',
-      data: { ...base, status: 'unconfirmed', emailHash, actionNote },
+      data: { ...base, status: 'unconfirmed', emailHash: fakeAddressHash(request.email) },
       depth: 0,
     })
     if (request.status === 'unconfirmed') return created
@@ -148,14 +169,16 @@ async function addFakeDataRequest(payload: Payload, request: FakeDataRequest, no
             name: null,
             status: 'closed',
             action: 'deleted-automatically',
+            actionNote,
             outcome: {
               suggestionsDeleted: 0,
               accountDeleted: 0,
+              newsletterRemoved: 0,
               reportAddressesCleared: 0,
               personalRightsReportsKept: 0,
             },
           }
-        : { ...written, status: 'new' },
+        : { ...written, status: 'new', actionNote },
       depth: 0,
     })
     if (deletion) return created

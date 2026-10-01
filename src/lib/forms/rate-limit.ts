@@ -47,6 +47,12 @@ export const CREATE_ACCOUNT_LIMIT: LimitBucket = { name: 'create', perWindow: 10
  */
 export const VERIFY_EMAIL_LIMIT: LimitBucket = { name: 'verify', perWindow: 10 }
 
+/**
+ * The data-request form (M4b, D49): 5 requests an hour per IP address, besides the budget of the
+ * email address the confirmation link goes to and the site-wide cap (`emailLimits`).
+ */
+export const DATA_REQUEST_LIMIT: LimitBucket = { name: 'request', perWindow: 5 }
+
 /** Links to add an address that one member may ask for in an hour. */
 export const MEMBER_VERIFY_PER_HOUR = 3
 

@@ -795,6 +795,141 @@ export const AREAS: Area[] = [
     },
   },
   {
+    title: 'Data-request form and pages',
+    shown: false,
+    note: `The form at the end of the data requests page (/en/legal/data-requests/), and the pages after it, exist only in English, ${ENGLISH_ONLY}. They are not among the strings that go public at M2 in Turkish: at M2 the form goes public in English. The form shows only once a mail server is set up (M2).`,
+    places: {
+      'dataRequest.heading':
+        'Data requests page (/en/legal/data-requests/) - heading of the form at the end of the page',
+      'dataRequest.intro': 'Data requests page - first paragraph above the form',
+      'dataRequest.kept':
+        'Data requests page - second paragraph above the form (what is kept until the request is confirmed), with a link to the privacy policy',
+      'dataRequest.unavailable':
+        'Data requests page - instead of the form, while there is no mail server or the spam check is not set up',
+      'dataRequest.noscript': 'Data requests page - note above the form when JavaScript is off',
+      'dataRequest.email.label': 'Data request form - label of the email field',
+      'dataRequest.email.hint': 'Data request form - hint under that label',
+      'dataRequest.kind.legend': 'Data request form - question above the choices',
+      'dataRequest.kind.deletion':
+        'Data request form - first choice (its label and hint); the label also appears on the confirmation page',
+      'dataRequest.kind.access':
+        'Data request form - second choice (its label and hint); the label also appears on the confirmation page',
+      'dataRequest.kind.correction':
+        'Data request form - third choice (its label and hint); the label also appears on the confirmation page',
+      'dataRequest.kind.objection':
+        'Data request form - fourth choice (its label and hint); the label also appears on the confirmation page',
+      'dataRequest.kind.restriction':
+        'Data request form - fifth choice (its label and hint); the label also appears on the confirmation page',
+      'dataRequest.kind.withdraw-consent':
+        'Data request form - sixth choice (its label and hint); the label also appears on the confirmation page',
+      'dataRequest.kind.other':
+        'Data request form - last choice (its label and hint); the label also appears on the confirmation page',
+      'dataRequest.name.label': 'Data request form - label of the name field',
+      'dataRequest.name.hint': 'Data request form - hint under that label',
+      'dataRequest.details.label': 'Data request form - label of the details field',
+      'dataRequest.details.hint': 'Data request form - hint under that label',
+      'dataRequest.details.left': 'Data request form - count under the details field',
+      'dataRequest.details.over':
+        'Data request form - count under the details field, when the text is too long',
+      'dataRequest.honeypot':
+        'Data request form - label of a hidden field that people never see (only spam programs fill it in)',
+      'dataRequest.spamNote': 'Data request form - note above the send button',
+      'dataRequest.submit': 'Data request form - send button',
+      'dataRequest.sending': 'Data request form - the send button while the form is sent',
+      'dataRequest.errors.title':
+        'Data request form - heading of the box that lists the problems, after sending',
+      'dataRequest.errors.prefix':
+        'Data request form - word before each problem at its field, read by screen readers',
+      'dataRequest.errors.emailMissing': 'Data request form - error at the email field',
+      'dataRequest.errors.emailInvalid': 'Data request form - error at the email field',
+      'dataRequest.errors.emailTooLong': 'Data request form - error at the email field',
+      'dataRequest.errors.kindMissing': 'Data request form - error at the choices',
+      'dataRequest.errors.nameTooLong': 'Data request form - error at the name field',
+      'dataRequest.errors.detailsMissing': 'Data request form - error at the details field',
+      'dataRequest.errors.detailsTooLong': 'Data request form - error at the details field',
+      'dataRequest.errors.needsJs':
+        'Data request form - error when the spam check did not run (JavaScript off, or the page had not loaded)',
+      'dataRequest.errors.spamCheck':
+        'Data request form - error when the spam check expired or failed',
+      'dataRequest.errors.rateLimited':
+        'Data request form - error after too many requests from one connection or to one address',
+      'dataRequest.errors.unavailable':
+        'Data request form - error when the confirmation email could not be sent',
+      'dataRequest.errors.failed':
+        'Data request form - error when the request could not be stored, with the reference that finds it in our log',
+      'dataRequest.sent.metaTitle':
+        'After sending the form (/en/legal/data-requests/sent/) - browser tab',
+      'dataRequest.sent.title': 'After sending the form - heading',
+      'dataRequest.sent.text': 'After sending the form - first paragraph',
+      'dataRequest.sent.confirm': 'After sending the form - first point of the list',
+      'dataRequest.sent.validity': 'After sending the form - second point of the list',
+      'dataRequest.sent.notConfirmed': 'After sending the form - third point of the list',
+      'dataRequest.sent.missing':
+        'After sending the form - last paragraph, with a link back to the form',
+      'dataRequest.confirm.expiredTitle':
+        'Page the emailed link opens (/en/legal/data-requests/confirm/), when the link has expired or was used - heading and browser tab',
+      'dataRequest.confirm.expired':
+        'Page the emailed link opens, when the link has expired or was used - first paragraph',
+      'dataRequest.confirm.expiredUsed':
+        'Page the emailed link opens, when the link has expired or was used - second paragraph',
+      'dataRequest.confirm.again':
+        'Page the emailed link opens, when the link has expired or was used - button back to the form',
+      'dataRequest.confirm.deletionTitle':
+        'Page the emailed link opens, for a deletion - heading and browser tab',
+      'dataRequest.confirm.otherTitle':
+        'Page the emailed link opens, for any other request - heading and browser tab',
+      'dataRequest.confirm.from':
+        'Page the emailed link opens - the address the request was sent with ({email})',
+      'dataRequest.confirm.deletion.intro':
+        'Page the emailed link opens, for a deletion - paragraph under the address',
+      'dataRequest.confirm.deletion.goneHeading':
+        'Page the emailed link opens, for a deletion - first subheading',
+      'dataRequest.confirm.deletion.gone':
+        'Page the emailed link opens, for a deletion - the list of what is deleted',
+      'dataRequest.confirm.deletion.keptHeading':
+        'Page the emailed link opens, for a deletion - second subheading',
+      'dataRequest.confirm.deletion.kept':
+        'Page the emailed link opens, for a deletion - the list of what stays',
+      'dataRequest.confirm.deletion.email':
+        'Page the emailed link opens, for a deletion - paragraph after the lists',
+      'dataRequest.confirm.deletion.button':
+        'Page the emailed link opens, for a deletion - the button that deletes',
+      'dataRequest.confirm.other.kind':
+        'Page the emailed link opens, for any other request - what was asked for ({kind}: the choice in the form)',
+      'dataRequest.confirm.other.answer':
+        'Page the emailed link opens, for any other request - paragraph under that',
+      'dataRequest.confirm.other.button':
+        'Page the emailed link opens, for any other request - the button that confirms',
+      'dataRequest.confirm.notYou': 'Page the emailed link opens - paragraph above the button',
+      'dataRequest.done.metaTitle':
+        'After a confirmed deletion (/en/legal/data-requests/done/) - browser tab',
+      'dataRequest.done.title': 'After a confirmed deletion - heading',
+      'dataRequest.done.text': 'After a confirmed deletion - paragraph above the list',
+      'dataRequest.done.deleted': 'After a confirmed deletion - the list of what was deleted',
+      'dataRequest.done.email': 'After a confirmed deletion - paragraph after that list',
+      'dataRequest.done.keptHeading': 'After a confirmed deletion - subheading',
+      'dataRequest.done.kept': 'After a confirmed deletion - the list of what stays',
+      'dataRequest.done.more':
+        'After a confirmed deletion - paragraph with a link to the data requests page',
+      'dataRequest.done.jobs': 'After a confirmed deletion - first link at the end',
+      'dataRequest.done.home': 'After a confirmed deletion - second link at the end',
+      'dataRequest.received.metaTitle':
+        'After any other confirmed request (/en/legal/data-requests/received/) - browser tab',
+      'dataRequest.received.title': 'After any other confirmed request - heading',
+      'dataRequest.received.text': 'After any other confirmed request - first paragraph',
+      'dataRequest.received.answer': 'After any other confirmed request - second paragraph',
+      'dataRequest.received.record': 'After any other confirmed request - third paragraph',
+      'dataRequest.received.more':
+        'After any other confirmed request - paragraph with a link to the data requests page',
+      'dataRequest.received.jobs': 'After any other confirmed request - first link at the end',
+      'dataRequest.received.home': 'After any other confirmed request - second link at the end',
+      'outcome.error.requestFailed':
+        'Page the emailed link opens - message at the top when confirming went wrong (nothing changed)',
+      'outcome.error.requestFailedReference':
+        'Page the emailed link opens - message at the top when confirming went wrong (nothing changed), with the reference that finds it in our log',
+    },
+  },
+  {
     title: 'Sign-in and account pages',
     shown: false,
     note: `Sign-in, sign-out and the account pages exist only in English (/en/sign-in/, /en/account/), ${ENGLISH_ONLY}; Turkish pages link to them from the header and the mobile menu.`,
@@ -1213,7 +1348,7 @@ export const AREAS: Area[] = [
     note: 'Each email goes out in the language of the form the person used, and those forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).',
     places: {
       'emails.greeting':
-        'Every automatic email (the outcome of a suggestion, the confirmation of a report, a sign-in link, a link to add an address, the emails about deleting an account) - first line',
+        'Every automatic email (the outcome of a suggestion, the confirmation of a report, a sign-in link, a link to add an address, the link to confirm a data request, the emails about deleting an account or data) - first line',
       'emails.suggestion.subjectPublished':
         'Email about the outcome of a suggestion, when it was published - subject',
       'emails.suggestion.subjectNotAdded':
@@ -1259,6 +1394,34 @@ export const AREAS: Area[] = [
         'Email with a link to add an address to an account - how long the link works',
       'emails.verifyEmail.notYou':
         'Email with a link to add an address to an account - what to do if you did not ask for it',
+      'emails.dataRequest.confirm.subject':
+        'Email with the link to confirm a data request (sent when the data-request form is sent) - subject',
+      'emails.dataRequest.confirm.types':
+        'Email with the link to confirm a data request - first paragraph, which names the kind of request (one text for each choice of the form)',
+      'emails.dataRequest.confirm.act':
+        'Email with the link to confirm a data request - second paragraph, followed by the link',
+      'emails.dataRequest.confirm.validity':
+        'Email with the link to confirm a data request - how long the link works',
+      'emails.dataRequest.confirm.notYou':
+        'Email with the link to confirm a data request - what to do if you did not send it, and what we keep then',
+      'emails.dataRequest.deleted.subject':
+        'Email after a deletion confirmed with the data-request form - subject',
+      'emails.dataRequest.deleted.text':
+        'Email after a confirmed deletion - first paragraph, followed by the list of what was deleted',
+      'emails.dataRequest.deleted.suggestions':
+        'Email after a confirmed deletion - a point of the list: the suggestions deleted ({count}: their number)',
+      'emails.dataRequest.deleted.account':
+        'Email after a confirmed deletion - a point of the list: the account deleted',
+      'emails.dataRequest.deleted.newsletter':
+        'Email after a confirmed deletion - a point of the list: the Glia Notes subscription removed (from M2)',
+      'emails.dataRequest.deleted.reports':
+        'Email after a confirmed deletion - a point of the list: the reports whose address was removed ({count}: their number)',
+      'emails.dataRequest.deleted.nothing':
+        'Email after a confirmed deletion - first paragraph instead, when nothing was found under the address',
+      'emails.dataRequest.deleted.kept':
+        'Email after a confirmed deletion - the requests about personal rights that keep the address, and why ({count}: their number)',
+      'emails.dataRequest.deleted.record':
+        'Email after a confirmed deletion - what stays, with the link to the privacy notice',
       'emails.account.deleted.subject': 'Email after a member deleted their account - subject',
       'emails.account.deleted.text': 'Email after a member deleted their account - first paragraph',
       'emails.account.deleted.kept':

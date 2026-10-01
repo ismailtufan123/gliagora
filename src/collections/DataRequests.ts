@@ -1,5 +1,11 @@
-import type { CollectionBeforeValidateHook, CollectionConfig, Field, PayloadRequest } from 'payload'
-import { validations } from 'payload'
+import type {
+  CollectionBeforeChangeHook,
+  CollectionBeforeValidateHook,
+  CollectionConfig,
+  Field,
+  PayloadRequest,
+} from 'payload'
+import { ValidationError, validations } from 'payload'
 
 import { nobody, signedIn } from '@/lib/access'
 import { DATA_REQUEST_KINDS, DATA_REQUEST_SOURCES } from '@/lib/data-requests/kinds'
@@ -80,6 +86,49 @@ const prepare: CollectionBeforeValidateHook<DataRequest> = ({
   return data
 }
 
+/** What an editor writes about handling a request: nothing while it is unconfirmed. */
+const HANDLING = ['action', 'actionNote'] as const
+
+// An unconfirmed request holds only its kind, its date and the address hash, as the form, the
+// confirmation email and the privacy texts promise: no editor's note and no action either. The
+// admin shows both read-only then (their access rule below); this refuses them also from code that
+// bypasses access control, and the database refuses them too (migration
+// 20261002_090000_data_request_guards).
+const keepUnconfirmedMinimal: CollectionBeforeChangeHook<DataRequest> = ({
+  data,
+  originalDoc,
+  req,
+}) => {
+  if ((data.status ?? originalDoc?.status) !== 'unconfirmed') return data
+  for (const name of HANDLING) if (data[name] === '') data[name] = null
+  const written = HANDLING.filter((name) => data[name] != null)
+  if (written.length > 0) {
+    throw new ValidationError({
+      collection: 'data-requests',
+      errors: written.map((path) => ({
+        path,
+        message:
+          'An unconfirmed request holds nothing but its kind, its date and its address code.',
+      })),
+      req,
+    })
+  }
+  return data
+}
+
+/**
+ * Typed by a signed-in editor once the request is confirmed (or arrived by email), never before.
+ * The site's own code saves with access control off.
+ */
+const whenConfirmed = (field: Field): Field =>
+  ({
+    ...field,
+    access: {
+      update: ({ req, doc }: { req: PayloadRequest; doc?: RequestData }) =>
+        Boolean(req.user) && doc?.status !== 'unconfirmed',
+    },
+  }) as Field
+
 /** Set by the site, never typed by an editor. */
 const bySite = (field: Field): Field =>
   ({
@@ -107,10 +156,12 @@ const sidebarDate = (name: string, label: string, description: string): Field =>
 // PLAN §3.2, §5.1 (DataRequest), §15.1, §18.1; M4b, D8, D49: requests about a person's own data.
 // Emails to privacy@, which editors record here and answer within 30 days, closing them with what
 // they did; "Delete my account" in a member's privacy settings (done at once, recorded closed by
-// src/lib/members/account-deletion.ts; the final email goes out from the record,
-// `sendRequestEmails`). Later in M4b (the M4b design §7.8): the form on /en/legal/data-requests/
-// (recorded at once, acted on only after the person confirms it with the link in our email; a
-// confirmed deletion is done by the site itself).
+// src/lib/members/account-deletion.ts); and the form on /en/legal/data-requests/ (the M4b design
+// §7.8): recorded at once with only its kind, date and address hash (src/lib/data-requests/
+// record.ts), acted on only after the person confirms it with the link in our email
+// (src/lib/data-requests/confirm.ts). A confirmed deletion is done by the site itself and recorded
+// closed; any other confirmed request waits here as New for an editor. The final email of a
+// deletion the site did goes out from its record (`sendRequestEmails`).
 //
 // No versions: a request holds personal data, and the retention task deletes the whole record, 2
 // years after it was closed, or 60 days after it arrived if nobody confirmed it
@@ -145,7 +196,7 @@ export const DataRequests: CollectionConfig = {
   hooks: {
     beforeOperation: [keepOutOfLists(PRIVATE_FIELDS)],
     beforeValidate: [...fixed.beforeValidate, ...once.beforeValidate, prepare],
-    beforeChange: [...fixed.beforeChange, ...once.beforeChange],
+    beforeChange: [...fixed.beforeChange, ...once.beforeChange, keepUnconfirmedMinimal],
   },
   fields: [
     asReceived({
@@ -207,7 +258,7 @@ export const DataRequests: CollectionConfig = {
         description: 'What the person wrote. Empty until a request from the form is confirmed.',
       },
     }),
-    {
+    whenConfirmed({
       name: 'actionNote',
       label: 'Note on what was done',
       type: 'textarea',
@@ -215,12 +266,13 @@ export const DataRequests: CollectionConfig = {
       admin: {
         disableListColumn: true,
         description:
-          'For editors only; never shown on the site or sent to the person. Say what you checked and what you answered.',
+          'For editors only; never shown on the site or sent to the person. Say what you checked and what you answered. Not for a request that is not confirmed yet, which holds nothing but its kind, its date and its address code.',
       },
-    },
+    }),
     bySite({
       // Counts only, never what was deleted: suggestionsDeleted, accountDeleted (0 or 1),
-      // reportAddressesCleared, personalRightsReportsKept.
+      // newsletterRemoved (0 or 1), reportAddressesCleared, personalRightsReportsKept
+      // (src/lib/data-requests/outcome.ts).
       name: 'outcome',
       label: 'What the site deleted',
       type: 'json',
@@ -252,7 +304,7 @@ export const DataRequests: CollectionConfig = {
           'Not confirmed yet: the person has not opened the link in our email; nothing is done until they do. New: confirmed, nobody has answered yet. In progress: you have answered the person or started. Closed: done, with what you did.',
       },
     },
-    {
+    whenConfirmed({
       name: 'action',
       label: 'What was done',
       type: 'select',
@@ -269,7 +321,7 @@ export const DataRequests: CollectionConfig = {
         return problem ?? validations.select(value as never, options as never)
       },
       admin: { position: 'sidebar', description: 'Required to close the request.' },
-    },
+    }),
     bySite({
       name: 'source',
       type: 'select',
