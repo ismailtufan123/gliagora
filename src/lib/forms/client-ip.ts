@@ -1,5 +1,6 @@
-import { createHmac, hkdfSync } from 'node:crypto'
 import { isIP } from 'node:net'
+
+import { keyedHash } from '@/lib/keys'
 
 // Who is sending a form, for the rate limit only (PLAN §3.2, D34). The raw IP address is never
 // stored or logged: the limit keeps an HMAC of it, whose key is derived from PAYLOAD_SECRET, so the
@@ -65,21 +66,10 @@ export function limitSubject(ip: string): string {
     .join(':')}::/64`
 }
 
-const keys = new Map<string, Buffer>()
-
-/** A key for hashing IP addresses, derived from PAYLOAD_SECRET (HKDF-SHA256, fixed label). */
-function hashKey(secret: string): Buffer {
-  let key = keys.get(secret)
-  if (!key) {
-    key = Buffer.from(hkdfSync('sha256', secret, '', 'gliagora/forms/ip-hash/v1', 32))
-    keys.clear()
-    keys.set(secret, key)
-  }
-  return key
-}
-
-/** The stored form of a client's IP address: HMAC-SHA256 (hex) of its limit subject. */
+/**
+ * The stored form of a client's IP address: HMAC-SHA256 (hex) of its limit subject, with a key
+ * derived from PAYLOAD_SECRET (src/lib/keys.ts).
+ */
 export function hashClientIp(ip: string, secret: string): string {
-  if (secret === '') throw new Error('PAYLOAD_SECRET is not set.')
-  return createHmac('sha256', hashKey(secret)).update(limitSubject(ip)).digest('hex')
+  return keyedHash(secret, 'gliagora/forms/ip-hash/v1', limitSubject(ip))
 }

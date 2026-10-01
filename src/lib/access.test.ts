@@ -6,6 +6,8 @@ import { describe, expect, it } from 'vitest'
 import { COLLECTIONS } from '@/collections'
 import { GLOBALS } from '@/globals'
 
+import { nobody, signedIn } from './access'
+
 // The rules as written (src/lib/access.ts). tests/e2e/access.spec.ts checks the same over HTTP,
 // together with Payload's own collections and routes.
 
@@ -76,6 +78,39 @@ describe('access rules (PLAN §18.2)', () => {
   })
 })
 
+describe('member accounts (M4b, D49)', () => {
+  const bySlug = (slug: string) => COLLECTIONS.find((c) => c.slug === slug)!
+  const HIDDEN = ['members', 'member-sessions', 'email-tokens', 'saved-items', 'deletion-log']
+
+  it('are never Payload accounts: the editors (users) are the only collection with auth', () => {
+    expect(COLLECTIONS.filter((c) => c.auth).map((c) => c.slug)).toEqual(['users'])
+  })
+
+  it.each(HIDDEN)('%s is closed to everyone, with no API routes and no copies', (slug) => {
+    const collection = bySlug(slug)
+    for (const operation of ['read', 'create', 'update', 'delete', 'readVersions', 'unlock']) {
+      expect((collection.access as Record<string, unknown>)[operation], operation).toBe(nobody)
+    }
+    expect(collection.endpoints).toBe(false)
+    expect(collection.admin?.hidden).toBe(true)
+    expect(collection.graphQL).toBe(false)
+    expect(collection.versions).toBeUndefined()
+    expect(collection.disableDuplicate).toBe(true)
+    expect(collection.lockDocuments).toBe(false)
+  })
+
+  it('data requests are handled by signed-in editors and deleted by nobody', () => {
+    const { access } = bySlug('data-requests')
+    expect(access).toMatchObject({
+      read: signedIn,
+      create: signedIn,
+      update: signedIn,
+      delete: nobody,
+    })
+    expect(bySlug('data-requests').endpoints).toBeUndefined()
+  })
+})
+
 describe('deploy/Caddyfile', () => {
   const caddyfile = readFileSync(new URL('../../deploy/Caddyfile', import.meta.url), 'utf8')
 
@@ -126,6 +161,30 @@ describe('deploy/Caddyfile', () => {
       )
       expect(rules, `resp_headers>${header}`).toContain('regexp \\?.*$ ?[removed]')
     }
+  })
+})
+
+describe('the production server’s files', () => {
+  it('never name the test sign-in providers (AUTH_TEST_ISSUER)', () => {
+    // Without the variable reaching the app, no test identity can reach the production database;
+    // the app also ignores it where PAYLOAD_JOBS_AUTORUN is "true" (src/lib/members/config.ts).
+    for (const file of ['compose.prod.yml', '.env.example']) {
+      const text = readFileSync(new URL(`../../deploy/${file}`, import.meta.url), 'utf8')
+      expect(text, `deploy/${file}`).not.toContain('AUTH_TEST_ISSUER')
+    }
+  })
+
+  it('pass the sign-in keys to the app, with ORCID’s own issuer by default', () => {
+    const compose = readFileSync(new URL('../../deploy/compose.prod.yml', import.meta.url), 'utf8')
+    for (const name of [
+      'GOOGLE_CLIENT_ID',
+      'GOOGLE_CLIENT_SECRET',
+      'ORCID_CLIENT_ID',
+      'ORCID_CLIENT_SECRET',
+    ]) {
+      expect(compose).toContain(`${name}: \${${name}:-}`)
+    }
+    expect(compose).toContain('ORCID_ISSUER: ${ORCID_ISSUER:-https://orcid.org}')
   })
 })
 

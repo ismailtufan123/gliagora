@@ -3,6 +3,8 @@
 // notes, addresses and email addresses only on the reserved example.org and example.com domains,
 // no real people. src/scripts/fake-queue.ts stores them after the fake jobs.
 
+import type { DataRequestKind, DataRequestSource } from '@/lib/data-requests/kinds'
+import type { DataRequestAction, DataRequestStatus } from '@/lib/data-requests/status'
 import type { ReportAction, ReportKind, ReportStatus } from '@/lib/reports/status'
 import type { RejectionReason, SubmissionKind } from '@/lib/review/status'
 
@@ -241,6 +243,90 @@ export const FAKE_REPORTS: FakeReport[] = [
     email: 'reader@example.org',
     institution: '05dxps055',
     status: 'new',
+  },
+]
+
+/**
+ * A data request (M4b, D49), as the form, the account settings or an editor recorded it, and how
+ * far it has been handled. Every one is marked by its action note (the editors' own field), so the
+ * next run finds them, also the unconfirmed ones, which hold no address or text of their own.
+ */
+export type FakeDataRequest = {
+  kind: DataRequestKind
+  source: DataRequestSource
+  status: DataRequestStatus
+  /**
+   * The address it came from. A request from the form keeps only its hash until it is confirmed;
+   * an account deleted without an address has none.
+   */
+  email: string | null
+  name?: string
+  details?: string
+  locale: 'en' | 'tr'
+  action?: DataRequestAction
+  /** How many days ago it arrived. */
+  receivedDaysAgo: number
+}
+
+export const FAKE_DATA_REQUESTS: FakeDataRequest[] = [
+  {
+    // Sent from the form, its link not opened yet: kind, date and the address hash only.
+    kind: 'deletion',
+    source: 'form',
+    status: 'unconfirmed',
+    email: 'requester-1@example.org',
+    locale: 'en',
+    receivedDaysAgo: 1,
+  },
+  {
+    kind: 'access',
+    source: 'form',
+    status: 'new',
+    email: 'requester-2@example.org',
+    name: 'A. Requester',
+    details: 'Please send me a copy of the data you hold about me.',
+    locale: 'en',
+    receivedDaysAgo: 3,
+  },
+  {
+    // Arrived by email to privacy@ and recorded by an editor.
+    kind: 'correction',
+    source: 'email',
+    status: 'in-progress',
+    email: 'requester-3@example.com',
+    details: 'The address on a report I sent has a typing mistake.',
+    locale: 'tr',
+    receivedDaysAgo: 12,
+  },
+  {
+    // Confirmed with the link: the site deleted the data itself.
+    kind: 'deletion',
+    source: 'form',
+    status: 'closed',
+    email: 'requester-4@example.org',
+    locale: 'en',
+    action: 'deleted-automatically',
+    receivedDaysAgo: 20,
+  },
+  {
+    // "Delete my account" of a member who had no address (ORCID only).
+    kind: 'deletion',
+    source: 'account',
+    status: 'closed',
+    email: null,
+    locale: 'en',
+    action: 'deleted-automatically',
+    receivedDaysAgo: 6,
+  },
+  {
+    kind: 'objection',
+    source: 'email',
+    status: 'closed',
+    email: 'requester-6@example.com',
+    details: 'I object to being contacted about my suggestion.',
+    locale: 'en',
+    action: 'answered',
+    receivedDaysAgo: 40,
   },
 ]
 

@@ -13,6 +13,8 @@ import * as migration_20260928_052700_retention_safeguards from './20260928_0527
 import * as migration_20260928_100000_search from './20260928_100000_search';
 import * as migration_20260928_135840_report_institution from './20260928_135840_report_institution';
 import * as migration_20260928_143415_institution_time_zone from './20260928_143415_institution_time_zone';
+import * as migration_20261001_142245_members from './20261001_142245_members';
+import * as migration_20261001_142246_member_constraints from './20261001_142246_member_constraints';
 
 export const migrations = [
   {
@@ -83,11 +85,21 @@ export const migrations = [
   {
     up: migration_20260928_135840_report_institution.up,
     down: migration_20260928_135840_report_institution.down,
-    name: '20260928_135840_report_institution'
+    name: '20260928_135840_report_institution',
   },
   {
     up: migration_20260928_143415_institution_time_zone.up,
     down: migration_20260928_143415_institution_time_zone.down,
-    name: '20260928_143415_institution_time_zone'
+    name: '20260928_143415_institution_time_zone',
+  },
+  {
+    up: migration_20261001_142245_members.up,
+    down: migration_20261001_142245_members.down,
+    name: '20261001_142245_members',
+  },
+  {
+    up: migration_20261001_142246_member_constraints.up,
+    down: migration_20261001_142246_member_constraints.down,
+    name: '20261001_142246_member_constraints',
   },
 ];

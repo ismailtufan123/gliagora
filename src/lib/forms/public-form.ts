@@ -5,13 +5,24 @@ import { errorCode } from '@/lib/errors'
 import { type SpamChallenge, checkAnswer, newChallenge } from './altcha'
 import { clientIp, hashClientIp } from './client-ip'
 import { FORM_INPUTS } from './fields'
-import { type LimitBucket, type LimitStore, admit } from './rate-limit'
+import { type Limit, type LimitBucket, type LimitStore, admit, ipLimit } from './rate-limit'
 
-// What happens when someone sends a public form ("Suggest a listing", "Report a problem"; PLAN
-// §3.2, §18.2). The checks run cheapest first: the fields, the hidden field, the spam check, then
-// the rate limit (the only one that needs the database), and only then is the form stored. Each
-// form describes its fields (a `PublicForm`); its Server Action passes in what this needs, so
-// tests can too.
+// What happens when someone sends a public form ("Suggest a listing", "Report a problem"; from M4b
+// also the forms that email a link; PLAN §3.2, §18.2). The checks run cheapest first: the fields,
+// the hidden field, the spam check, then the rate limits (the only check that needs the
+// database), and only then is the form stored. Each form describes its fields (a `PublicForm`);
+// its Server Action passes in what this needs, so tests can too.
+//
+// Next.js forwards a Server Action posted to a page that does not have it to the page that does
+// (adding `x-action-forwarded`), and that internal request goes straight to the app, past Caddy.
+// Our forms always post to the page that shows them, so they are never forwarded; a forwarded call
+// is someone running a form through another page, which at M2 could be a public page running a form
+// that is still behind the site-wide password. It is refused before the form is read (D49). With
+// Next.js 16.3.6 the forward meets the site's trailing-slash redirect and never reaches the form;
+// the refusal keeps it so if that changes (tests/e2e/actions.spec.ts checks both).
+
+/** The header Next.js adds to a Server Action it forwards from another page. */
+export const FORWARDED_ACTION_HEADER = 'x-action-forwarded'
 
 /** Problems with the whole form rather than a field; messages under `{form}.errors`. */
 export type FormProblem = 'needsJs' | 'spamCheck' | 'rateLimited' | 'unavailable' | 'failed'
@@ -36,17 +47,27 @@ export type FormDependencies<Data> = {
   now: Date
   /** The rate-limit store; asked for only when a form has passed the other checks. */
   limits: () => Promise<LimitStore>
-  /** Stores what was sent. */
-  save: (data: Data) => Promise<void>
+  /**
+   * Stores what was sent (and sends its email, for the forms that send one). `'unavailable'` when
+   * that could not be done just now (the mail server did not take the email): the form says
+   * "temporarily unavailable", and `save` has removed what it stored.
+   */
+  save: (data: Data) => Promise<void | 'unavailable'>
 }
 
 export type Parse<Data, Errors> = { ok: true; data: Data } | { ok: false; errors: Errors }
 
-/** One public form: how to read and check its fields, and its rate-limit bucket. */
+/** One public form: how to read and check its fields, and its rate limits. */
 export type PublicForm<Values, Data, Errors> = {
   /** Names what is stored, in the server log ("Suggestion not saved …"). */
   name: string
+  /** Its own limit per hashed IP address. */
   limit: LimitBucket
+  /**
+   * Limits that depend on what was sent, checked after the IP's: for the forms that send an email,
+   * the budget of the address it goes to and the site-wide cap (`emailLimits`).
+   */
+  moreLimits?: (data: Data, secret: string) => Limit[]
   /** The fields as sent: shown again in the form after an error. */
   read: (form: FormData) => Values
   parse: (values: Values, locale: string) => Parse<Data, Errors>
@@ -86,6 +107,11 @@ export async function handlePublicForm<Values, Data, Errors>(
   deps: FormDependencies<Data>,
   spec: PublicForm<Values, Data, Errors>,
 ): Promise<FormOutcome<Values, Errors>> {
+  if (deps.headers.get(FORWARDED_ACTION_HEADER) !== null) {
+    // Answered as a failed spam check: nothing is read, stored, counted or sent.
+    console.warn(`${spec.name}: a forwarded Server Action was refused`)
+    return { kind: 'refused', status: 400, problem: 'spamCheck', values: spec.read(new FormData()) }
+  }
   const values = spec.read(form)
   const { locale, altcha, honeypot } = readControls(form)
   if (!deps.altchaKey || !deps.secret) {
@@ -112,18 +138,25 @@ export async function handlePublicForm<Values, Data, Errors>(
   const reference = newReference()
   try {
     const admission = await admit(await deps.limits(), {
-      bucket: spec.limit,
-      ipHash: hashClientIp(clientIp(deps.headers), deps.secret),
+      keys: [
+        ipLimit(spec.limit, hashClientIp(clientIp(deps.headers), deps.secret)),
+        ...(spec.moreLimits?.(parsed.data, deps.secret) ?? []),
+      ],
       replayKey: answer.replayKey,
       now: deps.now,
     })
     if (admission === 'replayed') {
       return { kind: 'refused', status: 400, problem: 'spamCheck', values }
     }
-    if (admission === 'rate-limited') {
+    if (admission === 'rateLimited') {
       return { kind: 'refused', status: 429, problem: 'rateLimited', values }
     }
-    await deps.save(parsed.data)
+    if (admission === 'unavailable') {
+      return { kind: 'refused', status: 503, problem: 'unavailable', values }
+    }
+    if ((await deps.save(parsed.data)) === 'unavailable') {
+      return { kind: 'refused', status: 503, problem: 'unavailable', values }
+    }
   } catch (error) {
     logFailure(spec.name, reference, error)
     return { kind: 'failed', status: 500, reference, values }

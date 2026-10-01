@@ -35,6 +35,10 @@ import { type SqlRunner, inTransaction, logCounts, maintenanceTask } from './tas
 //   theirs, without the link;
 // - a closed report, 2 years after it was closed (`purgeAt`), with any versions.
 // Form-limit rows (hashed IP addresses) go hourly, in purgeFormLimits.
+//
+// Its deletions are not written to the deletion log (src/collections/DeletionLog.ts, M4b): if a
+// backup is ever restored, the restored records' deletion dates have still passed, so the next
+// run deletes them again. The log is for deletions nothing else would repeat.
 
 const BATCH = 100
 const MAX_BATCHES = 20
@@ -159,7 +163,13 @@ export async function purgeSuggestions(
         // Through the collection, which also deletes any versions; the database clears the links
         // to it from candidates and jobs. One at a time: the transaction has one connection.
         for (const id of due) {
-          await payload.delete({ collection: 'submissions', id, depth: 0, req })
+          await payload.delete({
+            collection: 'submissions',
+            id,
+            depth: 0,
+            req,
+            context: { retention: RETENTION },
+          })
         }
         return { suggestions: due.length, candidates: cleared.length }
       })
@@ -313,6 +323,7 @@ export async function purgeReports(payload: Payload, now: Date): Promise<number>
           ],
         },
         depth: 0,
+        context: { retention: RETENTION },
       })
       if (done.errors.length > 0) throw new Error('A report could not be deleted')
       deleted += done.docs.length

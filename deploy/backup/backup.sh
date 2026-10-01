@@ -8,8 +8,10 @@
 # Every run:
 #   1. Streams each database dump (pg_dump) straight into restic, which encrypts and deduplicates
 #      it. No unencrypted dump is written to disk. The rows of form_limits (hashed IP addresses and
-#      used spam-check answers, kept 24 hours in the app database only, D34) are left out; the
-#      table itself is dumped, so a restore starts with empty form limits.
+#      used spam-check answers, kept 24 hours in the app database only, D34), member_sessions and
+#      email_tokens (members' sessions and email links, D49) are left out; the tables themselves
+#      are dumped, so a restore starts with empty form limits, signs every member out and revives
+#      no email link.
 #   2. Adds the files needed to rebuild the server: .env, admin-auth.caddy, Compose files.
 #      Never the map's basemap (/opt/gliagora/basemap, about 4 GB): it is downloaded again
 #      (deploy/basemap/fetch-basemap.sh), so it stays out of the backups and of the weekly copy.
@@ -54,9 +56,11 @@ for db in $DATABASES; do
   log "Dumping database $db"
   out=$(mktemp)
   set +e
-  # form_limits never goes into backups (D34, step 1); databases without it are not affected.
+  # These rows never go into backups (D34, D49, step 1); databases without the tables are not
+  # affected.
   compose exec -T db pg_dump -U postgres --format=custom --compress=0 \
-    --exclude-table-data=public.form_limits "$db" \
+    --exclude-table-data=public.form_limits --exclude-table-data=public.member_sessions \
+    --exclude-table-data=public.email_tokens "$db" \
     | restic backup --stdin --stdin-filename "$db.dump" --host "$HOST_TAG" \
       --tag "$TAG" --tag "db:$db" --json >"$out"
   status=("${PIPESTATUS[@]}")

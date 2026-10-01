@@ -8,6 +8,7 @@ import {
   test,
 } from '@playwright/test'
 
+import { DATA_REQUEST_STATUSES } from '../../src/lib/data-requests/status'
 import { JOB_STATUSES } from '../../src/lib/jobs/status'
 import { REPORT_STATUSES } from '../../src/lib/reports/status'
 import { CANDIDATE_STATUSES, SUBMISSION_STATUSES } from '../../src/lib/review/status'
@@ -16,7 +17,8 @@ import { editorHeaders, editorPassword } from './editor'
 // Signed out, Payload's API gives nothing (PLAN §18.2, src/lib/access.ts): no collection or global
 // can be read, created, changed or deleted, no draft or unpublished record is shown, and no
 // personal data (suggestions, reports, email addresses) leaves the server. The public pages read
-// through Payload's local API instead, with their own queries.
+// through Payload's local API instead, with their own queries. Member accounts (M4b) have no API
+// routes at all.
 //
 // The collections and globals are read from src/payload-types.ts when the test runs, so a new one
 // is covered once the types are regenerated (`pnpm generate:types`; CI fails while the committed
@@ -48,6 +50,7 @@ const SIGNED_OUT: Record<string, SignedOut> = {
   candidates: { shows: 'nothing' },
   submissions: { shows: 'nothing' },
   reports: { shows: 'nothing' },
+  'data-requests': { shows: 'nothing' },
   jobs: { shows: 'nothing' },
   'retired-listings': { shows: 'nothing' },
   terms: { shows: 'nothing' },
@@ -55,6 +58,13 @@ const SIGNED_OUT: Record<string, SignedOut> = {
   'country-sets': { shows: 'nothing' },
   institutions: { shows: 'nothing' },
   'form-limits': { shows: 'nothing' },
+  // Member accounts and the deletion log (M4b): no REST routes at all (`endpoints: false`, as for
+  // Payload's migrations below), so every request answers 501.
+  members: { shows: 'nothing', routes: 'none' },
+  'member-sessions': { shows: 'nothing', routes: 'none' },
+  'email-tokens': { shows: 'nothing', routes: 'none' },
+  'saved-items': { shows: 'nothing', routes: 'none' },
+  'deletion-log': { shows: 'nothing', routes: 'none' },
   // Payload's own collections.
   'payload-kv': { shows: 'nothing' },
   'payload-jobs': { shows: 'nothing' },
@@ -105,6 +115,8 @@ const STATES: Record<string, string[]> = {
     ...each('status', SUBMISSION_STATUSES),
   ],
   reports: ['where[email][exists]=true&limit=3', ...each('status', REPORT_STATUSES)],
+  // Every status, including requests nobody has confirmed yet (M4b).
+  'data-requests': ['where[email][exists]=true&limit=3', ...each('status', DATA_REQUEST_STATUSES)],
   // Editors may delete only institutions added by hand (MANUAL_INSTITUTION in the test data).
   institutions: each('origin', [{ value: 'manual' }, { value: 'ror' }]),
 }
@@ -243,6 +255,13 @@ test.describe('signed out, the API gives nothing', () => {
         keep('a report’s email address', doc.email)
         keep('a report’s details', doc.details)
         keep('a report’s action note', doc.actionNote)
+      }
+      for (const doc of await read('/api/data-requests/?limit=100&depth=0')) {
+        keep('a data request’s email address', doc.email)
+        keep('a data request’s name', doc.name)
+        keep('a data request’s details', doc.details)
+        keep('a data request’s action note', doc.actionNote)
+        keep('a data request’s address code', doc.emailHash)
       }
       for (const doc of await read('/api/candidates/?limit=100&depth=0')) {
         keep('a candidate’s decision note', doc.decisionNote)

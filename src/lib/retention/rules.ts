@@ -39,6 +39,40 @@ export const ACK_WINDOW_DAYS = 7
 
 export { SUBMISSION_RETENTION_DAYS }
 
+// Member accounts and self-service privacy (M4b, D49; PLAN §18.1). The tasks that apply them come
+// with the account pages; the sign-in core (src/lib/members/) uses the lifetimes already.
+
+/** A session lasts this long from sign-in, never extended (PLAN §18.1). */
+export const SESSION_DAYS = 30
+/** A sign-in link works this long, once. */
+export const SIGN_IN_LINK_MINUTES = 15
+/** A link that adds an email address to an account works this long, once. */
+export const VERIFY_LINK_HOURS = 24
+/** A link that confirms a data request works this long, once. */
+export const DATA_REQUEST_LINK_HOURS = 24
+/** The sealed sign-in cookie (an OAuth flow, the confirm step, an email link's binding). */
+export const SIGN_IN_COOKIE_MINUTES = 15
+/** An account unused this long is warned, then deleted INACTIVITY_GRACE_DAYS later. */
+export const INACTIVITY_MONTHS = 24
+export const INACTIVITY_GRACE_DAYS = 30
+/** A warning refused as "no such address" counts only when refused again this many days later. */
+export const WARNING_REFUSAL_RETRY_DAYS = 7
+/** A confirmed data request is answered within this many days of receipt (KVKK Art. 13). */
+export const DATA_REQUEST_ANSWER_DAYS = 30
+/** A closed data request is kept this long, then deleted (as reports, PLAN §18.1). */
+export const DATA_REQUEST_RETENTION_YEARS = 2
+/** What is left of a request nobody confirmed (kind, date, keyed address hash) is kept this long. */
+export const UNCONFIRMED_REQUEST_DAYS = 60
+/**
+ * Rows of the deletion log (record IDs only) are kept this long: longer than the 6 months a backup
+ * can hold the deleted data, so a restore of any backup can still repeat each deletion.
+ */
+export const DELETION_LOG_MONTHS = 7
+/** Limits on what one member can store. */
+export const MAX_SAVED_ITEMS = 500
+export const MAX_SESSIONS = 20
+export const MAX_PREFERRED_SUBFIELDS = 12
+
 /** Form-limit rows created before this instant are deleted. */
 export function formLimitCutoff(now: Instant): Date {
   return new Date(toMs(now) - FORM_LIMIT_MAX_AGE_HOURS * HOUR_MS)

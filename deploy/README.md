@@ -154,7 +154,7 @@ Do not start the stack by hand: the first deploy (step 5) pulls the images and s
 
 Backups are encrypted with restic (PLAN §11.7.1, §18.2). Each night at 00:30 UTC (03:30 in Istanbul):
 
-- each database is dumped and streamed into the encrypted repository, together with `.env`, `admin-auth.caddy` and the Compose files. The rows of `form_limits` (hashed IP addresses for the form rate limits, kept 24 hours in the app database only, D34) are left out; after a restore the limits start empty;
+- each database is dumped and streamed into the encrypted repository, together with `.env`, `admin-auth.caddy` and the Compose files. The rows of `form_limits` (hashed IP addresses for the form rate limits, kept 24 hours in the app database only, D34), `member_sessions` and `email_tokens` (members' sessions and email links, D49) are left out; after a restore the limits start empty, every member is signed out and no email link works;
 - everything from the last 2 days is kept, plus 7 daily, 4 weekly and 6 monthly snapshots. Backups taken before updates and restores never delete anything themselves;
 - on Sundays the repository is checked for damage.
 

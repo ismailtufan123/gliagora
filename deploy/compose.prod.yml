@@ -55,6 +55,14 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       EMAIL_FROM: ${EMAIL_FROM:-Gliagora <hello@gliagora.com>}
+      # Member sign-in with Google and ORCID (M4b, D49): each is off until both of its keys are
+      # set. ORCID_ISSUER stays ORCID's own; the app refuses ORCID's sandbox here. Email links
+      # switch on with SMTP_HOST. Nothing else about sign-in reaches the app.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      ORCID_CLIENT_ID: ${ORCID_CLIENT_ID:-}
+      ORCID_CLIENT_SECRET: ${ORCID_CLIENT_SECRET:-}
+      ORCID_ISSUER: ${ORCID_ISSUER:-https://orcid.org}
     depends_on:
       db:
         condition: service_healthy
