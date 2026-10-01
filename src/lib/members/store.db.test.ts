@@ -1027,8 +1027,12 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       })
       expect(await setDisplayName(store, member.id, null, NOW)).toBe(true)
       expect(await findMember(store, { id: member.id })).toMatchObject({ displayName: null })
-      for (const name of ['', 'a'.repeat(81), 'Bell\u0007']) {
-        await expect(setDisplayName(store, member.id, name, NOW)).rejects.toThrow(MemberStoreError)
+      for (const name of ['', 'a'.repeat(81), 'Bell\u0007', 'Ana\u0085Bob', 'Ana\u202EBob']) {
+        await expect(setDisplayName(store, member.id, name, NOW)).rejects.toMatchObject({
+          name: 'MemberStoreError',
+          code: 'invalid',
+          target: 'displayName',
+        })
       }
     })
   })

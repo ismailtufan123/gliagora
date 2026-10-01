@@ -165,7 +165,7 @@ describe('verifyEmailEmail', () => {
 
   it('says that someone signed in asked for it, with the link, and what to do if it was not you', () => {
     const email = verifyEmailEmail({ locale: 'en', link: LINK })
-    expect(email.subject).toBe('Confirm the email address for your Gliagora account')
+    expect(email.subject).toBe('Add this email address to a Gliagora account?')
     expect(email.text).toContain(
       `Someone signed in to a Gliagora account asked to add this address to that account. If it was you, open this link in the browser where you are signed in:\n${LINK}\n`,
     )
@@ -179,9 +179,14 @@ describe('verifyEmailEmail', () => {
     expect(text).not.toMatch(/@(?!gliagora\.com)/)
   })
 
+  it('does not tell the reader the account is theirs: anyone can type their address', () => {
+    expect(verifyEmailEmail({ locale: 'en', link: LINK }).subject).not.toMatch(/\byour\b/i)
+    expect(verifyEmailEmail({ locale: 'tr', link: LINK }).subject).not.toMatch(/hesabınız/i)
+  })
+
   it('has its Turkish text', () => {
     expect(verifyEmailEmail({ locale: 'tr', link: LINK }).subject).toBe(
-      'Gliagora hesabınızın e-posta adresini onaylayın',
+      'Bu e-posta adresi bir Gliagora hesabına eklensin mi?',
     )
   })
 })

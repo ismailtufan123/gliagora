@@ -20,6 +20,7 @@ import {
   addMonthsUtc,
 } from '@/lib/retention/rules'
 
+import { DISPLAY_NAME_MAX, UNSAFE_IN_NAME } from './display-name'
 import { normaliseEmail } from './email-address'
 import { type Changes, type NewAccount, isGoogleSubject } from './identity'
 import { isOrcidId } from './orcid-id'
@@ -106,8 +107,8 @@ const googleId = z.string().refine(isGoogleSubject)
 const orcidId = z.string().refine(isOrcidId)
 const displayName = z
   .string()
-  .max(80)
-  .refine((value) => !/[\u0000-\u001F\u007F]/.test(value))
+  .max(DISPLAY_NAME_MAX)
+  .refine((value) => !UNSAFE_IN_NAME.test(value))
 
 const iso = (date: Date) => date.toISOString()
 
@@ -317,9 +318,6 @@ export function touchMember(db: MemberDb, memberId: number, now: Date): Promise<
 
 // ---------------------------------------------------------------------------------------------
 // Settings: Glia Notes, preferred subfields, display name
-
-/** A display name as the settings store it: at most 80 characters, no control characters. */
-export const DISPLAY_NAME_MAX = 80
 
 /** A subfield's slug, as the settings form sends it. */
 const subfieldSlug = z

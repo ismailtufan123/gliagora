@@ -5,12 +5,13 @@ import { newReference } from '@/lib/forms/public-form'
 import { MAX_PREFERRED_SUBFIELDS } from '@/lib/retention/rules'
 
 import type { MemberCookie } from './cookies'
+import { DISPLAY_NAME_MAX, UNSAFE_IN_NAME } from './display-name'
 import { sameOrigin } from './origin'
 import { type DoneCode, type ErrorCode, outcomePath } from './outcome'
 import { MEMBER_PATHS } from './paths'
 import type { ProviderChange } from './provider-sign-in'
 import { forbidden, formValue, readForm, seeOther } from './responses'
-import { DISPLAY_NAME_MAX, type DigestChoice, type MemberRecord } from './store'
+import type { DigestChoice, MemberRecord } from './store'
 
 // The account's settings (M4b, D49; the M4b design §5, §7.3, §7.4): the forms on /en/account/ post
 // to /en/account/settings/ with an `intent`.
@@ -79,13 +80,14 @@ export function readSubfields(form: FormData | null): string[] | null {
 }
 
 /**
- * The display name as stored: NFC, runs of white space as one space, trimmed; null when empty
- * (the name is removed); `invalid` with control characters or more than 80 characters.
+ * The display name as stored: NFC, runs of white space (tabs and line breaks among them) as one
+ * space, trimmed; null when empty (the name is removed); `invalid` with any other control or
+ * direction character (UNSAFE_IN_NAME) or more than 80 characters.
  */
 export function readDisplayName(value: string | null): string | null | 'invalid' {
   if (value === null) return 'invalid'
-  if (/[\u0000-\u0008\u000E-\u001F\u007F]/.test(value)) return 'invalid'
   const name = value.normalize('NFC').replace(/\s+/g, ' ').trim()
+  if (UNSAFE_IN_NAME.test(name)) return 'invalid'
   if (name === '') return null
   return name.length > DISPLAY_NAME_MAX ? 'invalid' : name
 }

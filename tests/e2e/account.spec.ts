@@ -337,7 +337,7 @@ test.describe('adding or changing the email address', () => {
     await expect(page).toHaveURL(endsWith('/en/account/email/sent/'))
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Check your inbox')
     const email = await latestEmailTo(address)
-    expect(email.subject).toBe('Confirm the email address for your Gliagora account')
+    expect(email.subject).toBe('Add this email address to a Gliagora account?')
     expect(email.text).toContain(
       'Someone signed in to a Gliagora account asked to add this address to that account.',
     )
@@ -351,6 +351,8 @@ test.describe('adding or changing the email address', () => {
     await expect(strangerPage.getByRole('heading', { level: 1 })).toHaveText(
       'Sign in to the account that asked for this address',
     )
+    // The document's title is the page's heading, in each state (WCAG 2.4.2).
+    await expect(strangerPage).toHaveTitle(/^Sign in to the account that asked for this address/)
     await expect(strangerPage.getByRole('main')).not.toContainText(address)
     await expect(strangerPage.getByRole('button', { name: 'Add this address' })).toHaveCount(0)
     await expectNoSeriousAxeIssues(strangerPage)
@@ -384,6 +386,7 @@ test.describe('adding or changing the email address', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'Add this email address to your account',
     )
+    await expect(page).toHaveTitle(/^Add this email address to your account/)
     await expect(page.getByRole('main')).toContainText(`Add ${address} to your Gliagora account.`)
     await expect(page.getByRole('main')).toContainText(`It replaces ${member.address}`)
     await expectNoSeriousAxeIssues(page)
@@ -400,6 +403,7 @@ test.describe('adding or changing the email address', () => {
     // Used once.
     await page.goto(link)
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('This link has expired')
+    await expect(page).toHaveTitle(/^This link has expired/)
     await second.close()
     await member.context.close()
   })
@@ -416,7 +420,7 @@ test.describe('adding or changing the email address', () => {
     await expect(page).toHaveURL(endsWith('/en/account/email/sent/'))
     // The same email as for a free address: nothing is told before the link is used.
     const email = await latestEmailTo(holder.email!)
-    expect(email.subject).toBe('Confirm the email address for your Gliagora account')
+    expect(email.subject).toBe('Add this email address to a Gliagora account?')
     await page.goto(await signInLinkTo(holder.email!))
     await page.getByRole('button', { name: 'Add this address' }).click()
     await expect(page).toHaveURL(endsWith('/en/account/?error=email-taken#outcome'))

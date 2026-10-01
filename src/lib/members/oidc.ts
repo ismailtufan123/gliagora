@@ -3,6 +3,7 @@ import * as oauth from 'oauth4webapi'
 import { errorCode, errorSummary } from '@/lib/errors'
 
 import type { Provider, ProviderOn } from './config'
+import { DISPLAY_NAME_MAX, UNSAFE_IN_NAME } from './display-name'
 import { normaliseEmail } from './email-address'
 import { googleEmail, isGoogleSubject, isOrcidSubject } from './identity'
 import { type SignInState, openSignIn } from './seal'
@@ -31,8 +32,6 @@ export const DISCOVERY_TTL_MS = 24 * 60 * 60_000
 /** What we ask each provider for: an ID token, and from Google the email address. */
 export const SCOPES: Record<Provider, string> = { google: 'openid email', orcid: 'openid' }
 
-/** The longest name from an ORCID record a member may take as display name (members.displayName). */
-export const DISPLAY_NAME_MAX = 80
 const NAME_PART_MAX = 100
 
 /** Options of every request to a provider: the time limit, and plain http for the fakes only. */
@@ -170,12 +169,12 @@ export class ClaimError extends Error {
   }
 }
 
-/** Control and direction characters, and line breaks: never part of a name we show. */
-const UNSAFE_IN_NAME = /[\p{Cc}\u2028\u2029\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu
+/** Every character of UNSAFE_IN_NAME, to replace them all. */
+const UNSAFE_IN_NAME_ALL = new RegExp(UNSAFE_IN_NAME, 'gu')
 
 function cleanName(value: unknown): string | null {
   if (typeof value !== 'string') return null
-  const text = value.normalize('NFC').replace(UNSAFE_IN_NAME, ' ').replace(/\s+/gu, ' ').trim()
+  const text = value.normalize('NFC').replace(UNSAFE_IN_NAME_ALL, ' ').replace(/\s+/gu, ' ').trim()
   return text !== '' && text.length <= NAME_PART_MAX ? text : null
 }
 

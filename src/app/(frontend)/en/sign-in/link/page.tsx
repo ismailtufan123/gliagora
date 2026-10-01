@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { unstable_rethrow } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getPayload } from 'payload'
-import type { ReactNode } from 'react'
+import { type ReactNode, cache } from 'react'
 
 import { SignOutForm } from '@/components/account/AccountNav'
 import { MemberUnavailable } from '@/components/account/MemberUnavailable'
@@ -33,15 +33,27 @@ import { requestTime } from '@/lib/records'
 // A link that adds an address to an account (the M4b design §7.4) opens here too: only the member
 // who asked for it, signed in in this browser, sees the address and "Add this address"; anyone
 // else is told to sign in to that account and open the link again (it works for 24 hours), and
-// the link stays usable. Never indexed.
+// the link stays usable. Never indexed. The document's title is the heading of the state shown
+// (WCAG 2.4.2): the link is looked up once per request, for the page and its metadata.
 export const dynamic = 'force-dynamic'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations({ locale: 'en', namespace: 'signIn' })
+/** The `token` of the address as one string, so the lookup's cache has one key per request. */
+const tokenOf = (value: string | string[] | undefined) => (typeof value === 'string' ? value : '')
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const t = await getTranslations({ locale: 'en', namespace: 'signIn.link' })
+  let title: string
+  try {
+    title = t(titleOf(await landing(tokenOf((await searchParams).token))))
+  } catch (error) {
+    unstable_rethrow(error)
+    // The page shows MemberUnavailable, under this heading, and logs the error.
+    title = t('signInTitle')
+  }
   return {
-    title: t('title'),
+    title,
     ...(memberPageIndexed() ? {} : { robots: { index: false } }),
   }
 }
@@ -61,7 +73,21 @@ type Landing =
       toSave: SaveJob | null
     }
 
-async function landing(token: unknown): Promise<Landing> {
+/** The page's heading, which is its title too. */
+function titleOf(found: Landing) {
+  switch (found.state) {
+    case 'expired':
+      return 'expiredTitle'
+    case 'verify':
+      return 'verifyTitle'
+    case 'verify-other':
+      return 'verifyOtherTitle'
+    case 'ready':
+      return found.known ? 'signInTitle' : 'createTitle'
+  }
+}
+
+const landing = cache(async (token: string): Promise<Landing> => {
   if (!isToken(token)) return { state: 'expired' }
   const now = requestTime()
   const db = memberDb(await getPayload({ config }))
@@ -90,14 +116,14 @@ async function landing(token: unknown): Promise<Landing> {
     sameBrowser: binding !== null && bindingMatches(binding.bind, link.browserHash),
     toSave: await positionToSave(link.save),
   }
-}
+})
 
 export default async function Page({ searchParams }: Props) {
   setRequestLocale('en')
   const t = await getTranslations({ locale: 'en', namespace: 'signIn.link' })
   let found: Landing
   try {
-    found = await landing((await searchParams).token)
+    found = await landing(tokenOf((await searchParams).token))
   } catch (error) {
     unstable_rethrow(error)
     return <MemberUnavailable title={t('signInTitle')} name="Sign-in link page" error={error} />
@@ -107,7 +133,7 @@ export default async function Page({ searchParams }: Props) {
     return (
       <main id="main" className="page-frame flex-1 py-12">
         <div className="grid max-w-(--measure) gap-6">
-          <h1 className="text-h1">{t('expiredTitle')}</h1>
+          <h1 className="text-h1">{t(titleOf(found))}</h1>
           <p>{t('expired')}</p>
           <p>
             <a href={MEMBER_PATHS.signIn} className="button button-primary">
@@ -126,7 +152,7 @@ export default async function Page({ searchParams }: Props) {
     return (
       <main id="main" className="page-frame flex-1 py-12">
         <div className="grid max-w-(--measure) gap-6">
-          <h1 className="text-h1">{t('verifyTitle')}</h1>
+          <h1 className="text-h1">{t(titleOf(found))}</h1>
           <p>{t.rich('verify', { email: found.email, strong })}</p>
           {found.current && <p>{t.rich('verifyReplaces', { email: found.current, strong })}</p>}
           <p>{t('verifyOthers')}</p>
@@ -145,7 +171,7 @@ export default async function Page({ searchParams }: Props) {
     return (
       <main id="main" className="page-frame flex-1 py-12">
         <div className="grid max-w-(--measure) gap-6">
-          <h1 className="text-h1">{t('verifyOtherTitle')}</h1>
+          <h1 className="text-h1">{t(titleOf(found))}</h1>
           <p>{t('verifyOther')}</p>
           {found.signedIn ? (
             <>
@@ -165,7 +191,7 @@ export default async function Page({ searchParams }: Props) {
   return (
     <main id="main" className="page-frame flex-1 py-12">
       <div className="grid max-w-(--measure) gap-6">
-        <h1 className="text-h1">{t(known ? 'signInTitle' : 'createTitle')}</h1>
+        <h1 className="text-h1">{t(titleOf(found))}</h1>
         {!sameBrowser && (
           <p className="notice wrap-anywhere" role="note">
             {t('otherBrowser', { email })}

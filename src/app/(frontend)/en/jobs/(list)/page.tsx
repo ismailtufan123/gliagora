@@ -43,8 +43,10 @@ import { paths } from '@/lib/site'
 // Each row has a Save control once a way of signing in is on (src/lib/members/save-context.ts),
 // which returns to this address. A signed-in member's preferred subfields apply to the list
 // without filters, with a notice that names them (D35, src/lib/jobs/preferred.ts): the page then
-// queries, shows and links from those filters (`effective`, `links`), while its address, canonical
-// page and Save controls stay those of the request.
+// queries, shows and links from those filters (`effective`, `links`), while its address and
+// canonical page stay those of the request. The Save controls return to the list that was shown:
+// the bare list says `prefs=off` there unless the default applied, so a visitor who signs in to
+// save (and may have preferences) comes back to the same rows, not to their default.
 export const dynamic = 'force-dynamic'
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
@@ -152,10 +154,12 @@ export default async function Page({ searchParams }: Props) {
   const appliedNames = applied
     ? chips.filter((chip) => chip.name === 'subfield').map((chip) => chip.label)
     : []
+  // The address of the list that was shown (see above): with any filter set, the filter model
+  // drops `prefs=off` again.
   const save =
     list.jobs.length > 0
       ? await saveContext(
-          filtersHref(JOB_FILTERS, filters),
+          filtersHref(JOB_FILTERS, applied ? filters : { ...filters, prefs: 'off' }),
           list.jobs.map((job) => job.id),
         )
       : null

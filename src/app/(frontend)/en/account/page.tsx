@@ -131,6 +131,9 @@ export default async function Page({ searchParams }: Props) {
 
   const { member } = current
   const { methods } = await memberRequest()
+  // The form that adds or changes the address needs a mail server and the spam check.
+  const spamKey = altchaKey()
+  const canAddEmail = methods.email && spamKey !== null
   // How many ways into the account there are: the last one cannot be removed.
   const ways = [member.email, member.googleId, member.orcidId].filter(Boolean).length
   const provider = (key: 'google' | 'orcid', linked: string | null) => ({
@@ -187,9 +190,9 @@ export default async function Page({ searchParams }: Props) {
           )}
         </div>
 
-        <DigestSettings member={member} />
+        <DigestSettings member={member} canAddEmail={canAddEmail} />
         <SubfieldSettings subfields={subfields} chosen={chosen} />
-        <EmailSettings member={member} available={methods.email} altchaKey={altchaKey()} />
+        <EmailSettings member={member} available={methods.email} altchaKey={spamKey} />
 
         <section aria-labelledby="methods-heading" className="grid gap-4">
           <h2 id="methods-heading" className="text-h2">

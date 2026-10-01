@@ -51,8 +51,10 @@ export const VERIFY_EMAIL_LIMIT: LimitBucket = { name: 'verify', perWindow: 10 }
 export const MEMBER_VERIFY_PER_HOUR = 3
 
 /**
- * The member's own limit on links to add an address: the member's ID (no personal data in itself),
- * kept for 24 hours like every other limit.
+ * The member's own limit on links to add an address, keyed by the member's ID: it links the count
+ * to the account, so it is personal data (the add-or-change form's note says so), kept for 24
+ * hours like every other limit. Hashing it would change nothing: the site can recompute the hash
+ * of each of its members' IDs.
  */
 export const memberVerifyLimit = (memberId: number): Limit => ({
   key: `member:verify:${memberId}`,

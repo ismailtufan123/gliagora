@@ -5,9 +5,10 @@ import { sendVerifyLink } from '@/app/(frontend)/en/account/actions'
 import { CONTENT_PAGES } from '@/lib/content'
 import { initialFormState } from '@/lib/forms/public-form'
 import { emptyVerifyEmailValues } from '@/lib/forms/verify-email'
+import { DISPLAY_NAME_MAX } from '@/lib/members/display-name'
 import { ACCOUNT_SECTIONS, MEMBER_LEGAL_LINKS, MEMBER_PATHS } from '@/lib/members/paths'
 import { CONSENT_GIVEN, SETTINGS_INPUTS, type SettingsIntent } from '@/lib/members/settings'
-import { DISPLAY_NAME_MAX, type MemberRecord } from '@/lib/members/store'
+import type { MemberRecord } from '@/lib/members/store'
 import { MAX_PREFERRED_SUBFIELDS } from '@/lib/retention/rules'
 import { PRIVACY_EMAIL } from '@/lib/site'
 
@@ -42,9 +43,17 @@ const strong = (chunks: ReactNode) => <strong className="wrap-anywhere">{chunks}
 
 /**
  * Glia Notes, the monthly digest: on with the consent box (never ticked in advance), off in one
- * press. Only for an account with an email address; without one, the section says to add it first.
+ * press. Only for an account with an email address; without one, the section says to add it first
+ * (with a link to the form), or, while the form is not available, that adding one comes later.
  */
-export async function DigestSettings({ member }: { member: MemberRecord }) {
+export async function DigestSettings({
+  member,
+  canAddEmail,
+}: {
+  member: MemberRecord
+  /** Whether the account page offers the form that adds an address (EmailSettings). */
+  canAddEmail: boolean
+}) {
   const t = await getTranslations({ locale: 'en', namespace: 'account.digest' })
   const id = ACCOUNT_SECTIONS.digest
   const consentText = (chunks: ReactNode) => (
@@ -57,9 +66,11 @@ export async function DigestSettings({ member }: { member: MemberRecord }) {
       <p>{t('text')}</p>
       {!member.email ? (
         <p>
-          {t.rich('needsEmail', {
-            link: (chunks) => <a href={`#${ACCOUNT_SECTIONS.email}`}>{chunks}</a>,
-          })}
+          {canAddEmail
+            ? t.rich('needsEmail', {
+                link: (chunks) => <a href={`#${ACCOUNT_SECTIONS.email}`}>{chunks}</a>,
+              })
+            : t('needsEmailLater')}
         </p>
       ) : member.digestOptIn ? (
         <>

@@ -954,6 +954,8 @@ export const AREAS: Area[] = [
       'account.digest.text': 'Account - Glia Notes section - first paragraph',
       'account.digest.needsEmail':
         'Account - Glia Notes section, for an account without an email address - paragraph (the link leads to the email address section)',
+      'account.digest.needsEmailLater':
+        'Account - Glia Notes section, for an account without an email address, while the add-or-change form is not available (no mail server yet) - paragraph, without a link',
       'account.digest.on':
         'Account - Glia Notes section, when the member has chosen Glia Notes - paragraph with the address',
       'account.digest.stop':
@@ -987,18 +989,20 @@ export const AREAS: Area[] = [
         'Account - add-an-address form - label of the email field, for an account with an address',
       'account.email.hint': 'Account - add-an-address form - hint under that label',
       'account.email.noscript':
-        'Account - add-an-address form - note above the form when JavaScript is off',
-      'account.email.spamNote': 'Account - add-an-address form - note above the send button',
+        'Account - add-or-change form - note above the form when JavaScript is off (for an account with or without an address)',
+      'account.email.spamNote':
+        'Account - add-or-change form - note above the send button (the count of links is kept per account)',
       'account.email.submit': 'Account - add-an-address form - send button',
       'account.email.sending':
         'Account - add-an-address form - the send button while the form is sent',
       'account.email.unavailable':
-        'Account - email address section - shown instead of the form while emails cannot be sent',
+        'Account - email address section - shown instead of the add-or-change form while emails cannot be sent',
       'account.email.errors.title':
         'Add-an-address form, after sending with problems - heading of the list of problems at the top of the form',
       'account.email.errors.prefix':
         'Add-an-address form, after sending with problems - word before the message at the field, read by screen readers',
-      'account.email.errors.emailMissing': 'Add-an-address form - error at the email field',
+      'account.email.errors.emailMissing':
+        'Add-or-change form - error at the email field, when it is empty',
       'account.email.errors.emailInvalid': 'Add-an-address form - error at the email field',
       'account.email.errors.emailTooLong': 'Add-an-address form - error at the email field',
       'account.email.errors.emailSame':
@@ -1196,7 +1200,8 @@ export const AREAS: Area[] = [
       'emails.signIn.validity': 'Email with a sign-in link - how long the link works',
       'emails.signIn.sameBrowser': 'Email with a sign-in link - where to open the link',
       'emails.signIn.notYou': 'Email with a sign-in link - what to do if you did not ask for it',
-      'emails.verifyEmail.subject': 'Email with a link to add an address to an account - subject',
+      'emails.verifyEmail.subject':
+        'Email with a link to add an address to an account - subject (a question: whoever reads it may have no account)',
       'emails.verifyEmail.intro':
         'Email with a link to add an address to an account - first paragraph, followed by the link',
       'emails.verifyEmail.validity':

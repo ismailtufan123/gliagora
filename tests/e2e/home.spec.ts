@@ -117,6 +117,8 @@ test.describe('the hero beside the poster', () => {
 test.describe('home page figures and lists', () => {
   test.skip(({ isMobile }) => isMobile, 'the same data on every screen')
 
+  // Signed out: for a member with preferred subfields, the bare jobs list applies the default
+  // (D35, a known effect in PLAN §2.4), while its head line still gives the open positions.
   test('each figure is the number its list shows', async ({ page, request }) => {
     await page.goto('/en/')
     const open = figure(page, /open positions?/)

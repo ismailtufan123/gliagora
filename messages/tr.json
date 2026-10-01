@@ -730,6 +730,7 @@
       "heading": "Glia Notes",
       "text": "Glia Notes aylık bültendir: yeni pozisyonlar ve yaklaşan son başvuru tarihleri, ayda bir e-posta kutunuzda.",
       "needsEmail": "Glia Notes, hesabınızın e-posta adresine gönderilir; hesabınızın henüz bir e-posta adresi yok. <link>Önce bir e-posta adresi ekleyin</link>.",
+      "needsEmailLater": "Glia Notes, hesabınızın e-posta adresine gönderilir; hesabınızın henüz bir e-posta adresi yok. Adres eklemek daha sonra burada mümkün olacak.",
       "on": "Glia Notes'u <strong>{email}</strong> adresine almayı seçtiniz.",
       "stop": "Glia Notes'u durdur",
       "off": "Glia Notes kapalı. Açtığınızda bülten <strong>{email}</strong> adresine gönderilir.",
@@ -753,15 +754,15 @@
       "label": "E-posta adresi",
       "newLabel": "Yeni e-posta adresi",
       "hint": "Bu adrese bir bağlantı göndeririz. Bağlantıyı, oturumunuzun açık olduğu bu tarayıcıda açın; 24 saat boyunca çalışır.",
-      "noscript": "Bu formdaki spam kontrolü JavaScript gerektirir. JavaScript olmadan e-posta adresi ekleyemezsiniz.",
-      "spamNote": "Spam programlarını engellemek için tarayıcınız, form gönderilmeden önce küçük bir bulmaca çözer; gönderilebilecek bağlantı sayısını sınırlamak için IP adresinizin ve e-posta adresinin karıştırılmış biçimlerini 24 saat saklarız. <link>Formu nasıl koruduğumuz</link>",
+      "noscript": "Bu formdaki spam kontrolü JavaScript gerektirir. JavaScript olmadan e-posta adresi ekleyemez veya değiştiremezsiniz.",
+      "spamNote": "Spam programlarını engellemek için tarayıcınız, form gönderilmeden önce küçük bir bulmaca çözer; gönderilebilecek bağlantı sayısını sınırlamak için IP adresinizin ve e-posta adresinin karıştırılmış biçimlerini ve hesabınızın istediği bağlantıların sayısını 24 saat saklarız. <link>Formu nasıl koruduğumuz</link>",
       "submit": "Bana onay bağlantısı gönder",
       "sending": "Bağlantı gönderiliyor…",
-      "unavailable": "E-posta adresi ekleme şu anda kullanılamıyor. Verilerinizle ilgili sorularınız mı var? <email>privacy@gliagora.com</email> adresine yazın.",
+      "unavailable": "E-posta adresi ekleme veya değiştirme şu anda kullanılamıyor. Verilerinizle ilgili sorularınız mı var? <email>privacy@gliagora.com</email> adresine yazın.",
       "errors": {
         "title": "Bir sorun var",
         "prefix": "Hata:",
-        "emailMissing": "Eklenecek e-posta adresini girin.",
+        "emailMissing": "Bir e-posta adresi girin.",
         "emailInvalid": "E-posta adresini doğru biçimde girin, örneğin ad@example.org.",
         "emailTooLong": "En fazla 254 karakterlik bir e-posta adresi girin.",
         "emailSame": "Bu zaten hesabınızın e-posta adresi.",
@@ -916,7 +917,7 @@
       "notYou": "Bu bağlantıyı siz istemediyseniz bu e-postayı dikkate almayın: hiçbir şey olmaz ve hesap oluşturulmaz."
     },
     "verifyEmail": {
-      "subject": "Gliagora hesabınızın e-posta adresini onaylayın",
+      "subject": "Bu e-posta adresi bir Gliagora hesabına eklensin mi?",
       "intro": "Bir Gliagora hesabında oturum açmış biri, bu adresin o hesaba eklenmesini istedi. Bunu siz istediyseniz bu bağlantıyı, oturumunuzun açık olduğu tarayıcıda açın:",
       "validity": "Bağlantı 24 saat boyunca ve yalnızca bir kez çalışır.",
       "notYou": "Bunu siz istemediyseniz bu e-postayı dikkate almayın: hiçbir şey değişmez."

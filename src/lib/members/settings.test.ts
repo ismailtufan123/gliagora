@@ -242,7 +242,7 @@ describe('display name', () => {
 
   it('refuses a name that is too long or has control characters', async () => {
     const deps = fakes()
-    for (const name of ['a'.repeat(81), 'Bell\u0007', 'Null\u0000']) {
+    for (const name of ['a'.repeat(81), 'Bell\u0007', 'Null\u0000', 'Ana\u0085\u009B\u202EBob']) {
       const response = await handleSettings(
         post([
           ['intent', 'name'],
@@ -312,5 +312,19 @@ describe('reading the fields', () => {
     expect(readDisplayName('')).toBeNull()
     expect(readDisplayName(null)).toBe('invalid')
     expect(readDisplayName('a'.repeat(80))).toBe('a'.repeat(80))
+    expect(readDisplayName('Josiah\r\n\u000B\u000C\u2028 Carberry')).toBe('Josiah Carberry')
+  })
+
+  it('refuses C1 control characters and direction controls in a display name', () => {
+    for (const name of [
+      'Ana\u0085Bob',
+      'Ana\u009BBob',
+      'Ana\u202EBob',
+      'Ana\u2066Bob',
+      'Ana\u200FBob',
+      'Ana\u007FBob',
+    ]) {
+      expect(readDisplayName(name), JSON.stringify(name)).toBe('invalid')
+    }
   })
 })

@@ -730,6 +730,7 @@
       "heading": "Glia Notes",
       "text": "Glia Notes is the monthly digest: new positions and the deadlines ahead, once a month in your inbox.",
       "needsEmail": "Glia Notes goes to the email address of your account, which has none yet. <link>Add an email address first</link>.",
+      "needsEmailLater": "Glia Notes goes to the email address of your account, which has none yet. Adding an address will be possible here later.",
       "on": "You have chosen to receive Glia Notes at <strong>{email}</strong>.",
       "stop": "Stop Glia Notes",
       "off": "Glia Notes is off. When you switch it on, it goes to <strong>{email}</strong>.",
@@ -753,15 +754,15 @@
       "label": "Email address",
       "newLabel": "New email address",
       "hint": "We email a link to this address. Open it in this browser, where you are signed in; it works for 24 hours.",
-      "noscript": "The spam check on this form needs JavaScript. Without JavaScript, you cannot add an email address.",
-      "spamNote": "To keep out spam programs, your browser solves a small puzzle before the form is sent, and we keep scrambled forms of your IP address and of the email address for 24 hours to limit how many links can be sent. <link>How we protect the form</link>",
+      "noscript": "The spam check on this form needs JavaScript. Without JavaScript, you cannot add or change the email address.",
+      "spamNote": "To keep out spam programs, your browser solves a small puzzle before the form is sent, and we keep scrambled forms of your IP address and of the email address, and a count of the links your account asked for, for 24 hours to limit how many links can be sent. <link>How we protect the form</link>",
       "submit": "Email me a confirmation link",
       "sending": "Sending the link…",
-      "unavailable": "Adding an email address is not available at the moment. Questions about your data? Write to <email>privacy@gliagora.com</email>.",
+      "unavailable": "Adding or changing the email address is not available at the moment. Questions about your data? Write to <email>privacy@gliagora.com</email>.",
       "errors": {
         "title": "There is a problem",
         "prefix": "Error:",
-        "emailMissing": "Enter the email address to add.",
+        "emailMissing": "Enter an email address.",
         "emailInvalid": "Enter an email address in the correct format, such as name@example.org.",
         "emailTooLong": "Enter an email address of 254 characters or fewer.",
         "emailSame": "This is already the email address of your account.",
@@ -916,7 +917,7 @@
       "notYou": "If you did not ask for this link, ignore this email: nothing happens, and no account is created."
     },
     "verifyEmail": {
-      "subject": "Confirm the email address for your Gliagora account",
+      "subject": "Add this email address to a Gliagora account?",
       "intro": "Someone signed in to a Gliagora account asked to add this address to that account. If it was you, open this link in the browser where you are signed in:",
       "validity": "The link works for 24 hours and only once.",
       "notYou": "If it was not you, ignore this email: nothing changes."
