@@ -10,20 +10,28 @@ import {
   membersToDelete,
   membersToWarn,
 } from '@/lib/members/store'
-import { deletionDueAt } from '@/lib/retention/rules'
+import { warningDeadlineDay } from '@/lib/retention/rules'
 
 import { type SendResult, sendOne } from './email'
 import { logCounts, maintenanceTask } from './task'
 
 // Member accounts nobody uses (M4b, D49; the M4b design §7.7; PLAN §18.1), every day at 05:30 UTC.
 //
-// - Warn: members with an email address not seen for 24 months get one email that names the day
-//   their account will be deleted, 30 days on, with a plain link to the sign-in page. The 30 days
-//   start only when the mail server accepted the warning. An address the server says does not
-//   exist (5.1.x) is tried again 7 days later; refused again, it counts as unreachable and the 30
-//   days start without a delivered warning. A reply that asks to try again later (4xx: throttling,
-//   greylisting) or a server that cannot be reached stops the warnings of this run, and nobody
-//   else is marked; any other refusal (a full mailbox, a policy) skips the member for this run.
+// - Warn: members with an email address not seen for 24 months get one email that names a day,
+//   with a plain link to the sign-in page: signing in before that day keeps the account, in any
+//   time zone (`warningDeadlineDay`: the account is deleted 30 days after the warning, which is
+//   after the end of the day before the named day even at UTC−12). The 30 days start only when the
+//   mail server accepted the warning.
+// - An address the server says does not exist (a refused recipient: RCPT TO answered with 5.1.0,
+//   5.1.1, 5.1.2, 5.1.3, 5.1.6 or 5.1.10) is tried again 7 days later; refused again, it counts as
+//   unreachable and the 30 days start without a delivered warning. Such a refusal counts only in a
+//   run in which the server accepted some other warning, which shows that it takes our messages
+//   (a server that refuses the sender may answer every recipient alike); otherwise the member is
+//   tried again the next day.
+// - A refused sender (MAIL FROM, or the sender statuses 5.1.7 and 5.1.8), a reply that asks to try
+//   again later (4xx: throttling, greylisting) or a server that cannot be reached stops the
+//   warnings of this run, and nobody else is marked: it would happen to every message. Any other
+//   refusal (a full mailbox, a policy) skips the member for this run.
 //   Without a mail server nobody is warned, so no member with an address is ever deleted.
 // - Delete: warned members not seen since, 30 days after the warning; members without an address
 //   (nobody to warn) 24 months and 30 days after their last activity. Each is deleted by
@@ -40,51 +48,83 @@ const DELETE_BATCH = 100
 const MAX_DELETE_BATCHES = 20
 
 /**
- * What the mail server's answer to a warning means (the M4b design §7.7): `accepted`; the address
- * does not exist (`no-such-address`, enhanced status 5.1.x); `try-later`, a temporary refusal (any
- * 4xx reply) or a server that cannot be reached; `refused` for any other refusal.
+ * The enhanced statuses (RFC 3463) that say a recipient does not exist, when the server gives them
+ * in answer to RCPT TO: 5.1.1 bad mailbox, 5.1.2 bad domain, 5.1.3 bad address syntax, 5.1.6
+ * mailbox moved, 5.1.10 null MX, and 5.1.0, which Mailpit and others give for an unknown mailbox
+ * (Postfix also gives it for a sender it refuses only at RCPT TO: hence the rule in `warn`).
+ */
+const NO_SUCH_RECIPIENT = /^5\.1\.(?:0|1|2|3|6|10)$/
+
+/** Statuses about the sender's address (5.1.7 bad sender's mailbox, 5.1.8 bad sender's domain). */
+const SENDER_REFUSED = /^[45]\.1\.[78]$/
+
+/**
+ * What the mail server's answer to a warning means (the M4b design §7.7): `accepted`; the
+ * recipient does not exist (`no-such-address`: RCPT TO refused with one of the statuses above);
+ * `try-later`, a temporary refusal (any 4xx reply), a refused sender (at MAIL FROM, or 5.1.7 or
+ * 5.1.8 at any step) or a server that cannot be reached, which would happen to every message of
+ * the run; `refused` for any other refusal, about this message only.
  */
 export type WarningDelivery = 'accepted' | 'no-such-address' | 'try-later' | 'refused'
 
 export function warningDelivery(result: SendResult): WarningDelivery {
   if (result.status === 'sent') return 'accepted'
   if (result.status === 'unavailable') return 'try-later'
-  const code = result.reply?.code
+  const { code, enhanced, command } = result.reply ?? {}
   if (code !== undefined && code >= 400 && code < 500) return 'try-later'
-  if (result.reply?.enhanced?.startsWith('5.1.')) return 'no-such-address'
+  if (command === 'MAIL FROM' || (enhanced && SENDER_REFUSED.test(enhanced))) return 'try-later'
+  if (command === 'RCPT TO' && enhanced && NO_SUCH_RECIPIENT.test(enhanced)) {
+    return 'no-such-address'
+  }
   return 'refused'
 }
 
-/** The reply code and enhanced status, or the error's class and code: never the reply's text. */
+/** The reply code, enhanced status and command, or the error's class and code: never the text. */
 const replyOf = (result: SendResult) =>
-  [result.reply?.code, result.reply?.enhanced].filter(Boolean).join(' ') ||
+  [result.reply?.code, result.reply?.enhanced, result.reply?.command].filter(Boolean).join(' ') ||
   result.error ||
   'no reply'
+
+/** Why a run stops (`try-later`), for its log line. */
+const stopReason = (result: SendResult) => {
+  if (result.status === 'unavailable') return 'could not be reached'
+  const code = result.reply?.code
+  return code !== undefined && code >= 400 && code < 500
+    ? 'asked to try again later'
+    : 'refused our sender'
+}
+
+const warnings = (count: number) => (count === 1 ? '1 warning' : `${count} warnings`)
 
 /** Sends the warnings of this run. Returns its counts. */
 async function warn(payload: Payload, now: Date) {
   const db = memberDb(payload)
   const counts = { warned: 0, refusedOnce: 0, unreachable: 0, skipped: 0, stopped: 0 }
-  const message = inactivityWarningEmail({ locale: 'en', deleteOn: deletionDueAt(now) })
+  const message = inactivityWarningEmail({ locale: 'en', day: warningDeadlineDay(now) })
+  /** Whether the server accepted any warning of this run (see `noSuchAddress`). */
+  let anyAccepted = false
+  /** Members whose address the server said does not exist, and the replies, for the log. */
+  const noSuchAddress: number[] = []
+  const replies = new Set<string>()
   let after = 0
-  for (let batch = 0; batch < MAX_WARN_BATCHES; batch++) {
+  sending: for (let batch = 0; batch < MAX_WARN_BATCHES; batch++) {
     const members = await membersToWarn(db, now, { after, limit: WARN_BATCH })
     for (const member of members) {
       after = member.id
       const result = await sendOne(payload, member.email, message)
       const outcome = warningDelivery(result)
       if (outcome === 'accepted') {
+        anyAccepted = true
         if (await markWarned(db, member.id, now)) counts.warned++
       } else if (outcome === 'no-such-address') {
-        const marked = await markWarningRefused(db, member.id, now)
-        if (marked === 'first') counts.refusedOnce++
-        else if (marked === 'unreachable') counts.unreachable++
+        noSuchAddress.push(member.id)
+        replies.add(replyOf(result))
       } else if (outcome === 'try-later') {
         counts.stopped = 1
         payload.logger.warn(
-          `cleanInactiveMembers: the mail server asked to try again later or could not be reached (${replyOf(result)}); no more warnings this run`,
+          `cleanInactiveMembers: the mail server ${stopReason(result)} (${replyOf(result)}); no more warnings this run`,
         )
-        return counts
+        break sending
       } else {
         counts.skipped++
         payload.logger.warn(
@@ -94,6 +134,25 @@ async function warn(payload: Payload, now: Date) {
     }
     if (members.length < WARN_BATCH) break
   }
+  if (noSuchAddress.length === 0) return counts
+  const codes = [...replies].join(', ')
+  // An address the server says does not exist counts only when it took another warning of this
+  // run: a server that refuses our sender may refuse every recipient with a status like 5.1.0.
+  if (!anyAccepted) {
+    payload.logger.warn(
+      `cleanInactiveMembers: the mail server refused ${warnings(noSuchAddress.length)} as addresses that do not exist (${codes}) and accepted none; nobody marked, tried again tomorrow`,
+    )
+    return counts
+  }
+  for (const id of noSuchAddress) {
+    const marked = await markWarningRefused(db, id, now)
+    if (marked === 'first') counts.refusedOnce++
+    else if (marked === 'unreachable') counts.unreachable++
+  }
+  // The countdown can start without a delivered warning: say so beyond the counts.
+  payload.logger.warn(
+    `cleanInactiveMembers: the mail server refused ${warnings(noSuchAddress.length)} as addresses that do not exist (${codes}): ${counts.refusedOnce} tried again in 7 days, ${counts.unreachable} counted as unreachable (their 30 days start without a delivered warning)`,
+  )
   return counts
 }
 

@@ -14,7 +14,8 @@ import { OUTCOME_ID } from './paths'
  * (the M4b design §7.3). `removed`: a saved position removed on the saved page without JavaScript,
  * whose row is then gone. The account's settings (§7.4): an address added by its link
  * (`email-verified`), Glia Notes switched on or off, the preferred subfields saved or all removed,
- * the display name saved or removed.
+ * the display name saved or removed. `not-signed-in`: "Delete my account" pressed with no session,
+ * as after a second press once the account was deleted (src/lib/members/account-deletion.ts).
  */
 export const DONE_CODES = [
   'signed-in',
@@ -32,6 +33,7 @@ export const DONE_CODES = [
   'subfields-removed',
   'name-saved',
   'name-removed',
+  'not-signed-in',
 ] as const
 /**
  * What a redirect reports as gone wrong. Messages under `outcome.error`. Besides the email link's

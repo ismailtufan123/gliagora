@@ -42,6 +42,7 @@ import {
   monthsBeforeUtc,
   requestEmailCutoff,
   unconfirmedRequestCutoff,
+  warningDeadlineDay,
   warningExpiredCutoff,
   warningRetryCutoff,
 } from './rules'
@@ -322,7 +323,7 @@ describe('inactivity (PLAN §18.1, the M4b design §7.7)', () => {
     )
   })
 
-  it('deletes warned members 30 days after the warning, from the day the warning names', () => {
+  it('deletes warned members 30 days after the warning, at the earliest', () => {
     expect(warningExpiredCutoff(RUN)).toEqual(new Date(RUN.getTime() - 30 * DAY))
     const warned = new Date('2026-10-01T05:30:12.000Z')
     expect(deletionDueAt(warned).toISOString()).toBe('2026-10-31T05:30:12.000Z')
@@ -333,6 +334,32 @@ describe('inactivity (PLAN §18.1, the M4b design §7.7)', () => {
     expect(warned.getTime() <= warningExpiredCutoff('2026-11-01T05:30:00.000Z').getTime()).toBe(
       true,
     )
+    // A run that comes a little later than the warning's did deletes on that UTC day.
+    expect(warned.getTime() <= warningExpiredCutoff('2026-10-31T05:30:20.000Z').getTime()).toBe(
+      true,
+    )
+  })
+
+  it('names a day in the warning that holds in every time zone, down to UTC−12', () => {
+    // The daily run at 05:30 UTC: "sign in before 30 Oct" for a deletion from 31 Oct 05:30 UTC.
+    expect(warningDeadlineDay('2026-10-01T05:30:12.000Z')).toBe('2026-10-30')
+    // The day before the named day ends at UTC−12 at noon UTC of the named day: no later than the
+    // earliest moment of the deletion, for a warning at any time of day (a run started by hand).
+    // The day after the named one would not hold: the named day is the latest that does.
+    const noonUtc = (day: string, plusDays = 0) =>
+      Date.parse(`${day}T12:00:00.000Z`) + plusDays * DAY
+    for (let minute = 0; minute < 24 * 60; minute += 7) {
+      const warnedAt = new Date(Date.parse('2026-10-01T00:00:00.000Z') + minute * 60_000)
+      const day = warningDeadlineDay(warnedAt)
+      const earliest = deletionDueAt(warnedAt).getTime()
+      expect(noonUtc(day), warnedAt.toISOString()).toBeLessThanOrEqual(earliest)
+      expect(noonUtc(day, 1), warnedAt.toISOString()).toBeGreaterThan(earliest)
+      // And the end of that day before, in Etc/GMT+12, is the same instant.
+      const lastMoment = new Date(noonUtc(day) - 1)
+      expect(new Intl.DateTimeFormat('en-CA', { timeZone: 'Etc/GMT+12' }).format(lastMoment)).toBe(
+        new Date(noonUtc(day, -1)).toISOString().slice(0, 10),
+      )
+    }
   })
 
   it('counts an address as unreachable only when refused again at least 7 days later', () => {

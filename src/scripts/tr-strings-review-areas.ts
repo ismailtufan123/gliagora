@@ -1087,14 +1087,15 @@ export const AREAS: Area[] = [
       'account.delete.keptHeading': 'Delete your account? - heading of the list of what stays',
       'account.delete.kept': 'Delete your account? - list of what stays - items',
       'account.delete.email':
-        'Delete your account?, for an account with an email address - paragraph above the buttons',
+        'Delete your account?, for an account with an email address when the site can send email - paragraph above the buttons',
       'account.delete.submit': 'Delete your account? - button that deletes the account',
       'account.delete.cancel': 'Delete your account? - button beside it, back to the privacy page',
       'account.deleted.metaTitle': 'Account deleted (/en/account/deleted/) - browser tab',
       'account.deleted.title': 'Account deleted - heading',
       'account.deleted.text': 'Account deleted - first paragraph',
       'account.deleted.kept': 'Account deleted - paragraph about what stays',
-      'account.deleted.email': 'Account deleted - paragraph about the confirmation email',
+      'account.deleted.email':
+        'Account deleted - paragraph about the confirmation email the account’s address may receive',
       'account.deleted.jobs': 'Account deleted - first link (the jobs list)',
       'account.deleted.home': 'Account deleted - second link (the home page)',
       'outcome.done.signed-in':
@@ -1118,6 +1119,8 @@ export const AREAS: Area[] = [
       'outcome.done.name-saved': 'Account - message at the top after saving the display name',
       'outcome.done.name-removed':
         'Account - message at the top after saving an empty display name, which removes it',
+      'outcome.done.not-signed-in':
+        'Privacy and your data, when signed out - message above the sign-in form after pressing Delete my account while no longer signed in (for example a second press after the account was deleted)',
       'outcome.done.othersEnded':
         'Account - second sentence of the message at the top, after linking or removing a way to sign in, when the account was signed in in other browsers too',
       'outcome.error.link-expired':
@@ -1161,9 +1164,13 @@ export const AREAS: Area[] = [
       'outcome.error.name-invalid':
         'Account - message at the top when the display name was too long or had control characters',
       'outcome.error.failed':
-        'Sign-in and account pages - message at the top when something went wrong (on the privacy pages: the download, or deleting the account)',
+        'Sign-in and account pages - message at the top when something went wrong (on the privacy page: the download)',
       'outcome.error.failedReference':
         'Sign-in and account pages - message at the top when something went wrong, with the reference that finds it in our log',
+      'outcome.error.deleteFailed':
+        'Delete your account? - message at the top when deleting the account went wrong (nothing was deleted)',
+      'outcome.error.deleteFailedReference':
+        'Delete your account? - message at the top when deleting the account went wrong (nothing was deleted), with the reference that finds it in our log',
     },
   },
   {

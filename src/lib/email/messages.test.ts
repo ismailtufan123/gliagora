@@ -233,13 +233,13 @@ describe('accountDeletedEmail', () => {
 })
 
 describe('inactivityWarningEmail', () => {
-  const deleteOn = new Date('2026-10-31T05:30:12.000Z')
+  const day = '2026-10-30'
 
-  it('names the day the account goes, with a plain sign-in link', () => {
-    const email = inactivityWarningEmail({ locale: 'en', deleteOn })
+  it('names the day before which to sign in, with a plain sign-in link', () => {
+    const email = inactivityWarningEmail({ locale: 'en', day })
     expect(email.subject).toBe('Your Gliagora account will be deleted')
     expect(email.text).toContain(
-      'You have not used your Gliagora | Neuroscience account for 2 years. To keep it, sign in before 31 Oct 2026:\nhttps://gliagora.com/en/sign-in/\n',
+      'You have not used your Gliagora | Neuroscience account for 2 years. To keep it, sign in before 30 Oct 2026:\nhttps://gliagora.com/en/sign-in/\n',
     )
     expect(email.text).toContain('we will delete the account on that day or soon after')
     expect(email.text).toContain('https://gliagora.com/en/legal/privacy/')
@@ -248,14 +248,12 @@ describe('inactivityWarningEmail', () => {
     expect(email.text).not.toMatch(/@(?!gliagora\.com)/)
   })
 
-  it('writes the day in UTC, whatever the server’s time zone', () => {
-    const late = inactivityWarningEmail({
-      locale: 'en',
-      deleteOn: new Date('2026-10-31T23:59:59.000Z'),
-    })
-    expect(late.text).toContain('sign in before 31 Oct 2026:')
-    expect(inactivityWarningEmail({ locale: 'tr', deleteOn }).text).toContain(
-      '31 Eki 2026 tarihinden önce oturum açın:',
+  it('writes the day as given, whatever the server’s time zone', () => {
+    expect(inactivityWarningEmail({ locale: 'en', day: '2026-10-31' }).text).toContain(
+      'sign in before 31 Oct 2026:',
+    )
+    expect(inactivityWarningEmail({ locale: 'tr', day }).text).toContain(
+      '30 Eki 2026 tarihinden önce oturum açın:',
     )
   })
 })

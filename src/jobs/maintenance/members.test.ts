@@ -14,11 +14,53 @@ describe('warningDelivery', () => {
     )
   })
 
-  it('reads 5.1.x as "no such address"', () => {
-    for (const enhanced of ['5.1.0', '5.1.1', '5.1.10']) {
-      expect(warningDelivery({ status: 'refused', reply: { code: 550, enhanced } })).toBe(
-        'no-such-address',
-      )
+  it('reads a recipient refused at RCPT TO as "no such address" only with a recipient status', () => {
+    for (const enhanced of ['5.1.0', '5.1.1', '5.1.2', '5.1.3', '5.1.6', '5.1.10']) {
+      expect(
+        warningDelivery({ status: 'refused', reply: { code: 550, enhanced, command: 'RCPT TO' } }),
+      ).toBe('no-such-address')
+    }
+    // Other statuses at RCPT TO are about this message only.
+    for (const enhanced of ['5.1.4', '5.1.5', '5.2.1', '5.7.1']) {
+      expect(
+        warningDelivery({ status: 'refused', reply: { code: 550, enhanced, command: 'RCPT TO' } }),
+      ).toBe('refused')
+    }
+  })
+
+  it('never reads a refusal at another step, or with no step known, as "no such address"', () => {
+    // The message refused after DATA (a spam filter, a quota checked late).
+    expect(
+      warningDelivery({
+        status: 'refused',
+        reply: { code: 550, enhanced: '5.1.1', command: 'DATA' },
+      }),
+    ).toBe('refused')
+    expect(warningDelivery({ status: 'refused', reply: { code: 550, enhanced: '5.1.1' } })).toBe(
+      'refused',
+    )
+  })
+
+  it('stops the run when the server refuses our sender: every message would be refused', () => {
+    // At MAIL FROM, whatever the status (Postfix: 550 5.1.0 Sender address rejected).
+    for (const reply of [
+      { code: 550, enhanced: '5.1.0' },
+      { code: 553, enhanced: '5.1.8' },
+      { code: 550, enhanced: '5.7.1' },
+      { code: 550 },
+    ]) {
+      expect(
+        warningDelivery({ status: 'refused', reply: { ...reply, command: 'MAIL FROM' } }),
+      ).toBe('try-later')
+    }
+    // The sender statuses at any step (Exchange Online: 550 5.1.8 Access denied, bad outbound
+    // sender; Postfix checks the sender at RCPT TO by default).
+    for (const enhanced of ['5.1.7', '5.1.8']) {
+      for (const command of ['RCPT TO', 'DATA', undefined] as const) {
+        expect(
+          warningDelivery({ status: 'refused', reply: { code: 550, enhanced, command } }),
+        ).toBe('try-later')
+      }
     }
   })
 

@@ -2,7 +2,7 @@ import { type Page, expect, test } from '@playwright/test'
 
 import { editorHeaders, editorPassword } from './editor'
 import { emailCount, mailpitUrl } from './mailpit'
-import { SESSION_COOKIE, isSignedIn, providerMember, startAt } from './member'
+import { SESSION_COOKIE, SIGN_IN_COOKIE, isSignedIn, providerMember, startAt } from './member'
 
 // Deleting an account (M4b, D49; the M4b design §5, §7.6). In the `destructive` project, which runs
 // after every other test (playwright.config.ts), as a data request's deletion will. Members of
@@ -64,6 +64,13 @@ test('deletes the account through its confirmation page, by keyboard', async ({ 
     `We will send one email to ${address} to confirm that your account was deleted.`,
   )
 
+  // The account navigation marks Privacy as the section this page is in, not as this page.
+  const privacyLink = page
+    .getByRole('navigation', { name: 'Your account' })
+    .getByRole('link', { name: 'Privacy' })
+  await expect(privacyLink).not.toHaveAttribute('aria-current')
+  await expect(privacyLink).toHaveAttribute('data-section', '')
+
   // Tab from the last link of the text: the button, then Cancel. Enter on the button deletes.
   await main.getByRole('link', { name: 'data requests' }).focus()
   await page.keyboard.press('Tab')
@@ -73,6 +80,8 @@ test('deletes the account through its confirmation page, by keyboard', async ({ 
   await expect(main.getByRole('link', { name: 'Cancel' })).toBeFocused()
   await page.keyboard.press('Shift+Tab')
   await expect(button).toBeFocused()
+  const session = (await context.cookies()).find((cookie) => cookie.name === SESSION_COOKIE)
+  expect(session).toBeDefined()
   await page.keyboard.press('Enter')
 
   await expect(page).toHaveURL(/\/en\/account\/deleted\/$/)
@@ -80,6 +89,31 @@ test('deletes the account through its confirmation page, by keyboard', async ({ 
   // The session cookie is gone, and the session with it.
   expect((await context.cookies()).map((cookie) => cookie.name)).not.toContain(SESSION_COOKIE)
   expect(await isSignedIn(page)).toBe(false)
+
+  // A second press (a double click, or Back and the button again) still carries the old cookie: it
+  // deletes nothing more, clears the cookie and leads to the privacy page, which says so.
+  await context.addCookies([session!])
+  const again = await page.request.post('/en/account/privacy/delete/use/', {
+    headers: { Origin: new URL(page.url()).origin },
+    maxRedirects: 0,
+  })
+  expect(again.status()).toBe(303)
+  expect(again.headers()['location']).toBe('/en/account/privacy/?done=not-signed-in#outcome')
+  const cleared = (await again.headersArray())
+    .filter((header) => header.name.toLowerCase() === 'set-cookie')
+    .map((header) => header.value)
+  expect(cleared).toEqual([
+    `${SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`,
+    `${SIGN_IN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`,
+  ])
+  await page.goto('/en/account/privacy/?done=not-signed-in#outcome')
+  const outcome = page.locator('#outcome')
+  await expect(outcome).toHaveRole('status')
+  await expect(outcome).toHaveText(
+    'You are not signed in. If you have just deleted your account, it has been deleted.',
+  )
+  await expect(outcome).toBeFocused()
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sign in to manage your data')
 
   // The request is recorded closed, with the address the final email will go to.
   const [request, ...others] = await requestsFor(page, address)
@@ -107,6 +141,18 @@ test('deletes the account through its confirmation page, by keyboard', async ({ 
   await page.context().clearCookies()
   await startAt(page, 'google', { fields: { sub: sub!, email: address, hd: 'example.org' } })
   await expect(page).toHaveURL(/\/en\/sign-in\/confirm\/$/)
+  await context.close()
+})
+
+test('a failed deletion says that the account was not deleted', async ({ browser }) => {
+  const { context, page } = await providerMember(browser, 'google')
+  await page.goto('/en/account/privacy/delete/?error=failed&ref=0123456789#outcome')
+  const outcome = page.locator('#outcome')
+  await expect(outcome).toHaveRole('alert')
+  await expect(outcome).toBeFocused()
+  await expect(outcome).toContainText('Your account was not deleted: something went wrong.')
+  await expect(outcome).toContainText('mention reference 0123456789')
+  expect(await isSignedIn(page)).toBe(true)
   await context.close()
 })
 

@@ -201,18 +201,33 @@ export function warningExpiredCutoff(now: Instant): Date {
 }
 
 /**
- * When an account warned at `warnedAt` is due for deletion (30 days later): the warning names this
- * day, and the daily run deletes it that day or the next (a run at the same minute 30 days on can
- * come a few seconds early).
+ * The earliest moment an account warned at `warnedAt` can be deleted (30 days later): the daily run
+ * deletes it then or the day after (a run at the same minute 30 days on can come a few seconds
+ * early). The warning names an earlier day (`warningDeadlineDay`).
  */
 export function deletionDueAt(warnedAt: Instant): Date {
   return new Date(toMs(warnedAt) + INACTIVITY_GRACE_DAYS * DAY_MS)
 }
 
+/** The westernmost time zone (UTC−12), where a calendar day ends last: Anywhere on Earth. */
+const AOE_OFFSET_MS = 12 * HOUR_MS
+
 /**
- * A warning the mail server refused as "no such address" (5.1.x) at or before this instant is
- * sent again: refused again, the address counts as unreachable and the 30 days start without a
- * delivered warning. Refused later than this, the member is not tried again yet.
+ * The day the inactivity warning names ("To keep it, sign in before …"), as `YYYY-MM-DD`: the
+ * latest day N such that the day before it has ended everywhere, even at UTC−12 (N at 12:00 UTC),
+ * by the earliest moment the account can be deleted (`deletionDueAt`). A reader in any time zone
+ * who signs in before N keeps the account; the deletion comes on day N or later, wherever they are.
+ * The date has no time zone of its own, as the reader's is unknown (CLAUDE.md: calendar days).
+ */
+export function warningDeadlineDay(warnedAt: Instant): string {
+  return new Date(deletionDueAt(warnedAt).getTime() - AOE_OFFSET_MS).toISOString().slice(0, 10)
+}
+
+/**
+ * A warning the mail server refused as "no such address" (a recipient refused at RCPT TO with
+ * 5.1.0–5.1.3, 5.1.6 or 5.1.10, in a run where it accepted some other warning) at or before this
+ * instant is sent again: refused again, the address counts as unreachable and the 30 days start
+ * without a delivered warning. Refused later than this, the member is not tried again yet.
  */
 export function warningRetryCutoff(now: Instant): Date {
   return new Date(toMs(now) - WARNING_REFUSAL_RETRY_DAYS * DAY_MS)

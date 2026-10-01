@@ -98,6 +98,49 @@ describe('sendOne', () => {
     })
   })
 
+  it('says which command the server refused, so a refused sender is not taken for a recipient', async () => {
+    vi.stubEnv('SMTP_HOST', '127.0.0.1')
+    // Nodemailer's error when the server refuses the sender (MAIL FROM) or the recipient (RCPT TO).
+    const refusedAt = (command: string, response: string) =>
+      Object.assign(new Error(`Mail command failed: ${response}`), {
+        code: 'EENVELOPE',
+        responseCode: Number(response.slice(0, 3)),
+        response,
+        command,
+      })
+    const send = async (error: unknown) =>
+      sendOne(
+        sending(async () => Promise.reject(error)),
+        'x@example.org',
+        message,
+      )
+    expect(
+      (await send(refusedAt('MAIL FROM', '553 5.1.8 <hello@gliagora.com>: Domain not found')))
+        .reply,
+    ).toEqual({ code: 553, enhanced: '5.1.8', command: 'MAIL FROM' })
+    expect(
+      (await send(refusedAt('RCPT TO', '550 5.1.1 <x@example.org>: User unknown'))).reply,
+    ).toEqual({ code: 550, enhanced: '5.1.1', command: 'RCPT TO' })
+    // Through the adapter's own error, as on the server; an unknown step is not kept.
+    expect(
+      (await send(new EmailNotSentError('EENVELOPE', 550, '5.1.0', 'MAIL FROM'))).reply,
+    ).toEqual({ code: 550, enhanced: '5.1.0', command: 'MAIL FROM' })
+    expect((await send(refusedAt('AUTH PLAIN', '535 5.7.8 Authentication failed'))).reply).toEqual({
+      code: 535,
+      enhanced: '5.7.8',
+    })
+    // A recipient refused without an error (Nodemailer's rejectedErrors).
+    const partly = sending(async () => ({
+      accepted: [],
+      rejected: ['x@example.org'],
+      rejectedErrors: [refusedAt('RCPT TO', '550 5.1.1 <x@example.org>: User unknown')],
+    }))
+    expect(await sendOne(partly, 'x@example.org', message)).toEqual({
+      status: 'refused',
+      reply: { code: 550, enhanced: '5.1.1', command: 'RCPT TO' },
+    })
+  })
+
   it('sends nothing without a mail server', async () => {
     vi.stubEnv('SMTP_HOST', '')
     const payload = sending(async () => ({}))

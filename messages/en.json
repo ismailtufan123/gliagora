@@ -856,7 +856,7 @@
       "title": "Your account has been deleted",
       "text": "Your Gliagora account, your saved positions and your settings have been deleted, and you have been signed out in every browser.",
       "kept": "We keep a record of your request for 2 years, to show that we handled it. Our backups may hold your account for up to 6 months; if a backup is ever restored, your account is deleted again.",
-      "email": "If your account had an email address, we will send one email there to confirm the deletion.",
+      "email": "If your account had an email address, you may also receive one email there confirming the deletion.",
       "jobs": "Browse positions",
       "home": "Go to the home page"
     }
@@ -896,6 +896,7 @@
       "subfields-removed": "You have no preferred subfields now: the jobs list shows all positions.",
       "name-saved": "Your display name has been saved.",
       "name-removed": "Your display name has been removed.",
+      "not-signed-in": "You are not signed in. If you have just deleted your account, it has been deleted.",
       "othersEnded": "Other browsers where you were signed in have been signed out."
     },
     "error": {
@@ -903,6 +904,8 @@
       "linkExpiredSignedIn": "This sign-in link has expired or has already been used, so you are still signed in as before.",
       "failed": "Something went wrong. Please try again.",
       "failedReference": "Something went wrong. Please try again, or write to privacy@gliagora.com and mention reference {reference}.",
+      "deleteFailed": "Your account was not deleted: something went wrong. Please try again.",
+      "deleteFailedReference": "Your account was not deleted: something went wrong. Please try again, or write to privacy@gliagora.com and mention reference {reference}.",
       "expired": "Signing in or linking took more than 15 minutes, or came back to another browser or an older tab, so nothing has changed. Please try again.",
       "cancelled-google": "You cancelled on the Google page, so nothing has changed.",
       "cancelled-orcid": "You cancelled on the ORCID page, so nothing has changed.",

@@ -856,7 +856,7 @@
       "title": "Hesabınız silindi",
       "text": "Gliagora hesabınız, kaydettiğiniz pozisyonlar ve ayarlarınız silindi; tüm tarayıcılarda oturumunuz kapatıldı.",
       "kept": "Talebinizi yerine getirdiğimizi gösterebilmek için talebinizin kaydını 2 yıl saklarız. Yedeklerimiz hesabınızı en fazla 6 ay tutabilir; bir yedek geri yüklenirse hesabınız yeniden silinir.",
-      "email": "Hesabınızın bir e-posta adresi varsa silme işlemini doğrulamak için o adrese bir e-posta göndereceğiz.",
+      "email": "Hesabınızın bir e-posta adresi varsa silme işlemini doğrulayan bir e-postayı da o adrese alabilirsiniz.",
       "jobs": "Pozisyonlara göz atın",
       "home": "Ana sayfaya gidin"
     }
@@ -896,6 +896,7 @@
       "subfields-removed": "Artık tercih ettiğiniz alt alan yok: iş ilanları listesi tüm pozisyonları gösterir.",
       "name-saved": "Görünen adınız kaydedildi.",
       "name-removed": "Görünen adınız kaldırıldı.",
+      "not-signed-in": "Oturumunuz açık değil. Hesabınızı az önce sildiyseniz hesabınız silindi.",
       "othersEnded": "Oturumunuzun açık olduğu diğer tarayıcılarda oturumunuz kapatıldı."
     },
     "error": {
@@ -903,6 +904,8 @@
       "linkExpiredSignedIn": "Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış; bu nedenle oturumunuz önceki gibi açık.",
       "failed": "Bir sorun oluştu. Lütfen yeniden deneyin.",
       "failedReference": "Bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin.",
+      "deleteFailed": "Hesabınız silinmedi: bir sorun oluştu. Lütfen yeniden deneyin.",
+      "deleteFailedReference": "Hesabınız silinmedi: bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin.",
       "expired": "Oturum açma ya da bağlama 15 dakikadan uzun sürdü veya başka bir tarayıcıya ya da eski bir sekmeye döndü; bu nedenle hiçbir şey değişmedi. Lütfen yeniden deneyin.",
       "cancelled-google": "Google'ın sayfasında vazgeçtiniz; hiçbir şey değişmedi.",
       "cancelled-orcid": "ORCID'in sayfasında vazgeçtiniz; hiçbir şey değişmedi.",

@@ -24,15 +24,15 @@ import {
   saveJob,
   touchMember,
 } from '@/lib/members/store'
-import { monthsBeforeUtc } from '@/lib/retention/rules'
+import { monthsBeforeUtc, warningDeadlineDay } from '@/lib/retention/rules'
 
 import { DAY, institution, job, rows, suggestion, testPayload, unique } from './helpers'
 import { type Mailpit, mailpitAvailable, startMailpit } from './mailpit'
 
 // The member tasks (M4b, D49; the M4b design §7.6, §7.7, §7.9, §9) against a real, migrated
 // database and, for the emails, a throwaway Mailpit (a container, or the program in MAILPIT_BIN)
-// that refuses every address outside example.org as nonexistent (550 5.1.0) and can refuse
-// everything with a code of the test's choice. The inactivity timeline runs the task at chosen
+// that refuses every address outside example.org as nonexistent (550 5.1.0 at RCPT TO) and can
+// refuse every recipient, or our sender, with a code of the test's choice. The inactivity timeline runs the task at chosen
 // moments, as the daily schedule would. Every assertion is about the test's own members and
 // addresses: the task looks at every member in the shared scratch database.
 
@@ -144,8 +144,8 @@ describe.skipIf(!canStartMailpit)('inactive members, through Mailpit', () => {
     expect(warning?.Subject).toBe('Your Gliagora account will be deleted')
     expect(warning?.Text).toContain('You have not used your Gliagora | Neuroscience account')
     expect(warning?.Text).toMatch(/\nhttps:\/\/gliagora\.com\/en\/sign-in\/\r?\n/)
-    // The day named is the warning's day, 30 days on, in UTC.
-    const day = formatDay(at(30).toISOString().slice(0, 10), 'en')
+    // The day named is the latest before which signing in keeps the account in every time zone.
+    const day = formatDay(warningDeadlineDay(run), 'en')
     expect(warning?.Text).toContain(`sign in before ${day}:`)
     expect(warning?.Text).not.toMatch(/token=|\?next=/)
     expect(await mailpit!.to(notYet.email!)).toEqual([])
@@ -236,7 +236,11 @@ describe.skipIf(!canStartMailpit)('inactive members, through Mailpit', () => {
       email: address('gone', 'nowhere.example.org'),
       lastSeen: monthsBefore(run, 25),
     })
-    await cleanInactiveMembers(payload, run)
+    // A refusal counts only in a run in which the server accepted another warning.
+    const reachable = await member({ lastSeen: monthsBefore(run, 25) })
+    const first = await cleanInactiveMembers(payload, run)
+    expect(first.refusedOnce).toBeGreaterThanOrEqual(1)
+    expect(iso((await state(reachable.id))?.deletion_warned_at)).toBe(run.toISOString())
     expect(iso((await state(gone.id))?.warning_refused_at)).toBe(run.toISOString())
     expect((await state(gone.id))?.deletion_warned_at).toBeNull()
     // Six days later it is not tried again.
@@ -244,7 +248,10 @@ describe.skipIf(!canStartMailpit)('inactive members, through Mailpit', () => {
     expect(iso((await state(gone.id))?.warning_refused_at)).toBe(run.toISOString())
     expect((await state(gone.id))?.deletion_warned_at).toBeNull()
     // Seven days later, refused again: the countdown starts without a delivered warning.
-    await cleanInactiveMembers(payload, at(7))
+    const another = await member({ lastSeen: monthsBefore(at(7), 25) })
+    const second = await cleanInactiveMembers(payload, at(7))
+    expect(second.unreachable).toBeGreaterThanOrEqual(1)
+    expect(iso((await state(another.id))?.deletion_warned_at)).toBe(at(7).toISOString())
     expect(iso((await state(gone.id))?.deletion_warned_at)).toBe(at(7).toISOString())
     await cleanInactiveMembers(payload, at(36))
     expect(await state(gone.id)).not.toBeNull()
@@ -252,6 +259,74 @@ describe.skipIf(!canStartMailpit)('inactive members, through Mailpit', () => {
     expect(await state(gone.id)).toBeNull()
     // Nothing ever reached the address.
     expect(await mailpit!.to(gone.email!)).toEqual([])
+  })
+
+  // The next two run long before the others (at(-400)): only their own members are due then.
+  const early = at(-400)
+  const removeMembers = (ids: number[]) =>
+    store.execute(
+      sql`delete from members where id in (${sql.join(
+        ids.map((id) => sql`${id}`),
+        sql`, `,
+      )})`,
+    )
+
+  it('mark nobody when the server refuses every warning of a run as nonexistent and accepts none', async () => {
+    const lost = [
+      await member({
+        email: address('lost', 'nowhere.example.org'),
+        lastSeen: monthsBefore(early, 25),
+      }),
+      await member({
+        email: address('lost', 'nowhere.example.org'),
+        lastSeen: monthsBefore(early, 25),
+      }),
+    ]
+    try {
+      const result = await cleanInactiveMembers(payload, early)
+      expect(result).toMatchObject({ warned: 0, refusedOnce: 0, unreachable: 0, stopped: 0 })
+      for (const { id } of lost) {
+        expect(await state(id)).toMatchObject({
+          deletion_warned_at: null,
+          warning_refused_at: null,
+        })
+      }
+      // A week later, the same: the countdown never starts on refusals alone.
+      await cleanInactiveMembers(payload, new Date(early.getTime() + 7 * DAY))
+      for (const { id } of lost) {
+        expect(await state(id)).toMatchObject({
+          deletion_warned_at: null,
+          warning_refused_at: null,
+        })
+      }
+    } finally {
+      await removeMembers(lost.map(({ id }) => id))
+    }
+  })
+
+  it('stop the warnings of a run, marking nobody, when the server refuses our sender', async () => {
+    const due = [
+      await member({ lastSeen: monthsBefore(early, 25) }),
+      await member({
+        email: address('lost', 'nowhere.example.org'),
+        lastSeen: monthsBefore(early, 25),
+      }),
+    ]
+    await mailpit!.refuseAll(550, 'Sender')
+    try {
+      const result = await cleanInactiveMembers(payload, early)
+      expect(result).toMatchObject({ warned: 0, refusedOnce: 0, unreachable: 0, stopped: 1 })
+      for (const { id } of due) {
+        expect(await state(id)).toMatchObject({
+          deletion_warned_at: null,
+          warning_refused_at: null,
+        })
+      }
+    } finally {
+      await mailpit!.refuseAll(null)
+      await removeMembers(due.map(({ id }) => id))
+    }
+    expect(await mailpit!.to(due[0]!.email!)).toEqual([])
   })
 })
 

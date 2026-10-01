@@ -26,7 +26,10 @@ import { type MemberRecord, deleteMember } from './store'
 //   ever restored.
 // Then this browser's cookies go and the browser is sent to "Your account has been deleted".
 
-/** The account was already gone when the transaction reached it (a second press, elsewhere). */
+/**
+ * The account was already gone when the transaction reached it (two presses at the same moment, or
+ * a deletion elsewhere).
+ */
 class AccountGone extends Error {
   override name = 'AccountGone'
 }
@@ -82,10 +85,14 @@ const SIGNED_OUT = [clearedCookie(SESSION_COOKIE), clearedCookie(SIGN_IN_COOKIE)
 
 /**
  * POST `/en/account/privacy/delete/use/`: only from the site's own pages (`sameOrigin`), so no other
- * site can delete an account, and only while signed in (signed out, the privacy page shows the
- * sign-in panel). Ends at "Your account has been deleted" without this browser's cookies, also
- * when the account was already gone (a second press). A failure keeps everything as it was and
- * leads back to the confirmation page with a reference.
+ * site can delete an account, and only while signed in. Ends at "Your account has been deleted"
+ * without this browser's cookies, also when the account went while this request waited for it (two
+ * presses at the same moment). A request that finds no session leads, without this browser's
+ * cookies, to the privacy page, which says "You are not signed in. If you have just deleted your
+ * account, it has been deleted." above the sign-in panel: it can only come from a confirmation page
+ * shown while signed in, so it is a second press after the deletion (a double click, or Back and
+ * the button again) or a session that ended meanwhile, which the server cannot tell apart. A
+ * failure keeps everything as it was and leads back to the confirmation page with a reference.
  */
 export async function handleAccountDeletion(
   request: Request,
@@ -94,7 +101,9 @@ export async function handleAccountDeletion(
   if (!sameOrigin(request.headers, deps.env)) return forbidden()
   try {
     const member = await deps.member()
-    if (!member) return seeOther(MEMBER_PATHS.privacy)
+    if (!member) {
+      return seeOther(outcomePath(MEMBER_PATHS.privacy, { done: 'not-signed-in' }), SIGNED_OUT)
+    }
     await deps.deleteAccount(member)
     return seeOther(MEMBER_PATHS.accountDeleted, SIGNED_OUT)
   } catch (error) {

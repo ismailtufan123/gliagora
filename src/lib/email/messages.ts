@@ -186,19 +186,20 @@ export function accountDeletedEmail({ locale }: { locale: Locale }): EmailText {
 
 /**
  * The warning before an account is deleted for inactivity (M4b, D49; the M4b design §7.7; PLAN
- * §18.1), sent by `cleanInactiveMembers` 24 months after the member's last activity: the day from
- * which the account is deleted (`deleteOn`, its calendar day in UTC) and a plain link to the
- * sign-in page, which carries no token (signing in by any method keeps the account).
+ * §18.1), sent by `cleanInactiveMembers` 24 months after the member's last activity: the day before
+ * which to sign in to keep the account (`day`, `YYYY-MM-DD`, chosen by `warningDeadlineDay` so that
+ * it holds in every time zone, src/lib/retention/rules.ts) and a plain link to the sign-in page,
+ * which carries no token (signing in by any method keeps the account).
  */
 export function inactivityWarningEmail({
   locale,
-  deleteOn,
+  day,
 }: {
   locale: Locale
-  deleteOn: Date
+  day: string
 }): EmailText {
   const t = translator(locale)
-  const date = formatDay(deleteOn.toISOString().slice(0, 10), locale)
+  const date = formatDay(day, locale)
   return {
     locale,
     subject: t('account.inactiveWarning.subject'),

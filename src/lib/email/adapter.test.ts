@@ -130,6 +130,26 @@ describe('withoutRecipients', () => {
     expect(JSON.stringify(thrown)).not.toContain('Recipient')
   })
 
+  it('keeps the command the server refused (the sender or the recipient), nothing else', async () => {
+    const atMailFrom = Object.assign(new Error('Mail command failed: 550 5.1.0 <hello@x>'), {
+      code: 'EENVELOPE',
+      responseCode: 550,
+      response: '550 5.1.0 <hello@gliagora.com>: Sender address rejected',
+      command: 'MAIL FROM',
+    })
+    const thrown = (await failing(atMailFrom)
+      .sendEmail({ to: 'x@example.org' })
+      .catch((error: unknown) => error)) as InstanceType<typeof EmailNotSentError>
+    expect(thrown).toMatchObject({ responseCode: 550, enhanced: '5.1.0', command: 'MAIL FROM' })
+    expect(JSON.stringify(thrown)).not.toContain('@')
+    const auth = (await failing(
+      Object.assign(new Error('Invalid login'), { command: 'AUTH PLAIN' }),
+    )
+      .sendEmail({ to: 'x@example.org' })
+      .catch((error: unknown) => error)) as InstanceType<typeof EmailNotSentError>
+    expect(auth.command).toBeUndefined()
+  })
+
   it('keeps the code of a transport error, so a task still stops and tries again later', async () => {
     const thrown = await failing(
       Object.assign(new Error('connect ECONNREFUSED'), { code: 'ESOCKET' }),

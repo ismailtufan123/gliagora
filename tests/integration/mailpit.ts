@@ -84,8 +84,9 @@ function startBinary(
 /**
  * How the throwaway Mailpit answers, for the tests that need a refusal (M4b, the inactivity
  * warnings): `allowedRecipients`, a regular expression (Go's syntax), makes it refuse every other
- * recipient with `550 5.1.0` (an address that does not exist); `chaos` lets a test make it refuse
- * every recipient with a code of its choice (`mailpit.refuseAll(451)`), without enhanced status.
+ * recipient at RCPT TO with `550 5.1.0` (an address that does not exist); `chaos` lets a test make
+ * it refuse every recipient, or the sender at MAIL FROM, with a code of its choice
+ * (`mailpit.refuseAll(451)`, `mailpit.refuseAll(550, 'Sender')`), without enhanced status.
  */
 export type MailpitOptions = { allowedRecipients?: string; chaos?: boolean }
 
@@ -145,15 +146,16 @@ export async function startMailpit({ allowedRecipients, chaos = false }: Mailpit
       return Promise.all(found.map((m) => mailpit.message(m.ID)))
     },
     /**
-     * With `chaos`: refuses every recipient with `code` (`451`, `552`, …) from now on, or, with
-     * null, accepts them again.
+     * With `chaos`: refuses every recipient (RCPT TO), or with `at: 'Sender'` our sender (MAIL
+     * FROM), with `code` (`451`, `552`, …) from now on, or, with null, accepts everything again.
      */
-    async refuseAll(code: number | null) {
+    async refuseAll(code: number | null, at: 'Recipient' | 'Sender' = 'Recipient') {
       const response = await fetch(`${api}/api/v1/chaos`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        // Triggers left out are switched off.
         body: JSON.stringify({
-          Recipient: { ErrorCode: code ?? 451, Probability: code === null ? 0 : 100 },
+          [at]: { ErrorCode: code ?? 451, Probability: code === null ? 0 : 100 },
         }),
       })
       if (!response.ok) throw new Error(`Mailpit chaos answered ${response.status}`)

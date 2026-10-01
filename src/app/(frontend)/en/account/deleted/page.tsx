@@ -6,8 +6,9 @@ import { paths } from '@/lib/site'
 
 // After "Delete my account" (M4b, D49; the M4b design §5, §7.6): the account is gone, and with it
 // this browser's session. Static, and the same for everyone (it names nobody): what was deleted,
-// what stays (the record of the request, the backups) and the one email that confirms it. Never
-// indexed.
+// what stays (the record of the request, the backups) and that an email may confirm it. It cannot
+// promise that email: it is built without the server's settings, and the account may have had no
+// address or the site no mail server (the confirmation page promises it only then). Never indexed.
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations({ locale: 'en', namespace: 'account.deleted' })

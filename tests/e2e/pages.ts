@@ -97,7 +97,16 @@ export const PAGES = [
   { path: '/en/account/privacy/', name: 'privacy (email member)', member: 'email' },
   { path: '/en/account/privacy/', name: 'privacy (ORCID member)', member: 'orcid' },
   { path: '/en/account/privacy/', name: 'privacy (signed out)' },
+  {
+    path: '/en/account/privacy/?done=not-signed-in',
+    name: 'privacy (signed out, after deleting)',
+  },
   { path: '/en/account/privacy/delete/', name: 'delete your account?', member: 'email' },
+  {
+    path: '/en/account/privacy/delete/?error=failed&ref=0123456789',
+    name: 'delete your account? (failed)',
+    member: 'email',
+  },
   { path: '/en/account/deleted/', name: 'account deleted' },
   { path: '/this-page-does-not-exist/', name: '404', status: 404 },
   { path: '/en/gone-example/', name: '410', status: 410 },

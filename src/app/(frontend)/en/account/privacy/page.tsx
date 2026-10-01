@@ -19,10 +19,15 @@ import { type CurrentMember, currentMember } from '@/lib/members/session'
 // route) and "Delete my account" (a link to the confirmation page, which says what goes and what
 // stays: no dialog, so it works without JavaScript and needs nothing from the header's script).
 // `?error=failed` is the export's outcome when it could not be made. For visitors who are signed
-// out, the sign-in panel (200, as the account page). Rendered for each request, never indexed.
+// out, the sign-in panel (200, as the account page), with `?done=not-signed-in` when "Delete my
+// account" was pressed without a session (a second press after the deletion). Rendered for each
+// request, never indexed.
 export const dynamic = 'force-dynamic'
 
 const PRIVACY_OUTCOMES = { error: ['failed'] } as const
+
+/** "Delete my account" pressed with no session (src/lib/members/account-deletion.ts). */
+const SIGNED_OUT_OUTCOMES = { done: ['not-signed-in'] } as const
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
 
@@ -64,6 +69,7 @@ export default async function Page({ searchParams }: Props) {
       <main id="main" className="page-frame flex-1 py-12">
         <div className="grid max-w-(--measure) gap-6">
           <h1 className="text-h1">{t('signedOutTitle')}</h1>
+          <OutcomeMessage outcome={readOutcome(params, SIGNED_OUT_OUTCOMES)} />
           <SignInPanel next={MEMBER_PATHS.privacy} path={MEMBER_PATHS.privacy} />
         </div>
       </main>

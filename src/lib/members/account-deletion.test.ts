@@ -71,11 +71,16 @@ describe('the account deletion route', () => {
     }
   })
 
-  it('sends a visitor who is signed out to the privacy page, deleting nothing', async () => {
+  it('sends a visitor who is signed out to the privacy page with a message, deleting nothing', async () => {
+    // A second press after the deletion: the session is gone, and the cookie with it.
     const deps = fakes(null)
     const response = await handleAccountDeletion(post(), deps)
     expect(response.status).toBe(303)
-    expect(response.headers.get('location')).toBe('/en/account/privacy/')
+    expect(response.headers.get('location')).toBe('/en/account/privacy/?done=not-signed-in#outcome')
+    expect(cookiesOf(response)).toEqual([
+      '__Host-gliagora-session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax',
+      '__Host-gliagora-signin=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax',
+    ])
     expect(deps.deleteAccount).not.toHaveBeenCalled()
   })
 
@@ -95,7 +100,7 @@ describe('the account deletion route', () => {
     ])
   })
 
-  it('ends at the same page when the account was already gone (a second press)', async () => {
+  it('ends at the same page when the account went while the request waited (two presses at once)', async () => {
     const response = await handleAccountDeletion(post(), fakes(member, false))
     expect(response.headers.get('location')).toBe('/en/account/deleted/')
     expect(cookiesOf(response)).toHaveLength(2)

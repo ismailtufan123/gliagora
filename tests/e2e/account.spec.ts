@@ -621,7 +621,7 @@ test.describe('the account deletion route', () => {
       maxRedirects: 0,
     })
     expect(response.status()).toBe(303)
-    expect(response.headers()['location']).toBe('/en/account/privacy/')
+    expect(response.headers()['location']).toBe('/en/account/privacy/?done=not-signed-in#outcome')
   })
 })
 

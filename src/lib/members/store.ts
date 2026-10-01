@@ -1063,10 +1063,12 @@ export function markWarned(db: MemberDb, memberId: number, now: Date): Promise<b
 }
 
 /**
- * After the mail server refused the warning as "no such address" (5.1.x): the first time, the
- * refusal is recorded and the member is tried again 7 days later; refused again then, the address
- * counts as unreachable and the 30 days start without a delivered warning, as for members without
- * an address. Returns `first`, `unreachable`, or null when the member is no longer due.
+ * After the mail server refused the warning as "no such address" (a recipient refused at RCPT TO,
+ * in a run where it accepted another warning; src/jobs/maintenance/cleanInactiveMembers.ts): the
+ * first time, the refusal is recorded and the member is tried again 7 days later; refused again
+ * then, the address counts as unreachable and the 30 days start without a delivered warning, as
+ * for members without an address. Returns `first`, `unreachable`, or null when the member is no
+ * longer due.
  */
 export function markWarningRefused(
   db: MemberDb,

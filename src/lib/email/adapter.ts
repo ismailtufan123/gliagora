@@ -3,26 +3,30 @@ import type { EmailAdapter } from 'payload'
 
 import { errorCode } from '@/lib/errors'
 
-import { enhancedStatus } from './deliver'
+import { type SmtpCommand, enhancedStatus, smtpCommand } from './deliver'
 import { type Address, DEFAULT_SENDER, smtpSettings } from './settings'
 
 /**
  * A send error without the recipient or the server's reply: only the codes that `sendOne()`
  * (src/lib/email/deliver.ts) and `errorSummary()` (src/lib/errors.ts) read. `enhanced` is the
  * reply's enhanced status code (RFC 3463, e.g. `5.1.1` for an address that does not exist), the
- * only part of the reply's text that is kept: the rest names the recipient.
+ * only part of the reply's text that is kept: the rest names the recipient. `command` is the SMTP
+ * command the server refused (`MAIL FROM`: the sender; `RCPT TO`: the recipient; `DATA`: the
+ * message), as Nodemailer reports it; it names nobody.
  */
 export class EmailNotSentError extends Error {
   override name = 'EmailNotSentError'
   readonly code?: string
   readonly responseCode?: number
   readonly enhanced?: string
+  readonly command?: SmtpCommand
 
-  constructor(code?: string, responseCode?: number, enhanced?: string) {
+  constructor(code?: string, responseCode?: number, enhanced?: string, command?: SmtpCommand) {
     super(`An email was not sent (${[code, responseCode].filter(Boolean).join(' ') || 'unknown'})`)
     this.code = code
     this.responseCode = responseCode
     this.enhanced = enhanced
+    this.command = command
   }
 }
 
@@ -41,12 +45,14 @@ export function withoutRecipients(adapter: EmailAdapter): EmailAdapter {
         try {
           return await inner.sendEmail(message)
         } catch (error) {
-          const { responseCode, response } =
-            (error as { responseCode?: unknown; response?: unknown } | null) ?? {}
+          const { responseCode, response, command } =
+            (error as { responseCode?: unknown; response?: unknown; command?: unknown } | null) ??
+            {}
           throw new EmailNotSentError(
             errorCode(error),
             typeof responseCode === 'number' ? responseCode : undefined,
             enhancedStatus(response),
+            smtpCommand(command),
           )
         }
       },
