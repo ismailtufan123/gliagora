@@ -610,6 +610,151 @@
       "jobs": "Browse positions"
     }
   },
+  "dataRequest": {
+    "heading": "Send a request",
+    "intro": "Use this form to have your data deleted, or for any other request about your personal data. We email you a link to confirm that the request is yours, and we act on it only after you confirm it.",
+    "kept": "Until you confirm, we keep only the type of request, its date and a scrambled code of your email address, for 60 days, to be able to show that a request arrived. If you do not confirm, what you write here is deleted after 24 hours. <link>How we handle data requests</link>",
+    "unavailable": "The form is temporarily unavailable. Please write to <email>privacy@gliagora.com</email> instead.",
+    "noscript": "The spam check on this form needs JavaScript. Without JavaScript, write to <email>privacy@gliagora.com</email> instead.",
+    "email": {
+      "label": "Your email address",
+      "hint": "The address you use with Gliagora. We send the confirmation link there; it works for 24 hours."
+    },
+    "kind": {
+      "legend": "What are you asking for?",
+      "deletion": {
+        "label": "Delete my data",
+        "hint": "As soon as you confirm, we delete the suggestions you sent with this address, a Gliagora account with it and your address on problem reports."
+      },
+      "access": {
+        "label": "A copy of my data",
+        "hint": "We send you a copy of the data we hold about you. Members can also download theirs at once in their account settings."
+      },
+      "correction": {
+        "label": "Correct my data",
+        "hint": "Tell us what is wrong and what it should say. To correct a listing, use Report a problem on its page instead."
+      },
+      "objection": {
+        "label": "Object to how we use my data",
+        "hint": "Where we rely on our legitimate interest. Tell us which use you object to."
+      },
+      "restriction": {
+        "label": "Restrict how we use my data (EU)",
+        "hint": "If you are in the European Union: ask us to limit how we use your data, for example while we check whether it is correct."
+      },
+      "withdraw-consent": {
+        "label": "Withdraw my consent",
+        "hint": "For example, to emails about the outcome of a suggestion. You can unsubscribe from Glia Notes with the link in any issue."
+      },
+      "other": {
+        "label": "Something else",
+        "hint": "Any other question or request about your personal data."
+      }
+    },
+    "name": {
+      "label": "Your name (optional)",
+      "hint": "Not needed to delete your data, and not kept with a deletion. For other requests, it can help us find your data and answer you."
+    },
+    "details": {
+      "label": "Details",
+      "hint": "Needed for every request except a deletion: what you are asking for, and anything that helps us find your data. Not kept with a deletion. Plain text, up to 2,000 characters. Please do not send sensitive data, such as information about your health.",
+      "left": "Characters left: {count}",
+      "over": "Characters over the limit: {count}"
+    },
+    "honeypot": "Leave this field empty",
+    "spamNote": "To keep out spam programs, your browser solves a small puzzle before the form is sent, and we keep scrambled forms of your IP address and of the email address for 24 hours to limit how many requests can be sent. <link>How we protect the form</link>",
+    "submit": "Send request",
+    "sending": "Sending your request…",
+    "errors": {
+      "title": "There is a problem",
+      "prefix": "Error:",
+      "emailMissing": "Enter your email address: we send the confirmation link there.",
+      "emailInvalid": "Enter an email address in the correct format, such as name@example.org.",
+      "emailTooLong": "Enter an email address of 254 characters or fewer.",
+      "kindMissing": "Choose what you are asking for.",
+      "nameTooLong": "Shorten your name to 200 characters or fewer.",
+      "detailsMissing": "Tell us what you are asking for.",
+      "detailsTooLong": "Shorten the details to 2,000 characters or fewer.",
+      "needsJs": "The spam check did not run: the page had not finished loading, or JavaScript is turned off or blocked in your browser. Wait until the page has loaded and send the form again, or write to privacy@gliagora.com.",
+      "spamCheck": "The spam check has expired or did not work. Please send the form again.",
+      "rateLimited": "Too many requests have been sent recently, from here or to this address. Please try again later, or write to privacy@gliagora.com.",
+      "unavailable": "We could not send the confirmation email just now. Please try again in a few minutes, or write to privacy@gliagora.com.",
+      "failed": "Something went wrong and your request was not sent. Please try again later, or write to privacy@gliagora.com and mention reference {reference}."
+    },
+    "sent": {
+      "metaTitle": "Check your inbox",
+      "title": "Check your inbox",
+      "text": "We have emailed a link to confirm your request to the address you entered.",
+      "confirm": "We act on your request only after you open the link and confirm it.",
+      "validity": "The link works for 24 hours and only once.",
+      "notConfirmed": "If you do not confirm it, nothing happens, and what you wrote is deleted after 24 hours.",
+      "missing": "No email? Check your spam folder, and check that you typed your address correctly. You can <link>send the request again</link>."
+    },
+    "confirm": {
+      "expiredTitle": "This link has expired",
+      "expired": "This link has expired or has already been used. A link to confirm a request works for 24 hours and only once.",
+      "expiredUsed": "If you used it a moment ago, your request has been confirmed. Otherwise, please send it again.",
+      "again": "Send a request",
+      "deletionTitle": "Delete your data?",
+      "otherTitle": "Confirm your request",
+      "from": "Request from <strong>{email}</strong>",
+      "deletion": {
+        "intro": "This deletes the data Gliagora holds under this email address, at once. It cannot be undone.",
+        "goneHeading": "What is deleted",
+        "gone": {
+          "suggestions": "The suggestions you sent with this address, with their links and notes",
+          "account": "A Gliagora account with this address, if there is one, with its saved positions and settings",
+          "reports": "Your address on the problem reports and corrections you sent",
+          "newsletter": "A Glia Notes subscription of this address, if there is one"
+        },
+        "keptHeading": "What stays",
+        "kept": {
+          "personalRights": "Your address on requests about your personal rights that you sent through Report a problem: we handle them under Law No. 5651 and keep them for 2 years after they are closed, to be able to show how we handled them.",
+          "record": "A record of this request, with this address, which we keep for 2 years to show that we handled it.",
+          "backups": "Our backups, which may hold the deleted data for up to 6 months. If a backup is ever restored, the data is deleted again."
+        },
+        "email": "We then send one email to this address that says what was deleted.",
+        "button": "Delete my data"
+      },
+      "other": {
+        "kind": "You asked for: <strong>{kind}</strong>",
+        "answer": "Once you confirm, we record your request and answer it at this address within 30 days of receiving it.",
+        "button": "Confirm my request"
+      },
+      "notYou": "If you did not send this request, close this page: nothing happens."
+    },
+    "done": {
+      "metaTitle": "Data deleted",
+      "title": "Your data has been deleted",
+      "text": "We have deleted the data Gliagora held under your email address:",
+      "deleted": {
+        "suggestions": "The suggestions you sent with that address, with their links and notes",
+        "account": "A Gliagora account with that address, if there was one, with its saved positions and settings",
+        "reports": "Your address on the problem reports and corrections you sent",
+        "newsletter": "The Glia Notes subscription of that address, if there was one"
+      },
+      "email": "One email to that address will say what was found and deleted.",
+      "keptHeading": "What stays",
+      "kept": {
+        "personalRights": "Your address on requests about your personal rights that you sent through Report a problem: we handle them under Law No. 5651 and keep them for 2 years after they are closed, to be able to show how we handled them.",
+        "record": "A record of your request, with your address, which we keep for 2 years to show that we handled it.",
+        "backups": "Our backups, which may hold the deleted data for up to 6 months. If a backup is ever restored, the data is deleted again."
+      },
+      "more": "For anything else about your data, see <link>data requests</link>.",
+      "jobs": "Browse positions",
+      "home": "Go to the home page"
+    },
+    "received": {
+      "metaTitle": "Request confirmed",
+      "title": "Your request has been confirmed",
+      "text": "Thank you. We have recorded your request.",
+      "answer": "We answer it free of charge, by email to the address you gave, within 30 days of receiving it. If we refuse a request, we explain why.",
+      "record": "We keep a record of your request, with what you wrote, for 2 years after we close it, to show how we handled it.",
+      "more": "How we handle requests is explained on the <link>data requests</link> page.",
+      "jobs": "Browse positions",
+      "home": "Go to the home page"
+    }
+  },
   "signIn": {
     "title": "Sign in",
     "description": "Sign in to Gliagora. There are no Gliagora passwords.",
@@ -906,6 +1051,8 @@
       "failedReference": "Something went wrong. Please try again, or write to privacy@gliagora.com and mention reference {reference}.",
       "deleteFailed": "Your account was not deleted: something went wrong. Please try again.",
       "deleteFailedReference": "Your account was not deleted: something went wrong. Please try again, or write to privacy@gliagora.com and mention reference {reference}.",
+      "requestFailed": "Your request was not confirmed: something went wrong. Please try again.",
+      "requestFailedReference": "Your request was not confirmed: something went wrong. Please try again, or write to privacy@gliagora.com and mention reference {reference}.",
       "expired": "Signing in or linking took more than 15 minutes, or came back to another browser or an older tab, so nothing has changed. Please try again.",
       "cancelled-google": "You cancelled on the Google page, so nothing has changed.",
       "cancelled-orcid": "You cancelled on the ORCID page, so nothing has changed.",
@@ -973,6 +1120,33 @@
       "intro": "Someone signed in to a Gliagora account asked to add this address to that account. If it was you, open this link in the browser where you are signed in:",
       "validity": "The link works for 24 hours and only once.",
       "notYou": "If it was not you, ignore this email: nothing changes."
+    },
+    "dataRequest": {
+      "confirm": {
+        "subject": "Confirm your request to Gliagora",
+        "types": {
+          "deletion": "We have received a request to delete the data that Gliagora | Neuroscience holds under this email address.",
+          "access": "We have received a request, sent with this email address, for a copy of the data that Gliagora | Neuroscience holds about you.",
+          "correction": "We have received a request, sent with this email address, to correct data that Gliagora | Neuroscience holds about you.",
+          "objection": "We have received an objection, sent with this email address, to how Gliagora | Neuroscience uses data about you.",
+          "restriction": "We have received a request, sent with this email address, to restrict how Gliagora | Neuroscience uses data about you.",
+          "withdraw-consent": "We have received a request, sent with this email address, to withdraw a consent you gave Gliagora | Neuroscience.",
+          "other": "We have received a request about personal data, sent to Gliagora | Neuroscience with this email address."
+        },
+        "act": "We act on it only after you confirm that it is yours. To confirm it, open this link:",
+        "validity": "The link works for 24 hours and only once.",
+        "notYou": "If you did not send this request, ignore this email: nothing happens. We keep only a note that a request arrived (its type, its date and a scrambled code of this address) for 60 days, to be able to show that it arrived, and then delete it."
+      },
+      "deleted": {
+        "subject": "Your data has been deleted from Gliagora",
+        "text": "As you confirmed, we have deleted the data that Gliagora | Neuroscience held under this email address:",
+        "suggestions": "{count, plural, one {# suggestion you sent, with its link and note} other {# suggestions you sent, with their links and notes}}",
+        "account": "your Gliagora account, with your saved positions and settings",
+        "reports": "{count, plural, one {your address on # problem report or correction you sent} other {your address on # problem reports and corrections you sent}}",
+        "nothing": "As you confirmed, we looked for data that Gliagora | Neuroscience held under this email address. We found no suggestion, account or problem report with it, so there was nothing to delete.",
+        "kept": "{count, plural, one {We keep this address on # request about your personal rights that you sent us: we handle such requests under Law No. 5651 and keep them, with the address, for 2 years after they are closed, to be able to show how we handled them.} other {We keep this address on # requests about your personal rights that you sent us: we handle such requests under Law No. 5651 and keep them, with the address, for 2 years after they are closed, to be able to show how we handled them.}}",
+        "record": "We keep a record of your request, with this email address, for 2 years, to show that we handled it. Our backups may hold the deleted data for up to 6 months; if a backup is ever restored, it is deleted again. How we handle your data: {privacyUrl}"
+      }
     },
     "account": {
       "deleted": {

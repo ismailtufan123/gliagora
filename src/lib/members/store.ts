@@ -5,6 +5,7 @@ import type { Payload } from 'payload'
 import { z } from 'zod'
 
 import { errorCode } from '@/lib/errors'
+import { DETAILS_MAX, NAME_MAX } from '@/lib/forms/fields'
 import type { DeadlineKind } from '@/lib/jobs/deadline'
 import type { JobStatus } from '@/lib/jobs/status'
 import {
@@ -622,6 +623,13 @@ const toTokenRecord = (row: TokenRow): EmailTokenRecord => ({
   expiresAt: toDate(row.expires_at) as Date,
 })
 
+/**
+ * The longest `request_data` a link keeps, as JSON: a data request's details (2,000 characters)
+ * and name (200), each of whose characters JSON may write as two (a quote, a backslash, a line
+ * break), with room for the keys.
+ */
+const REQUEST_DATA_MAX = 2 * (DETAILS_MAX + NAME_MAX) + 200
+
 const newTokenInput = z
   .object({
     purpose: z.enum(['sign-in', 'verify-email', 'data-request']),
@@ -638,7 +646,7 @@ const newTokenInput = z
     locale: z.enum(['en', 'tr']),
     requestData: z
       .record(z.string(), z.unknown())
-      .refine((value) => JSON.stringify(value).length <= 4000)
+      .refine((value) => JSON.stringify(value).length <= REQUEST_DATA_MAX)
       .nullish(),
   })
   // A link to add an address is bound to the member who asked; a sign-in link may carry the

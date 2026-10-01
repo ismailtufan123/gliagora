@@ -1,6 +1,7 @@
-// Names and limits of the public forms ("Suggest a listing", "Report a problem", the sign-in link),
-// shared by the server (suggest-schema.ts, report-schema.ts, sign-in.ts) and the forms in the
-// browser (src/components/suggest/, src/components/report/, src/components/account/). Kept apart
+// Names and limits of the public forms ("Suggest a listing", "Report a problem", the sign-in link,
+// the data-request form), shared by the server (suggest-schema.ts, report-schema.ts, sign-in.ts,
+// data-request-schema.ts) and the forms in the browser (src/components/suggest/,
+// src/components/report/, src/components/account/, src/components/data-requests/). Kept apart
 // from the schemas so that the browser does not load zod.
 
 /** "Suggest a listing": the fields a person fills in, in the order of the form (and of the error summary). */
@@ -10,6 +11,10 @@ export type SuggestField = (typeof SUGGEST_FIELDS)[number]
 /** "Report a problem": the fields a person fills in, in the order of the form. */
 export const REPORT_FIELDS = ['kind', 'details', 'email'] as const
 export type ReportField = (typeof REPORT_FIELDS)[number]
+
+/** The data-request form (M4b): the fields a person fills in, in the order of the form. */
+export const DATA_REQUEST_FIELDS = ['email', 'kind', 'name', 'details'] as const
+export type DataRequestField = (typeof DATA_REQUEST_FIELDS)[number]
 
 /** Names of the other inputs the public forms send. */
 export const FORM_INPUTS = {
@@ -31,7 +36,9 @@ export const FORM_INPUTS = {
 
 /** The longest note, in UTF-16 code units: what the browser counts, and what Payload checks. */
 export const NOTE_MAX = 500
-/** The longest details of a report, counted the same way. */
+/** The longest details of a report or a data request, counted the same way. */
 export const DETAILS_MAX = 2000
+/** The longest name on a data request (the data-requests collection checks it again). */
+export const NAME_MAX = 200
 /** The longest email address that can be delivered (RFC 5321). */
 export const EMAIL_MAX = 254

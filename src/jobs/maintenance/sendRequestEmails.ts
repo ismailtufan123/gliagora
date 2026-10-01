@@ -3,8 +3,14 @@ import { sql } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
 
 import type { DataRequestSource } from '@/lib/data-requests/kinds'
+import { deletionOutcome } from '@/lib/data-requests/outcome'
 import { AUTOMATIC_ACTION } from '@/lib/data-requests/status'
-import { type EmailText, accountDeletedEmail, emailLocale } from '@/lib/email/messages'
+import {
+  type EmailText,
+  accountDeletedEmail,
+  dataDeletedEmail,
+  emailLocale,
+} from '@/lib/email/messages'
 import { canSendEmail } from '@/lib/email/settings'
 import { REQUEST_EMAIL_WINDOW_DAYS, requestEmailCutoff } from '@/lib/retention/rules'
 
@@ -13,14 +19,14 @@ import { logCounts, maintenanceTask } from './task'
 
 // The final email of a deletion the site did itself (M4b, D49; the M4b design §9): the data-request
 // record is the outbox. "Delete my account" records its request closed, with the account's address
-// if it had one (src/lib/members/account-deletion.ts); this task emails that address once, within
-// minutes, and sets `confirmationSentAt` only after the mail server accepted the message (a
-// database trigger keeps it set against an editor's save that read the record a moment earlier,
-// migration 20261001_201739_member_tasks). Only requests received within the last 7 days: after an
-// outage of the mail server, or when email is first set up (M2), nobody is told of a deletion done
-// long ago. Nothing is sent after a deletion for inactivity (no record is made: the warning told
-// the member). The confirmed deletion of a data request from the form will get its own email here
-// (`FINAL_EMAILS`), from the counts in its `outcome`.
+// if it had one (src/lib/members/account-deletion.ts), and so does a deletion confirmed with the
+// link of the data-request form, with the address and counts of what it deleted
+// (src/lib/data-requests/confirm.ts). This task emails that address once, within minutes, and sets
+// `confirmationSentAt` only after the mail server accepted the message (a database trigger keeps it
+// set against an editor's save that read the record a moment earlier, migration
+// 20261001_201739_member_tasks). Only requests received within the last 7 days: after an outage of
+// the mail server, or when email is first set up (M2), nobody is told of a deletion done long ago.
+// Nothing is sent after a deletion for inactivity (no record is made: the warning told the member).
 
 const BATCH = 50
 
@@ -37,6 +43,9 @@ export type RequestRow = {
 /** The final email of each kind of deletion the site does itself, by where its request came from. */
 export const FINAL_EMAILS: Partial<Record<DataRequestSource, (row: RequestRow) => EmailText>> = {
   account: (row) => accountDeletedEmail({ locale: emailLocale(row.locale) }),
+  // What was deleted, from the counts the confirmation stored, and which reports keep the address.
+  form: (row) =>
+    dataDeletedEmail({ locale: emailLocale(row.locale), outcome: deletionOutcome(row.outcome) }),
 }
 
 export async function sendRequestEmails(payload: Payload, now: Date) {

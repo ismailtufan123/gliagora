@@ -8,7 +8,8 @@ import { renderContentFile } from '@/lib/markdown'
 import { alternatesFor } from '@/lib/metadata'
 
 // A long-form page from content/ (About, legal texts): title, optional draft notice, the text
-// and the date it was last updated.
+// and the date it was last updated. `after` comes below the text, outside it: the data-request
+// form, on the data-requests page.
 
 export async function contentMetadata(key: ContentKey): Promise<Metadata> {
   const page = CONTENT_PAGES[key]
@@ -22,7 +23,15 @@ export async function contentMetadata(key: ContentKey): Promise<Metadata> {
   }
 }
 
-export async function ContentPage({ pageKey, intro }: { pageKey: ContentKey; intro?: ReactNode }) {
+export async function ContentPage({
+  pageKey,
+  intro,
+  after,
+}: {
+  pageKey: ContentKey
+  intro?: ReactNode
+  after?: ReactNode
+}) {
   const page = CONTENT_PAGES[pageKey]
   setRequestLocale(page.locale)
   const t = await getTranslations({ locale: page.locale })
@@ -42,6 +51,7 @@ export async function ContentPage({ pageKey, intro }: { pageKey: ContentKey; int
           {t('pages.updated', { date: formatDate(page.updated, page.locale) })}
         </p>
       </article>
+      {after}
     </main>
   )
 }

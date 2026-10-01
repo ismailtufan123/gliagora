@@ -107,10 +107,12 @@ const sidebarDate = (name: string, label: string, description: string): Field =>
 // PLAN §3.2, §5.1 (DataRequest), §15.1, §18.1; M4b, D8, D49: requests about a person's own data.
 // Emails to privacy@, which editors record here and answer within 30 days, closing them with what
 // they did; "Delete my account" in a member's privacy settings (done at once, recorded closed by
-// src/lib/members/account-deletion.ts; the final email goes out from the record,
-// `sendRequestEmails`). Later in M4b (the M4b design §7.8): the form on /en/legal/data-requests/
-// (recorded at once, acted on only after the person confirms it with the link in our email; a
-// confirmed deletion is done by the site itself).
+// src/lib/members/account-deletion.ts); and the form on /en/legal/data-requests/ (the M4b design
+// §7.8): recorded at once with only its kind, date and address hash (src/lib/data-requests/
+// record.ts), acted on only after the person confirms it with the link in our email
+// (src/lib/data-requests/confirm.ts). A confirmed deletion is done by the site itself and recorded
+// closed; any other confirmed request waits here as New for an editor. The final email of a
+// deletion the site did goes out from its record (`sendRequestEmails`).
 //
 // No versions: a request holds personal data, and the retention task deletes the whole record, 2
 // years after it was closed, or 60 days after it arrived if nobody confirmed it

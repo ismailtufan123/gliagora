@@ -20,9 +20,12 @@ const nextConfig: NextConfig = {
   // checks this.
   serverExternalPackages: ['payload'],
   // Files the server reads at run time that no import names, copied into .next/standalone: the
-  // editor guide shown in the admin (src/admin/help.ts).
+  // editor guide shown in the admin (src/admin/help.ts), and the text of the data-requests page,
+  // which is rendered for each request because of its form (the other content pages are static,
+  // so their text is read at build time).
   outputFileTracingIncludes: {
     '/admin/**': ['./docs/editor-guide-tr.md'],
+    '/en/legal/data-requests': ['./content/en/legal/data-requests.md'],
   },
   // PLAN §2.1: every URL ends with a slash, and `/` goes to the English home page.
   trailingSlash: true,

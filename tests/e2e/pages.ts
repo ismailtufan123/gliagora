@@ -13,7 +13,14 @@ export const PAGES = [
   { path: '/en/legal/cookies/', name: 'cookies and storage' },
   { path: '/en/legal/terms/', name: 'terms of use' },
   { path: '/en/legal/takedown/', name: 'notice and takedown' },
+  // With the data-request form at its end (M4b), where the app can send email (as in CI);
+  // without a mail server it says the form is unavailable. The pages after it: the link's page
+  // with a valid link is checked in its flow (data-requests.spec.ts); an unknown one is expired.
   { path: '/en/legal/data-requests/', name: 'data requests' },
+  { path: '/en/legal/data-requests/sent/', name: 'data request sent' },
+  { path: '/en/legal/data-requests/confirm/?token=expired', name: 'data request link (expired)' },
+  { path: '/en/legal/data-requests/done/', name: 'data deleted' },
+  { path: '/en/legal/data-requests/received/', name: 'data request confirmed' },
   { path: '/en/events/', name: 'placeholder (window)' },
   { path: '/en/suggest/', name: 'suggest a listing' },
   { path: '/en/suggest/sent/', name: 'suggestion sent' },

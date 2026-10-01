@@ -287,6 +287,17 @@ Member sign-in (D49) stays off on the server until its settings exist: `/en/sign
 2. **Then set the keys** in `/opt/gliagora/.env` (`deploy/.env.example` lists them): `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, `ORCID_CLIENT_ID` and `ORCID_CLIENT_SECRET` (ORCID's own issuer; its sandbox is refused here), and, for sign-in by email link, the M2 `SMTP_*` settings (the link form also needs `ALTCHA_HMAC_KEY`, which is set). Each way of signing in switches on by itself once its settings are there; none needs a new secret.
 3. **Restart the app** (`sudo ./update.sh --no-pull`) and check its start line: `docker compose -f compose.prod.yml logs app | grep 'Member sign-in'`. A line naming a setting that switched a way off says which one; it never shows a value.
 
+## 10. Finding a data request from an address (M4b)
+
+The data-request form (`/en/legal/data-requests/`) works once the M2 `SMTP_*` settings are set, like email sign-in (until then it says that it is temporarily unavailable and gives privacy@gliagora.com). A request sent with it is recorded at once, but until the person confirms it with the link in our email, its record holds no address: only its kind, the date and a code made from the address (`emailHash`, an HMAC with a key derived from `PAYLOAD_SECRET`, `src/lib/data-requests/address.ts`). Unconfirmed records are deleted after 60 days. If someone writes to privacy@ that they sent a request (for example, the link expired), work out the code from the address they give, on the server:
+
+```sh
+cd /opt/gliagora
+docker compose -f compose.prod.yml exec -T app node -e 'const c=require("node:crypto");let a="";process.stdin.on("data",(d)=>(a+=d)).on("end",()=>{const k=Buffer.from(c.hkdfSync("sha256",process.env.PAYLOAD_SECRET,"","gliagora/data-requests/address/v1",32));console.log(c.createHmac("sha256",k).update(a.trim().normalize("NFC").toLowerCase()).digest("hex"))})'
+```
+
+Then type the address, press Enter and then Ctrl-D: the command prints the code (64 characters). The address is read from what you type, so it is in no shell history, command line or log, and the secret never leaves the container. Capitals do not matter, but every other character does (`name+news@` is another address than `name@`). In the admin, open "Data requests", add the filter "Address code" equals the code (or open `/admin/collections/data-requests?where[emailHash][equals]=<code>`): the list shows the requests sent from that address, with their kind, status and date. Requests the person confirmed also hold the address itself (filter "Email").
+
 ## Checking from outside
 
 Check the site from another computer with single requests (`curl`, a browser). Do not scan the server's ports at full speed from your own connection: during S, a scan of all 65,535 ports made the provider's network block that IPv4 address for about 20 minutes (IPv6 kept working). If you must, scan slowly or from elsewhere.

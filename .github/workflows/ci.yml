@@ -180,6 +180,11 @@ jobs:
           # Member sign-in stays off without its settings, and the account page still answers.
           contains http://localhost:3000/en/sign-in/ 'Signing in is not available yet.'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/en/account/)" = 200
+          # The data-requests page reads its text when it is requested (the image must hold the
+          # file, next.config.ts), and its form waits for a mail server.
+          dr="$(curl -fsS http://localhost:3000/en/legal/data-requests/)"
+          grep -qF 'Your rights in short' <<<"$dr"
+          grep -qF 'The form is temporarily unavailable.' <<<"$dr"
           # Nor are there Save buttons on the jobs list.
           jobs="$(curl -fsS http://localhost:3000/en/jobs/)"
           if grep -qF 'save-button' <<<"$jobs"; then echo 'Save buttons without sign-in'; exit 1; fi

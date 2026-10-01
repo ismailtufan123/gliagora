@@ -149,6 +149,17 @@ for (const viewport of [
       await expectLayoutHolds(page, testInfo, 'report a problem about an institution, errors')
     })
 
+    test('data request, with errors', async ({ page }, testInfo) => {
+      needsMailpit()
+      await page.setExtraHTTPHeaders({ 'X-Forwarded-For': clientAddress() })
+      await page.goto('/en/legal/data-requests/')
+      await page.getByLabel('Your email address').fill('not an address')
+      await page.getByRole('radio', { name: 'Correct my data', exact: true }).check()
+      await page.getByRole('button', { name: 'Send request' }).click()
+      await expect(summary(page)).toBeFocused()
+      await expectLayoutHolds(page, testInfo, 'data request, errors')
+    })
+
     test('sign in, with errors', async ({ page }, testInfo) => {
       needsMailpit()
       await page.setExtraHTTPHeaders({ 'X-Forwarded-For': clientAddress() })

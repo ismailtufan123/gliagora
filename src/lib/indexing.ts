@@ -23,6 +23,13 @@ export const jobsListIndexed = (query: URLSearchParams) =>
  */
 export const memberPageIndexed = (): boolean => false
 
+/**
+ * The pages after the data-request form (M4b, D49): "check your inbox", the page the emailed link
+ * opens, and the pages after confirming. Never indexed: each is about one request. The form's own
+ * page is a legal text (`contentPageIndexed`).
+ */
+export const dataRequestPageIndexed = (): boolean => false
+
 /** The world map (PLAN §2.2): indexed, like the unfiltered jobs list it shows on a map. */
 export const mapPageIndexed = (): boolean => true
 
