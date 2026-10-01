@@ -30,6 +30,7 @@ Everything the production server runs is described in this folder (PLAN §11.5),
 | `backup/backup.sh` | Encrypted backup of the databases and settings (restic) |
 | `backup/restore.sh` | Restore, list snapshots, or test a restore without touching production |
 | `backup/systemd/` | Timers: nightly backup, monthly restore test |
+| `basemap/fetch-basemap.sh` | Puts the map's basemap (tiles, fonts, sprites) on the server; run about twice a year (step 8) |
 
 On the server, everything lives in `/opt/gliagora`:
 
@@ -44,6 +45,7 @@ On the server, everything lives in `/opt/gliagora`:
 | Docker volume `gliagora_caddy-logs` | Access logs with masked IPs, kept 14 days |
 | `/opt/gliagora/backup/` | Backup scripts, `backup.env` (mode 600) and `restic-password` (readable only by root) |
 | `/var/backups/gliagora/restic` | Encrypted backup repository |
+| `/opt/gliagora/basemap/public` | The map's basemap, served by Caddy at `/basemap/` (step 8); not backed up, fetched again |
 
 ## Who logs in
 
@@ -71,6 +73,8 @@ Each deploy then goes like this:
    - a restart;
    - a wait (at most 5 minutes) until every service is healthy. The app applies database migrations when it starts.
 4. If that fails before the app was restarted (for example, the backup fails), `.env` goes back to the previous image and nothing else changed. **If the new image started but did not become healthy, the script switches back to the previous image by itself** (it is still on the server) and waits for it (D42). The workflow then fails with "Rolled back to …", so you see it. Database migrations are not undone; if the new version's migrations broke something, restore the `pre-update` snapshot (step 7).
+
+A deploy changes only the app's image. The other files in this folder (`compose.prod.yml`, the `Caddyfile`, the scripts) reach the server only when you copy them (step 2's `scp`), and then restart what uses them (`sudo ./update.sh --no-pull` in `/opt/gliagora`): the deploy key cannot change the server's configuration, so a leaked key cannot either.
 
 Until the repository variable `DEPLOY_ENABLED` is `true`, the workflow stops with a notice ("Deploy skipped") and changes nothing, whatever `DEPLOY_AUTO` says: it is the main switch. Run by hand, it also refuses any branch other than `main`.
 
@@ -112,7 +116,7 @@ From your computer:
 
 ```sh
 scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/postgres deploy/.env.example \
-  deploy/admin-auth.caddy.example deploy/update.sh deploy/deploy-remote.sh deploy/backup \
+  deploy/admin-auth.caddy.example deploy/update.sh deploy/deploy-remote.sh deploy/backup deploy/basemap \
   gliagora@<server-ip>:/opt/gliagora/
 ```
 
@@ -244,6 +248,21 @@ sudo ./restore.sh config latest /root/restored  # get the backed-up .env and set
 4. Recover `.env` and `admin-auth.caddy` with `sudo ./restore.sh config latest /root/restored` and copy them to `/opt/gliagora` (mode 600).
 5. Run the Deploy workflow with the last good `sha-` tag: it starts the stack with an empty database.
 6. Restore the data with `sudo ./restore.sh database latest` (it replaces the empty database, with any account made in between), then switch on the timers (step 5). Until then the database has no editor account; the site-wide password keeps its first-account route closed.
+7. Fetch the map's basemap again (step 8); it is not in the backups.
+
+## 8. The map's basemap (M5; then about twice a year)
+
+The map (PLAN §14) draws its background from a basemap on our own server: an extract of the Protomaps planet (OpenStreetMap data, ODbL) up to zoom 10, about 3.8 GB, with the fonts and sprites of its style. Caddy serves it at `/basemap/` from `/opt/gliagora/basemap/public`, behind the site-wide password until the map goes public at M6 (D39). Nothing about visitors reaches anyone: the server downloads the files once, and browsers get them from `gliagora.com`.
+
+```sh
+sudo /opt/gliagora/basemap/fetch-basemap.sh            # the newest Protomaps build (a few minutes)
+sudo /opt/gliagora/basemap/fetch-basemap.sh 20260930   # or a given build (YYYYMMDD)
+sudo /opt/gliagora/basemap/fetch-basemap.sh --rollback # back to the basemap before the last run
+```
+
+The script checks everything it downloads (the pmtiles tool by its checksum, the tiles with `pmtiles verify`, the fonts and sprites by a digest of their files, all pinned in the script) and changes `current.json`, the file the map reads first, only at the end. The map picks the new basemap up on its next load: no restart, no deploy. The basemap it replaces stays until the next run, for `--rollback`; older ones are deleted. It needs about 10 GB free while it runs. Without a basemap the map still works, with its pins on a plain background.
+
+Refresh it about twice a year (PLAN §14), and after moving to a new server. To update the fonts and sprites, change `ASSETS_COMMIT` and `ASSETS_DIGEST` in the script (and rebuild the test fixture with `tools/basemap/make-fixture.sh`).
 
 ## Checking from outside
 

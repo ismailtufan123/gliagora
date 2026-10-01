@@ -1,0 +1,6 @@
+{
+  "version": "20260930",
+  "tiles": "/basemap/20260930/planet.pmtiles",
+  "glyphs": "/basemap/assets-028c18f/fonts/{fontstack}/{range}.pbf",
+  "sprites": "/basemap/assets-028c18f/sprites/v4"
+}

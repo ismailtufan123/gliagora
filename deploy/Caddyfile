@@ -70,6 +70,25 @@
 		reverse_proxy app:3000
 	}
 
+	# The map's basemap (M5, PLAN §14): the tiles, fonts and sprites that
+	# deploy/basemap/fetch-basemap.sh puts in /opt/gliagora/basemap/public. Its versioned files never
+	# change, so browsers keep them; current.json names the current version and is checked on every
+	# visit. Private until the map goes public at the launch (M6, D39): then drop the import here.
+	@basemap path /basemap/*
+	handle @basemap {
+		import /etc/caddy/admin-auth.caddy
+		# `header` runs before `uri`, so its matchers see the full path.
+		@current path /basemap/current.json /basemap/previous.json
+		@versioned not path /basemap/current.json /basemap/previous.json
+		header @current Cache-Control "no-cache"
+		header @versioned Cache-Control "public, max-age=31536000, immutable"
+		uri strip_prefix /basemap
+		root * /srv/basemap
+		file_server {
+			hide .*
+		}
+	}
+
 	# The admin panel and Payload's API are behind a second password (admin-auth.caddy) until the
 	# admin has two factors (PLAN §18.2). The API needs it as much as the panel: its sign-in and
 	# password-reset routes would otherwise skip the second password, and while no account exists
