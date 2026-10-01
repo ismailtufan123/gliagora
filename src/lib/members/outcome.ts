@@ -8,9 +8,14 @@ import { OUTCOME_ID } from './paths'
 // ends in `#outcome`: the browser scrolls to the message and focuses it (Chromium skips
 // `autofocus` when the address names a fragment).
 
-/** What a redirect reports as done. Messages under `outcome.done`. */
+/**
+ * What a redirect reports as done. Messages under `outcome.done`. `signed-in-linked-google`: a
+ * Google sign-in that found the account by the address Google manages, and so added Google to it
+ * (the M4b design §7.3).
+ */
 export const DONE_CODES = [
   'signed-in',
+  'signed-in-linked-google',
   'created',
   'linked-google',
   'linked-orcid',
@@ -19,17 +24,21 @@ export const DONE_CODES = [
 ] as const
 /**
  * What a redirect reports as gone wrong. Messages under `outcome.error`. Besides the email link's
- * and a failure's: signing in with Google or ORCID that took too long or lost its cookie
- * (`expired`), was declined at the provider (`cancelled`), or lost its session while linking
- * (`link-interrupted`); too many accounts created from one connection (`create-limited`); and the
- * refusals of the account rules (src/lib/members/identity.ts, `Refusal`).
+ * and a failure's: signing in with Google or ORCID, or linking them, that took too long or lost
+ * its cookie (`expired`), was declined at the provider (`cancelled-google`, `cancelled-orcid`), or
+ * lost its session while linking (`link-interrupted`); a Link button whose request did not say it
+ * came from the site (`link-not-started`: an old browser without Sec-Fetch-Site, or the address
+ * opened from elsewhere); too many accounts created from one connection (`create-limited`); and
+ * the refusals of the account rules (src/lib/members/identity.ts, `Refusal`).
  */
 export const ERROR_CODES = [
   'link-expired',
   'failed',
   'expired',
-  'cancelled',
+  'cancelled-google',
+  'cancelled-orcid',
   'link-interrupted',
+  'link-not-started',
   'create-limited',
   'email-has-other-google',
   'google-elsewhere',

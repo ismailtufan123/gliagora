@@ -1,5 +1,7 @@
 import * as oauth from 'oauth4webapi'
 
+import { errorCode, errorSummary } from '@/lib/errors'
+
 import type { Provider, ProviderOn } from './config'
 import { normaliseEmail } from './email-address'
 import { googleEmail, isGoogleSubject, isOrcidSubject } from './identity'
@@ -208,6 +210,33 @@ export function identityFromClaims(provider: Provider, claims: oauth.IDToken): V
   }
   if (!isOrcidSubject(claims.sub)) throw new ClaimError('sub')
   return { provider, sub: claims.sub, name: orcidName(claims as Record<string, unknown>) }
+}
+
+/**
+ * oauth4webapi's error classes by a fixed name. The library names its errors after their class
+ * (`this.name = this.constructor.name`), which the production build minifies to one letter, so
+ * the log would say `E OAUTH_…`; instanceof still works there.
+ */
+const OAUTH_ERRORS: readonly [new (...args: never[]) => Error, string][] = [
+  [oauth.OperationProcessingError, 'OperationProcessingError'],
+  [oauth.ResponseBodyError, 'ResponseBodyError'],
+  [oauth.AuthorizationResponseError, 'AuthorizationResponseError'],
+  [oauth.WWWAuthenticateChallengeError, 'WWWAuthenticateChallengeError'],
+  [oauth.UnsupportedOperationError, 'UnsupportedOperationError'],
+]
+
+/** The class of an oauth4webapi error, by its fixed name, or null for any other error. */
+export function oauthErrorName(error: unknown): string | null {
+  return OAUTH_ERRORS.find(([kind]) => error instanceof kind)?.[1] ?? null
+}
+
+/**
+ * A failure for the log: the error's class and code (`OperationProcessingError
+ * OAUTH_JWT_CLAIM_COMPARISON_FAILED`), never its message, as `errorSummary` does for other errors.
+ */
+export function failureSummary(error: unknown): string {
+  const name = oauthErrorName(error)
+  return name ? [name, errorCode(error)].filter(Boolean).join(' ') : errorSummary(error)
 }
 
 /** The provider's OAuth error code, for the log: only a plain code, never other text. */

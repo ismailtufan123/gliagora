@@ -607,7 +607,7 @@
   },
   "signIn": {
     "title": "Sign in",
-    "description": "Sign in to Gliagora with Google, ORCID or a link we email you. There are no Gliagora passwords.",
+    "description": "Sign in to Gliagora. There are no Gliagora passwords.",
     "intro": "Members can save positions and choose what the jobs list and the monthly digest show first. There are no passwords.",
     "notAvailable": "Signing in is not available yet.",
     "notAvailableContact": "Questions about your data? Write to <email>privacy@gliagora.com</email>.",
@@ -615,7 +615,7 @@
       "heading": "{methods, select, both {Sign in with Google or ORCID} google {Sign in with Google} other {Sign in with ORCID}}",
       "google": "Continue with Google",
       "orcid": "Continue with ORCID",
-      "note": "You sign in on Google's or ORCID's own page, then come back here."
+      "note": "{methods, select, both {You sign in on Google's or ORCID's own page, then come back here.} google {You sign in on Google's own page, then come back here.} other {You sign in on ORCID's own page, then come back here.}}"
     },
     "emailHeading": "Sign in with your email address",
     "email": {
@@ -628,7 +628,7 @@
     "submit": "Email me a sign-in link",
     "sending": "Sending the link…",
     "privacy": "We use what you sign in with only to sign you in and for what you choose in your account. <link>How we handle member accounts</link>",
-    "terms": "If you do not have an account yet, you can create one after signing in with any of these. By creating an account, you accept the <link>terms of use</link> and confirm that you are 16 or older.",
+    "terms": "{providers, select, none {If you do not have an account yet, the emailed link lets you create one.} other {If you do not have an account yet, you can create one when you first sign in.}} By creating an account, you accept the <link>terms of use</link> and confirm that you are 16 or older.",
     "signedIn": {
       "title": "You are signed in",
       "account": "Go to your account",
@@ -682,7 +682,7 @@
       "button": "Create account",
       "cancel": "Cancel",
       "expiredTitle": "This sign-in has expired",
-      "expired": "An account must be created within 15 minutes of signing in at Google or ORCID, in the same browser. Please sign in again.",
+      "expired": "An account must be created within 15 minutes of signing in, in the same browser. Please sign in again.",
       "again": "Sign in again"
     },
     "signedOut": {
@@ -725,7 +725,7 @@
         "orcid": "Remove ORCID"
       },
       "onlyWay": "This is the only way into your account, so it cannot be removed.",
-      "note": "Linking takes you to Google or ORCID and back. When you link or remove a way to sign in, you are signed out in your other browsers."
+      "note": "{methods, select, both {Linking takes you to Google or ORCID and back.} google {Linking takes you to Google and back.} other {Linking takes you to ORCID and back.}} When you link or remove a way to sign in, you are signed out in your other browsers."
     },
     "signOut": {
       "heading": "Signing out",
@@ -736,6 +736,7 @@
   "outcome": {
     "done": {
       "signed-in": "You are signed in.",
+      "signed-in-linked-google": "You are signed in. Your Google account has been linked to your account, which has the same email address, so you can now sign in with it.",
       "created": "Your account has been created, and you are signed in.",
       "linked-google": "Your Google account has been linked: you can now sign in with it.",
       "linked-orcid": "Your ORCID iD has been linked: you can now sign in with it.",
@@ -748,9 +749,11 @@
       "linkExpiredSignedIn": "This sign-in link has expired or has already been used, so you are still signed in as before.",
       "failed": "Something went wrong. Please try again.",
       "failedReference": "Something went wrong. Please try again, or write to privacy@gliagora.com and mention reference {reference}.",
-      "expired": "Signing in took too long, or was started in another browser, so it did not finish. Please try again.",
-      "cancelled": "You cancelled on the Google or ORCID page, so nothing has changed.",
+      "expired": "Signing in or linking took more than 15 minutes, or came back to another browser or an older tab, so nothing has changed. Please try again.",
+      "cancelled-google": "You cancelled on the Google page, so nothing has changed.",
+      "cancelled-orcid": "You cancelled on the ORCID page, so nothing has changed.",
       "link-interrupted": "Nothing was linked: you were signed out, or signed in to another account, before linking finished. Please try again.",
+      "link-not-started": "Linking could not start. Press the Link button on this page again. If this keeps happening, update your browser.",
       "create-limited": "Too many accounts have been created from here recently. Please try again later.",
       "email-has-other-google": "This address belongs to a Gliagora account that is linked to another Google account. Sign in to that account with an email link, or with its own Google account.",
       "google-elsewhere": "This Google account is used by another Gliagora account. Sign in with it and delete that account first, if you want to link it here.",

@@ -23,7 +23,8 @@ import { memberDb } from '@/lib/members/store'
 // pages (`sameOrigin`), at most 10 an hour from one connection (its hashed IP address, as the
 // forms count). The identity comes from the sealed sign-in cookie the callback left (15 minutes),
 // never from the form, which only says whether to keep the ORCID record's name. It is checked
-// again: if an account has it by now, that account is signed in to. Then a new session, the
+// again: if an account has it by now, that account is signed in to (and Google added to it, when
+// that account has the address Google manages). Then a new session, the
 // sign-in cookie goes, and a 303 to where the person was going. A failure keeps the cookie, so
 // Back and the button again can still work.
 export const dynamic = 'force-dynamic'
@@ -73,7 +74,12 @@ export async function POST(request: Request) {
     const target =
       pending.next === DEFAULT_NEXT
         ? outcomePath(MEMBER_PATHS.account, {
-            done: done.kind === 'created' ? 'created' : 'signed-in',
+            done:
+              done.kind === 'created'
+                ? 'created'
+                : changed
+                  ? 'signed-in-linked-google'
+                  : 'signed-in',
             othersEnded: othersEnded > 0,
           })
         : pending.next

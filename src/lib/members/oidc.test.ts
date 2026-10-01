@@ -1,3 +1,5 @@
+import { createServer } from 'node:net'
+
 import * as oauth from 'oauth4webapi'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
@@ -15,9 +17,13 @@ import { isOrcidId } from './orcid-id'
 import {
   type CallbackResult,
   ClaimError,
+  DISCOVERY_TTL_MS,
   authorizationRequest,
+  discover,
+  failureSummary,
   forgetProviders,
   oauthErrorCode,
+  oauthErrorName,
   orcidName,
   verifyCallback,
 } from './oidc'
@@ -312,11 +318,105 @@ describe.each(['google', 'orcid'] as const)('%s: a faulty answer signs nobody in
   })
 })
 
+/** A port nothing listens on (it was free a moment ago). */
+async function freePort(): Promise<number> {
+  const server = createServer()
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  const { port } = server.address() as { port: number }
+  await new Promise<void>((resolve) => server.close(() => resolve()))
+  return port
+}
+
+/** The test issuer's Google settings at `base`. */
+function googleAt(base: string): ProviderOn {
+  const config = memberAuthConfig({ AUTH_TEST_ISSUER: base })
+  if (!config.google.on) throw new Error('the test issuer is not on')
+  return config.google
+}
+
 describe('a provider that cannot be reached', () => {
   it('fails the start, which the route reports', async () => {
-    const config = memberAuthConfig({ AUTH_TEST_ISSUER: 'http://127.0.0.1:9' })
-    if (!config.google.on) throw new Error('the test issuer is not on')
-    await expect(authorizationRequest('google', config.google, REDIRECT)).rejects.toThrow()
+    await expect(
+      authorizationRequest('google', googleAt('http://127.0.0.1:9'), REDIRECT),
+    ).rejects.toThrow()
+  })
+
+  it('a failed discovery is not kept: the next start fetches it again', async () => {
+    const port = await freePort()
+    const google = googleAt(`http://127.0.0.1:${port}`)
+    await expect(authorizationRequest('google', google, REDIRECT)).rejects.toThrow()
+    // The provider is back: the next start works, without waiting for a day or a restart.
+    const up = await startFakeOidc({ port })
+    try {
+      const { url } = await authorizationRequest('google', google, REDIRECT)
+      expect(url.origin).toBe(up.base)
+    } finally {
+      await up.close()
+    }
+  })
+
+  it('a discovery that is still being fetched is shared, and dropped once it fails', async () => {
+    const google = googleAt('http://127.0.0.1:9')
+    const first = discover(google)
+    expect(discover(google)).toBe(first)
+    await expect(first).rejects.toThrow()
+    const second = discover(google)
+    expect(second).not.toBe(first)
+    await expect(second).rejects.toThrow()
+  })
+})
+
+describe('the discovery cache', () => {
+  it('keeps a discovery document for 24 hours', async () => {
+    const at = Date.now()
+    const kept = discover(settings.google, at)
+    await kept
+    expect(discover(settings.google, at + DISCOVERY_TTL_MS - 1)).toBe(kept)
+    const fresh = discover(settings.google, at + DISCOVERY_TTL_MS)
+    expect(fresh).not.toBe(kept)
+    await fresh
+  })
+})
+
+describe('the log of a failure', () => {
+  // The production build minifies oauth4webapi's class names (`E OAUTH_…`); these names are fixed.
+  // The unit test runs unminified, so it guards the mapping, not the minification.
+  const response = new Response(null, { status: 400 })
+  it.each([
+    [
+      new oauth.OperationProcessingError('x', { code: oauth.JWT_CLAIM_COMPARISON }),
+      'OperationProcessingError OAUTH_JWT_CLAIM_COMPARISON_FAILED',
+    ],
+    [
+      new oauth.ResponseBodyError('x', { cause: { error: 'invalid_grant' }, response }),
+      'ResponseBodyError OAUTH_RESPONSE_BODY_ERROR',
+    ],
+    [
+      new oauth.AuthorizationResponseError('x', {
+        cause: new URLSearchParams({ error: 'server_error' }),
+      }),
+      'AuthorizationResponseError OAUTH_AUTHORIZATION_RESPONSE_ERROR',
+    ],
+    [
+      new oauth.WWWAuthenticateChallengeError('x', { cause: [], response }),
+      'WWWAuthenticateChallengeError OAUTH_WWW_AUTHENTICATE_CHALLENGE',
+    ],
+    [
+      new oauth.UnsupportedOperationError('x'),
+      'UnsupportedOperationError OAUTH_UNSUPPORTED_OPERATION',
+    ],
+  ])('names %s by its class', (error, expected) => {
+    // As the production build leaves it: the class name minified.
+    error.name = 'E'
+    expect(failureSummary(error)).toBe(expected)
+    expect(oauthErrorName(error)).toBe(expected.split(' ')[0])
+  })
+
+  it('describes other errors by their own class and code', () => {
+    expect(oauthErrorName(new ClaimError('sub'))).toBeNull()
+    expect(failureSummary(new ClaimError('sub'))).toBe('ClaimError sub')
+    expect(failureSummary(new TypeError('fetch failed'))).toBe('TypeError')
+    expect(failureSummary('text')).toBe('string')
   })
 })
 

@@ -95,12 +95,15 @@ export async function signInByLink(page: Page, address = newAddress()) {
   return address
 }
 
-/** A member of its own, signed in, in a context of its own: for tests that change an account. */
-export async function freshMember(browser: Browser) {
+/**
+ * A member of its own, signed in, in a context of its own: for tests that change an account. Made
+ * with an emailed link, to a new address unless the test gives one.
+ */
+export async function freshMember(browser: Browser, email?: string) {
   needsMailpit()
   const context = await ownContext(browser)
   const page = await context.newPage()
-  const address = await signInByLink(page)
+  const address = await signInByLink(page, email)
   return { context, page, address }
 }
 

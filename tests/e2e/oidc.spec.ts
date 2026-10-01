@@ -1,4 +1,4 @@
-import { type BrowserContext, type Page, expect, test } from '@playwright/test'
+import { type Browser, type BrowserContext, type Page, expect, test } from '@playwright/test'
 
 import { expectNoSeriousAxeIssues } from './forms'
 import {
@@ -35,6 +35,29 @@ async function cookiesOf(context: BrowserContext) {
 
 /** The outcome message, which the redirect's `#outcome` focuses. */
 const outcome = (page: Page) => page.locator('#outcome')
+
+/** The outcome after a flow that took too long, or came back to the wrong tab or browser. */
+const EXPIRED =
+  'Signing in or linking took more than 15 minutes, or came back to another browser or an older tab, so nothing has changed. Please try again.'
+
+/** Whether a session cookie's token still signs a browser in, tried in a new context. */
+async function tokenSignsIn(browser: Browser, token: string, baseURL: string) {
+  const context = await ownContext(browser)
+  await context.addCookies([
+    {
+      name: SESSION_COOKIE,
+      value: token,
+      domain: new URL(baseURL).hostname,
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ])
+  const signedIn = await isSignedIn(await context.newPage())
+  await context.close()
+  return signedIn
+}
 
 /** Navigates by a click on a link in the page, as the account page's links are followed. */
 async function followLink(page: Page, href: string) {
@@ -214,10 +237,14 @@ test.describe('signing in with Google', () => {
     await startAt(page, 'google', {
       fields: { sub: newGoogleSub(), email: owner.address, hd: 'example.org' },
     })
-    // No "Create account": the account with this address is signed in to.
-    await expect(page).toHaveURL(/\/en\/account\/\?done=signed-in&others=ended#outcome$/)
+    // No "Create account": the account with this address is signed in to, and it says that Google
+    // is now a way in (which is why the other browsers were signed out).
+    await expect(page).toHaveURL(
+      /\/en\/account\/\?done=signed-in-linked-google&others=ended#outcome$/,
+    )
+    await expect(outcome(page)).toBeFocused()
     await expect(outcome(page)).toHaveText(
-      'You are signed in. Other browsers where you were signed in have been signed out.',
+      'You are signed in. Your Google account has been linked to your account, which has the same email address, so you can now sign in with it. Other browsers where you were signed in have been signed out.',
     )
     await expect(page.getByRole('main')).toContainText(`You are signed in as ${owner.address}.`)
     await expect(page.getByRole('button', { name: 'Remove Google' })).toBeVisible()
@@ -243,6 +270,30 @@ test.describe('signing in with Google', () => {
     expect((await cookiesOf(context))[SESSION_COOKIE]).toBeUndefined()
     expect((await cookiesOf(context))[SIGN_IN_COOKIE]).toBeUndefined()
     await first.context.close()
+    await context.close()
+  })
+
+  test('an account made with the address meanwhile gets Google at "Create account"', async ({
+    browser,
+  }) => {
+    const context = await ownContext(browser)
+    const page = await context.newPage()
+    const address = newAddress()
+    await startAt(page, 'google', {
+      fields: { sub: newGoogleSub(), email: address, hd: 'example.org' },
+    })
+    await expect(page).toHaveURL(/\/en\/sign-in\/confirm\/$/)
+    // Before the button is pressed, someone makes an account with an emailed link to the address.
+    const owner = await freshMember(browser, address)
+    await page.getByRole('button', { name: 'Create account' }).click()
+    // The identity is checked again: that account is signed in to, with Google added.
+    await expect(page).toHaveURL(
+      /\/en\/account\/\?done=signed-in-linked-google&others=ended#outcome$/,
+    )
+    await expect(page.getByRole('main')).toContainText(`You are signed in as ${address}.`)
+    await expect(page.getByRole('button', { name: 'Remove Google' })).toBeVisible()
+    expect(await isSignedIn(owner.page)).toBe(false)
+    await owner.context.close()
     await context.close()
   })
 })
@@ -328,10 +379,12 @@ test.describe('answers that sign nobody in', () => {
       const page = await context.newPage()
       await startAt(page, provider, { decision: 'deny' }, '/en/sign-in/?next=%2Fen%2Fjobs%2F')
       // Where the person was going is kept, for trying again.
-      await expect(page).toHaveURL(/\/en\/sign-in\/\?next=%2Fen%2Fjobs%2F&error=cancelled#outcome$/)
+      await expect(page).toHaveURL(
+        new RegExp(`/en/sign-in/\\?next=%2Fen%2Fjobs%2F&error=cancelled-${provider}#outcome$`),
+      )
       await expect(outcome(page)).toBeFocused()
       await expect(outcome(page)).toHaveText(
-        'You cancelled on the Google or ORCID page, so nothing has changed.',
+        `You cancelled on the ${provider === 'google' ? 'Google' : 'ORCID'} page, so nothing has changed.`,
       )
       expect((await cookiesOf(context))[SESSION_COOKIE]).toBeUndefined()
       expect((await cookiesOf(context))[SIGN_IN_COOKIE]).toBeUndefined()
@@ -342,8 +395,7 @@ test.describe('answers that sign nobody in', () => {
   test('a missing or changed sign-in cookie has expired', async ({ browser, baseURL }) => {
     const context = await ownContext(browser)
     const page = await context.newPage()
-    const expired =
-      'Signing in took too long, or was started in another browser, so it did not finish. Please try again.'
+    const expired = EXPIRED
 
     await page.goto('/en/sign-in/')
     await page.getByRole('link', { name: 'Continue with Google' }).click()
@@ -537,16 +589,26 @@ test.describe('linking and removing sign-in methods', () => {
     await member.context.close()
   })
 
-  test('linking starts only from the site, while signed in; a sign-in meanwhile ends it', async ({
+  test('linking starts only from the site, while signed in; a sign-out meanwhile ends it', async ({
     browser,
   }) => {
     const member = await providerMember(browser, 'google')
     const page = member.page
 
-    // Typed into the address bar (or linked from another site): not started.
+    // Typed into the address bar (or linked from another site, or in a browser that does not say
+    // where a request comes from): not started, and the account page says so.
     await page.goto('/en/sign-in/orcid/?link=1')
-    await expect(page).toHaveURL(/\/en\/account\/$/)
+    await expect(page).toHaveURL(/\/en\/account\/\?error=link-not-started#outcome$/)
+    await expect(outcome(page)).toBeFocused()
+    await expect(outcome(page)).toHaveText(
+      'Linking could not start. Press the Link button on this page again. If this keeps happening, update your browser.',
+    )
     expect((await cookiesOf(member.context))[SIGN_IN_COOKIE]).toBeUndefined()
+    // The same without any Sec-Fetch-Site (Playwright's API requests send none), as such a
+    // browser sends it.
+    const bare = await page.request.get('/en/sign-in/google/?link=1', { maxRedirects: 0 })
+    expect(bare.status()).toBe(303)
+    expect(bare.headers()['location']).toBe('/en/account/?error=link-not-started#outcome')
 
     // Started here, then signed out before the provider answered: nothing is linked.
     await page.goto('/en/account/')
@@ -562,18 +624,115 @@ test.describe('linking and removing sign-in methods', () => {
     await member.context.close()
   })
 
-  test('signing in with another method while signed in switches accounts', async ({ browser }) => {
+  test('a link flow ends only in the session of the member who started it', async ({ browser }) => {
+    const a = await providerMember(browser, 'google')
+    const b = await providerMember(browser, 'google')
+    await a.page.goto('/en/account/')
+    await a.page.getByRole('link', { name: 'Link your ORCID iD' }).click()
+    // Before the provider answers, this browser is signed in to another account.
+    const bSession = (await cookiesOf(b.context))[SESSION_COOKIE]!
+    await a.context.clearCookies({ name: SESSION_COOKIE })
+    await a.context.addCookies([bSession])
+    const orcid = newOrcidId()
+    await answerAtProvider(a.page, 'orcid', { fields: { sub: orcid } })
+    await expect(a.page).toHaveURL(/\/en\/account\/\?error=link-interrupted#outcome$/)
+    await expect(outcome(a.page)).toBeFocused()
+
+    // Nothing moved: B's session is as it was (nothing rotated or ended), and neither account
+    // has the iD, which is still new.
+    expect(await isSignedIn(b.page)).toBe(true)
+    await expect(b.page.getByRole('link', { name: 'Link your ORCID iD' })).toBeVisible()
+    const again = await ownContext(browser)
+    const page = await again.newPage()
+    await startAt(page, 'google', { fields: { sub: a.sub!, email: a.email!, hd: 'example.org' } })
+    await expect(page).toHaveURL(/\/en\/account\/\?done=signed-in#outcome$/)
+    await expect(page.getByRole('link', { name: 'Link your ORCID iD' })).toBeVisible()
+    await page.context().clearCookies()
+    await startAt(page, 'orcid', { fields: { sub: orcid } })
+    await expect(page).toHaveURL(/\/en\/sign-in\/confirm\/$/)
+    await again.close()
+    await a.context.close()
+    await b.context.close()
+  })
+
+  test('a link flow cancelled after "Sign out everywhere" says it was cancelled', async ({
+    browser,
+  }) => {
+    const member = await providerMember(browser, 'google')
+    const page = member.page
+    await page.goto('/en/account/')
+    await page.getByRole('link', { name: 'Link your ORCID iD' }).click()
+    // In another browser, the member signs out everywhere: this one keeps its cookies.
+    const second = await ownContext(browser)
+    const other = await second.newPage()
+    await startAt(other, 'google', {
+      fields: { sub: member.sub!, email: member.email!, hd: 'example.org' },
+    })
+    await other.getByRole('button', { name: 'Sign out everywhere' }).click()
+    await answerAtProvider(page, 'orcid', { decision: 'deny' })
+    await expect(page).toHaveURL(/\/en\/account\/\?error=cancelled-orcid#outcome$/)
+    await expect(outcome(page)).toBeFocused()
+    await expect(outcome(page)).toHaveText(
+      'You cancelled on the ORCID page, so nothing has changed.',
+    )
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sign in to see your account')
+    await second.close()
+    await member.context.close()
+  })
+
+  test('a link flow that outlived its cookie ends on the account page, unchanged', async ({
+    browser,
+  }) => {
+    const member = await providerMember(browser, 'google')
+    const page = member.page
+    await page.goto('/en/account/')
+    const session = (await cookiesOf(member.context))[SESSION_COOKIE]!.value
+    await page.getByRole('link', { name: 'Link your ORCID iD' }).click()
+    // More than 15 minutes at the provider, or another flow started in another tab.
+    await member.context.clearCookies({ name: SIGN_IN_COOKIE })
+    await answerAtProvider(page, 'orcid', { fields: { sub: newOrcidId() } })
+    await expect(page).toHaveURL(/\/en\/account\/\?error=expired#outcome$/)
+    await expect(outcome(page)).toBeFocused()
+    await expect(outcome(page)).toHaveText(EXPIRED)
+    await expect(page.getByRole('link', { name: 'Link your ORCID iD' })).toBeVisible()
+    expect((await cookiesOf(member.context))[SESSION_COOKIE]!.value).toBe(session)
+    await member.context.close()
+  })
+
+  test('signing in with another method while signed in switches accounts', async ({
+    browser,
+    baseURL,
+  }) => {
     const first = await providerMember(browser, 'google')
     const second = await providerMember(browser, 'orcid')
     const page = first.page
+    const firstToken = (await cookiesOf(first.context))[SESSION_COOKIE]!.value
+    expect(await tokenSignsIn(browser, firstToken, baseURL!)).toBe(true)
     // Not offered on the pages (they say "You are signed in"), but the route allows it.
     await page.goto('/en/sign-in/orcid/')
     await answerAtProvider(page, 'orcid', { fields: { sub: second.sub! } })
     await expect(page).toHaveURL(/\/en\/account\/\?done=signed-in#outcome$/)
     await expect(page.getByRole('main')).toContainText(`ORCID iD ${second.sub}`)
     // The first account's session in this browser ended with the switch.
+    expect(await tokenSignsIn(browser, firstToken, baseURL!)).toBe(false)
     await first.context.close()
     await second.context.close()
+  })
+
+  test('creating an account while signed in ends the session this browser had', async ({
+    browser,
+    baseURL,
+  }) => {
+    const first = await providerMember(browser, 'google')
+    const page = first.page
+    const firstToken = (await cookiesOf(first.context))[SESSION_COOKIE]!.value
+    await page.goto('/en/sign-in/orcid/')
+    await answerAtProvider(page, 'orcid', { fields: { sub: newOrcidId() } })
+    await expect(page).toHaveURL(/\/en\/sign-in\/confirm\/$/)
+    await page.getByRole('button', { name: 'Create account' }).click()
+    await expect(page).toHaveURL(/\/en\/account\/\?done=created#outcome$/)
+    expect(await tokenSignsIn(browser, firstToken, baseURL!)).toBe(false)
+    await first.context.close()
   })
 })
 

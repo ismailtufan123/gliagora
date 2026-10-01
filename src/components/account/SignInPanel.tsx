@@ -37,13 +37,15 @@ export async function SignInPanel({ next, path }: { next: string | null; path: s
   const key = altchaKey()
   const safe = next ? safeNext(next, origin) : null
   const providers = (['google', 'orcid'] as const).filter((provider) => methods[provider])
+  // The texts name only the providers that are on.
+  const which = providers.length === 2 ? 'both' : providers[0]
   const startQuery =
     safe && safe !== DEFAULT_NEXT ? `?${new URLSearchParams({ next: safe }).toString()}` : ''
   const providerLinks =
     providers.length > 0 ? (
       <section aria-labelledby="sign-in-providers-heading" className="grid gap-4">
         <h2 id="sign-in-providers-heading" className="text-h3">
-          {t('providers.heading', { methods: providers.length === 2 ? 'both' : providers[0]! })}
+          {t('providers.heading', { methods: which! })}
         </h2>
         <ul role="list" className="flex flex-wrap gap-3">
           {providers.map((provider) => (
@@ -57,7 +59,7 @@ export async function SignInPanel({ next, path }: { next: string | null; path: s
             </li>
           ))}
         </ul>
-        <p className="text-text-muted">{t('providers.note')}</p>
+        <p className="text-text-muted">{t('providers.note', { methods: which! })}</p>
       </section>
     ) : null
   // Where the form goes without JavaScript: this page with only the `next` the sign-in page reads
@@ -107,6 +109,7 @@ export async function SignInPanel({ next, path }: { next: string | null; path: s
         </p>
         <p>
           {t.rich('terms', {
+            providers: providers.length > 0 ? 'some' : 'none',
             link: (chunks) => <a href={MEMBER_LEGAL_LINKS.terms}>{chunks}</a>,
           })}
         </p>

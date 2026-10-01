@@ -808,7 +808,7 @@ export const AREAS: Area[] = [
       'signIn.providers.orcid':
         'Sign in, and the account page when signed out - button that leads to ORCID to sign in',
       'signIn.providers.note':
-        'Sign in, and the account page when signed out - line under the Google and ORCID buttons',
+        'Sign in, and the account page when signed out - line under the Google and ORCID buttons (it names the ways that are on: both, only Google or only ORCID)',
       'signIn.emailHeading':
         'Sign in, and the account page when signed out - heading above the form',
       'signIn.email.label': 'Sign-in form - label of the email field',
@@ -821,7 +821,7 @@ export const AREAS: Area[] = [
       'signIn.privacy':
         'Sign in, and the account page when signed out - first line under the form (the link leads to the privacy policy)',
       'signIn.terms':
-        'Sign in, and the account page when signed out - second line under the form (the link leads to the terms of use)',
+        'Sign in, and the account page when signed out - second line under the form (the link leads to the terms of use); its first sentence depends on whether Google or ORCID sign-in is on, or only the emailed link',
       'signIn.signedIn.title': 'Sign in, when already signed in - heading',
       'signIn.signedIn.account': 'Sign in, when already signed in - button to the account page',
       'signIn.signedIn.other': 'Sign in, when already signed in - paragraph above the buttons',
@@ -938,14 +938,16 @@ export const AREAS: Area[] = [
       'account.methods.onlyWay':
         'Account - ways to sign in - under Google or ORCID instead of the remove button, when it is the only way into the account',
       'account.methods.note':
-        'Account - ways to sign in - line under the list, while Google or ORCID sign-in is on',
+        'Account - ways to sign in - line under the list, while Google or ORCID sign-in is on (it names the ways that are on: both, only Google or only ORCID)',
       'account.signOut.heading': 'Account - heading of the section about signing out',
       'account.signOut.text': 'Account - paragraph about signing out everywhere',
       'account.signOut.everywhere': 'Account - Sign out everywhere button',
       'outcome.done.signed-in':
-        'Account - message at the top after signing in with an emailed link',
+        'Account - message at the top after signing in, with an emailed link, Google or ORCID (also after "Create account" when the account already existed by then)',
+      'outcome.done.signed-in-linked-google':
+        'Account - message at the top after signing in with Google for the first time to an account that already had the same email address, which linked Google to it',
       'outcome.done.created':
-        'Account - message at the top after creating an account with an emailed link',
+        'Account - message at the top after creating an account, with an emailed link or with the "Create account" button after signing in with Google or ORCID for the first time',
       'outcome.done.linked-google': 'Account - message at the top after linking a Google account',
       'outcome.done.linked-orcid': 'Account - message at the top after linking an ORCID iD',
       'outcome.done.unlinked-google': 'Account - message at the top after removing Google',
@@ -957,11 +959,15 @@ export const AREAS: Area[] = [
       'outcome.error.linkExpiredSignedIn':
         'Sign in, when already signed in - message at the top when an emailed link had expired or was used (the browser stays signed in to the same account)',
       'outcome.error.expired':
-        'Sign in - message at the top when signing in with Google or ORCID took more than 15 minutes, or came back to another browser',
-      'outcome.error.cancelled':
-        'Sign in, or the account page - message at the top when the person cancelled on the Google or ORCID page',
+        'Sign in, or the account page - message at the top when signing in with or linking Google or ORCID took more than 15 minutes, came back to another browser or an older tab, or "Create account" was pressed after its 15 minutes',
+      'outcome.error.cancelled-google':
+        'Sign in, or the account page - message at the top when the person cancelled on the Google page (signing in or linking)',
+      'outcome.error.cancelled-orcid':
+        'Sign in, or the account page - message at the top when the person cancelled on the ORCID page (signing in or linking)',
       'outcome.error.link-interrupted':
         'Account - message at the top when linking Google or ORCID ended after the browser was signed out or signed in to another account',
+      'outcome.error.link-not-started':
+        'Account - message at the top when a Link button was pressed in a browser that does not say which site started the request (or the link was opened from outside the site)',
       'outcome.error.create-limited':
         'Sign in - message at the top when too many accounts were created from one connection within an hour',
       'outcome.error.email-has-other-google':

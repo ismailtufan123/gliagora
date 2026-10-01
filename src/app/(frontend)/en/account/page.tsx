@@ -24,6 +24,7 @@ export const dynamic = 'force-dynamic'
 const ACCOUNT_OUTCOMES = {
   done: [
     'signed-in',
+    'signed-in-linked-google',
     'created',
     'linked-google',
     'linked-orcid',
@@ -32,15 +33,25 @@ const ACCOUNT_OUTCOMES = {
   ],
   error: [
     'failed',
-    'cancelled',
+    'cancelled-google',
+    'cancelled-orcid',
     'expired',
     'link-interrupted',
+    'link-not-started',
     'google-elsewhere',
     'orcid-elsewhere',
     'google-already-linked',
     'orcid-already-linked',
     'last-method',
   ],
+} as const
+
+/**
+ * What a link flow can end in when this browser was signed out meanwhile (in another browser,
+ * "Sign out everywhere"): the person still pressed Continue, Deny, or answered an older tab.
+ */
+const SIGNED_OUT_OUTCOMES = {
+  error: ['failed', 'cancelled-google', 'cancelled-orcid', 'expired', 'link-interrupted'],
 } as const
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> }
@@ -71,9 +82,7 @@ export default async function Page({ searchParams }: Props) {
       <main id="main" className="page-frame flex-1 py-12">
         <div className="grid max-w-(--measure) gap-6">
           <h1 className="text-h1">{t('signedOutTitle')}</h1>
-          <OutcomeMessage
-            outcome={readOutcome(params, { error: ['failed', 'link-interrupted'] })}
-          />
+          <OutcomeMessage outcome={readOutcome(params, SIGNED_OUT_OUTCOMES)} />
           <SignInPanel next={MEMBER_PATHS.account} path={MEMBER_PATHS.account} />
         </div>
       </main>
@@ -155,7 +164,12 @@ export default async function Page({ searchParams }: Props) {
             ))}
           </dl>
           {(methods.google || methods.orcid) && (
-            <p className="text-text-muted">{t('methods.note')}</p>
+            <p className="text-text-muted">
+              {t('methods.note', {
+                methods:
+                  methods.google && methods.orcid ? 'both' : methods.google ? 'google' : 'orcid',
+              })}
+            </p>
           )}
         </section>
 

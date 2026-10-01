@@ -22,8 +22,14 @@ describe('readOutcome', () => {
       { kind: 'done', code: 'unlinked-google', othersEnded: false },
     ],
     [
-      { error: 'cancelled', others: 'ended' },
-      { kind: 'error', code: 'cancelled', reference: null },
+      { error: 'cancelled-google', others: 'ended' },
+      { kind: 'error', code: 'cancelled-google', reference: null },
+    ],
+    [{ error: 'cancelled-orcid' }, { kind: 'error', code: 'cancelled-orcid', reference: null }],
+    [{ error: 'link-not-started' }, { kind: 'error', code: 'link-not-started', reference: null }],
+    [
+      { done: 'signed-in-linked-google', others: 'ended' },
+      { kind: 'done', code: 'signed-in-linked-google', othersEnded: true },
     ],
     [
       { error: 'orcid-elsewhere', ref: '3F2A9C01D4' },
@@ -49,6 +55,8 @@ describe('readOutcome', () => {
     { error: '<script>' },
     { done: ['created', 'created'] },
     { error: 'Failed' },
+    // The single code of before PR 3: each provider has its own now.
+    { error: 'cancelled' },
   ])('shows nothing for %j', (params) => {
     expect(readOutcome(params, ALL)).toBeNull()
   })
@@ -103,10 +111,10 @@ describe('outcomePath', () => {
     expect(
       outcomePath(
         '/en/sign-in/',
-        { error: 'cancelled' },
+        { error: 'cancelled-orcid' },
         { next: '/en/jobs/?type=phd', save: null },
       ),
-    ).toBe('/en/sign-in/?next=%2Fen%2Fjobs%2F%3Ftype%3Dphd&error=cancelled#outcome')
+    ).toBe('/en/sign-in/?next=%2Fen%2Fjobs%2F%3Ftype%3Dphd&error=cancelled-orcid#outcome')
   })
 
   it('reads back as what it wrote', () => {
