@@ -175,7 +175,7 @@ sudo systemctl daemon-reload
 
 The timers are switched on after the first deploy (step 5).
 
-**Weekly copy to the operator's computer** (until the second VDS exists at M2). The repository is encrypted, so copying its files is safe. On your computer:
+**Weekly copy to the operator's computer** (until the second VDS exists at M2). The repository is encrypted, so copying its files is safe. It holds only the database dumps and a few settings files (about 20 MB in October 2026), never the map's basemap, which is downloaded again instead (step 8). On your computer:
 
 ```sh
 rsync -a --delete gliagora@<server-ip>:/var/backups/gliagora/restic/ ~/gliagora-backups/restic/
@@ -261,6 +261,8 @@ sudo /opt/gliagora/basemap/fetch-basemap.sh --rollback # back to the basemap bef
 ```
 
 The script checks everything it downloads (the pmtiles tool by its checksum, the tiles with `pmtiles verify`, the fonts and sprites by a digest of their files, all pinned in the script) and changes `current.json`, the file the map reads first, only at the end. The map picks the new basemap up on its next load: no restart, no deploy. The basemap it replaces stays until the next run, for `--rollback`; older ones are deleted. It needs about 10 GB free while it runs. Without a basemap the map still works, with its pins on a plain background.
+
+The basemap is not in the backups (`backup/backup.sh` names its files one by one), so it never reaches the weekly copy either: checked on 2026-10-01, the snapshots hold no basemap file and the whole repository is 19 MB.
 
 Refresh it about twice a year (PLAN §14), and after moving to a new server. To update the fonts and sprites, change `ASSETS_COMMIT` and `ASSETS_DIGEST` in the script (and rebuild the test fixture with `tools/basemap/make-fixture.sh`).
 

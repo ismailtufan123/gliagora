@@ -176,6 +176,7 @@ You may use the name Gliagora to refer to us. You may not use our name or logo i
 ### Material from others
 
 - Map data © OpenStreetMap contributors, available under the Open Database License (ODbL). The map also uses Protomaps and MapLibre, which are credited on the map.
+- Time zones of deadlines are worked out from institutions' locations with time-zone borders made from OpenStreetMap data (timezone-boundary-builder), © OpenStreetMap contributors, available under the Open Database License (ODbL). [TO DECIDE: B20 – whether job pages need their own notice]
 - Institution data comes from ROR and is released under CC0, which means anyone may reuse it. We credit it anyway.
 - Photos and micrographs from others are used only under CC0, CC BY or CC BY-SA (Creative Commons licences that allow reuse), and we credit them where they appear. We do not use institution logos.
 

@@ -986,7 +986,7 @@ GitHub (code only, no personal data) ── Actions ──► container registry
 | Newsletter | listmonk, unmodified | AGPL-3.0 | runs as a separate service; double opt-in, templates, API `[U]` exact features at M2 |
 | Analytics | Umami, self-hosted, cookieless | MIT | also stores Web Vitals as events |
 | Spam protection | ALTCHA (self-hosted proof-of-work) + honeypot + rate limits | MIT | no third-party CAPTCHA |
-| Time zones from coordinates | `@photostructure/tz-lookup` | CC0; the borders it packs come from timezone-boundary-builder (ODbL, OpenStreetMap data) | offline and server-side only, 73 KB of border data; an institution's zone (D40, M4 notes); whether job pages that show these zones need an ODbL notice ("time zones derived from OpenStreetMap data") is settled with the M5 attribution (§14) |
+| Time zones from coordinates | `@photostructure/tz-lookup` | CC0; the borders it packs come from timezone-boundary-builder (ODbL, OpenStreetMap data) | offline and server-side only, 73 KB of border data; an institution's zone (D40, M4 notes); the ODbL credit for these zones is in the terms' "Material from others" since M5 (draft); whether job pages need their own notice is lawyer question B20 |
 | Proxy and TLS | Caddy | Apache-2.0 | automatic certificates |
 | Backups | restic | BSD-2 | encrypted, deduplicated |
 | Tests | Vitest, Playwright + axe-core, Lighthouse CI | MIT / Apache-2.0 | §17 |
@@ -1137,9 +1137,9 @@ Order checklist: data centre in Türkiye; renewal price after any campaign perio
 | Pins | Circle with count; ring style shows positions, events or both; the panel repeats this in text (never colour alone) |
 | Zoom story | World → country (click a country in the list or map to fit its bounds) → institution → panel with its positions and events → detail page |
 | Panel | Side panel (desktop) or bottom sheet (mobile); focus moves to its heading; `Esc` closes |
-| Sync | Same filters as the list; choosing an institution adds an "Institution" chip; hovering a list row highlights its pin on desktop |
+| Sync | Same filters as the list; choosing an institution adds an "Institution" chip; hovering a list row highlights its pin on desktop. As built in M5.3: `/en/jobs/?view=map` ("Show the map"), the list on the left and the map on the right (on phones the map first); every filter, chip, page and "Clear all" keeps the view, and the map takes the new pins without being made again; the panel's "These positions in the list" adds the institution's chip and keeps the map |
 | Accessibility | Map region labelled with a "Skip map" link; never a keyboard trap; "Institutions in view" list as the keyboard and screen-reader alternative; no geolocation prompt; reduced motion jumps instead of flying |
-| Attribution | "© OpenStreetMap contributors" (ODbL, links to the copyright page), Protomaps and MapLibre in the attribution control; ROR credited on the map page; the ODbL notice for deadline time zones derived from OpenStreetMap borders (§11.3) is settled here too |
+| Attribution | "© OpenStreetMap contributors" (ODbL, links to the copyright page), Protomaps and MapLibre in the attribution control; ROR credited on the map page; the ODbL notice for deadline time zones derived from OpenStreetMap borders (§11.3) is settled here too. As built in M5: the credits in the map's corner and under the map (with ROR); the time zones credited in the terms' "Material from others" (draft), and lawyer question B20 asks whether job pages need their own notice |
 | Events | Pinned at the host institution or at the venue's city; never at an individual's address |
 | Fallback | No WebGL → list + short message (M5.2: no static preview image; a picture made earlier would not show the current pins, while the list next to it does); no JavaScript → the same list, each institution linked to its page |
 | Updates | Basemap refreshed twice a year; institution data monthly with the ROR import |
@@ -1404,7 +1404,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 | M2 | Newsletter | Turkish mailbox and SMTP relay; SPF/DKIM/DMARC; listmonk; double opt-in pages; consent log; KVKK texts; unsubscribe headers; archive template; MX moves from Cloudflare Email Routing to the Turkish mail host before signups open; backup alerts by email (D42); deploys switch from every green `main` to release tags (`DEPLOY_AUTO` = `tags`, D43) | Signups open before content exists: the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public (unapproved drafts stay private), with a reduced header and footer that link only to public pages; until M6, links to the suggest and report forms point to `hello@gliagora.com`; everything else stays private until M6 (D39, D41). No Glia Notes issue before M6 (D41) | 1–2 weeks |
 | M4 | Jobs | Job collection; review queue v1; "Suggest a listing"; list, filters, chips, URL state; detail; closing soon; auto-expiry; sitemaps; basic search | Jobs window built and tested locally with fake data (D38); deployed at S, private; public at the M6 launch, once the §3.4 gate is met (D39) | 2–3 weeks |
 | M4b | Accounts and self-service privacy | Member sign-in (Google, ORCID, email link); saved items; digest settings and subfield preferences; export and delete; inactivity clean-up; automatic acknowledgements for requests | Accounts ready on the deployed site, still private, released with M6 | 1.5–2 weeks |
-| M5 | Map | Basemap extract and assets; `/en/map/`; jobs split view; clustering; institution panel; list sync | Map deployed; public with M6 (D39) | 1–2 weeks |
+| M5 | Map | Basemap extract and assets; `/en/map/`; jobs split view; clustering; institution panel; list sync | **Built and deployed 2026-10-01** (M5 notes below), with the basemap on the server, behind the password; public with M6 (D39) | 1–2 weeks |
 | M6 | Home and public launch | Home with static poster hero, live counts, latest positions and deadlines, windows overview, newsletter blocks; the full header and footer, and links to the suggest and report forms again in place of email (D41); the first Glia Notes issue, the launch issue (D41); pre-launch checklist below and the §3.4 gate | **Public launch (Phase 1a)**: jobs and the other sections go public once the §3.4 gate is met (D39) | 1 week + seeding |
 | M7 | Curation automation | Source register; allowed monitors; dedupe; link checker; dashboard widgets; local tag suggester; optional AI tier | Faster curation | 1–2 weeks |
 | M8 | Events and alerts | Events, deadlines, list and month views, iCal feeds, add to calendar, eligible Event markup; saved searches with weekly job alerts | Events window and alerts live | 2–3 weeks |
@@ -1513,6 +1513,34 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
   - add a `CAA` record and switch on DNSSEC in Cloudflare (optional);
   - decide whether deploys become automatic after merges (manual for now, §11.5).
 
+**M5 notes (2026-10-01).** The map (PLAN §14), in four steps, each tested locally on Node 24 and PostgreSQL 18 with the ROR sample and the fake jobs, as in CI.
+
+- **M5.1, the basemap** (#52):
+  - `deploy/basemap/fetch-basemap.sh` puts on the server the zoom-10 extract of the Protomaps planet (OpenStreetMap data; 3.8 GB for the build of 2026-09-30) and the fonts (SIL OFL) and sprites (MIT) of its style. Every download is checked against pinned values, and the files go into versioned folders.
+  - `/basemap/current.json` names the current version, so a refresh needs no deploy and can be rolled back.
+  - Caddy serves `/basemap/` (range requests, versioned files cached for good, behind the password until M6).
+  - The tests use a 2.3 MB Istanbul fixture of the same layout.
+  - `docs/vendors.md` now lists every external service.
+- **M5.2, the world map** (#53):
+  - `/api/map/institutions/?{filters}` answers GeoJSON with the panel's text in words, kept 10 minutes. The list and the map resolve the filters with the same code, so they always count the same positions.
+  - `/en/map/`: MapLibre GL JS 6.11.2, loaded natively from `/map/maplibre-gl/<version>/` (copied at build time, not bundled). Its worker therefore comes from our origin and shares MapLibre's code with the page, and the site's CSP allows it.
+  - The style is `@protomaps/basemaps` with our tokens, in light and dark. Clusters and pins show their counts.
+  - The panel (side panel, or bottom sheet on phones) takes focus, and Esc gives it back.
+  - "Institutions in view" is the keyboard and screen-reader way in, with "Skip the map".
+  - Without WebGL or JavaScript the page is the list. There is no static preview image: a picture made earlier would not show the current pins (§14, "Fallback").
+- **M5.3, the jobs list's map view** (#54): `?view=map` puts the list and the map side by side with the same filters (§14, "Sync"). The map component loads lazily (`LazyMapView`); `next/dynamic` did not keep it off the plain list.
+- **Measured** (`tests/e2e/budgets.spec.ts`, the map templates have their own budget):
+  - the map page: 458.6 KB of JavaScript, of which MapLibre with its worker is 307.8 KB;
+  - the map's own code: about 323 KB against PLAN's unverified 280 KB, so §17.3 now says ≤330 KB (operator to confirm);
+  - the jobs list: 139.91 of 140 KB. Before the next change to the list's own client code, find savings there first.
+- **Tests:** 1044 unit, 48 database (8 email tests need Docker locally) and 602 end-to-end tests pass on 34 templates. The map tests load MapLibre, its worker and the basemap under the exact CSP of `deploy/Caddyfile`, with nothing from other domains.
+- **The basemap on the server** (2026-10-01, with the operator's go-ahead):
+  - the new `Caddyfile`, `compose.prod.yml` and `deploy/basemap/` were copied (the files checked against `main`, the Caddyfile validated by Caddy);
+  - `fetch-basemap.sh` downloaded build 20260930 in 3 minutes (3.8 GB, `pmtiles verify` passed, the fonts and sprites matched their digest; 27 GB still free), and `update.sh` restarted Caddy with the new route after a backup.
+  - **Checked from outside:** `/basemap/` answers 401 without the password. With a temporary second user (a random password that never left the server unpiped, removed afterwards), `current.json` was `no-cache` and the tiles answered 206 to range requests. In Chromium, the world map drew the basemap with its labels, MapLibre and its worker loaded from our origin, nothing came from other domains, and there was no CSP violation under the real policy; on desktop and on a phone the credits read "MapLibre | Protomaps | © OpenStreetMap contributors", under the map too.
+  - **Backups:** the operator asked that the basemap stay out of the backups and the weekly copy. `backup/backup.sh` names its files one by one, so the snapshots hold no basemap file; the repository is 19 MB. It now says so in the script and the runbook.
+  - Events on the map come with M8.
+
 **Pre-launch checklist** (after S, before the M6 public launch; M6 works through it together with the §3.4 gate):
 
 - Lighthouse CI with the §17.3 budgets running against the deployed site (production, behind the password, while there is no staging, D42), Core Web Vitals "good" in lab tests.
@@ -1521,6 +1549,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 - Real-device check on a mid-range Android phone over throttled 4G (§17.2).
 - Legal texts: the one-time lawyer review of the questions in `docs/legal-open-questions.md` (group b) happens between S and M2 (D32); the operator then approves each text (D28). The contact pages, privacy policy, KVKK aydınlatma metni and açık rıza metni go live at M2; all other required legal pages are live before M6 (§3.4).
 - axe: 0 serious or critical issues; SPF, DKIM and DMARC pass; backup restore drill passed (§3.4).
+- The map in public (M5): drop the site-wide password from Caddy's `/basemap/` handle and give `/api/map/institutions/` its own handle without it (`deploy/Caddyfile`), both behind the password until then (D39); send the map data's answers as `public` instead of `private`; and add a job-page credit for the time zones if lawyer question B20 asks for one.
 - Private until the launch (D39): jobs and the other sections (search, institution pages, subfield hubs, the suggest and report forms, accounts) go public only at the M6 launch, once the §3.4 gate is met (at least 150 active verified positions across at least 25 countries, and the rest of the gate). At the launch, the reduced M2 header and footer give way to the full ones, and the links that point to `hello@gliagora.com` in place of the suggest and report forms point to the forms again (D41).
 
 Phase 1 total: about 23–32 weeks (including S). If M0 starts in early October 2026, the public launch (M6) lands around the turn of the year (late December to early January), still inside the PhD application season.
