@@ -4,7 +4,7 @@ import { cache } from 'react'
 
 import type { Locale } from '@/i18n/routing'
 import { institutionPath, subfieldPath } from '@/lib/detail-routes'
-import { type JobFilters, TERM_PARAMS, jobsHref } from '@/lib/filters/jobs'
+import { type JobFilters, TERM_PARAMS, jobsHref, parseJobFilters } from '@/lib/filters/jobs'
 import type { Region } from '@/lib/geography'
 import { intlLocale } from '@/lib/jobs/format'
 import {
@@ -498,6 +498,108 @@ export async function jobsList(filters: JobFilters, locale: Locale): Promise<Job
       ),
     ),
   }
+}
+
+/**
+ * How many open jobs match these filters: the number the jobs list shows for them ("38 positions
+ * match"), from the same resolution of the filters. Unset filters take the list's defaults.
+ */
+export async function countOpenJobs(
+  filters: Partial<JobFilters>,
+  locale: Locale,
+  now: Date,
+): Promise<number> {
+  const all = { ...parseJobFilters(new URLSearchParams()), ...filters }
+  const { payload, where } = await resolveJobFilters(all, locale, now)
+  return where ? (await payload.count({ collection: 'jobs', where, locale })).totalDocs : 0
+}
+
+/** Open jobs with a fixed deadline, the nearest first ("Deadlines coming up" on the home page). */
+export async function nextDeadlines(locale: Locale, limit: number): Promise<JobCard[]> {
+  const { jobs } = await findOpenJobs({
+    where: [{ deadlineKind: { equals: 'fixed' } }],
+    limit,
+    locale,
+  })
+  return jobs
+}
+
+/** What the open jobs cover (the home page's figures, PLAN §3.2 "Home"). */
+export type OpenJobsCoverage = {
+  /** All open jobs. */
+  open: number
+  /** Institutions with open jobs. */
+  institutions: number
+  /** Countries with open jobs, the most jobs first. */
+  countries: { code: string; name: string; jobs: number }[]
+}
+
+export async function openJobsCoverage(locale: Locale, now: Date): Promise<OpenJobsCoverage> {
+  const payload = await getPayload({ config })
+  const { docs, totalDocs } = await payload.find({
+    collection: 'jobs',
+    where: openJobsWhere(now),
+    select: { institution: true, country: true },
+    locale,
+    limit: MAP_MAX_JOBS,
+    depth: 0,
+  })
+  if (totalDocs > MAP_MAX_JOBS) {
+    console.warn(`The home page counts ${MAP_MAX_JOBS} of ${totalDocs} open positions.`)
+  }
+  const institutions = new Set<number>()
+  const byCountry = new Map<string, number>()
+  for (const doc of docs) {
+    const institution = typeof doc.institution === 'object' ? doc.institution?.id : doc.institution
+    if (typeof institution === 'number') institutions.add(institution)
+    const country = typeof doc.country === 'object' ? doc.country?.id : doc.country
+    if (country) byCountry.set(country, (byCountry.get(country) ?? 0) + 1)
+  }
+  const names =
+    byCountry.size > 0
+      ? await payload.find({
+          collection: 'countries',
+          where: { id: { in: [...byCountry.keys()] } },
+          select: { name: true },
+          locale,
+          pagination: false,
+          depth: 0,
+        })
+      : null
+  const collator = new Intl.Collator(intlLocale(locale))
+  const countries = [...byCountry]
+    .map(([code, jobs]) => ({
+      code,
+      name: names?.docs.find((doc) => doc.id === code)?.name || code,
+      jobs,
+    }))
+    .sort((a, b) => b.jobs - a.jobs || collator.compare(a.name, b.name))
+  return { open: totalDocs, institutions: institutions.size, countries }
+}
+
+/** The position types (PLAN §4.5), each with its open jobs, as the jobs list counts them. */
+export async function openJobsByType(
+  locale: Locale,
+  now: Date,
+): Promise<{ slug: string; label: string; jobs: number }[]> {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'terms',
+    where: { vocabulary: { equals: TERM_PARAMS.type }, isActive: { not_equals: false } },
+    select: { slug: true, label: true },
+    sort: ['sortOrder', 'id'],
+    locale,
+    pagination: false,
+    depth: 0,
+  })
+  const counted = await Promise.all(
+    docs.map(async (doc) => ({
+      slug: doc.slug,
+      label: doc.label || doc.slug,
+      jobs: await countOpenJobs({ type: [doc.slug] }, locale, now),
+    })),
+  )
+  return counted.filter((type) => type.jobs > 0)
 }
 
 /** At most this many matching positions go on the map (PLAN §3.4 expects hundreds). */

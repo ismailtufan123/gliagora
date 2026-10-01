@@ -13,6 +13,12 @@ export const PRIVACY_EMAIL = 'privacy@gliagora.com'
 export const WINDOWS = ['jobs', 'events', 'funding', 'papers', 'news', 'resources'] as const
 export type WindowKey = (typeof WINDOWS)[number]
 
+/**
+ * The windows that are built (PLAN §20): the others answer with a placeholder page until their
+ * milestone. The home page shows only these (PLAN §3.2 "Home": only live windows are shown).
+ */
+export const LIVE_WINDOWS: readonly WindowKey[] = ['jobs']
+
 /** Sections that are not windows but have their own page (PLAN §2.2). */
 export const SECTIONS = [
   'map',

@@ -35,8 +35,51 @@
     }
   },
   "home": {
-    "comingSoon": "Coming soon: a curated, English-first hub for neuroscience positions, events, funding, papers, news and resources.",
-    "writeToUs": "Write to us at <email>hello@gliagora.com</email>."
+    "subline": "Curated neuroscience positions from every subfield, each checked against the employer’s own posting.",
+    "findPositions": "Find positions",
+    "exploreMap": "Explore the map",
+    "windowsLabel": "The windows",
+    "figures": {
+      "title": "Gliagora today",
+      "open": "{count, plural, one {<n>#</n> open position} other {<n>#</n> open positions}}",
+      "openNote": "Each links to the original posting",
+      "deadlines": "{count, plural, one {<n>#</n> deadline this month} other {<n>#</n> deadlines this month}}",
+      "deadlinesNote": "Consider this your action potential",
+      "institutions": "{count, plural, one {<n>#</n> institution} other {<n>#</n> institutions}}",
+      "institutionsNote": "Every one a node in the network",
+      "countries": "{count, plural, one {<n>#</n> country} other {<n>#</n> countries}}",
+      "countriesNote": "And counting"
+    },
+    "latest": {
+      "title": "Latest positions",
+      "all": "All positions, newest first",
+      "empty": "New positions appear here as soon as they are published."
+    },
+    "deadlines": {
+      "title": "Deadlines coming up",
+      "all": "All positions by deadline",
+      "empty": "No position has a deadline coming up just now."
+    },
+    "nextLab": {
+      "title": "Where is your next lab?",
+      "text": "Zoom from the world to a country, an institution and its open positions.",
+      "link": "Explore the map",
+      "countries": "Open positions by country",
+      "country": "{name} ({count})",
+      "more": "{count, plural, one {and # more country on the map} other {and # more countries on the map}}"
+    },
+    "windows": {
+      "title": "What you will find here",
+      "jobsText": "MSc and PhD places, postdocs, research staff, faculty and industry roles, each linked to the employer’s own posting.",
+      "jobsAll": "All positions",
+      "type": "{label} ({count})"
+    },
+    "digest": {
+      "title": "Glia Notes, the monthly digest",
+      "text": "New positions and the deadlines ahead, once a month in your inbox.",
+      "short": "Glia Notes: new positions and deadlines, once a month.",
+      "button": "Get the monthly digest"
+    }
   },
   "notFound": {
     "title": "Page not found",
