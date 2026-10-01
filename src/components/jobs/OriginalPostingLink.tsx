@@ -1,4 +1,4 @@
-import { ExternalLink } from 'lucide-react'
+import { Icon } from '@/components/Icon'
 import { getTranslations } from 'next-intl/server'
 
 import type { Locale } from '@/i18n/routing'
@@ -27,7 +27,7 @@ export async function OriginalPostingLink({
       className={`button ${primary ? 'button-primary' : 'button-secondary'} ${className}`}
     >
       {t('viewOriginal')}
-      <ExternalLink aria-hidden="true" size={18} className="flex-none" />
+      <Icon name="externalLink" size={18} className="flex-none" />
       <span className="sr-only"> {t('opensEmployerSite')}</span>
     </a>
   )

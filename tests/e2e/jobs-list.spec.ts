@@ -372,6 +372,43 @@ test.describe('with JavaScript', () => {
     ).toHaveAttribute('aria-current', 'page')
   })
 
+  // D45: the list's behaviour (ListBehaviour) loads when the reader first reaches for the filters,
+  // chips or sort order; what they do before it has arrived is kept and done once it is there.
+  test('its script loads when first needed, and a change made before it arrives applies', async ({
+    page,
+  }) => {
+    await page.goto('/en/jobs/', { waitUntil: 'networkidle' })
+    await page.evaluate(() => ((window as unknown as { marker: number }).marker = 1))
+    // From now on, scripts arrive late.
+    const late: string[] = []
+    await page.route('**/_next/static/chunks/*.js', async (route) => {
+      late.push(route.request().url())
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.continue()
+    })
+    await filterButton(page, 'Position type').click()
+    await option(page, 'PhD').click()
+    await expect(page).toHaveURL(/\/en\/jobs\/\?type=phd$/)
+    await expect(page.locator('[data-chip]', { hasText: 'PhD' })).toBeVisible()
+    expect(late.length).toBeGreaterThan(0)
+    expect(await page.evaluate(() => (window as unknown as { marker?: number }).marker)).toBe(1)
+  })
+
+  test('a chip clicked before the script arrives removes its value without a page load', async ({
+    page,
+  }) => {
+    await page.goto('/en/jobs/?type=phd,postdoc', { waitUntil: 'networkidle' })
+    await page.evaluate(() => ((window as unknown as { marker: number }).marker = 1))
+    await page.route('**/_next/static/chunks/*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.continue()
+    })
+    await page.getByRole('link', { name: 'Remove filter: PhD' }).click()
+    await expect(page).toHaveURL(/\/en\/jobs\/\?type=postdoc$/)
+    await expect(page.getByRole('link', { name: 'Remove filter: Postdoc' })).toBeFocused()
+    expect(await page.evaluate(() => (window as unknown as { marker?: number }).marker)).toBe(1)
+  })
+
   test('the count is a live region', async ({ page }) => {
     await page.goto('/en/jobs/')
     await expect(page.getByRole('status').filter({ has: count(page) })).toHaveCount(1)

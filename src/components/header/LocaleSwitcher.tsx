@@ -24,9 +24,7 @@ export type LocaleIcons = { globe: ReactNode; chevron: ReactNode }
 // languages are coming. Language names are written in their own language, with `lang`.
 // `variant="list"` shows the same choices as a plain list, for the mobile menu.
 // A client component because the links follow the address (usePathname). Its icons come from the
-// server as props, so their definitions and lucide's createLucideIcon stay out of its client code
-// (PLAN §17.3). lucide's Icon component is still sent: lucide-react marks it "use client", so
-// every lucide icon, also one drawn on the server, loads it in the browser.
+// server as props (src/components/Icon.tsx), so they add nothing to its client code (PLAN §17.3).
 export function LocaleSwitcher({
   locale,
   labels,

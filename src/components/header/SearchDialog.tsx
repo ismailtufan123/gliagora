@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { Icon } from '@/components/Icon'
 import { getTranslations } from 'next-intl/server'
 
 import { SearchForm } from '@/components/search/SearchForm'
@@ -31,7 +31,7 @@ export async function SearchDialog({ locale }: { locale: Locale }) {
         </SearchForm>
         <form method="dialog" className="search-dialog-close">
           <button type="submit" className="disclosure-button size-11" aria-label={t('close')}>
-            <X aria-hidden="true" size={20} />
+            <Icon name="close" size={20} />
           </button>
         </form>
       </div>

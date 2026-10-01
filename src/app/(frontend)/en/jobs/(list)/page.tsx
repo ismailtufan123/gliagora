@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { Icon } from '@/components/Icon'
 import type { Metadata } from 'next'
 import { unstable_rethrow } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -178,7 +178,7 @@ export default async function Page({ searchParams }: Props) {
                     data-chip
                   >
                     {chip.label}
-                    <X aria-hidden="true" size={14} className="flex-none" />
+                    <Icon name="close" size={14} className="flex-none" />
                   </a>
                 </li>
               ))}

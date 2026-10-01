@@ -1,215 +1,80 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useTransition } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 
-import {
-  DEADLINE_FROM,
-  DEADLINE_RANGE,
-  DEADLINE_TO,
-  JOB_FILTERS,
-  jobFormValues,
-} from '@/lib/filters/jobs'
-import { filtersHref, parseFilters } from '@/lib/filters/model'
-import { deadlineRange } from '@/lib/filters/values'
-import { LOCATION_CHANGE } from '@/lib/link-state'
+import { type TakeOver, type Waiting, plainClick } from './handoff'
+import { FILTER_FORM_ID } from './ids'
 
-import { FILTER_FORM_ID, RANGE_ERROR_ID, RESULTS_HEADING_ID, RESULTS_ID } from './ids'
+// The jobs list without page loads (ListBehaviour: filters, chips and the sort order apply at
+// once) loads when the reader first reaches for them: the pointer over them, focus in them, or
+// their first use. Until then the page carries only this (PLAN §17.3, D45). What the reader does
+// in the moment before it arrives is kept: a field changed, typing in a list's search box, the
+// form submitted or a chip or other a[data-soft] link clicked, which would otherwise load a page.
+// ListBehaviour then does them in order. Without JavaScript the form and links load pages.
 
-// The jobs list without page loads (PLAN §17.4): a ticked box, a chosen option or the sort order
-// applies at once. The form's values become the canonical address (src/lib/filters) and the
-// router fetches the list for it inside a transition, so the page stays usable, focus stays where
-// it was, and the results are marked busy until the new ones arrive; the count above them is a
-// live region, so the new number is announced. Chips, "Clear all" and the empty state's links
-// (a[data-soft]) change the list the same way. Without JavaScript the form and links load pages.
-// Also: the date fields choose "Between these dates", and Apply with a day missing or in the
-// wrong order shows an error by them instead of applying; arrow keys in the deadline options only
-// move the choice (they would apply every option they pass), Enter or Apply applies it; "Show 38
-// positions" closes the filter sheet; long lists narrow as one types in their search box.
+let loaded = false
+const ListBehaviour = lazy(() =>
+  import('./ListBehaviour').then((module) => {
+    loaded = true
+    return module
+  }),
+)
 
-/** Case- and accent-insensitive text, for the search boxes of long lists. */
-const fold = (text: string) => text.toLocaleLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
-
-/** The fields of "Between these dates", and whether they are chosen with days that make no range. */
-function rangeOf(form: HTMLFormElement) {
-  const option = form.querySelector<HTMLInputElement>(
-    `[name="deadline"][value="${DEADLINE_RANGE}"]`,
-  )
-  const days = [DEADLINE_FROM, DEADLINE_TO].map((name) => form.elements.namedItem(name))
-  const [from, to] = days.filter((day) => day instanceof HTMLInputElement)
-  const invalid = !!option?.checked && !deadlineRange(from?.value, to?.value)
-  return { option, from, to, invalid }
-}
-
-/** Shows or hides the range's error, tied to both date fields while it shows. */
-function showRangeError(form: HTMLFormElement, show: boolean) {
-  const error = document.getElementById(RANGE_ERROR_ID)
-  if (!error) return
-  error.hidden = !show
-  const { from, to } = rangeOf(form)
-  for (const day of [from, to]) {
-    if (show) {
-      day?.setAttribute('aria-invalid', 'true')
-      day?.setAttribute('aria-describedby', RANGE_ERROR_ID)
-    } else {
-      day?.removeAttribute('aria-invalid')
-      day?.removeAttribute('aria-describedby')
-    }
-  }
-}
+const nothingKept: TakeOver = () => []
 
 export function JobsListEnhancer({ query }: { query: string }) {
-  const router = useRouter()
-  const [pending, startTransition] = useTransition()
-  // The link that started a change, and its place among the chips.
-  const clicked = useRef<{ link: Element; chip: number } | null>(null)
-  // Where focus was when the change started.
-  const focused = useRef<Element | null>(null)
-  const mounted = useRef(false)
+  // Once loaded (an earlier visit to the list in this tab), it comes back at once, with nothing
+  // to hand over.
+  const [takeOver, setTakeOver] = useState<TakeOver | null>(() => (loaded ? nothingKept : null))
+  const [startedLoaded] = useState(() => loaded)
 
   useEffect(() => {
     const form = document.getElementById(FILTER_FORM_ID)
-    if (!(form instanceof HTMLFormElement)) return
-    const go = (href: string) => {
-      if (href === location.pathname + location.search) return
-      focused.current = document.activeElement
-      startTransition(() => router.push(href, { scroll: false }))
-    }
-    const formHref = () =>
-      filtersHref(
-        JOB_FILTERS,
-        parseFilters(JOB_FILTERS, new URLSearchParams(new FormData(form) as unknown as string[][])),
-      )
-
-    // Arrow keys check each option of a radio group they pass: those wait for Enter or Apply.
-    // `change` comes between keydown and keyup, also for a held key.
+    if (startedLoaded || !(form instanceof HTMLFormElement)) return
+    const waiting: Waiting[] = []
+    let taken = false
     let arrowKey = false
-    const onKeyDown = (event: KeyboardEvent) => {
-      arrowKey = event.key.startsWith('Arrow')
+    const handOver: TakeOver = () => {
+      taken = true
+      return waiting.splice(0)
     }
-    const onKeyUp = () => {
-      arrowKey = false
-    }
+    const ours = (target: EventTarget | null) =>
+      target instanceof Element &&
+      (form.contains(target) ||
+        (target as HTMLInputElement).form === form ||
+        !!target.closest('a[data-soft]'))
 
-    // On the document: the sort order belongs to the form (form="…") but sits outside it.
-    const onChange = (event: Event) => {
-      const field = event.target as HTMLInputElement
-      if (field.form !== form) return
-      const day = field.name === DEADLINE_FROM || field.name === DEADLINE_TO
-      const { option } = rangeOf(form)
-      if (day && option) option.checked = true
-      // The range's error goes once the days are right or another option is chosen.
-      if ((day || field.name === 'deadline') && !rangeOf(form).invalid) showRangeError(form, false)
-      // The range applies with Apply, once both days are there.
-      if (day || field.value === DEADLINE_RANGE) return
-      if (field.type === 'radio' && arrowKey) return
-      if (field.name && field.type !== 'search') go(formHref())
+    const wake = (event: Event) => {
+      if (taken || !ours(event.target)) return
+      setTakeOver(() => handOver)
+      if (event.type === 'keydown') arrowKey = (event as KeyboardEvent).key.startsWith('Arrow')
+      if (event.type === 'keyup') arrowKey = false
     }
-
-    const onSubmit = (event: SubmitEvent) => {
-      event.preventDefault()
-      const range = rangeOf(form)
-      if (range.invalid && range.from && range.to) {
-        // Not applied: the error shows by the date fields (opened if they were closed), and focus
-        // moves to the day to fix. Unless they cannot be shown (in the closed filter sheet): then
-        // the rest applies, as the range was never applied.
-        const deadline = range.from.closest('details')
-        if (deadline) deadline.open = true
-        if (!range.from.checkVisibility || range.from.checkVisibility()) {
-          showRangeError(form, true)
-          ;(range.from.value ? range.to : range.from).focus()
+    const keep = (event: Event) => {
+      if (taken || !ours(event.target)) return
+      if (event.type === 'click') {
+        if (!plainClick(event as MouseEvent) || !(event.target as Element).closest('a[data-soft]'))
           return
-        }
+        event.preventDefault()
       }
-      go(formHref())
-      if (event.submitter?.hasAttribute('data-close-sheet')) {
-        form.querySelector<HTMLElement>('.filter-sheet [data-disclosure-close]')?.click()
-      }
+      if (event.type === 'submit') event.preventDefault()
+      waiting.push({ event, arrowKey })
+      setTakeOver(() => handOver)
     }
 
-    const onInput = (event: Event) => {
-      const box = event.target as HTMLInputElement
-      if (!box.hasAttribute('data-list-search')) return
-      const list = document.getElementById(box.getAttribute('aria-controls') ?? '')
-      const words = fold(box.value.trim())
-      for (const item of list?.querySelectorAll('li') ?? []) {
-        item.hidden = !fold(item.textContent ?? '').includes(words)
-      }
-      for (const group of list?.querySelectorAll('fieldset') ?? []) {
-        group.hidden = !group.querySelector('li:not([hidden])')
-      }
-    }
-
-    const onClick = (event: MouseEvent) => {
-      const link = event.target instanceof Element && event.target.closest('a[data-soft]')
-      if (!link || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-        return
-      event.preventDefault()
-      clicked.current = { link, chip: [...document.querySelectorAll('[data-chip]')].indexOf(link) }
-      go(link.getAttribute('href') ?? JOB_FILTERS.path)
-    }
-
-    document.addEventListener('change', onChange)
-    form.addEventListener('keydown', onKeyDown)
-    form.addEventListener('keyup', onKeyUp)
-    form.addEventListener('submit', onSubmit)
-    form.addEventListener('input', onInput)
-    document.addEventListener('click', onClick)
+    const early = ['pointerover', 'focusin', 'keydown', 'keyup']
+    const acts = ['change', 'input', 'submit', 'click']
+    for (const type of early) document.addEventListener(type, wake)
+    for (const type of acts) document.addEventListener(type, keep)
     return () => {
-      document.removeEventListener('change', onChange)
-      form.removeEventListener('keydown', onKeyDown)
-      form.removeEventListener('keyup', onKeyUp)
-      form.removeEventListener('submit', onSubmit)
-      form.removeEventListener('input', onInput)
-      document.removeEventListener('click', onClick)
+      for (const type of early) document.removeEventListener(type, wake)
+      for (const type of acts) document.removeEventListener(type, keep)
     }
-  }, [router])
+  }, [startedLoaded])
 
-  useEffect(() => {
-    document.getElementById(RESULTS_ID)?.setAttribute('aria-busy', String(pending))
-    // Once the list for the new address has arrived, the form shows exactly its filters: a box
-    // the reader ticked stays ticked in the page even after its chip removed it.
-    if (pending || !mounted.current) {
-      mounted.current = true
-      return
-    }
-    // The header marks the menu entry of the current list ("PhD") as the current page.
-    window.dispatchEvent(new Event(LOCATION_CHANGE))
-    const form = document.getElementById(FILTER_FORM_ID)
-    if (!(form instanceof HTMLFormElement)) return
-    const values = jobFormValues(parseFilters(JOB_FILTERS, new URLSearchParams(query)))
-    showRangeError(form, false)
-    for (const field of form.elements) {
-      if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement)) continue
-      const chosen = values[field.name]
-      if (!chosen) continue
-      if (field.type === 'checkbox' || field.type === 'radio') {
-        ;(field as HTMLInputElement).checked = chosen.includes(field.value)
-      } else if (field !== document.activeElement) {
-        field.value = chosen[0] ?? ''
-      }
-    }
-    // A removed chip took focus with it: move on to the next chip, or to the results.
-    const from = clicked.current
-    clicked.current = null
-    if (from && !from.link.isConnected) {
-      const chips = document.querySelectorAll<HTMLElement>('[data-chip]')
-      const next = chips[from.chip] ?? chips[from.chip - 1]
-      ;(next ?? document.getElementById(RESULTS_HEADING_ID))?.focus()
-    }
-    // A filter the server had opened to show an error closes with the new list: focus inside it
-    // moves to its button rather than get lost.
-    const before = focused.current
-    focused.current = null
-    const active = document.activeElement
-    if (
-      before?.isConnected &&
-      (active === before || active === document.body) &&
-      before.checkVisibility?.() === false
-    ) {
-      before.closest('details:not([open])')?.querySelector<HTMLElement>(':scope > summary')?.focus()
-    }
-  }, [query, pending])
-
-  return null
+  return takeOver ? (
+    <Suspense fallback={null}>
+      <ListBehaviour query={query} takeOver={takeOver} />
+    </Suspense>
+  ) : null
 }

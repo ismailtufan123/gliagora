@@ -1,4 +1,4 @@
-import { ChevronDown, Menu, Search } from 'lucide-react'
+import { Icon } from '@/components/Icon'
 import { getTranslations } from 'next-intl/server'
 
 import type { Locale } from '@/i18n/routing'
@@ -39,7 +39,7 @@ export async function MobileMenu({
   return (
     <details className="disclosure xl:hidden" data-disclosure data-modal>
       <summary className="button button-secondary px-2.5 sm:px-3">
-        <Menu aria-hidden="true" size={20} />
+        <Icon name="menu" size={20} />
         <span className="sr-only sm:not-sr-only">{t('header.menu')}</span>
       </summary>
       <div className="mobile-panel">
@@ -50,7 +50,7 @@ export async function MobileMenu({
           className="mobile-row justify-start gap-2 border-b border-line min-[22.5rem]:hidden"
           data-search-open
         >
-          <Search aria-hidden="true" size={20} />
+          <Icon name="search" size={20} />
           {t('search.trigger')}
         </a>
         <nav aria-label={t('header.navLabel')}>
@@ -61,7 +61,7 @@ export async function MobileMenu({
                   <details className="disclosure" data-disclosure>
                     <summary className="mobile-row">
                       {window.label}
-                      <ChevronDown aria-hidden="true" size={20} className="chevron" />
+                      <Icon name="chevronDown" size={20} className="chevron" />
                     </summary>
                     <ul role="list" className="grid pb-3 ps-4">
                       {withWindowLink(window).map((item) => (
