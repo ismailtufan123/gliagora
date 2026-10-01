@@ -274,7 +274,19 @@ Refresh it about twice a year (PLAN §14), and after moving to a new server. To 
 
 ## 9. Switching on member sign-in (M4b)
 
-Member sign-in (D49) stays off on the server until its settings exist: `/en/sign-in/` says "Signing in is not available yet", and the app logs one line at start, `Member sign-in: email off, google off, orcid off`. Switch it on only with the operator's go-ahead, in this order:
+Member sign-in (D49) stays off on the server until its settings exist: `/en/sign-in/` says "Signing in is not available yet", and the app logs one line at start, `Member sign-in: email off, google off, orcid off`.
+
+**First, register the Google and ORCID clients** (the operator, once; nothing on the server changes). Copy each client ID and secret straight into `/opt/gliagora/.env` in step 2 below, never into a chat, an email or a file in the repository.
+
+- **Google** (console.cloud.google.com):
+  - Create a project "gliagora", then Google Auth Platform → Get started: app name "Gliagora"; a user support email (better a group address the operator controls than a personal one, since users see it); Audience "External"; a developer contact email.
+  - Branding: home page `https://gliagora.com/en/`, privacy policy `https://gliagora.com/en/legal/privacy/`, terms of service `https://gliagora.com/en/legal/terms/`, authorised domain `gliagora.com`; no logo (a logo makes Google verify the brand first).
+  - Data access: the scopes `openid` and `…/auth/userinfo.email` only.
+  - Audience: keep the publishing status "Testing", with the operator's Google accounts as test users, until the M6 launch; publish it ("In production") then, once the privacy and terms pages are public (verify the domain in Google Search Console if Google asks).
+  - Clients → Create client → "Web application": authorised redirect URI `https://gliagora.com/en/sign-in/google/callback/`, no JavaScript origins. This gives `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+- **ORCID** (orcid.org → sign in → Developer tools): register for the free Public API (non-commercial use): name "Gliagora", website `https://gliagora.com`, a short description, redirect URI `https://gliagora.com/en/sign-in/orcid/callback/`. This gives `ORCID_CLIENT_ID` (`APP-…`) and `ORCID_CLIENT_SECRET`; the site asks for the `openid` scope itself. The first ORCID sign-in after step 3 (the operator's, behind the site-wide password) is a gate: it works only if ORCID returns the nonce and accepts the token request without PKCE. Otherwise the app's log names `OAUTH_JWT_CLAIM_COMPARISON_FAILED` or the token error, and ORCID cannot be used until that changes (PLAN §20, pre-launch checklist).
+
+Then switch sign-in on, only with the operator's go-ahead, in this order:
 
 1. **Copy the deploy files first.** Caddy must remove the query strings of the sign-in, account and data-request addresses from both of its logs (one-time links, Google's and ORCID's answers, where sign-in leads) before any sign-in key or `SMTP_HOST` is set. Backups must leave out sessions and email links, and a restore must keep the deletion log and the data requests (step 7). From your computer, in the repository:
 
