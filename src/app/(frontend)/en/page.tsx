@@ -1,32 +1,44 @@
 import type { Metadata } from 'next'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { setRequestLocale } from 'next-intl/server'
 
+import { HomeDigest } from '@/components/home/HomeDigest'
+import { HomeFigures } from '@/components/home/HomeFigures'
+import { HomeHero } from '@/components/home/HomeHero'
+import { HomeLists } from '@/components/home/HomeLists'
+import { HomeNextLab } from '@/components/home/HomeNextLab'
+import { HomeWindows } from '@/components/home/HomeWindows'
 import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/JsonLd'
-import { CONTACT_EMAIL } from '@/lib/site'
+import { errorSummary } from '@/lib/errors'
+import { homeData } from '@/lib/home'
+import { requestTime } from '@/lib/records'
 
-// Coming-soon page (M0), until the home page of M6. English only (PLAN §12). Static HTML and CSS.
-// The logo is in the header; the H1 is the tagline, as on the future home page (PLAN §9.1).
+// The home page (PLAN §3.2 "Home", §9.1, §9.2; M6). English only (PLAN §12). The figures and lists
+// come from the database, kept for up to 10 minutes (src/lib/home.ts); if the database cannot be
+// read, the page still has its hero, its ways in and the digest, without them.
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = { alternates: { canonical: '/en/' } }
 
-export default async function ComingSoonPage() {
+export default async function HomePage() {
   setRequestLocale('en')
-  const t = await getTranslations({ locale: 'en' })
+  const now = requestTime()
+  const data = await homeData(now).catch((error: unknown) => {
+    // Class and code only: a failed query's message can quote its parameters.
+    console.error('Home page data failed:', errorSummary(error))
+    return null
+  })
 
   return (
-    <main id="main" className="page-frame grid flex-1 content-center gap-8 py-16">
+    <main id="main" className="home flex-1">
       <OrganizationJsonLd />
       <WebSiteJsonLd />
-      {/* 9.3em is 14ch of Commissioner Bold: ch is the width of "0" in the font in use, so a width
-          in ch re-wrapped the heading when the web font replaced its fallback. */}
-      <h1 className="max-w-[9.3em] text-hero leading-[1.02]">{t('brand.tagline')}</h1>
-      <div className="grid max-w-measure gap-4 text-card">
-        <p>{t('home.comingSoon')}</p>
-        <p>
-          {t.rich('home.writeToUs', {
-            email: (chunks) => <a href={`mailto:${CONTACT_EMAIL}`}>{chunks}</a>,
-          })}
-        </p>
-      </div>
+      <HomeHero data={data} />
+      {data && <HomeFigures data={data} />}
+      <HomeDigest variant="short" />
+      {data && <HomeLists data={data} now={now} />}
+      {data && <HomeNextLab data={data} />}
+      {data && <HomeWindows data={data} />}
+      <HomeDigest variant="full" />
     </main>
   )
 }

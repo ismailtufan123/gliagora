@@ -35,8 +35,52 @@
     }
   },
   "home": {
-    "comingSoon": "Yakında: sinirbilim alanındaki pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları özenle seçip bir araya getiren, İngilizce öncelikli bir merkez.",
-    "writeToUs": "Bize <email>hello@gliagora.com</email> adresinden ulaşabilirsiniz."
+    "subline": "Sinirbilimin her alt alanından özenle seçilmiş pozisyonlar; her biri işverenin kendi ilanında kontrol edilir.",
+    "findPositions": "Pozisyon bulun",
+    "exploreMap": "Haritayı keşfedin",
+    "windowsLabel": "Pencereler",
+    "figures": {
+      "title": "Bugün Gliagora",
+      "open": "{count, plural, one {<n>#</n> açık pozisyon} other {<n>#</n> açık pozisyon}}",
+      "openNote": "Her biri orijinal ilana bağlanır",
+      "deadlines": "{count, plural, one {bu ay <n>#</n> son başvuru} other {bu ay <n>#</n> son başvuru}}",
+      "deadlinesNote": "Bunu aksiyon potansiyeliniz sayın",
+      "institutions": "{count, plural, one {<n>#</n> kurum} other {<n>#</n> kurum}}",
+      "institutionsNote": "Her biri ağda bir düğüm",
+      "countries": "{count, plural, one {<n>#</n> ülke} other {<n>#</n> ülke}}",
+      "countriesNote": "Ve sayı artıyor"
+    },
+    "latest": {
+      "title": "Son eklenen pozisyonlar",
+      "all": "Tüm pozisyonlar, en yenisi önce",
+      "empty": "Yeni pozisyonlar yayımlanır yayımlanmaz burada görünür."
+    },
+    "deadlines": {
+      "title": "Yaklaşan son başvuru tarihleri",
+      "all": "Tüm pozisyonlar, son başvuru tarihine göre",
+      "empty": "Şu anda son başvuru tarihi yaklaşan bir pozisyon yok."
+    },
+    "nextLab": {
+      "title": "Bir sonraki laboratuvarınız nerede?",
+      "text": "Dünyadan bir ülkeye, bir kuruma ve onun açık pozisyonlarına yakınlaşın.",
+      "link": "Haritayı keşfedin",
+      "countries": "Ülkelere göre açık pozisyonlar",
+      "noCountries": "Şu anda açık pozisyonu olan bir ülke yok.",
+      "country": "{name} ({count})",
+      "more": "{count, plural, one {ve haritada # ülke daha} other {ve haritada # ülke daha}}"
+    },
+    "windows": {
+      "title": "Burada neler bulacaksınız",
+      "jobsText": "Yüksek lisans ve doktora yerleri, doktora sonrası, araştırma kadroları, öğretim üyeliği ve sektör pozisyonları; her biri işverenin kendi ilanına bağlanır.",
+      "jobsAll": "Tüm pozisyonlar",
+      "type": "{label} ({count})"
+    },
+    "digest": {
+      "title": "Glia Notes, aylık bülten",
+      "text": "Yeni pozisyonlar ve yaklaşan son başvuru tarihleri, ayda bir e-posta kutunuzda.",
+      "short": "Glia Notes: yeni pozisyonlar ve son başvuru tarihleri, ayda bir.",
+      "button": "Aylık bülteni alın"
+    }
   },
   "notFound": {
     "title": "Sayfa bulunamadı",

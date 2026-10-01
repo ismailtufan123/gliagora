@@ -15,6 +15,8 @@ export type JobRowOptions = {
   showInstitution?: boolean
   /** Leave the tags out, for short lists next to other content. */
   compact?: boolean
+  /** Leave the original posting's link out, for short lists that lead to the job pages. */
+  brief?: boolean
 }
 
 // A job in a list (PLAN §3.2 "Job card", §7.5 "Job row", §9.3): the title linking to the job
@@ -28,6 +30,7 @@ export async function JobRow({
   headingLevel,
   showInstitution = true,
   compact = false,
+  brief = false,
 }: JobRowOptions & { job: JobCard; now: Date; locale: Locale }) {
   const t = await getTranslations({ locale, namespace: 'jobs' })
   const Heading = `h${headingLevel}` as const
@@ -87,7 +90,7 @@ export async function JobRow({
           )}
         </ul>
       )}
-      {job.originalUrl && deadline?.open !== false && (
+      {!brief && job.originalUrl && deadline?.open !== false && (
         <OriginalPostingLink
           href={job.originalUrl}
           locale={locale}

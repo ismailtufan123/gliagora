@@ -114,6 +114,12 @@ jobs:
           DATABASE_URL: postgres://gliagora:smoke-test-only@localhost:5432/gliagora
           PAYLOAD_SECRET: test-data-only
           E2E_EDITOR_PASSWORD: e2e-test-only
+      # The app keeps the home page's figures for up to 10 minutes (src/lib/home.ts), and the smoke
+      # test read them from the empty database: start it again so the tests see the test data.
+      - name: Restart the app with the test data
+        run: |
+          docker restart app
+          for i in $(seq 1 60); do curl -fsS http://localhost:3000/health/ && break; sleep 2; done
       # Tests against a real PostgreSQL (pnpm test:db), on scratch databases dropped afterwards:
       # search (src/lib/search/search.db.test.ts, owned by a throwaway role that is not a superuser,
       # as on the server) and the scheduled tasks (tests/integration/, M4.7, on a migrated scratch

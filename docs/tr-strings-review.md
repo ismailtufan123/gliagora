@@ -2,7 +2,7 @@
 
 Every text of the Gliagora interface in Turkish, next to its English original and where it appears, so that a native speaker can review them all in one pass (PLAN §12, D40). Until then the Turkish texts are drafts.
 
-Updated 2026-10-01: 451 strings in 18 areas, 74 of them shown on the Turkish site now.
+Updated 2026-10-01: 483 strings in 18 areas, 74 of them shown on the Turkish site now.
 
 This file is generated from `messages/en.json` and `messages/tr.json` by `pnpm tr:review`; do not edit it by hand. A test fails when it no longer matches the messages.
 
@@ -30,7 +30,7 @@ The rows of the table are grouped by these areas, in this order.
 - **2. Footer**: 11 strings, shown on the Turkish site now: partly (8 of 11). On every page, so also on the Turkish pages. The social media links stay hidden on every page until the addresses of the profiles are known (D31).
 - **3. Browser tab titles and link previews**: 4 strings, shown on the Turkish site now: partly (2 of 4). The title pattern and the site name are used on the Turkish pages. The home page title and the general description are not: every Turkish page has a title and a description of its own, and the home page exists only in English.
 - **4. Legal and contact pages**: 20 strings, shown on the Turkish site now: partly (13 of 20). The Turkish contact page and the two Turkish legal texts show their own titles and descriptions, and every Turkish page shows the titles of all legal pages in its footer. The descriptions of the English legal pages and of the About page are not yet shown: those pages exist only in English. The texts of the pages themselves are reviewed separately (see the top of this file).
-- **5. Home page**: 3 strings, shown on the Turkish site now: not yet. The home page is a coming-soon page in English only (/en/); there is no Turkish home page yet.
+- **5. Home page**: 35 strings, shown on the Turkish site now: not yet. The home page (M6) is in English only (/en/); there is no Turkish home page yet.
 - **6. Pages being built**: 5 strings, shown on the Turkish site now: not yet. These stand-in pages for the sections that are not built yet exist only in English (/en/events/, /en/funding/, /en/papers/, /en/news/, /en/resources/, /en/map/, /en/learn/, /en/learn/bench-to-bedside/, /en/newsletter/).
 - **7. Error pages**: 7 strings, shown on the Turkish site now: not yet. Always in English. The not-found page answers every unknown address, also under /tr/; the removed page and the short answer while the database is unreachable are in English too.
 - **8. Jobs list**: 68 strings, shown on the Turkish site now: not yet. The jobs list exists only in English (/en/jobs/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
@@ -45,7 +45,7 @@ The rows of the table are grouped by these areas, in this order.
 - **17. Report a problem**: 57 strings, shown on the Turkish site now: not yet. The form exists only in English (/en/report/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
 - **18. Automatic emails**: 26 strings, shown on the Turkish site now: not yet. Each email goes out in the language of the form the person used, and both forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).
 
-Total: 451 strings, 74 of them shown on the Turkish site now.
+Total: 483 strings, 74 of them shown on the Turkish site now.
 
 ## Strings
 
@@ -139,8 +139,40 @@ Total: 451 strings, 74 of them shown on the Turkish site now.
 | 4. Legal and contact pages | `pages.about.title` | About Gliagora | Gliagora hakkında | About page (/en/about/) - heading and browser tab | not yet |
 | 4. Legal and contact pages | `pages.about.description` | Why Gliagora exists, where its name comes from, how entries are chosen and checked, and who runs it. | Gliagora'nın neden var olduğu, adının nereden geldiği, içeriklerin nasıl seçilip doğrulandığı ve siteyi kimin yürüttüğü. | About page (/en/about/) - description in search results and link previews | not yet |
 | 5. Home page | `brand.tagline` | Where neuroscience meets | Sinirbilimin buluştuğu yer | Home page (/en/) - main heading | not yet |
-| 5. Home page | `home.comingSoon` | Coming soon: a curated, English-first hub for neuroscience positions, events, funding, papers, news and resources. | Yakında: sinirbilim alanındaki pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları özenle seçip bir araya getiren, İngilizce öncelikli bir merkez. | Home page (/en/) - text under the heading | not yet |
-| 5. Home page | `home.writeToUs` | Write to us at `<email>`hello@gliagora.com`</email>`. | Bize `<email>`hello@gliagora.com`</email>` adresinden ulaşabilirsiniz. | Home page (/en/) - contact line under the text | not yet |
+| 5. Home page | `home.subline` | Curated neuroscience positions from every subfield, each checked against the employer’s own posting. | Sinirbilimin her alt alanından özenle seçilmiş pozisyonlar; her biri işverenin kendi ilanında kontrol edilir. | Home page - text under the heading | not yet |
+| 5. Home page | `home.findPositions` | Find positions | Pozisyon bulun | Home page - main button under the heading | not yet |
+| 5. Home page | `home.exploreMap` | Explore the map | Haritayı keşfedin | Home page - link next to the main button | not yet |
+| 5. Home page | `home.windowsLabel` | The windows | Pencereler | Home page - name of the list of links around the brain picture (read by screen readers) | not yet |
+| 5. Home page | `home.figures.title` | Gliagora today | Bugün Gliagora | Home page - heading of the figures band (read by screen readers) | not yet |
+| 5. Home page | `home.figures.open` | `{count, plural, one {<n>#</n> open position} other {<n>#</n> open positions}}` | `{count, plural, one {<n>#</n> açık pozisyon} other {<n>#</n> açık pozisyon}}` | Home page - figures band: number of open positions | not yet |
+| 5. Home page | `home.figures.openNote` | Each links to the original posting | Her biri orijinal ilana bağlanır | Home page - figures band: line under the open positions | not yet |
+| 5. Home page | `home.figures.deadlines` | `{count, plural, one {<n>#</n> deadline this month} other {<n>#</n> deadlines this month}}` | `{count, plural, one {bu ay <n>#</n> son başvuru} other {bu ay <n>#</n> son başvuru}}` | Home page - figures band: deadlines this month | not yet |
+| 5. Home page | `home.figures.deadlinesNote` | Consider this your action potential | Bunu aksiyon potansiyeliniz sayın | Home page - figures band: line under the deadlines (a pun on "action potential") | not yet |
+| 5. Home page | `home.figures.institutions` | `{count, plural, one {<n>#</n> institution} other {<n>#</n> institutions}}` | `{count, plural, one {<n>#</n> kurum} other {<n>#</n> kurum}}` | Home page - figures band: institutions with open positions | not yet |
+| 5. Home page | `home.figures.institutionsNote` | Every one a node in the network | Her biri ağda bir düğüm | Home page - figures band: line under the institutions | not yet |
+| 5. Home page | `home.figures.countries` | `{count, plural, one {<n>#</n> country} other {<n>#</n> countries}}` | `{count, plural, one {<n>#</n> ülke} other {<n>#</n> ülke}}` | Home page - figures band: countries with open positions | not yet |
+| 5. Home page | `home.figures.countriesNote` | And counting | Ve sayı artıyor | Home page - figures band: line under the countries | not yet |
+| 5. Home page | `home.latest.title` | Latest positions | Son eklenen pozisyonlar | Home page - heading of the newest positions | not yet |
+| 5. Home page | `home.latest.all` | All positions, newest first | Tüm pozisyonlar, en yenisi önce | Home page - link under the newest positions | not yet |
+| 5. Home page | `home.latest.empty` | New positions appear here as soon as they are published. | Yeni pozisyonlar yayımlanır yayımlanmaz burada görünür. | Home page - text when there are no positions yet | not yet |
+| 5. Home page | `home.deadlines.title` | Deadlines coming up | Yaklaşan son başvuru tarihleri | Home page - heading of the coming deadlines | not yet |
+| 5. Home page | `home.deadlines.all` | All positions by deadline | Tüm pozisyonlar, son başvuru tarihine göre | Home page - link under the coming deadlines | not yet |
+| 5. Home page | `home.deadlines.empty` | No position has a deadline coming up just now. | Şu anda son başvuru tarihi yaklaşan bir pozisyon yok. | Home page - text when no deadline is coming up | not yet |
+| 5. Home page | `home.nextLab.title` | Where is your next lab? | Bir sonraki laboratuvarınız nerede? | Home page - heading of the map section | not yet |
+| 5. Home page | `home.nextLab.text` | Zoom from the world to a country, an institution and its open positions. | Dünyadan bir ülkeye, bir kuruma ve onun açık pozisyonlarına yakınlaşın. | Home page - text of the map section | not yet |
+| 5. Home page | `home.nextLab.link` | Explore the map | Haritayı keşfedin | Home page - button to the map | not yet |
+| 5. Home page | `home.nextLab.countries` | Open positions by country | Ülkelere göre açık pozisyonlar | Home page - heading of the list of countries | not yet |
+| 5. Home page | `home.nextLab.noCountries` | No country has open positions just now. | Şu anda açık pozisyonu olan bir ülke yok. | Home page - text when no country has open positions | not yet |
+| 5. Home page | `home.nextLab.country` | `{name}` (`{count}`) | `{name}` (`{count}`) | Home page - a country with its number of positions | not yet |
+| 5. Home page | `home.nextLab.more` | `{count, plural, one {and # more country on the map} other {and # more countries on the map}}` | `{count, plural, one {ve haritada # ülke daha} other {ve haritada # ülke daha}}` | Home page - link under the list of countries | not yet |
+| 5. Home page | `home.windows.title` | What you will find here | Burada neler bulacaksınız | Home page - heading of the sections overview | not yet |
+| 5. Home page | `home.windows.jobsText` | MSc and PhD places, postdocs, research staff, faculty and industry roles, each linked to the employer’s own posting. | Yüksek lisans ve doktora yerleri, doktora sonrası, araştırma kadroları, öğretim üyeliği ve sektör pozisyonları; her biri işverenin kendi ilanına bağlanır. | Home page - sections overview: description of the positions | not yet |
+| 5. Home page | `home.windows.jobsAll` | All positions | Tüm pozisyonlar | Home page - sections overview: link to all positions | not yet |
+| 5. Home page | `home.windows.type` | `{label}` (`{count}`) | `{label}` (`{count}`) | Home page - sections overview: a position type with its number | not yet |
+| 5. Home page | `home.digest.title` | Glia Notes, the monthly digest | Glia Notes, aylık bülten | Home page - heading of the newsletter box at the bottom | not yet |
+| 5. Home page | `home.digest.text` | New positions and the deadlines ahead, once a month in your inbox. | Yeni pozisyonlar ve yaklaşan son başvuru tarihleri, ayda bir e-posta kutunuzda. | Home page - text of the newsletter box | not yet |
+| 5. Home page | `home.digest.short` | Glia Notes: new positions and deadlines, once a month. | Glia Notes: yeni pozisyonlar ve son başvuru tarihleri, ayda bir. | Home page - newsletter line under the figures | not yet |
+| 5. Home page | `home.digest.button` | Get the monthly digest | Aylık bülteni alın | Home page - newsletter button and link | not yet |
 | 6. Pages being built | `placeholder.text` | This part of Gliagora is being built and will open here soon. | Gliagora'nın bu bölümü hazırlanıyor ve yakında burada açılacak. | Pages being built - text under the heading | not yet |
 | 6. Pages being built | `placeholder.contact` | Questions or suggestions? Write to us at `<email>`hello@gliagora.com`</email>`. | Soru ve önerileriniz için bize `<email>`hello@gliagora.com`</email>` adresinden ulaşabilirsiniz. | Pages being built - contact line | not yet |
 | 6. Pages being built | `placeholder.home` | Go to the home page | Ana sayfaya git | Pages being built - link to the home page | not yet |
