@@ -2,7 +2,9 @@ import { isCalendarDay } from '@/lib/jobs/deadline'
 import { paths } from '@/lib/site'
 
 import {
+  type FilterConfig,
   type FilterState,
+  activeFilters,
   choice,
   emptyFilters,
   filtersHref,
@@ -49,30 +51,42 @@ export function invalidDeadlineRange(query: URLSearchParams): { from: string; to
   return { from: isCalendarDay(from) ? from : '', to: isCalendarDay(to) ? to : '' }
 }
 
-export const JOB_FILTERS = {
+const JOB_PARAMS = {
+  subfield: list(readSlug),
+  method: list(readSlug),
+  model: list(readSlug),
+  type: list(readSlug),
+  stage: list(readSlug),
+  country: list(readCountry),
+  region: list(readRegion),
+  deadline: one((raw, query) =>
+    raw === DEADLINE_RANGE
+      ? deadlineRange(query.get(DEADLINE_FROM), query.get(DEADLINE_TO))
+      : readDeadline(raw),
+  ),
+  institution: list(readInstitution),
+  q: text(QUERY_MAX_LENGTH),
+  // D35: a signed-in member's preferred subfields apply to the bare list; `prefs=off` shows all
+  // positions instead. Kept only while no filter is set (`normalise` below): with a filter, the
+  // preferences do not apply anyway, so the address has one spelling.
+  prefs: choice(['on', 'off'], 'on'),
+  sort: choice(['deadline', 'newest'], 'deadline'),
+  // `map` is kept for the map view (M5); until then it shows the list.
+  view: choice(['list', 'map'], 'list'),
+  page: page(),
+}
+
+export const JOB_FILTERS: FilterConfig<typeof JOB_PARAMS> = {
   path: paths.window('jobs'),
-  params: {
-    subfield: list(readSlug),
-    method: list(readSlug),
-    model: list(readSlug),
-    type: list(readSlug),
-    stage: list(readSlug),
-    country: list(readCountry),
-    region: list(readRegion),
-    deadline: one((raw, query) =>
-      raw === DEADLINE_RANGE
-        ? deadlineRange(query.get(DEADLINE_FROM), query.get(DEADLINE_TO))
-        : readDeadline(raw),
-    ),
-    institution: list(readInstitution),
-    q: text(QUERY_MAX_LENGTH),
-    sort: choice(['deadline', 'newest'], 'deadline'),
-    // `map` is kept for the map view (M5); until then it shows the list.
-    view: choice(['list', 'map'], 'list'),
-    page: page(),
-  },
+  params: JOB_PARAMS,
   // Not redirected: the page shows the entered days with the error.
   shownAsSent: (query: URLSearchParams) => invalidDeadlineRange(query) !== null,
+  // `prefs=off&type=phd` is `type=phd`: the preferences apply only to the list without filters.
+  normalise(state) {
+    return state.prefs !== 'on' && activeFilters({ path: '', params: JOB_PARAMS }, state).length > 0
+      ? { ...state, prefs: 'on' }
+      : state
+  },
 }
 
 export type JobFilters = FilterState<typeof JOB_FILTERS.params>

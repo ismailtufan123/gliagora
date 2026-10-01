@@ -28,7 +28,8 @@ import {
 
 const ATTEMPTS = 2
 
-const identityOf = (member: MemberRecord | null): MemberIdentity | null =>
+/** A member as `resolve()` needs it. */
+export const identityOf = (member: MemberRecord | null): MemberIdentity | null =>
   member && {
     id: member.id,
     email: member.email,
@@ -50,7 +51,7 @@ async function holdersOf(db: MemberDb, incoming: ProviderIncoming): Promise<Hold
 /** A conflict that remained after deciding again: nothing changed. */
 const conflict = () => new MemberStoreError('conflict', 'members')
 
-/** The refusals Google and ORCID can meet (the others are about email links, from PR 5 on). */
+/** The refusals Google and ORCID can meet (the others are about adding an address by link). */
 export type ProviderRefusal = Exclude<Refusal, 'email-taken' | 'not-token-member'>
 
 function providerRefusal(reason: Refusal): ProviderRefusal {

@@ -8,18 +8,20 @@
 // again gives every member a new session (30 days), ends their others and saves the three jobs
 // afresh, so it can run at any time. It also empties the form limits (hashed addresses, used
 // spam-check answers), so the sign-in tests of a run within the hour of the last one start afresh.
+// The member with an email address has two preferred subfields (D35), the others none.
 import config from '@payload-config'
 import { sql } from '@payloadcms/db-postgres'
 import { getPayload } from 'payload'
 
 import { LIMIT_TABLE } from '@/lib/forms/rate-limit'
-import { createMember, findMember, memberDb } from '@/lib/members/store'
+import { createMember, findMember, memberDb, setPreferredSubfields } from '@/lib/members/store'
 import { hashToken } from '@/lib/members/tokens'
 import { SESSION_DAYS } from '@/lib/retention/rules'
 
 import {
   E2E_MEMBER_EMAIL,
   E2E_MEMBER_ORCID,
+  E2E_MEMBER_SUBFIELDS,
   E2E_SAVER_EMAIL,
   type E2eMember,
   e2eMemberToken,
@@ -66,6 +68,10 @@ try {
     { kind: 'saver', saves: true, id: (await byEmail(E2E_SAVER_EMAIL)).id },
   ]
   for (const { kind, saves, id } of members) {
+    const subfields = kind === 'email' ? E2E_MEMBER_SUBFIELDS : []
+    if ((await setPreferredSubfields(db, id, [...subfields], now)) !== subfields.length) {
+      throw new Error(`The subfields ${subfields.join(', ')} are missing. Run pnpm migrate first.`)
+    }
     await db.transaction(async (tx) => {
       // The one session the tests use, with a token they can make themselves.
       await tx.execute(sql`DELETE FROM member_sessions WHERE member_id = ${id}`)
@@ -92,7 +98,7 @@ try {
   }
   await db.execute(sql`DELETE FROM ${sql.identifier(LIMIT_TABLE)}`)
   payload.logger.info(
-    `Added the test members ${E2E_MEMBER_EMAIL}, ${E2E_MEMBER_ORCID} and ${E2E_SAVER_EMAIL}, each with a new session; the two with an address have saved ${SAVED_JOBS.length} positions`,
+    `Added the test members ${E2E_MEMBER_EMAIL}, ${E2E_MEMBER_ORCID} and ${E2E_SAVER_EMAIL}, each with a new session; the two with an address have saved ${SAVED_JOBS.length} positions, and ${E2E_MEMBER_EMAIL} prefers the subfields ${E2E_MEMBER_SUBFIELDS.join(' and ')}`,
   )
   process.exit(0)
 } catch (error) {

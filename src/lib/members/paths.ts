@@ -22,8 +22,13 @@ export const MEMBER_PATHS = {
   signInConfirm: '/en/sign-in/confirm/',
   /** The POST route behind "Create account" on that page. */
   signInCreate: '/en/sign-in/create/',
-  /** The POST route of the account's settings (`intent=`): removing Google or ORCID, for now. */
+  /**
+   * The POST route of the account's settings (`intent=`): Glia Notes, preferred subfields, the
+   * display name, removing Google or ORCID.
+   */
   accountSettings: '/en/account/settings/',
+  /** After asking for a link to add an address to the account: check your inbox. */
+  emailSent: '/en/account/email/sent/',
   /** The member's saved positions (`?page=`, `?done=`, `?error=`). */
   saved: '/en/account/saved/',
   /** The POST route behind every Save button (`item`, `saved`, `back`). */
@@ -42,6 +47,13 @@ export const providerStartPath = (provider: 'google' | 'orcid') => `/en/sign-in/
  */
 export const providerCallbackPath = (provider: 'google' | 'orcid') =>
   `/en/sign-in/${provider}/callback/`
+
+/** The account page's sections that other pages link to (`/en/account/#subfields`). */
+export const ACCOUNT_SECTIONS = {
+  digest: 'digest',
+  subfields: 'subfields',
+  email: 'email',
+} as const
 
 /** The element an outcome message is (and its redirects' fragment): the browser focuses it. */
 export const OUTCOME_ID = 'outcome'

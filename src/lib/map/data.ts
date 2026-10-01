@@ -69,10 +69,11 @@ export type MapTexts = {
 /**
  * The filters without the list's sort and page: the key of an answer. The view stays, because the
  * panel's link to the list keeps it (the world map links to the list, the jobs list's map view to
- * itself).
+ * itself). Without `prefs` too: the map shows the filters it is given, and a member's preferred
+ * subfields (D35) arrive as the subfield filter they stand for.
  */
 export const mapQuery = (filters: JobFilters) =>
-  serializeFilters(JOB_FILTERS, { ...filters, sort: 'deadline', page: 1 }).toString()
+  serializeFilters(JOB_FILTERS, { ...filters, prefs: 'on', sort: 'deadline', page: 1 }).toString()
 
 /** About 1 m: enough for a pin, and the answer stays small. */
 const round = (value: number) => Math.round(value * 1e5) / 1e5

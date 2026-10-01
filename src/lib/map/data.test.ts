@@ -137,6 +137,12 @@ describe('mapQuery', () => {
     expect(mapQuery(emptyFilters(JOB_FILTERS))).toBe('')
   })
 
+  it('leaves out prefs: the map shows the filters it is given (D35)', () => {
+    const all = parseJobFilters(new URLSearchParams('prefs=off&view=map'))
+    expect(mapQuery(all)).toBe('view=map')
+    expect(mapQuery({ ...all, subfield: ['glia'] })).toBe('subfield=glia&view=map')
+  })
+
   it('links the panel to the list in the same view', () => {
     const filters = parseJobFilters(new URLSearchParams('type=phd&view=map'))
     const info = mapJson({ institutions: [institution()], unmapped: 0 }, filters, NOW, 'en', texts)

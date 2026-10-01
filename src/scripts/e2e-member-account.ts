@@ -16,6 +16,12 @@ export const E2E_MEMBER_ORCID = '9999-0000-0000-0027'
 export type E2eMember = 'email' | 'orcid' | 'saver'
 
 /**
+ * The preferred subfields of the member with an email address (D35), by slug: the jobs list
+ * without filters shows their positions to it. The open fixed job is in the first.
+ */
+export const E2E_MEMBER_SUBFIELDS = ['glia', 'cognitive'] as const
+
+/**
  * The session cookie's value for a test member, made from E2E_MEMBER_TOKEN (any text, the same for
  * `pnpm e2e:member` and the tests): 32 bytes written base64url, the form of every session token.
  */

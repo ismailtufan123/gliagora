@@ -10,6 +10,7 @@ import {
   newAddress,
   newGoogleSub,
   ownContext,
+  providerMember,
   signInAs,
 } from './member'
 
@@ -229,6 +230,49 @@ test.describe('signed out', () => {
     await page.getByRole('button', { name: 'Create account' }).click()
     await expect(page).toHaveURL(endsWith(`${jobPath(OPEN)}#save`))
     await expect(pageSave(page)).toHaveAttribute('aria-pressed', 'true')
+    await context.close()
+  })
+
+  test('from the list without filters: back at the row in that list, not in a default (D35)', async ({
+    browser,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'the same on every device')
+    // A member who prefers Glial biology, signed out again (when their session has ended).
+    const { context, page, sub, email } = await providerMember(browser, 'google')
+    await page
+      .locator('#subfields')
+      .getByRole('checkbox', { name: 'Glial biology', exact: true })
+      .check()
+    await page.getByRole('button', { name: 'Save preferred subfields' }).click()
+    await expect(page).toHaveURL(endsWith('/en/account/?done=subfields-saved#outcome'))
+    await context.clearCookies()
+    const rowIds = () =>
+      page.locator('#job-results .job-list > li').evaluateAll((items) => items.map((i) => i.id))
+    // The rows their default would show (the first page of the same filter), and the first row of
+    // the list without filters that is not among them.
+    await page.goto('/en/jobs/?subfield=glia')
+    const preferred = await rowIds()
+    await page.goto('/en/jobs/')
+    const id = (await rowIds()).find((rowId) => !preferred.includes(rowId))
+    expect(id, 'a row the default does not show').toBeTruthy()
+    const job = { shortId: id!.slice('job-'.length) }
+
+    // Its Save link returns to the list that was shown: all positions, which `prefs=off` keeps.
+    const link = row(page, job).getByRole('link', { name: /^Save/ })
+    await expect(link).toHaveAttribute(
+      'href',
+      `/en/sign-in/?next=${encodeURIComponent('/en/jobs/?prefs=off')}&save=job%3A${job.shortId}`,
+    )
+    await link.click()
+    await page.getByRole('link', { name: 'Continue with Google' }).click()
+    await answerAtProvider(page, 'google', { fields: { sub, email: email!, hd: 'example.org' } })
+    await expect(page).toHaveURL(endsWith(`/en/jobs/?prefs=off#${id}`))
+    await expect(page.locator('[data-preferred]')).toHaveCount(0)
+    await expect(row(page, job).locator('form[data-save] button')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
     await context.close()
   })
 

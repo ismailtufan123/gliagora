@@ -403,6 +403,12 @@ export const AREAS: Area[] = [
       'jobs.list.suggest': 'Jobs list, no position matches - button to Suggest a listing',
       'jobs.list.pastEnd': 'Jobs list - note on a page number past the end of the list',
       'jobs.list.firstPage': 'Jobs list - link after that note',
+      'jobs.list.preferred.text':
+        "Jobs list opened without filters by a member with preferred subfields - notice above the filter chips, naming the member's subfields",
+      'jobs.list.preferred.all':
+        'Jobs list, with the preferred subfields applied - first link in that notice, to all positions',
+      'jobs.list.preferred.change':
+        'Jobs list, with the preferred subfields applied - second link in that notice, to the account page',
       'pagination.label': 'Jobs list - page links under the results - name read by screen readers',
       'pagination.previous': 'Jobs list - page links - link to the previous page',
       'pagination.next': 'Jobs list - page links - link to the next page',
@@ -871,9 +877,27 @@ export const AREAS: Area[] = [
       'signIn.link.expiredTitle':
         'The page a sign-in link opens, when the link has expired or was used - heading',
       'signIn.link.expired':
-        'The page a sign-in link opens, when the link has expired or was used - paragraph',
+        'The page a sign-in link (or a link to add an address) opens, when the link has expired or was used - paragraph',
       'signIn.link.again':
         'The page a sign-in link opens, when the link has expired or was used - button to the sign-in page',
+      'signIn.link.verifyTitle':
+        'The page an emailed link to add an address opens (/en/sign-in/link/), for the member who asked for it - heading',
+      'signIn.link.verify':
+        'The page a link to add an address opens, for the member who asked for it - first paragraph, with the new address',
+      'signIn.link.verifyReplaces':
+        'The page a link to add an address opens, when the account already has an address - paragraph naming the address it replaces',
+      'signIn.link.verifyOthers':
+        'The page a link to add an address opens, for the member who asked for it - paragraph above the button',
+      'signIn.link.verifyButton':
+        'The page a link to add an address opens, for the member who asked for it - button',
+      'signIn.link.verifyOtherTitle':
+        'The page a link to add an address opens, for anyone else (signed out, or signed in to another account) - heading',
+      'signIn.link.verifyOther':
+        'The page a link to add an address opens, for anyone else - paragraph under the heading',
+      'signIn.link.verifyOtherSignedIn':
+        'The page a link to add an address opens, when signed in to another account - paragraph above the Sign out button',
+      'signIn.link.signOut':
+        'The page a link to add an address opens, when signed in to another account - Sign out button',
       'signIn.confirm.metaTitle':
         'Create your account (/en/sign-in/confirm/, after signing in with Google or ORCID for the first time) - browser tab',
       'signIn.confirm.title': 'Create your account - heading',
@@ -926,6 +950,81 @@ export const AREAS: Area[] = [
         'Account, and the sign-in page when signed in - who is signed in, for an account with only Google',
       'account.displayName':
         'Account - line under who is signed in, when the account has a display name (the name from the ORCID record, if the member chose it)',
+      'account.digest.heading': 'Account - heading of the Glia Notes section',
+      'account.digest.text': 'Account - Glia Notes section - first paragraph',
+      'account.digest.needsEmail':
+        'Account - Glia Notes section, for an account without an email address - paragraph (the link leads to the email address section)',
+      'account.digest.needsEmailLater':
+        'Account - Glia Notes section, for an account without an email address, while the add-or-change form is not available (no mail server yet) - paragraph, without a link',
+      'account.digest.on':
+        'Account - Glia Notes section, when the member has chosen Glia Notes - paragraph with the address',
+      'account.digest.stop':
+        'Account - Glia Notes section, when the member has chosen Glia Notes - button that stops it',
+      'account.digest.off':
+        'Account - Glia Notes section, when Glia Notes is off - paragraph with the address it would go to',
+      'account.digest.consent':
+        'Account - Glia Notes section - label of the consent checkbox (never ticked in advance); the consent text quotes it',
+      'account.digest.consentHint':
+        'Account - Glia Notes section - hint under that checkbox (the link leads to the consent text)',
+      'account.digest.start': 'Account - Glia Notes section - button that switches Glia Notes on',
+      'account.subfields.heading': 'Account - heading of the preferred subfields section',
+      'account.subfields.text':
+        'Account - preferred subfields section - paragraph under the heading',
+      'account.subfields.legend':
+        'Account - preferred subfields section - name of the group of subfield checkboxes',
+      'account.subfields.hint':
+        'Account - preferred subfields section - hint above the checkboxes ({max} is 12)',
+      'account.subfields.save': 'Account - preferred subfields section - save button',
+      'account.email.heading': 'Account - heading of the email address section',
+      'account.email.current':
+        "Account - email address section - the account's address, when it has one",
+      'account.email.none': 'Account - email address section - when the account has no address',
+      'account.email.addHeading':
+        'Account - email address section, for an account without an address - heading of the form',
+      'account.email.changeHeading':
+        'Account - email address section, for an account with an address - heading of the form',
+      'account.email.label':
+        'Account - add-an-address form - label of the email field, for an account without an address',
+      'account.email.newLabel':
+        'Account - add-an-address form - label of the email field, for an account with an address',
+      'account.email.hint': 'Account - add-an-address form - hint under that label',
+      'account.email.noscript':
+        'Account - add-or-change form - note above the form when JavaScript is off (for an account with or without an address)',
+      'account.email.spamNote':
+        'Account - add-or-change form - note above the send button (the count of links is kept per account)',
+      'account.email.submit': 'Account - add-an-address form - send button',
+      'account.email.sending':
+        'Account - add-an-address form - the send button while the form is sent',
+      'account.email.unavailable':
+        'Account - email address section - shown instead of the add-or-change form while emails cannot be sent',
+      'account.email.errors.title':
+        'Add-an-address form, after sending with problems - heading of the list of problems at the top of the form',
+      'account.email.errors.prefix':
+        'Add-an-address form, after sending with problems - word before the message at the field, read by screen readers',
+      'account.email.errors.emailMissing':
+        'Add-or-change form - error at the email field, when it is empty',
+      'account.email.errors.emailInvalid': 'Add-an-address form - error at the email field',
+      'account.email.errors.emailTooLong': 'Add-an-address form - error at the email field',
+      'account.email.errors.emailSame':
+        "Add-an-address form - error at the email field, when it is the account's own address",
+      'account.email.errors.needsJs':
+        'Add-an-address form - error at the top of the form, when the spam check did not run',
+      'account.email.errors.spamCheck':
+        'Add-an-address form - error at the top of the form, when the spam check failed',
+      'account.email.errors.rateLimited':
+        'Add-an-address form - error at the top of the form, after too many links asked for from one connection (10 an hour), by one account (3 an hour) or for one email address (3 an hour, 5 a day)',
+      'account.email.errors.unavailable':
+        'Add-an-address form - error at the top of the form, when the email could not be sent or the form is switched off',
+      'account.email.errors.failed':
+        'Add-an-address form - error at the top of the form, when something went wrong',
+      'account.email.sent.metaTitle':
+        'Confirmation link sent (/en/account/email/sent/) - browser tab',
+      'account.email.sent.title': 'Confirmation link sent - heading',
+      'account.email.sent.text': 'Confirmation link sent - first paragraph',
+      'account.email.sent.validity': 'Confirmation link sent - first point of the list',
+      'account.email.sent.sameBrowser': 'Confirmation link sent - second point of the list',
+      'account.email.sent.missing':
+        'Confirmation link sent - paragraph after the list (the link leads to the account page)',
       'account.methods.heading': 'Account - heading of the ways to sign in',
       'account.methods.email': 'Account - ways to sign in - the email link',
       'account.methods.google': 'Account - ways to sign in - Google',
@@ -947,6 +1046,10 @@ export const AREAS: Area[] = [
         'Account - ways to sign in - under Google or ORCID instead of the remove button, when it is the only way into the account',
       'account.methods.note':
         'Account - ways to sign in - line under the list, while Google or ORCID sign-in is on (it names the ways that are on: both, only Google or only ORCID)',
+      'account.name.heading': 'Account - heading of the display name section',
+      'account.name.label': 'Account - display name section - label of the text field',
+      'account.name.hint': 'Account - display name section - hint under that label ({max} is 80)',
+      'account.name.save': 'Account - display name section - save button',
       'account.signOut.heading': 'Account - heading of the section about signing out',
       'account.signOut.text': 'Account - paragraph about signing out everywhere',
       'account.signOut.everywhere': 'Account - Sign out everywhere button',
@@ -960,6 +1063,17 @@ export const AREAS: Area[] = [
       'outcome.done.linked-orcid': 'Account - message at the top after linking an ORCID iD',
       'outcome.done.unlinked-google': 'Account - message at the top after removing Google',
       'outcome.done.unlinked-orcid': 'Account - message at the top after removing ORCID',
+      'outcome.done.email-verified':
+        'Account - message at the top after adding or changing the email address with its emailed link',
+      'outcome.done.digest-on': 'Account - message at the top after switching Glia Notes on',
+      'outcome.done.digest-off': 'Account - message at the top after stopping Glia Notes',
+      'outcome.done.subfields-saved':
+        'Account - message at the top after saving preferred subfields',
+      'outcome.done.subfields-removed':
+        'Account - message at the top after saving with no preferred subfield ticked',
+      'outcome.done.name-saved': 'Account - message at the top after saving the display name',
+      'outcome.done.name-removed':
+        'Account - message at the top after saving an empty display name, which removes it',
       'outcome.done.othersEnded':
         'Account - second sentence of the message at the top, after linking or removing a way to sign in, when the account was signed in in other browsers too',
       'outcome.error.link-expired':
@@ -990,6 +1104,18 @@ export const AREAS: Area[] = [
         'Account - message at the top when the account already has another ORCID iD',
       'outcome.error.last-method':
         'Account - message at the top when removing the only way into the account was refused',
+      'outcome.error.email-taken':
+        'Account - message at the top when the address of a link to add an address belongs to another account',
+      'outcome.error.verify-expired':
+        'Account - message at the top when a link to add an address had expired or was used, or was asked for by another account',
+      'outcome.error.digest-consent':
+        'Account - message at the top when Get Glia Notes was pressed without ticking the consent box',
+      'outcome.error.digest-needs-email':
+        'Account - message at the top when Glia Notes was asked for by an account without an email address',
+      'outcome.error.subfields-too-many':
+        'Account - message at the top when more than 12 preferred subfields were ticked',
+      'outcome.error.name-invalid':
+        'Account - message at the top when the display name was too long or had control characters',
       'outcome.error.failed':
         'Sign-in and account pages - message at the top when something went wrong',
       'outcome.error.failedReference':
@@ -1036,7 +1162,7 @@ export const AREAS: Area[] = [
     note: 'Each email goes out in the language of the form the person used, and those forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).',
     places: {
       'emails.greeting':
-        'Every automatic email (the outcome of a suggestion, the confirmation of a report, a sign-in link) - first line',
+        'Every automatic email (the outcome of a suggestion, the confirmation of a report, a sign-in link, a link to add an address) - first line',
       'emails.suggestion.subjectPublished':
         'Email about the outcome of a suggestion, when it was published - subject',
       'emails.suggestion.subjectNotAdded':
@@ -1074,6 +1200,14 @@ export const AREAS: Area[] = [
       'emails.signIn.validity': 'Email with a sign-in link - how long the link works',
       'emails.signIn.sameBrowser': 'Email with a sign-in link - where to open the link',
       'emails.signIn.notYou': 'Email with a sign-in link - what to do if you did not ask for it',
+      'emails.verifyEmail.subject':
+        'Email with a link to add an address to an account - subject (a question: whoever reads it may have no account)',
+      'emails.verifyEmail.intro':
+        'Email with a link to add an address to an account - first paragraph, followed by the link',
+      'emails.verifyEmail.validity':
+        'Email with a link to add an address to an account - how long the link works',
+      'emails.verifyEmail.notYou':
+        'Email with a link to add an address to an account - what to do if you did not ask for it',
       'emails.automatic': 'Every automatic email - line before the signature',
       'emails.signature': 'Every automatic email - signature',
     },

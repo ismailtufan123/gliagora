@@ -40,6 +40,28 @@ export const SIGN_IN_LIMIT: LimitBucket = { name: 'signin', perWindow: 10 }
  */
 export const CREATE_ACCOUNT_LIMIT: LimitBucket = { name: 'create', perWindow: 10 }
 
+/**
+ * Adding or changing the address of an account (M4b, D49): 10 an hour per IP address, besides 3 an
+ * hour per member (`memberVerifyLimit`), the budget of the address the link goes to and the
+ * site-wide cap (`emailLimits`).
+ */
+export const VERIFY_EMAIL_LIMIT: LimitBucket = { name: 'verify', perWindow: 10 }
+
+/** Links to add an address that one member may ask for in an hour. */
+export const MEMBER_VERIFY_PER_HOUR = 3
+
+/**
+ * The member's own limit on links to add an address, keyed by the member's ID: it links the count
+ * to the account, so it is personal data (the add-or-change form's note says so), kept for 24
+ * hours like every other limit. Hashing it would change nothing: the site can recompute the hash
+ * of each of its members' IDs.
+ */
+export const memberVerifyLimit = (memberId: number): Limit => ({
+  key: `member:verify:${memberId}`,
+  perWindow: MEMBER_VERIFY_PER_HOUR,
+  windowMs: HOUR_MS,
+})
+
 export const SUGGESTIONS_PER_WINDOW = SUGGEST_LIMIT.perWindow
 export const LIMIT_WINDOW_MS = HOUR_MS
 
