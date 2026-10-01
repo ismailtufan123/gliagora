@@ -122,6 +122,14 @@ describe('withoutRecipients', () => {
     expect(errorSummary(error)).toBe('EmailNotSentError EENVELOPE 550')
   })
 
+  it('keeps the enhanced status of the reply (5.1.1: no such address), never its text', async () => {
+    const thrown = (await failing(refused())
+      .sendEmail({ to: 'x@example.org' })
+      .catch((error: unknown) => error)) as InstanceType<typeof EmailNotSentError>
+    expect(thrown.enhanced).toBe('5.1.1')
+    expect(JSON.stringify(thrown)).not.toContain('Recipient')
+  })
+
   it('keeps the code of a transport error, so a task still stops and tries again later', async () => {
     const thrown = await failing(
       Object.assign(new Error('connect ECONNREFUSED'), { code: 'ESOCKET' }),

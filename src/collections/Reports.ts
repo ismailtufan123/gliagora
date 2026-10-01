@@ -21,6 +21,8 @@ import {
 } from '@/lib/reports/status'
 import type { Report } from '@/payload-types'
 
+import { logDeletions } from './DeletionLog'
+
 type ReportData = Partial<Report>
 
 /** What Payload passes to a field's validate function, as far as these rules use it. */
@@ -128,6 +130,9 @@ export const Reports: CollectionConfig = {
     beforeOperation: [keepOutOfLists(PRIVATE_FIELDS)],
     beforeValidate: [...fixed.beforeValidate, prepare],
     beforeChange: fixed.beforeChange,
+    // A deletion an editor or a data request makes must survive a restore (src/collections/
+    // DeletionLog.ts); the retention task's deletions repeat themselves.
+    afterDelete: [logDeletions('reports')],
   },
   fields: [
     fromForm({

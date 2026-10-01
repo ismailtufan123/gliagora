@@ -1,8 +1,8 @@
 // Adds fake jobs for local development and CI (D38): pnpm fake:jobs
 // About 60 generated jobs over the test institutions, plus the fixed jobs the end-to-end tests
 // rely on (src/scripts/fake-jobs-fixed.ts), an institution added by hand and the address of one
-// retired job, then a handful of suggestions, candidates and reports for the review queue
-// (src/scripts/fake-queue-data.ts).
+// retired job, then a handful of suggestions, candidates, reports and data requests for the review
+// queue (src/scripts/fake-queue-data.ts).
 // Earlier fake data is removed first, so the script can run again at any time. Needs the test
 // institutions: pnpm ror:import tests/fixtures/ror/…-sample.zip
 import config from '@payload-config'
@@ -161,6 +161,9 @@ try {
   )
   payload.logger.info(
     `Removed ${removedQueue.reports} and added ${queue.reports} fake reports (with those the end-to-end tests sent)`,
+  )
+  payload.logger.info(
+    `Removed ${removedQueue.dataRequests} and added ${queue.dataRequests} fake data requests`,
   )
   process.exit(0)
 } catch (error) {

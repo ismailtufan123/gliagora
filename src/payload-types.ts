@@ -71,6 +71,7 @@ export interface Config {
     candidates: Candidate;
     submissions: Submission;
     reports: Report;
+    'data-requests': DataRequest;
     jobs: Job;
     'retired-listings': RetiredListing;
     terms: Term;
@@ -78,6 +79,11 @@ export interface Config {
     'country-sets': CountrySet;
     institutions: Institution;
     'form-limits': FormLimit;
+    members: Member;
+    'member-sessions': MemberSession;
+    'email-tokens': EmailToken;
+    'saved-items': SavedItem;
+    'deletion-log': DeletionLog;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
@@ -90,6 +96,7 @@ export interface Config {
     candidates: CandidatesSelect<false> | CandidatesSelect<true>;
     submissions: SubmissionsSelect<false> | SubmissionsSelect<true>;
     reports: ReportsSelect<false> | ReportsSelect<true>;
+    'data-requests': DataRequestsSelect<false> | DataRequestsSelect<true>;
     jobs: JobsSelect<false> | JobsSelect<true>;
     'retired-listings': RetiredListingsSelect<false> | RetiredListingsSelect<true>;
     terms: TermsSelect<false> | TermsSelect<true>;
@@ -97,6 +104,11 @@ export interface Config {
     'country-sets': CountrySetsSelect<false> | CountrySetsSelect<true>;
     institutions: InstitutionsSelect<false> | InstitutionsSelect<true>;
     'form-limits': FormLimitsSelect<false> | FormLimitsSelect<true>;
+    members: MembersSelect<false> | MembersSelect<true>;
+    'member-sessions': MemberSessionsSelect<false> | MemberSessionsSelect<true>;
+    'email-tokens': EmailTokensSelect<false> | EmailTokensSelect<true>;
+    'saved-items': SavedItemsSelect<false> | SavedItemsSelect<true>;
+    'deletion-log': DeletionLogSelect<false> | DeletionLogSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -1564,6 +1576,80 @@ export interface Report {
   updatedAt: string;
 }
 /**
+ * Requests about a person's own data, newest first. Requests from the form count only once the person confirms them with the link in our email ("Not confirmed yet" until then; such a record keeps only its kind, its date and a scrambled code of the address, and is deleted after 60 days). A confirmed deletion is done by the site itself and closed. Answer the other requests within 30 days of receipt, then close them with what you did. To record a request that arrived by email, create one here with the date it arrived. Requests are deleted 2 years after they are closed, by the nightly retention task; they are never deleted by hand (close a mistaken one as Not applicable).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "data-requests".
+ */
+export interface DataRequest {
+  id: number;
+  kind: 'deletion' | 'access' | 'correction' | 'objection' | 'restriction' | 'withdraw-consent' | 'other';
+  /**
+   * The address the request came from. Empty until the person confirms a request from the form.
+   */
+  email?: string | null;
+  /**
+   * Optional; not kept for deletion requests.
+   */
+  name?: string | null;
+  locale: 'en' | 'tr';
+  /**
+   * What the person wrote. Empty until a request from the form is confirmed.
+   */
+  details?: string | null;
+  /**
+   * For editors only; never shown on the site or sent to the person. Say what you checked and what you answered.
+   */
+  actionNote?: string | null;
+  /**
+   * Counts from an automatic deletion.
+   */
+  outcome?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Not confirmed yet: the person has not opened the link in our email; nothing is done until they do. New: confirmed, nobody has answered yet. In progress: you have answered the person or started. Closed: done, with what you did.
+   */
+  status: 'unconfirmed' | 'new' | 'in-progress' | 'closed';
+  /**
+   * Required to close the request.
+   */
+  action?: ('deleted-automatically' | 'answered' | 'refused' | 'not-applicable') | null;
+  source: 'form' | 'account' | 'email';
+  /**
+   * When the request arrived (for an email: when it reached the mailbox). The answer is due 30 days later.
+   */
+  receivedAt?: string | null;
+  /**
+   * 30 days after it was received, once confirmed (KVKK Art. 13).
+   */
+  respondBy?: string | null;
+  /**
+   * When the request was closed.
+   */
+  closedAt?: string | null;
+  /**
+   * A closed request is deleted 2 years after it was closed; one never confirmed, 60 days after it arrived. By the nightly retention task.
+   */
+  purgeAt?: string | null;
+  /**
+   * When the person was emailed that their data was deleted. Empty while no mail server is set up.
+   */
+  confirmationSentAt?: string | null;
+  /**
+   * A scrambled code of the address a form request was sent from; the technical administrator can work it out from an address.
+   */
+  emailHash?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Listings that were offline (answering "410 Gone") for 12 months: the rest of the record has been deleted, and only the address and ID are kept, so the address keeps answering 410 (D34). Added by the daily retention task; never changed or deleted.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1614,6 +1700,91 @@ export interface FormLimit {
   key: string;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "members".
+ */
+export interface Member {
+  id: number;
+  email?: string | null;
+  emailVerifiedAt?: string | null;
+  emailVerifiedBy?: ('link' | 'google') | null;
+  googleId?: string | null;
+  orcidId?: string | null;
+  displayName?: string | null;
+  digestOptIn?: boolean | null;
+  digestChangedAt?: string | null;
+  digestConsentVersion?: string | null;
+  subfieldPrefs?: (number | Term)[] | null;
+  lastSeenAt: string;
+  deletionWarnedAt?: string | null;
+  warningRefusedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "member-sessions".
+ */
+export interface MemberSession {
+  id: number;
+  member?: (number | null) | Member;
+  tokenHash: string;
+  expiresAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-tokens".
+ */
+export interface EmailToken {
+  id: number;
+  tokenHash: string;
+  purpose: 'sign-in' | 'verify-email' | 'data-request';
+  email: string;
+  member?: (number | null) | Member;
+  browserHash?: string | null;
+  request?: (number | null) | DataRequest;
+  next?: string | null;
+  save?: string | null;
+  locale: 'en' | 'tr';
+  requestData?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  expiresAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "saved-items".
+ */
+export interface SavedItem {
+  id: number;
+  member?: (number | null) | Member;
+  itemType: 'job';
+  job?: (number | null) | Job;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deletion-log".
+ */
+export interface DeletionLog {
+  id: number;
+  targetCollection: 'members' | 'submissions' | 'reports';
+  targetId: number;
+  action: 'delete' | 'clear-email';
+  at: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1774,6 +1945,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'reports';
         value: number | Report;
+      } | null)
+    | ({
+        relationTo: 'data-requests';
+        value: number | DataRequest;
       } | null)
     | ({
         relationTo: 'jobs';
@@ -1937,6 +2112,30 @@ export interface ReportsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "data-requests_select".
+ */
+export interface DataRequestsSelect<T extends boolean = true> {
+  kind?: T;
+  email?: T;
+  name?: T;
+  locale?: T;
+  details?: T;
+  actionNote?: T;
+  outcome?: T;
+  status?: T;
+  action?: T;
+  source?: T;
+  receivedAt?: T;
+  respondBy?: T;
+  closedAt?: T;
+  purgeAt?: T;
+  confirmationSentAt?: T;
+  emailHash?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "jobs_select".
  */
 export interface JobsSelect<T extends boolean = true> {
@@ -2087,6 +2286,78 @@ export interface FormLimitsSelect<T extends boolean = true> {
   key?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "members_select".
+ */
+export interface MembersSelect<T extends boolean = true> {
+  email?: T;
+  emailVerifiedAt?: T;
+  emailVerifiedBy?: T;
+  googleId?: T;
+  orcidId?: T;
+  displayName?: T;
+  digestOptIn?: T;
+  digestChangedAt?: T;
+  digestConsentVersion?: T;
+  subfieldPrefs?: T;
+  lastSeenAt?: T;
+  deletionWarnedAt?: T;
+  warningRefusedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "member-sessions_select".
+ */
+export interface MemberSessionsSelect<T extends boolean = true> {
+  member?: T;
+  tokenHash?: T;
+  expiresAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-tokens_select".
+ */
+export interface EmailTokensSelect<T extends boolean = true> {
+  tokenHash?: T;
+  purpose?: T;
+  email?: T;
+  member?: T;
+  browserHash?: T;
+  request?: T;
+  next?: T;
+  save?: T;
+  locale?: T;
+  requestData?: T;
+  expiresAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "saved-items_select".
+ */
+export interface SavedItemsSelect<T extends boolean = true> {
+  member?: T;
+  itemType?: T;
+  job?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "deletion-log_select".
+ */
+export interface DeletionLogSelect<T extends boolean = true> {
+  targetCollection?: T;
+  targetId?: T;
+  action?: T;
+  at?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

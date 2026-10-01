@@ -8,7 +8,14 @@ import { transitionProblem } from '@/lib/review/status'
 import { FAKE_INSTITUTIONS, postingUrl } from './fake-jobs-data'
 import { FIXED_JOBS } from './fake-jobs-fixed'
 import {
+  DATA_REQUEST_STATUSES,
+  statusProblem as requestStatusProblem,
+} from '@/lib/data-requests/status'
+import { normaliseEmail } from '@/lib/members/email-address'
+
+import {
   FAKE_CANDIDATES,
+  FAKE_DATA_REQUESTS,
   FAKE_QUEUE_INSTITUTIONS,
   FAKE_QUEUE_NOTE,
   FAKE_REPORTS,
@@ -138,6 +145,44 @@ describe('fake reports', () => {
     for (const report of about) {
       expect(kindsFor('institution')).toContain(report.kind)
       expect(FAKE_QUEUE_INSTITUTIONS).toContain(report.institution)
+    }
+  })
+})
+
+describe('fake data requests', () => {
+  it('cover every status, from every source', () => {
+    expect(new Set(FAKE_DATA_REQUESTS.map((r) => r.status))).toEqual(
+      new Set(DATA_REQUEST_STATUSES.map(({ value }) => value)),
+    )
+    expect(new Set(FAKE_DATA_REQUESTS.map((r) => r.source))).toEqual(
+      new Set(['form', 'account', 'email']),
+    )
+  })
+
+  it('use only reserved example domains, as stored addresses', () => {
+    for (const { email } of FAKE_DATA_REQUESTS) {
+      if (!email) continue
+      expect(email.split('@')[1]).toMatch(RESERVED)
+      expect(normaliseEmail(email)).toBe(email)
+    }
+  })
+
+  it('are made the way the site makes them', () => {
+    for (const request of FAKE_DATA_REQUESTS) {
+      // Only the form records unconfirmed requests; an editor records emailed ones as New.
+      if (request.status === 'unconfirmed') expect(request.source).toBe('form')
+      if (request.source === 'email') {
+        expect(requestStatusProblem(undefined, 'new', true)).toBeNull()
+        expect(request.action).not.toBe('deleted-automatically')
+      }
+      // An account deletion is done at once; only it may lack an address.
+      if (request.source === 'account') {
+        expect(request).toMatchObject({ kind: 'deletion', status: 'closed' })
+      } else {
+        expect(request.email).not.toBeNull()
+      }
+      if (request.status === 'closed') expect(request.action).toBeDefined()
+      if (request.details) expect(request.details.length).toBeLessThanOrEqual(2000)
     }
   })
 })

@@ -282,6 +282,19 @@ const keepPublished: CollectionBeforeDeleteHook = async ({ id, req, context }) =
   }
 }
 
+// Members' saved items that point to the job go with it (M4b, D49), in the deletion's own
+// transaction: whichever way a job is deleted (the retention task, an editor deleting a draft, the
+// fake data), none is left without its job. The relationship itself is optional, since the
+// database would otherwise refuse to delete a saved job (src/collections/members/SavedItems.ts).
+// Runs after keepPublished, which refuses the deletions that may not happen.
+const forgetSavedItems: CollectionBeforeDeleteHook = async ({ id, req }) => {
+  await req.payload.db.deleteMany({
+    collection: 'saved-items',
+    where: { job: { equals: id } },
+    req,
+  })
+}
+
 // ---------------------------------------------------------------------------------------------
 // Rules checked when a job is saved (PLAN §6.4). Each one is a field validation, so the admin
 // shows every missing item at once, next to its field.
@@ -603,7 +616,7 @@ export const Jobs: CollectionConfig = {
   hooks: {
     beforeValidate: [...fixedFields.beforeValidate, prepare],
     beforeChange: fixedFields.beforeChange,
-    beforeDelete: [keepPublished],
+    beforeDelete: [keepPublished, forgetSavedItems],
   },
   fields: [
     {

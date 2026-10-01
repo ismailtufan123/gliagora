@@ -3,21 +3,26 @@ import type { EmailAdapter } from 'payload'
 
 import { errorCode } from '@/lib/errors'
 
+import { enhancedStatus } from './deliver'
 import { type Address, DEFAULT_SENDER, smtpSettings } from './settings'
 
 /**
- * A send error without the recipient or the server's reply: only the codes that `deliver()` and
- * `errorSummary()` read (src/lib/errors.ts).
+ * A send error without the recipient or the server's reply: only the codes that `sendOne()`
+ * (src/lib/email/deliver.ts) and `errorSummary()` (src/lib/errors.ts) read. `enhanced` is the
+ * reply's enhanced status code (RFC 3463, e.g. `5.1.1` for an address that does not exist), the
+ * only part of the reply's text that is kept: the rest names the recipient.
  */
 export class EmailNotSentError extends Error {
   override name = 'EmailNotSentError'
   readonly code?: string
   readonly responseCode?: number
+  readonly enhanced?: string
 
-  constructor(code?: string, responseCode?: number) {
+  constructor(code?: string, responseCode?: number, enhanced?: string) {
     super(`An email was not sent (${[code, responseCode].filter(Boolean).join(' ') || 'unknown'})`)
     this.code = code
     this.responseCode = responseCode
+    this.enhanced = enhanced
   }
 }
 
@@ -36,10 +41,12 @@ export function withoutRecipients(adapter: EmailAdapter): EmailAdapter {
         try {
           return await inner.sendEmail(message)
         } catch (error) {
-          const reply = (error as { responseCode?: unknown } | null)?.responseCode
+          const { responseCode, response } =
+            (error as { responseCode?: unknown; response?: unknown } | null) ?? {}
           throw new EmailNotSentError(
             errorCode(error),
-            typeof reply === 'number' ? reply : undefined,
+            typeof responseCode === 'number' ? responseCode : undefined,
+            enhancedStatus(response),
           )
         }
       },

@@ -21,6 +21,8 @@ import {
 } from '@/lib/review/status'
 import type { Submission } from '@/payload-types'
 
+import { logDeletions } from './DeletionLog'
+
 type SubmissionData = Partial<Submission>
 
 /** What Payload passes to a field's validate function, as far as these rules use it. */
@@ -157,6 +159,9 @@ export const Submissions: CollectionConfig = {
     beforeOperation: [keepOutOfLists(PRIVATE_FIELDS)],
     beforeValidate: [prepare],
     afterChange: [queue],
+    // A deletion an editor or a data request makes must survive a restore (src/collections/
+    // DeletionLog.ts); the retention task's deletions repeat themselves.
+    afterDelete: [logDeletions('submissions')],
   },
   fields: [
     fromForm({

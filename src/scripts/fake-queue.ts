@@ -5,35 +5,50 @@
 import type { Payload } from 'payload'
 
 import { FAKE_DATA } from '@/collections/Jobs'
+import { requestAddressHash } from '@/lib/data-requests/address'
 import { idOf } from '@/lib/relationship'
-
 import { type ItemLookup, type ItemRef, findReportItem, itemRefText } from '@/lib/reports/item'
+import type { DataRequest } from '@/payload-types'
 
 import {
   FAKE_CANDIDATES,
+  FAKE_DATA_REQUESTS,
   FAKE_QUEUE_NOTE,
   FAKE_REPORTS,
   FAKE_SUBMISSIONS,
+  type FakeDataRequest,
   type FakeReview,
   type FakeSubmission,
 } from './fake-queue-data'
 
-// Lets the fake candidates be removed again, although candidates are never deleted otherwise.
+// Lets the fake candidates be removed again, although candidates are never deleted otherwise, and
+// keeps removing fake suggestions and reports out of the deletion log (src/collections/
+// DeletionLog.ts).
 const context = { fakeData: FAKE_DATA }
+
+const DAY_MS = 86_400_000
 
 const ids = (values: unknown[]) =>
   values.map((value) => idOf(value)).filter((id): id is number => typeof id === 'number')
 
 /**
- * Removes the fake suggestions, candidates and reports of an earlier run (including the reports
- * the end-to-end tests sent), and the draft jobs made by accepting candidates. Returns how many
- * suggestions, candidates and reports it removed.
+ * Removes the fake suggestions, candidates, reports and data requests of an earlier run (including
+ * the reports the end-to-end tests sent), and the draft jobs made by accepting candidates. Returns how many
+ * suggestions, candidates, reports and data requests it removed.
  */
 export async function removeFakeQueue(payload: Payload) {
+  // Data requests are never deleted by editors; the local API (which bypasses access control)
+  // removes the fake ones, found by the marker in their action note.
+  const dataRequests = await payload.delete({
+    collection: 'data-requests',
+    where: { actionNote: { contains: FAKE_QUEUE_NOTE } },
+    depth: 0,
+  })
   const reports = await payload.delete({
     collection: 'reports',
     where: { details: { contains: FAKE_QUEUE_NOTE } },
     depth: 0,
+    context,
   })
   const submissions = await payload.find({
     collection: 'submissions',
@@ -80,7 +95,91 @@ export async function removeFakeQueue(payload: Payload) {
     submissions: submissions.docs.length,
     candidates: candidates.docs.length,
     reports: reports.docs.length,
+    dataRequests: dataRequests.docs.length,
   }
+}
+
+/**
+ * Adds one fake data request the way the site and the editors make them: a request from the form
+ * is recorded unconfirmed (kind, date, address hash) and then confirmed, which stores what the
+ * person wrote; an emailed one is recorded as New; then each is handled as an editor would.
+ */
+async function addFakeDataRequest(payload: Payload, request: FakeDataRequest, now: Date) {
+  const actionNote = `${FAKE_QUEUE_NOTE} Fake data request.`
+  const receivedAt = new Date(now.getTime() - request.receivedDaysAgo * DAY_MS).toISOString()
+  const base = { kind: request.kind, source: request.source, locale: request.locale, receivedAt }
+  const written = {
+    email: request.email,
+    name: request.name ?? null,
+    details: request.details ?? null,
+  }
+  if (request.source === 'account') {
+    // "Delete my account": done at once and recorded closed.
+    return payload.create({
+      collection: 'data-requests',
+      data: {
+        ...base,
+        ...written,
+        status: 'closed',
+        action: 'deleted-automatically',
+        actionNote,
+        outcome: { accountDeleted: 1 },
+      },
+      depth: 0,
+    })
+  }
+  let created: DataRequest
+  if (request.source === 'form') {
+    const emailHash = requestAddressHash(request.email ?? '', process.env.PAYLOAD_SECRET ?? '')
+    created = await payload.create({
+      collection: 'data-requests',
+      data: { ...base, status: 'unconfirmed', emailHash, actionNote },
+      depth: 0,
+    })
+    if (request.status === 'unconfirmed') return created
+    // The person opened the link: a deletion is done at once, anything else waits for an editor.
+    const deletion = request.kind === 'deletion'
+    created = await payload.update({
+      collection: 'data-requests',
+      id: created.id,
+      data: deletion
+        ? {
+            ...written,
+            name: null,
+            status: 'closed',
+            action: 'deleted-automatically',
+            outcome: {
+              suggestionsDeleted: 0,
+              accountDeleted: 0,
+              reportAddressesCleared: 0,
+              personalRightsReportsKept: 0,
+            },
+          }
+        : { ...written, status: 'new' },
+      depth: 0,
+    })
+    if (deletion) return created
+  } else {
+    created = await payload.create({
+      collection: 'data-requests',
+      data: { ...base, ...written, status: 'new', actionNote },
+      depth: 0,
+    })
+  }
+  if (request.status === 'new') return created
+  await payload.update({
+    collection: 'data-requests',
+    id: created.id,
+    data: { status: 'in-progress' },
+    depth: 0,
+  })
+  if (request.status !== 'closed') return created
+  return payload.update({
+    collection: 'data-requests',
+    id: created.id,
+    data: { status: 'closed', action: request.action ?? 'answered' },
+    depth: 0,
+  })
 }
 
 type Lookups = {
@@ -225,5 +324,11 @@ export async function addFakeQueue(payload: Payload, { institutionId, jobId }: L
       })
     }
   }
-  return { submissions: FAKE_SUBMISSIONS.length, candidates: counts, reports: FAKE_REPORTS.length }
+  for (const request of FAKE_DATA_REQUESTS) await addFakeDataRequest(payload, request, now)
+  return {
+    submissions: FAKE_SUBMISSIONS.length,
+    candidates: counts,
+    reports: FAKE_REPORTS.length,
+    dataRequests: FAKE_DATA_REQUESTS.length,
+  }
 }

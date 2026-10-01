@@ -36,3 +36,26 @@ describe('fixedFieldHooks', () => {
     expect(guard({ label: 'Rodents' })).toEqual({ label: 'Rodents' })
   })
 })
+
+describe('fixedFieldHooks with untilSet', () => {
+  const once = fixedFieldHooks('data-requests', ['email', 'details'], { untilSet: true })
+  const guardOnce = (data: Record<string, unknown>, original: Record<string, unknown>) =>
+    once.beforeChange[0]!({
+      data,
+      operation: 'update',
+      originalDoc: original,
+      req: {},
+    } as never)
+
+  it('lets an empty field be filled in once', () => {
+    expect(() => guardOnce({ email: 'someone@example.org' }, { email: null })).not.toThrow()
+    expect(() => guardOnce({ details: 'Text' }, {})).not.toThrow()
+  })
+
+  it('refuses any change after that, also to empty', () => {
+    const stored = { email: 'someone@example.org', details: 'Text' }
+    expect(() => guardOnce({ email: 'other@example.org' }, stored)).toThrow()
+    expect(() => guardOnce({ details: null }, stored)).toThrow()
+    expect(() => guardOnce({ email: 'someone@example.org' }, stored)).not.toThrow()
+  })
+})
