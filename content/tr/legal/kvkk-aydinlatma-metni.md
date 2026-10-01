@@ -73,21 +73,23 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 ### Üye hesabı
 
 - **Veriler:**
-  - doğrulanmış e-posta adresiniz;
+  - varsa doğrulanmış e-posta adresiniz (ORCID ile veya Google'ın yönetmediği bir adresle Google ile oluşturulan hesapta, siz bir onay bağlantısıyla adres ekleyene kadar e-posta adresi yoktur);
   - isteğe bağlı görünen adınız;
   - ORCID ile giriş yaptıysanız ORCID iD'niz;
   - giriş sağlayıcısındaki hesap kimliğiniz (sağlayıcının verdiği teknik bir numara);
   - kaydettiğiniz ilanlar, etkinlikler ve programlar;
   - tercihleriniz: bültenin açık veya kapalı olması ve tercih ettiğiniz alt alanlar. Tercih ettiğiniz alt alanların tek işlevi, oturumunuz açıkken iş ilanları listesindeki varsayılan alt alan filtresini belirlemektir. Bu tercih Glia Notes'u etkilemez; bülten tüm aboneler için aynıdır. Bu tercihten hakkınızda bir profil oluşturmayız;
-  - hesabın oluşturulma tarihi, hesabı son kullandığınız tarih ve uzun süre kullanılmama uyarısının gönderildiği tarih;
-  - oturum kayıtları ve tek kullanımlık e-posta giriş bağlantıları.
+  - hesabın oluşturulma tarihi, hesabı son kullandığınız tarih, uzun süre kullanılmama uyarısının gönderildiği tarih ve uyarı, adres artık var olmadığı için reddedildiyse bunun ilk olduğu tarih;
+  - giriş yaptığınız her tarayıcı için bir oturum kaydı (oturum kodunun karıştırılmış biçimi ve oturumun sona ereceği tarih) ve size e-postayla gönderdiğimiz tek kullanımlık bağlantılar (giriş ve hesabınıza adres ekleme bağlantıları), kullanılana veya süreleri dolana kadar.
 - **Nereden ve nasıl:** Sizden ve seçtiğiniz giriş yönteminden:
-  - Google ile girişte yalnızca e-posta adresinizi ve Google'ın hesabınıza verdiği teknik kimlik numarasını alırız ("openid email" izinleri);
-  - ORCID ile girişte ORCID iD'nizi alırız; adınızı yalnızca siz saklamayı seçerseniz tutarız;
+  - Google ile girişte Google'ın hesabınıza verdiği teknik kimlik numarasını, e-posta adresinizi, Google'ın bu adresi doğrulayıp doğrulamadığını ve Google Workspace adreslerinde adresin alan adını alırız ("openid email" izinleri). Adresi yalnızca Google yönetiyorsa (Gmail adresi veya bir Google Workspace alan adına ait adres) saklarız. Aksi hâlde adresi hiç saklamayız; adresi hesabınıza bir onay bağlantısıyla kendiniz ekleyebilirsiniz. Alan adını hiçbir zaman saklamayız;
+  - ORCID ile girişte ORCID iD'nizi alırız; ORCID kaydınızdaki adı yalnızca hesabınızı oluştururken ilgili kutuyu işaretlerseniz tutarız;
   - e-posta bağlantısıyla girişte yazdığınız adresi kullanırız;
+  - hesap yalnızca, kullanım koşullarıyla ilgili satırı okuduktan sonra "{en: Create account}" (Hesap oluştur) düğmesine bastığınızda oluşturulur;
   - parola kullanmayız ve saklamayız;
-  - aynı doğrulanmış e-posta adresine sahip hesaplar birleştirilir;
-  - ORCID hesabınızı hesap ayarlarından bağlayabilirsiniz.
+  - Google'ın yönettiği bir adresle Google ile veya e-posta bağlantısıyla giriş yaptığınızda, bu adrese sahip hesaba girersiniz;
+  - Google ve ORCID hesaplarınızı hesap ayarlarından bağlayabilirsiniz. Başka bir Gliagora hesabına ait bir giriş yöntemi veya adres bağlanmaz; var olan hesaplar hiçbir zaman birleştirilmez;
+  - giriş yöntemlerinizi veya adresinizi değiştirdiğinizde diğer tarayıcılardaki oturumlarınız kapatılır.
 - **Amaç:**
   - giriş yapmanızı sağlamak ve oturumunuzu açık tutmak;
   - kaydettiğiniz öğeleri ve tercihlerinizi saklamak;
@@ -95,9 +97,9 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Hukuki sebep:** Kullanım koşullarını kabul ettiğinizde aramızda kurulan sözleşmenin kurulması ve ifası için gerekli olması (KVKK m.5/2 (c)). [KARAR VERİLECEK: B9 – koşulların girişte nasıl kabul edileceği ve sözleşme hukuki sebebi]
 - **Saklama:**
   - hesabınız, siz silene kadar tutulur;
-  - 24 ay boyunca hiç kullanılmayan hesaplara bir uyarı e-postası göndeririz. Uyarıdan sonraki 30 gün içinde giriş yapmazsanız hesap silinir;
-  - oturumlar en fazla 30 gün sürer; e-posta giriş bağlantıları 15 dakika geçerlidir ve bir kez kullanılabilir;
-  - hesabınızı sildiğinizde hesap bilgileriniz, kaydettiğiniz öğeler, tercihleriniz ve bülten aboneliğiniz hemen silinir. Size silme işlemini bildiren son bir e-posta göndeririz. Silinen veriler en geç 6 ay içinde yedeklerden de silinir; bkz. "Yedekler".
+  - hesabın kullanılması, giriş yapmanız veya oturumunuz açıkken siteyi kullanmanız demektir. 24 ay boyunca hiç kullanılmayan hesaplara bir uyarı e-postası göndeririz. Uyarıdan sonraki 30 gün içinde giriş yapmazsanız hesap silinir. Uyarı, adres artık var olmadığı için teslim edilemezse 30 günlük süre uyarı olmadan başlar. E-posta adresi olmayan bir hesaba uyarı gönderilemez; böyle bir hesap son kullanımından 24 ay 30 gün sonra silinir. Kullanılmadığı için silinen bir hesaba son bir e-posta göndermeyiz;
+  - oturumlar girişten itibaren en fazla 30 gün sürer; e-posta giriş bağlantıları 15 dakika, hesaba adres ekleme bağlantıları 24 saat geçerlidir ve her biri bir kez kullanılabilir;
+  - hesabınızı sildiğinizde hesap bilgileriniz, kaydettiğiniz öğeler, tercihleriniz ve bülten aboneliğiniz hemen silinir ve silme bir veri talebi olarak kaydedilir (bkz. "KVKK başvurularınız ve veri talepleriniz"). Hesabınızda e-posta adresi varsa size silme işlemini bildiren son bir e-posta göndeririz. Silinen veriler en geç 6 ay içinde yedeklerden de silinir; bkz. "Yedekler".
 - **Kullanılmayan hesap uyarısı ve silme bildirimi:**
   - Uyarı e-postası meşru menfaatimize (m.5/2 (f)) dayanır: verileri gereğinden uzun saklamamak.
   - Silme bildirimi e-postası, silme talebinizi yerine getirdiğimizi bildirir. Hukuki yükümlülüğümüze (m.5/2 (ç)) dayanır.
@@ -139,19 +141,22 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Hukuki sebep:**
   - kişilik haklarınızın ihlal edildiği gerekçesiyle, 5651 sayılı İnternet Kanunu m.9 kapsamında içeriğin yayından çıkarılmasını isteyebilirsiniz. Bu talepler için hukuki sebepler, bu Kanundan doğan hukuki yükümlülüğümüz (KVKK m.5/2 (ç)) ve sizin ve bizim haklarımızın korunması için zorunlu olmasıdır (KVKK m.5/2 (e));
   - düzeltme talepleri ve sorun bildirimleri: meşru menfaatimiz (m.5/2 (f)), yani yayımladığımız bilgileri doğru tutmak.
-- **Saklama:** Talep kapandıktan sonra 2 yıl [KARAR VERİLECEK: B11 – süre teyit edilecek].
+- **Saklama:** Talep kapandıktan sonra 2 yıl [KARAR VERİLECEK: B11 – süre teyit edilecek]. [Veri talebi sayfasından](/en/legal/data-requests/) bir silme talebini onaylarsanız, sorun bildirimlerinizdeki ve düzeltme taleplerinizdeki e-posta adresinizi hemen sileriz. Kişilik haklarınıza ilişkin talepler (5651 sayılı Kanun) adresinizi saklama süreleri boyunca korur. [KARAR VERİLECEK: B11 – onaylanan bir silme talebinin kişilik haklarına ilişkin taleplerdeki adresi de silip silmemesi gerektiği]
 
 ### KVKK başvurularınız ve veri talepleriniz
 
 - **Veriler:**
   - talebin türü;
-  - e-posta adresiniz ve açıklamanız;
+  - e-posta adresiniz, verirseniz adınız ve açıklamanız (formla yapılan bir silme talebinde adınız ve açıklamanız saklanmaz; yalnızca kaç kaydın silindiği saklanır);
   - talebin alındığı tarih ve yanıt için son tarih;
-  - talebin durumu ve sonuçlandığı tarih.
-- **Nereden ve nasıl:** Sizden: [veri talebi sayfasından](/en/legal/data-requests/) (İngilizce), e-postayla veya üyeyseniz hesap ayarlarındaki araçlarla.
+  - talebin durumu ve sonuçlandığı tarih;
+  - formla gönderilip onaylanmayan bir talep için yalnızca talebin türü, tarihi ve e-posta adresinizden üretilen karıştırılmış bir kod (karma değer); adresin kendisi ve yazdıklarınız saklanmaz.
+- **Nereden ve nasıl:** Sizden: [veri talebi sayfasındaki](/en/legal/data-requests/) formdan (İngilizce), e-postayla veya üyeyseniz hesap ayarlarındaki araçlarla. Hesabınızı ayarlardan sildiğinizde bu da bir talep olarak kaydedilir.
+  - Formla gönderdiğiniz talebi onaylamanız için size 24 saat geçerli bir bağlantı göndeririz. Yalnızca onaylanan talepleri işleme alırız. Siz onaylayana kadar yazdıklarınız yalnızca bu bağlantıyla birlikte tutulur ve onaylamazsanız 24 saat sonra bağlantıyla birlikte silinir.
+  - Bir talebin geldiğini gösterebilmek için, formla gönderilen her talebin türünü, tarihini ve adres kodunu 60 gün saklarız. [KARAR VERİLECEK: B4 – onaylanmayan taleplerin kaydı için hukuki sebep]
 - **Amaç:** KVKK m.11 kapsamındaki başvurunuzu sonuçlandırmak, size yanıt vermek ve yanıt sürelerini izlemek.
 - **Hukuki sebep:** Hukuki yükümlülüğümüzü yerine getirmek için zorunlu olması (KVKK m.5/2 (ç)). KVKK m.13, başvurulara yanıt vermemizi gerektirir.
-- **Saklama:** Talep kapandıktan sonra 2 yıl. Bu süre, sitenin veritabanındaki kayıtları ve e-posta yazışmalarını kapsar. [KARAR VERİLECEK: B11 – süre teyit edilecek]
+- **Saklama:** Talep kapandıktan sonra 2 yıl. Bu süre, sitenin veritabanındaki kayıtları ve e-posta yazışmalarını kapsar. Onaylanmayan talepler, geldikten 60 gün sonra silinir. [KARAR VERİLECEK: B11 – süre teyit edilecek; onaylanmayan talepler için 60 gün]
 
 ### Bize gönderdiğiniz e-postalar
 
@@ -164,21 +169,25 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 
 ### Form ve giriş güvenliği
 
-- **Veriler:** IP adresinizin karma (hash) değeri.
-- **Nereden ve nasıl:** "{en: Suggest a listing}" (İlan önerin) veya "{en: Report a problem}" (Sorun bildirin) formunu gönderdiğinizde, otomatik olarak.
+- **Veriler:**
+  - IP adresinizin karma (hash) değeri;
+  - e-posta gönderen formlarda, e-posta adresinin karma değeri;
+  - hesaba adres ekleme formunda, bağlantıyı isteyen hesabın numarası.
+- **Nereden ve nasıl:** Sitedeki bir formu ("{en: Suggest a listing}" (İlan önerin), "{en: Report a problem}" (Sorun bildirin), giriş bağlantısı, hesaba adres ekleme veya veri talebi formu) gönderdiğinizde, otomatik olarak.
 - **Amaç:** İstenmeyen gönderileri (spam) ve kötüye kullanımı önlemek.
-  - Örneğin ilan önerme formunda ve sorun bildirme formunda aynı IP adresinden her biri için saatte en fazla 5 gönderim kabul edilir.
-  - Giriş bağlantısı isteklerini ve diğer formları da sınırlarız. [KARAR VERİLECEK: S ve M4b – bu sınırlamada hangi bilginin kullanılacağı; karma IP değeri yalnızca ilan önerme ve sorun bildirme formları için kararlaştırılmıştır]
+  - Her form, aynı IP adresinden yalnızca sınırlı sayıda gönderim kabul eder. Örneğin ilan önerme, sorun bildirme ve veri talebi formlarının her biri saatte en fazla 5 gönderim kabul eder; giriş formu ve diğer formlar da sınırlanır.
+  - E-posta gönderen formlar (giriş bağlantısı, hesaba adres ekleme ve veri talebi formları), kimsenin gelen kutusunun doldurulamaması için e-posta adresine göre de sınırlanır. Adresin karma değerini, aynı posta kutusunun farklı yazımları (büyük harfler, `ad+etiket@` gibi bir ek ve Gmail adreslerindeki noktalar) tek adres sayılacak biçimde üretiriz. Site bu tür e-postalardan toplamda da saatte belirli bir sayıdan fazlasını göndermez.
+  - Hesaba adres ekleme formu, her hesabın istediği bağlantıları hesap numarasına göre de sayar.
   - Spam koruması (ALTCHA) kendi sunucumuzda çalışır; başka bir hizmete veri gitmez.
-- **Hukuki sebep:** Meşru menfaatimiz (m.5/2 (f)), yani siteyi ve kullanıcılarını kötüye kullanıma karşı korumak.
-- **Saklama:** Karma değer yalnızca kendi sunucumuzdaki site veritabanında tutulur ve 24 saat sonra silinir.
+- **Hukuki sebep:** Meşru menfaatimiz (m.5/2 (f)), yani siteyi, kullanıcılarını ve formların e-posta gönderdiği adresleri kötüye kullanıma karşı korumak.
+- **Saklama:** Karma değerler ve sayılar yalnızca kendi sunucumuzdaki site veritabanında tutulur ve 24 saat sonra silinir.
 
 ### Sunucu erişim kayıtları
 
 - **Veriler:**
   - maskelenmiş IP adresiniz: IPv4 adresinin son bölümü ve IPv6 adresinin ilk 48 bitinden sonraki kısmı, kayda geçmeden önce maskelenir;
   - istek zamanı ve türü;
-  - istenen sayfa adresi (arama sözcükleri gibi adreste yer alan bilgiler dâhil) [KARAR VERİLECEK: S ve M4b – giriş, onay ve abonelikten çıkma bağlantılarındaki tek kullanımlık kodların ve e-posta adreslerinin erişim kayıtlarına geçmemesi];
+  - istenen sayfa adresi (arama sözcükleri gibi adreste yer alan bilgiler dâhil). Giriş, hesap ve veri talebi sayfalarının adreslerinde "?" işaretinden sonraki kısım, sunucunun hata kayıtlarında da, kayda geçmeden önce silinir; böylece bağlantılarımızdaki tek kullanımlık kodlar kayıtlara geçmez. Bağlantılarımız hiçbir zaman e-posta adresi içermez. [KARAR VERİLECEK: M2 – bültenin onay ve abonelikten çıkma bağlantıları için de aynısı];
   - yanıt kodu ve boyutu;
   - tarayıcınızın gönderdiği diğer istek başlıkları, örneğin tarayıcı bilgisi (User-Agent), dil tercihi ve geldiğiniz sayfa (Referer).
   - Çerez ve yetkilendirme (Authorization) bilgilerini taşıyan istek başlıkları kayda geçmez.
@@ -218,6 +227,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - son 6 ayın aylık yedekleri;
   - son 2 günün tüm yedekleri.
   - Silinen tüm veriler (bülten abonelikleri, üye hesapları ve diğerleri) en geç 6 ay içinde yedeklerden de silinir.
+- **Silmeler geri yüklemeden sonra da geçerlidir:** Bir kişinin isteğiyle (veri talebi, hesap silme) veya hesap kullanılmadığı için sildiğimiz her kaydın numarasını, kişisel veri olmadan, 7 ay tutarız. Bir yedeği geri yüklememiz gerekirse bu kayıtları birkaç dakika içinde yeniden sileriz. Tam bir kayıptan sonra yapılan geri yükleme yalnızca en son yedeği kullanabileceği için, o yedekten sonra yapılan silmeleri (en fazla bir günlük) bilemez.
 
 ### İlanlarda ve kaynak metinlerde adı geçen kişiler
 
@@ -310,8 +320,8 @@ Bu özellik açılışta kapalıdır. Açıldığında, ilan metinleri Anthropic
 
 Tarayıcınızda yalnızca hizmetin çalışması için zorunlu bilgileri saklarız:
 
-- **Üye oturum çerezi:** Giriş yaptığınızda oluşturulur ve en fazla 30 gün geçerlidir.
-- **Giriş güvenliği çerezleri:** Google, ORCID veya e-posta bağlantısıyla giriş yaparken girişin güvenli olması için kullanılır.
+- **Üye oturum çerezi (`__Host-gliagora-session`):** Giriş yaptığınızda oluşturulur ve girişten itibaren 30 gün geçerlidir.
+- **Giriş çerezi (`__Host-gliagora-signin`):** Google, ORCID veya e-posta bağlantısıyla girişe başladığınızda 15 dakika için oluşturulur. Girişi kötüye kullanıma karşı korur; e-posta bağlantısı istendiği tarayıcıdan başka bir tarayıcıda açılırsa sizi uyarmamızı sağlar.
 - **Yönetim paneli oturum çerezi:** Yalnızca editörler için.
 
 Formlardaki spam koruması (ALTCHA) çerez kullanmaz ve tarayıcınızda hiçbir şey saklamaz.
@@ -321,7 +331,7 @@ Formlardaki spam koruması (ALTCHA) çerez kullanmaz ve tarayıcınızda hiçbir
 **Hukuki sebep:**
 
 - üye oturum çerezi: sözleşmenin ifası (m.5/2 (c));
-- giriş güvenliği çerezleri ve yönetim paneli oturum çerezi: meşru menfaatimiz (m.5/2 (f)).
+- giriş çerezi ve yönetim paneli oturum çerezi: meşru menfaatimiz (m.5/2 (f)).
 
 Analiz veya reklam çerezi kullanmayız. Üçüncü taraf çerezi yoktur. İstatistik yazılımımız çerez kullanmaz. Ayrıntılar, İngilizce [çerezler ve depolama sayfasında](/en/legal/cookies/) yer alır.
 
@@ -333,7 +343,7 @@ Hakkınızda yalnızca otomatik sistemlerle karar vermeyiz; bu, sizi hukuken vey
 
 - Veriler Türkiye'deki sunucumuzda tutulur. Veritabanları internete açık değildir.
 - Site yalnızca şifreli bağlantıyla (HTTPS) çalışır.
-- Üyeler için parola yoktur. Giriş bağlantıları tek kullanımlıktır ve 15 dakika geçerlidir. Oturum her girişte yenilenir.
+- Üyeler için parola yoktur. Giriş bağlantıları tek kullanımlıktır ve 15 dakika geçerlidir. E-postayla gönderilen her bağlantı yalnızca gönderildiği iş için (giriş, adres ekleme, talep onayı) kullanılabilir; bir giriş bağlantısı, istendiği tarayıcıdan başka bir tarayıcıda açılırsa önce bir uyarı gösterilir. Google ve ORCID ile girişte, girişin başkası tarafından ele geçirilmesini önleyen standart denetimler kullanılır (state, sağlayıcının yanıtındaki tek kullanımlık değer (nonce) ve sağlayıcı destekliyorsa PKCE). Oturum her girişte yenilenir.
 - Yönetim paneli ikinci bir doğrulama adımıyla korunur. Paneldeki işlemler kayda geçer.
 - Yedekler şifrelidir ve düzenli olarak geri yükleme testinden geçer.
 - Sayfalarımız başka alan adlarından içerik yüklemez. Takip pikseli yoktur.
@@ -361,9 +371,9 @@ Bazı işlemleri bize başvurmadan, kendiniz hemen yapabilirsiniz:
 - **Abonelikten çıkma:** Her bültendeki tek tıkla abonelikten çıkma bağlantısını kullanın veya hesap ayarlarınızda bülten seçeneğini kapatın. Hemen geçerli olur.
 - **Verilerinizi indirme:** Hesap ayarlarınızdaki "{en: Download my data}" (Verilerimi indir) düğmesiyle verilerinizi bir JSON dosyası olarak indirebilirsiniz.
 - **Hesabınızı silme:** Hesap ayarlarınızdaki "{en: Delete my account}" (Hesabımı sil) düğmesini kullanın. Onayınızdan sonra hesabınız hemen silinir.
-- **Üye değilseniz:**
-  - [Veri talebi sayfasından](/en/legal/data-requests/) (İngilizce) verilerinizin silinmesini isteyebilirsiniz.
-  - E-posta adresinize bir doğrulama bağlantısı gelir. Bu bağlantıya tıkladığınızda, e-posta adresinize bağlı kayıtlar otomatik olarak silinir. Bülten aboneliğiniz ve ilan önerme formunda verdiğiniz e-posta adresi silinir; açık rıza kayıtlarınız anonim hâle getirilir. Ardından silme işlemini bildiren bir e-posta alırsınız.
+- **Verilerinizin silinmesi (üye olsanız da olmasanız da):**
+  - [Veri talebi sayfasındaki](/en/legal/data-requests/) formla (İngilizce) verilerinizin silinmesini isteyebilirsiniz.
+  - E-posta adresinize 24 saat geçerli bir onay bağlantısı gelir. Bağlantıyı açıp onayladığınızda, e-posta adresinize bağlı kayıtlar hemen silinir: bu adresle gönderdiğiniz ilan önerileri, bu adrese sahip bir Gliagora hesabı, bu adresin bülten aboneliği ve sorun bildirimlerindeki adresiniz. Kişilik haklarınıza ilişkin talepler adresinizi saklama süreleri boyunca korur. Açık rıza kayıtlarınız anonim hâle getirilir. Ardından neyin silindiğini bildiren bir e-posta alırsınız.
   - Başvuru kayıtları, açık rıza kayıtları, e-posta yazışmaları, erişim kayıtları ve yedekler için yukarıdaki saklama süreleri geçerlidir.
 
 Avrupa Birliğinde bulunuyorsanız, AB Genel Veri Koruma Tüzüğü (GDPR) kapsamındaki haklarınız İngilizce [gizlilik politikasında](/en/legal/privacy/) anlatılır. [KARAR VERİLECEK: B10 – AB ve Avrupa Ekonomik Alanı]
@@ -377,11 +387,11 @@ Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğe göre bize şu yo
 - **Güvenli elektronik imza veya mobil imza:** Bu imzalardan biriyle imzaladığınız başvurunuzu privacy@gliagora.com adresine e-postayla gönderebilirsiniz.
 - **Kayıtlı elektronik posta (KEP) ve yazılı başvuru:** [KARAR VERİLECEK: B5 – KEP adresi, yazılı başvuru adresi ve başvuru yollarının Tebliğe uygunluğu]
 
-Başvurunuzu Türkçe veya İngilizce yazabilirsiniz. Başvurunuzda adınızı, soyadınızı, size ulaşabileceğimiz e-posta adresinizi ve talebinizi açıkça yazın. Talebinizle ilgili belgeleriniz varsa ekleyin. [KARAR VERİLECEK: B5 – T.C. kimlik numarası ve tebligata esas adres istenip istenmeyeceği]
+Başvurunuzu Türkçe veya İngilizce yazabilirsiniz. E-postayla başvururken adınızı, soyadınızı, size ulaşabileceğimiz e-posta adresinizi ve talebinizi açıkça yazın. Talebinizle ilgili belgeleriniz varsa ekleyin. Veri talebi formunda adınızı yazmanız isteğe bağlıdır. [KARAR VERİLECEK: B5 – T.C. kimlik numarası ve tebligata esas adres istenip istenmeyeceği; formla yapılan başvuruda isteğe bağlı ad alanının yeterli olup olmadığı (Başvuru Tebliği m.5)]
 
 Başvurunun size ait olduğunu doğrulamak için e-posta adresinize bir doğrulama bağlantısı gönderebilir veya sizden ek bilgi isteyebiliriz.
 
-Veri talebi sayfasından yaptığınız başvuruları aldığımızı hemen otomatik bir e-postayla bildiririz. E-postayla yaptığınız başvuruları da kayda alırız. Her başvuruyu niteliğine göre en kısa sürede sonuçlandırırız. Bu süre, başvurunun bize ulaştığı tarihten itibaren en fazla 30 gündür ve başvuru ücretsizdir. Talebinizi kabul edersek gereğini yaparız; reddedersek gerekçesini açıklarız. Yanıtımızı yazılı olarak veya elektronik ortamda, genellikle e-postayla veririz.
+Veri talebi sayfasındaki formla yaptığınız başvuruyu aldığımızı hemen bir e-postayla bildiririz. Bu e-posta, başvurunun size ait olduğunu onaylamanız için 24 saat geçerli bir bağlantı içerir; yalnızca onaylanan başvuruları işleme alırız. E-postayla yaptığınız başvuruları da kayda alırız. Her başvuruyu niteliğine göre en kısa sürede sonuçlandırırız. Bu süre, başvurunun bize ulaştığı tarihten itibaren en fazla 30 gündür ve başvuru ücretsizdir. Talebinizi kabul edersek gereğini yaparız; reddedersek gerekçesini açıklarız. Yanıtımızı yazılı olarak veya elektronik ortamda, genellikle e-postayla veririz.
 
 ## Kurula şikâyet
 

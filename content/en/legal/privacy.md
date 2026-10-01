@@ -99,33 +99,35 @@ To unsubscribe, use the one-click link in every email or the switch in your acco
 
 You can create a free account to save positions, events and programmes. There are no passwords. You sign in in one of three ways:
 
-- **Google:** you sign in on Google's page. Google tells us only your email address and an account ID.
-- **ORCID:** you sign in on ORCID's page. We receive your ORCID iD and the name on your ORCID record. We keep the name only if you choose to.
+- **Google:** you sign in on Google's page. Google tells us an account ID, your email address, whether Google has verified it and, for a Google Workspace address, its domain. We keep the address only if Google manages it (a Gmail address, or an address of a Google Workspace domain). Otherwise we do not keep it at all, and you can add it to your account yourself with a confirmation link. We never store the domain.
+- **ORCID:** you sign in on ORCID's page. We receive your ORCID iD and the name on your ORCID record. We keep the name only if you tick the box for it when you create your account.
 - **Email link:** you type your email address and we send you a sign-in link. It works once and expires after 15 minutes.
+
+The account is created only when you press "Create account", after reading the line about the terms of use.
 
 What we keep:
 
 - **Account:**
-  - your verified email address;
+  - your verified email address, if the account has one (an account made with ORCID, or with Google for an address Google does not manage, has none until you add one with a confirmation link);
   - a display name, if you add one;
   - your ORCID iD, if you sign in with ORCID;
   - the account ID that Google or ORCID gives us;
   - the date you joined and the date you were last active;
-  - the date we sent you an inactivity warning, if we sent one.
+  - the date we sent you an inactivity warning, if we sent one, and the date a warning was first refused because the address does not exist, if that happened.
 - **What you save and set:** saved positions, events and programmes, newsletter on or off, and your preferred subfields. Your preferred subfields only set the default subfield filter on the jobs list while you are signed in. They do not change Glia Notes, which is the same for every subscriber.
-- **Sign-in data:** a session record while you are signed in, and the single-use sign-in links.
+- **Sign-in data:** a session record for each browser where you are signed in (a scrambled form of its code and when it ends), and the single-use links we email you (to sign in, or to add an address to your account) until they are used or expire.
 
-If you use different sign-in methods with the same verified email address, we combine them into one account. You can link your ORCID iD from your settings.
+Signing in with Google with an address Google manages, or with an email link, finds the account that has that address. You can link Google and ORCID to your account in your settings. A sign-in method or an address that already belongs to another Gliagora account is not linked, and accounts are never combined once they exist. When you change your sign-in methods or your address, you are signed out in your other browsers.
 
 - **Where it comes from:** you, and Google or ORCID if you sign in with them.
 - **Why:** to sign you in and keep your saved items and settings.
 - **Legal basis:** our agreement with you: the [terms of use](/en/legal/terms/) you accept when you create an account (KVKK Art. 5(2)(c); GDPR Art. 6(1)(b)). [TO DECIDE: B9 – how members accept the terms at sign-in]
 - **How long:**
   - Your account, saved items and settings: until you delete your account.
-  - Sessions: 30 days. Sign-in links: 15 minutes, single use.
-  - Inactive accounts: if there is no activity for 24 months, we email you a warning and delete the account 30 days later. Legal basis: our legitimate interest in not keeping data longer than needed (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)). If you sign in during those 30 days, your account stays.
+  - Sessions: 30 days from when you signed in. Sign-in links: 15 minutes, single use. Links to add an address: 24 hours, single use.
+  - Inactive accounts: activity means signing in, or using the site while signed in. If there is no activity for 24 months, we email you a warning and delete the account 30 days later. If you sign in during those 30 days, your account stays. If the warning cannot be delivered because the address no longer exists, the 30 days start without it. An account without an email address cannot be warned: we delete it 24 months and 30 days after its last activity. We send no email after deleting an account for inactivity. Legal basis: our legitimate interest in not keeping data longer than needed (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
 
-When you delete your account in your settings, we delete your account, saved items, settings and newsletter subscription at once. We then send you one final email to confirm the deletion. Legal basis for that email: our legal duty to tell you what we did with your request (KVKK Art. 5(2)(ç); GDPR Art. 6(1)(c)).
+When you delete your account in your settings, we delete your account, saved items, settings and newsletter subscription at once, and record the deletion as a data request (see "Data requests"). If your account has an email address, we then send you one final email to confirm the deletion. Legal basis for that email: our legal duty to tell you what we did with your request (KVKK Art. 5(2)(ç); GDPR Art. 6(1)(c)).
 
 ### "Suggest a listing" form
 
@@ -144,18 +146,21 @@ On the [Suggest a listing](/en/suggest/) page, you can point us to a position or
 
 - **ALTCHA:** before a form is sent, your browser solves a small puzzle. This shows that a person, not a spam program, is sending the form. ALTCHA comes from our own server and is checked there; no outside service is involved.
 - **Hidden field:** forms contain a field that people do not see and spam programs often fill in.
-- **Rate limits:** the suggestion form accepts at most 5 suggestions an hour from the same IP address, and the "Report a problem" form at most 5 reports an hour. Your IP address is the number that identifies your internet connection. For this limit we store a scrambled code made from your IP address (a hash). This code still counts as personal data. Sign-in and the other forms are limited too. [TO DECIDE: S and M4b – what these limits use to identify requests; the hashed IP address is decided only for the suggestion and "Report a problem" forms, and the sentence on IP addresses under "Server logs" depends on this]
+- **Rate limits:** each form accepts only a limited number of sends from the same IP address. For example, the suggestion form, the "Report a problem" form and the data-request form each accept at most 5 an hour; the sign-in form and the other forms are limited too. Your IP address is the number that identifies your internet connection. For these limits we store a scrambled code made from your IP address (a hash).
+- **Limits per email address:** the forms that send an email (sign-in links, links to add an address to an account, and the data-request form) are also limited per email address, so that nobody can fill someone's inbox. We store a scrambled code of the address, made from it in one form, so that ways of writing one mailbox count once (capital letters, a tag such as `name+news@`, and the dots in a Gmail address). The site also sends at most a fixed number of such emails per hour in all. The form that adds or changes the address of an account also counts the links each account asked for, by the account's number.
+- These codes and counts still count as personal data.
 - **Where it comes from:** automatically, by electronic means, when your browser sends a form.
-- **Legal basis:** our legitimate interest in protecting the forms from abuse (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
-- **How long:** the hashed IP address is kept only in the website's database on our server and deleted after 24 hours.
+- **Legal basis:** our legitimate interest in protecting the forms, and the inboxes they send to, from abuse (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
+- **How long:** the codes and counts are kept only in the website's database on our server and deleted after 24 hours.
 
 ### Data requests
 
-- **What:** the type of request, your email address, the details you give us, the date we received it, the date our answer is due, the date we closed it, its status and our email correspondence with you.
-- **Where it comes from:** you, through the [data-request page](/en/legal/data-requests/), by email or through your account settings.
+- **What:** the type of request, your email address, your name if you give it, the details you give us, the date we received it, the date our answer is due, the date we closed it, its status and our email correspondence with you. For a deletion done through the form, we keep neither your name nor the details, but we keep how many records were deleted.
+- **Where it comes from:** you, through the form on the [data-request page](/en/legal/data-requests/), by email or through your account settings. When you delete your account in your settings, we record that as a request too.
+- **How the form works:** the form's email asks you to confirm the request with a link that works for 24 hours. We act only on confirmed requests. Until you confirm, what you wrote is kept only with the link, and deleted with it after 24 hours. For each request sent with the form, we keep, for 60 days, its type, its date and a scrambled code made from your email address (a hash), but not the address itself nor what you wrote, to be able to show that a request arrived. [TO DECIDE: B4 – legal basis for the record of requests that are not confirmed]
 - **Why:** to handle your request and to be able to show that we did.
 - **Legal basis:** our legal duty to answer. Under KVKK: Art. 5(2)(ç), because KVKK Art. 13 requires an answer. Under the GDPR: Art. 6(1)(c), because GDPR Arts. 12 to 22 require an answer.
-- **How long:** 2 years after the request is closed, in our database and our mailbox. [TO DECIDE: B11 – 2-year period]
+- **How long:** 2 years after the request is closed, in our database and our mailbox; for a request that is not confirmed, 60 days after it arrived. [TO DECIDE: B11 – 2-year period, and 60 days for requests that are not confirmed]
 
 ### Removal requests, corrections and "Report a problem"
 
@@ -169,7 +174,7 @@ Every item on Gliagora has a "Report a problem" link. It opens a short form with
     - Under KVKK: our legal duty under Law No. 5651 (Art. 5(2)(ç)), and the protection of your rights and ours (Art. 5(2)(e)).
     - Under the GDPR: our legitimate interest in handling these requests properly (Art. 6(1)(f)).
   - Corrections and problem reports: our legitimate interest in keeping listings accurate (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
-- **How long:** 2 years after the request is closed. [TO DECIDE: B11 – 2-year period]
+- **How long:** 2 years after the request is closed. [TO DECIDE: B11 – 2-year period] If you confirm a deletion request on the [data-request page](/en/legal/data-requests/), we clear your email address from your problem reports and corrections at once. Requests about your personal rights (Law No. 5651) keep it for their period. [TO DECIDE: B11 – whether a confirmed deletion request should also clear the address on requests about personal rights]
 
 ### Email to hello@gliagora.com
 
@@ -188,7 +193,7 @@ Our web server writes a line for each request it receives.
 - **What:** each line holds:
   - the date and time;
   - your IP address (the number that identifies your internet connection), shortened before it is written so that it no longer points to your connection alone;
-  - the web address requested, including any words you typed into the site search; [TO DECIDE: S and M4b – keep the single-use codes and email addresses in sign-in, confirmation and unsubscribe links out of these logs]
+  - the web address requested, including any words you typed into the site search. For sign-in, account and data-request addresses, the part after the "?" is removed before the line is written, also in the server's error log, so the single-use codes in our links never reach the logs; our links never carry email addresses. [TO DECIDE: M2 – the same for the newsletter's confirmation and unsubscribe links];
   - whether the request worked, and how much data was sent;
   - other information your browser sends with each request, such as the name and version of your browser (user agent), your preferred language and the page you came from;
   - for the editing area only, the editor's user name.
@@ -256,15 +261,17 @@ If you are named and want something corrected or removed, use the [notice and ta
 - **Why:** to restore the service after a failure.
 - **Legal basis:** the same basis as the original data, and our legitimate interest in keeping data safe (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
 - **How long:** we keep one copy for each of the last 7 days, the last 4 weeks and the last 6 months, plus every copy from the last 2 days. So anything you delete, including a deleted account and the address of a former subscriber, disappears from the backups within 6 months.
+- **Deletions survive a restore:** when we delete data because someone asked us to (a data request, a deleted account) or because an account was inactive, we note the number of each deleted record, with no personal data, for 7 months. If we ever restore a backup, we delete those records again within minutes. A restore after a total loss can only use the latest backup, so it cannot know the deletions made after that backup was taken (at most a day).
 
 ### Emails we send you
 
 We send you only emails you asked for, or emails your account or request needs:
 
 - the newsletter confirmation email and Glia Notes itself;
-- sign-in links;
-- an inactivity warning, and one final email after your account is deleted;
-- for data requests: a verification link, a confirmation, or an automatic acknowledgement;
+- sign-in links, and a link to confirm an email address you add to your account;
+- an inactivity warning, and one final email after you delete your account yourself;
+- for data requests: a link to confirm the request, which is also our acknowledgement, and one email that says what we deleted after you confirm a deletion;
+- for "Report a problem": an automatic acknowledgement, if you gave your address;
 - the outcome of your suggestion, only if you asked for it.
 
 ## Summary: purposes, legal bases and retention
@@ -274,15 +281,16 @@ We send you only emails you asked for, or emails your account or request needs:
 | Newsletter email address and status | Send Glia Notes | Consent (5(1)) | Consent (a) | Until you unsubscribe; unconfirmed: 7 days |
 | Newsletter consent records | Show your consent | Protecting a right (5(2)(e)) | Legal obligation (c) | While subscribed, plus 3 years; no longer linked to you in our live systems once your address is deleted (backups: within 6 months) |
 | Bounce records | Keep the list accurate | Legitimate interest (5(2)(f)) | Legitimate interests (f) | Deleted with the address |
-| Member account | Sign-in, saved items, settings | Contract (5(2)(c)) | Contract (b) | Until you delete it; after 24 months without activity: warning, deletion 30 days later |
+| Member account | Sign-in, saved items, settings | Contract (5(2)(c)) | Contract (b) | Until you delete it; after 24 months without activity: warning, deletion 30 days later (without an email address: deletion after 24 months and 30 days) |
 | Saved items and settings | Member features | Contract (5(2)(c)) | Contract (b) | Deleted with the account |
-| Sessions | Keep you signed in | Contract (5(2)(c)) | Contract (b) | 30 days |
+| Sessions | Keep you signed in | Contract (5(2)(c)) | Contract (b) | 30 days from sign-in |
 | Sign-in links | Sign you in | Contract (5(2)(c)) | Contract (b) | 15 minutes, single use |
+| Links to add an address | Confirm an address you add | Contract (5(2)(c)) | Contract (b) | 24 hours, single use |
 | Final deletion email | Confirm the deletion | Legal obligation (5(2)(ç)) | Legal obligation (c) | Sent once |
 | Suggestion: link and note | Review the suggestion | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 90 days after the decision |
 | Suggestion: your email (optional) | Tell you the outcome | Consent (5(1)) or Legitimate interest (5(2)(f)) [TO DECIDE: B8 – KVKK basis] | Consent (a) | 90 days after the decision, or earlier if you withdraw consent |
-| Hashed IP address | Protect the suggestion and "Report a problem" forms from abuse | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 24 hours |
-| Data requests | Handle your request | Legal obligation (5(2)(ç)) | Legal obligation (c) | 2 years after closure |
+| Hashed IP and email addresses | Protect the forms from abuse | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 24 hours |
+| Data requests | Handle your request | Legal obligation (5(2)(ç)) | Legal obligation (c) | 2 years after closure; not confirmed: type, date and address code, 60 days |
 | Removal requests (Law No. 5651) | Handle your request | Legal obligation and Protecting a right (5(2)(ç), (e)) | Legitimate interests (f) | 2 years after closure |
 | Corrections and problem reports | Keep listings accurate | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 2 years after closure |
 | Email to hello@gliagora.com | Reply to you | Legitimate interest (5(2)(f)) | Legitimate interests (f) | 2 years after the last message |
@@ -318,7 +326,7 @@ Our technical administrator is a person who maintains our server and software on
 
 ### Services you deal with directly
 
-- **Google and ORCID (sign-in):** if you choose one of them, you sign in on their own page. Google tells us your email address and an account ID. ORCID tells us your ORCID iD and your name, which we keep only if you choose. We send them no personal data about you. Their own privacy policies apply to your account with them. [TO DECIDE: B13 – role of Google and ORCID, and whether to mention your email provider]
+- **Google and ORCID (sign-in):** if you choose one of them, you sign in on their own page. Google tells us an account ID, your email address, whether it is verified and, for a Google Workspace address, its domain; we keep the address only if Google manages it, and never the domain. ORCID tells us your ORCID iD and your name, which we keep only if you choose. We send them no personal data about you. Their own privacy policies apply to your account with them. [TO DECIDE: B13 – role of Google and ORCID, and whether to mention your email provider]
 - **Your email provider:** our emails are delivered to the provider that runs your mailbox. You choose that provider, and it may be outside Türkiye.
 - **Sites we link to:** when you follow a link to an employer or another site, that site receives at most our domain name as the referring site, not the page you were on. Like any website you visit, it also sees your IP address and browser details, and its own privacy policy applies. Links to employers carry no tracking parameters.
 
@@ -353,8 +361,8 @@ You can ask for a copy of the safeguard we use for each transfer by writing to p
 
 We use only what is strictly necessary for the site to work, so there is no cookie banner. The [cookies and storage page](/en/legal/cookies/) lists each item and how long it is kept.
 
-- **Member session cookie:** keeps you signed in. It lasts 30 days.
-- **Sign-in security cookies:** short-lived cookies that protect sign-in with Google, ORCID or an email link against misuse. Their names and lifetimes are listed on the cookies and storage page.
+- **Member session cookie (`__Host-gliagora-session`):** keeps you signed in, for 30 days from when you signed in.
+- **Sign-in cookie (`__Host-gliagora-signin`):** set when you start signing in with Google, ORCID or an email link, for 15 minutes. It protects signing in against misuse and, for an email link, lets us warn you when the link is opened in another browser than the one where you asked for it.
 - **Editor session cookie:** only for editors of Gliagora. It cannot be read by scripts, is sent only over encrypted connections and is not sent when you arrive from another site (HttpOnly, Secure, SameSite=Strict). Its lifetime is listed on the cookies and storage page.
 
 The spam protection on forms (ALTCHA) sets no cookie and stores nothing in your browser.
@@ -368,7 +376,7 @@ We set no analytics cookies: our statistics tool works without cookies. There ar
 No law requires you to give us personal data. Some features need it:
 
 - Without an email address, we cannot send you Glia Notes.
-- Without an email address or an ORCID iD, you cannot have an account. This data is needed for our agreement with you (the terms of use).
+- Without an email address, a Google account or an ORCID iD, you cannot have an account. This data is needed for our agreement with you (the terms of use).
 - Without an email address, we cannot answer a data request or a removal request.
 - Your email address on the suggestion form is optional. Without it, we simply do not tell you the outcome.
 
@@ -376,7 +384,7 @@ Server logs and spam protection work automatically when you use the site.
 
 ## Automated decisions and profiling
 
-No decision that has legal or similarly significant effects on you is made by a computer alone (GDPR Art. 22). Some routine steps are automatic: spam filters, rate limits, and deleting an inactive account after a warning. We do not build profiles of you.
+No decision that has legal or similarly significant effects on you is made by a computer alone (GDPR Art. 22). Some routine steps are automatic: spam filters, rate limits, deleting an inactive account (after a warning, if it has an email address), and carrying out a deletion you confirmed with the data-request form. We do not build profiles of you.
 
 ## Your rights
 
@@ -424,9 +432,9 @@ You can do many things yourself, straight away:
 - **Download your data:** members get a JSON file (a common file format) from their settings.
 - **Delete your account:** a button in your settings. Your account, saved items, settings and newsletter subscription are deleted at once, and you receive one confirmation email. Consent records are unlinked from you, and copies in backups disappear later (see "Backups").
 
-If you are not a member, you can ask for deletion on the [data-request page](/en/legal/data-requests/). We send a verification link to your email address. When you click it, we automatically delete your newsletter subscription and the email address on any suggestion you sent, unlink your consent records and send you a confirmation. We keep a record of the request itself, as described under "Data requests".
+Anyone, member or not, can ask for deletion with the form on the [data-request page](/en/legal/data-requests/). We send a link to your email address, which works for 24 hours. When you open it and confirm, we delete at once the suggestions you sent with that address, a Gliagora account with that address, its newsletter subscription and your address on problem reports (requests about your personal rights keep it), unlink your consent records and send you one email that says what we deleted. We keep a record of the request itself, as described under "Data requests".
 
-For access, correction or objection, use the data-request page or write to privacy@gliagora.com. To have content about you removed from a listing, use the [notice and takedown page](/en/legal/takedown/). If you use one of these forms, you get an automatic acknowledgement at once. We answer free of charge within 30 days under KVKK, or within one month under the GDPR.
+For access, correction or objection, use the form on the data-request page or write to privacy@gliagora.com. To have content about you removed from a listing, use the [notice and takedown page](/en/legal/takedown/). The data-request form emails you at once: this is our acknowledgement, and it asks you to confirm the request. "Report a problem" sends an automatic acknowledgement too. We answer free of charge within 30 days of receiving a request under KVKK, or within one month under the GDPR.
 
 [TO DECIDE: B5 – KVKK application channels without a postal address]
 
@@ -450,7 +458,7 @@ You must be at least 16 to subscribe to Glia Notes, to have a member account or 
 - **Location:** your data is stored on servers we rent in Türkiye. The database cannot be reached from the internet, and each program on the server can reach only its own database.
 - **Connections:** all connections to the site are encrypted (HTTPS), and browsers are told to always use the encrypted connection (HSTS).
 - **Pages:** our pages tell browsers not to load anything from other websites (Content Security Policy). Other sites receive at most our domain name as the referring site. Our pages cannot use your camera, microphone or location, and the map never asks for your location.
-- **Member sign-in:** no passwords. Sign-in links work once and expire after 15 minutes. Sign-in with Google and ORCID uses standard checks that stop others from taking over the sign-in (state and PKCE). A new session starts at each sign-in.
+- **Member sign-in:** no passwords. Sign-in links work once and expire after 15 minutes. Each emailed link can be used only for what it was sent for (signing in, adding an address, confirming a request), and a sign-in link opened in another browser than the one that asked for it shows a warning first. Sign-in with Google and ORCID uses standard checks that stop others from taking over the sign-in (state, a one-time value in the provider's reply (nonce) and, where the provider supports it, PKCE). A new session starts at each sign-in.
 - **Editor access:** a long passphrase, a second sign-in step, a 15-minute lockout after 5 failed attempts, and an audit log. Members cannot reach the editing tools.
 - **Forms:** all input is checked on the server. Spam protection and rate limits apply.
 - **Server:** automatic security updates; administrators log in to the server with a key file, never a password; a firewall; blocking of repeated failed logins; and programs that run without administrator rights.

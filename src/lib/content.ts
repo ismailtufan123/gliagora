@@ -57,7 +57,7 @@ export const CONTENT_PAGES = {
     messages: 'privacy',
     path: '/en/legal/privacy/',
     file: 'en/legal/privacy.md',
-    updated: '2026-09-28',
+    updated: '2026-10-02',
     draft: true,
   },
   kvkk: {
@@ -65,7 +65,7 @@ export const CONTENT_PAGES = {
     messages: 'kvkk',
     path: '/tr/legal/kvkk-aydinlatma-metni/',
     file: 'tr/legal/kvkk-aydinlatma-metni.md',
-    updated: '2026-09-28',
+    updated: '2026-10-02',
     draft: true,
   },
   acikRiza: {
@@ -89,7 +89,7 @@ export const CONTENT_PAGES = {
     messages: 'terms',
     path: '/en/legal/terms/',
     file: 'en/legal/terms.md',
-    updated: '2026-10-01',
+    updated: '2026-10-02',
     draft: true,
   },
   takedown: {
@@ -105,7 +105,7 @@ export const CONTENT_PAGES = {
     messages: 'dataRequests',
     path: '/en/legal/data-requests/',
     file: 'en/legal/data-requests.md',
-    updated: '2026-09-27',
+    updated: '2026-10-02',
     draft: true,
   },
 } as const satisfies Record<string, ContentPageInfo>

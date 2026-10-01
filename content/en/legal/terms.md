@@ -1,6 +1,6 @@
 ## About these terms
 
-These terms apply when you use gliagora.com ("Gliagora | Neuroscience"), including member accounts and the Glia Notes newsletter. By using the site, you agree to them. When you create a member account, you confirm that you accept them. [TO DECIDE: B9 – whether visitors are bound, and how members accept the terms at sign-in]
+These terms apply when you use gliagora.com ("Gliagora | Neuroscience"), including member accounts and the Glia Notes newsletter. By using the site, you agree to them. When you create a member account (by pressing "Create account"), you confirm that you accept them and that you are 16 or older. [TO DECIDE: B9 – whether visitors are bound, and how members accept the terms at sign-in]
 
 Gliagora is run by Nuray Sancar, a private individual who lives in Türkiye. She is the editor and is responsible for what Gliagora publishes. [TO DECIDE: B1 – content provider role] In these terms, "we", "us" and "our" mean Gliagora and its editor. "You" means anyone who uses the site.
 
@@ -93,11 +93,11 @@ Your account has no public profile. Other visitors and members cannot see your s
 
 We do not use passwords. You can sign in with:
 
-- **Google:** we receive only your email address and an ID for your Google account. We do not receive your name, photo or contacts.
-- **ORCID:** we store your ORCID iD. We store the name from your ORCID record only if you choose to keep it on your Gliagora account.
+- **Google:** we receive an ID for your Google account, your email address and whether Google has verified it. We keep the address only if Google manages it (a Gmail or Google Workspace address). We do not receive your name, photo or contacts.
+- **ORCID:** we store your ORCID iD. We store the name from your ORCID record only if you tick the box for it when you create your account.
 - **A sign-in link by email:** the link works once and expires after 15 minutes.
 
-When you sign in with Google or ORCID, their own terms also apply to your account with them. If you use different ways to sign in (for example Google and an email link) with the same verified email address, you have one Gliagora account, not two. You can link your ORCID iD in your account settings.
+When you sign in with Google or ORCID, their own terms also apply to your account with them. An account is created only when you press "Create account". Signing in with Google with an address Google manages, or with an email link, signs you in to the account that has that address, if there is one. You can link Google and ORCID in your account settings. A way of signing in that belongs to another Gliagora account cannot be linked, and two accounts are never combined: delete one first.
 
 ### Your responsibilities
 
@@ -109,9 +109,9 @@ When you sign in with Google or ORCID, their own terms also apply to your accoun
 ### Ending your account
 
 - Before you delete your account, you can download your data with "Download my data". You get one file in JSON, a common format that other programs can read.
-- You can delete your account at any time with "Delete my account" in your account settings. We delete your account, saved items, preferences and newsletter subscription straight away, and send you one email to confirm.
+- You can delete your account at any time with "Delete my account" in your account settings. We delete your account, saved items, preferences and newsletter subscription straight away and, if your account has an email address, send you one email to confirm.
 - Copies in our encrypted backups disappear as the backups age out, within 6 months. The [privacy policy](/en/legal/privacy/) explains what we keep and for how long.
-- If you have not used Gliagora while signed in for 24 months, we email you a warning. If you do not sign in within 30 days of that email, we delete your account.
+- If you have not used Gliagora while signed in for 24 months, we email you a warning. If you do not sign in within 30 days of that email, we delete your account. An account without an email address cannot be warned: we delete it 24 months and 30 days after you last used it.
 - We may suspend or delete an account that breaks these terms. When we can, we tell you why. [TO DECIDE: B16 – suspension]
 
 ## Glia Notes newsletter
