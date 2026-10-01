@@ -123,8 +123,8 @@ export default async function Page({ searchParams }: Props) {
 
   return (
     <main id="main" className="page-frame grid flex-1 content-start gap-6 py-12">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-        <h1 className="text-h1">{t('list.title')}</h1>
+      <div className="jobs-head flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+        <h1 className="jobs-title text-h1">{t('list.title')}</h1>
         <p className="text-card">{t('list.open', { count: list.open })}</p>
       </div>
 

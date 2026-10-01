@@ -1070,6 +1070,28 @@
     }
   }
 
+  /*
+   * The jobs list's title and count, so that the web fonts and their fallbacks agree on the lines
+   * at every width and nothing moves when the fonts arrive (PLAN §7.3, §17; approved 2026-10-01).
+   * On phones the title always takes two lines: in one line it is 10.45em wide in Commissioner and
+   * 10.51em in its fallback, while a phone's line holds about 8 to 11em, so between 409 and 413px
+   * one font took one line and the other two (a layout shift of 0.23 on CI). Below 10em both break
+   * after "Neuroscience"; from 30rem the one line fits either font with room to spare. Below 48rem
+   * the count always sits under the title: between 674 and 683px it fitted beside the title in one
+   * font and not in the other. Checked in both fonts at every width from 320 to 1280px.
+   */
+  @media (width < 30rem) {
+    .jobs-title {
+      max-inline-size: 10em;
+    }
+  }
+
+  @media (width < 48rem) {
+    .jobs-head {
+      flex-direction: column;
+    }
+  }
+
   /* The number of results and the sort order, on one line where they fit (PLAN §9.3). */
   .results-head {
     display: flex;

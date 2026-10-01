@@ -196,18 +196,7 @@ test.describe('fonts', () => {
     jobPath(FIXED_JOBS.open),
     '/en/search/?q=neuro',
   ]) {
-    test(`${path}: no layout shift when the web fonts arrive late`, async ({ page, isMobile }) => {
-      // At 412px (the phone project) the jobs list's title, "Neuroscience positions", measures
-      // 380.02px in Commissioner on a 380px line: a hundredth of a pixel of difference in text
-      // rendering decides whether it takes one line or two. On some CI runners it takes one while
-      // the fallback (0.5% wider) takes two, and the list moves up by one heading line when the
-      // font arrives (0.234); on others both take two and nothing moves. No fallback can fix a
-      // heading that fills its line in the web font itself: moving it off the edge is a typography
-      // decision (PLAN §7.3; pre-launch checklist, §20). The jobs list is private until M6.
-      test.fixme(
-        isMobile && path === '/en/jobs/',
-        'the title fills its line in the web font itself at 412px',
-      )
+    test(`${path}: no layout shift when the web fonts arrive late`, async ({ page }) => {
       await page.route('**/*.woff2', async (route) => {
         await new Promise((resolve) => setTimeout(resolve, 1500))
         await route.continue()
