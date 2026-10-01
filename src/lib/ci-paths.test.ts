@@ -60,7 +60,6 @@ const FILES = {
     'docs/STATUS.md',
     'docs/NEXT.md',
     'docs/legal/veri-isleme-sozlesmesi-taslak.md',
-    'deploy/README.md',
     'tools/poster/README.md',
   ],
   // Read by the app or by a test, so a change to them runs CI.
@@ -69,6 +68,8 @@ const FILES = {
     'content/tr/legal/kvkk-aydinlatma-metni.md',
     'docs/editor-guide-tr.md',
     'docs/tr-strings-review.md',
+    // Its address-code command is run by src/lib/data-requests/address.test.ts.
+    'deploy/README.md',
     'src/lib/site.ts',
     'messages/en.json',
     '.github/workflows/ci.yml',

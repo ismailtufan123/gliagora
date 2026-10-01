@@ -94,8 +94,8 @@ Every pull request and every push to `main` runs `.github/workflows/ci.yml`:
    `sha-<commit>`.
 
 To save Actions minutes (2,000 a month on GitHub Free; PLAN §11.5, D46), a change that touches only
-documentation (Markdown files and `docs/`, except `content/`, `docs/editor-guide-tr.md` and
-`docs/tr-strings-review.md`, which the app or a test reads) runs no CI, and a push to `main` whose
+documentation (Markdown files and `docs/`, except `content/`, `docs/editor-guide-tr.md`,
+`docs/tr-strings-review.md` and `deploy/README.md`, which the app or a test reads) runs no CI, and a push to `main` whose
 tree already passed in its pull request skips steps 1 and 2's tests: it builds, smoke-tests and
 pushes the image only.
 
