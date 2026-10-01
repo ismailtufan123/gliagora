@@ -192,6 +192,16 @@ for (const viewport of [
       await context.close()
     })
 
+    test('jobs list and saved positions, signed in', async ({ page, baseURL }, testInfo) => {
+      await signInAs(page.context(), 'email', baseURL!)
+      await page.goto(FILTERED_LIST)
+      await expect(page.locator('#job-results form[data-save]').first()).toBeVisible()
+      await expectLayoutHolds(page, testInfo, 'jobs list, signed in')
+      await page.goto('/en/account/saved/')
+      await expect(page.getByRole('region', { name: 'No longer open' })).toBeVisible()
+      await expectLayoutHolds(page, testInfo, 'saved positions')
+    })
+
     test('account, signed in', async ({ page, baseURL }, testInfo) => {
       await signInAs(page.context(), 'email', baseURL!)
       await page.goto('/en/account/')

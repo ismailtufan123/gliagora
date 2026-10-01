@@ -1,6 +1,7 @@
 import { type Locale, locales } from '@/i18n/routing'
 import { normaliseEmail } from '@/lib/members/email-address'
 import { MEMBER_PATHS } from '@/lib/members/paths'
+import { parseSave } from '@/lib/members/return-path'
 
 import { FORM_INPUTS } from './fields'
 import {
@@ -33,6 +34,8 @@ export type SignInValues = {
   email: string
   /** Where to go after signing in, from the page's address (checked when the link is made). */
   next: string
+  /** The position a Save link asked to save once signed in (`job:{shortId}`), or empty. */
+  save: string
 }
 
 export type SignInData = {
@@ -42,6 +45,8 @@ export type SignInData = {
    */
   email: string
   next: string | null
+  /** A well-formed `job:{shortId}`, or null; whether it can still be saved is checked at sign-in. */
+  save: string | null
   locale: Locale
 }
 
@@ -49,11 +54,14 @@ export type SignInErrors = Partial<Record<'email', SignInErrorCode>>
 
 /** The longest `next` read from the form; the link keeps at most NEXT_MAX (return-path.ts). */
 const NEXT_READ_MAX = 2000
+/** `job:` and a short ID are 9 characters; anything longer is not one. */
+const SAVE_READ_MAX = 20
 
 export function readSignInValues(form: FormData): SignInValues {
   return {
     email: formText(form, 'email'),
     next: formText(form, FORM_INPUTS.next).slice(0, NEXT_READ_MAX),
+    save: formText(form, FORM_INPUTS.save).slice(0, SAVE_READ_MAX),
   }
 }
 
@@ -70,6 +78,7 @@ export function parseSignIn(values: SignInValues, locale: string): Parse<SignInD
     data: {
       email,
       next: values.next.trim() || null,
+      save: parseSave(values.save.trim()) ? values.save.trim() : null,
       // The form's own hidden field; anything else is read as English, the site's language.
       locale: (locales as readonly string[]).includes(locale) ? (locale as Locale) : 'en',
     },
@@ -96,7 +105,11 @@ export function handleSignInRequest(
 
 export type SignInState = FormState<SignInValues>
 
-export const emptySignInValues = (next: string | null): SignInValues => ({
+export const emptySignInValues = (
+  next: string | null,
+  save: string | null = null,
+): SignInValues => ({
   email: '',
   next: next ?? '',
+  save: save ?? '',
 })

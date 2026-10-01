@@ -1,9 +1,11 @@
 import { getTranslations } from 'next-intl/server'
 
+import { SaveControl } from '@/components/account/SaveControl'
 import type { Locale } from '@/i18n/routing'
 import { deadlineView } from '@/lib/jobs/format'
 import { textDirection } from '@/lib/jobs/languages'
 import { type JobCard, rowTags } from '@/lib/jobs/view'
+import type { SaveContext } from '@/lib/members/save-context'
 
 import { DeadlineText } from './DeadlineText'
 import { OriginalPostingLink } from './OriginalPostingLink'
@@ -17,12 +19,16 @@ export type JobRowOptions = {
   compact?: boolean
   /** Leave the original posting's link out, for short lists that lead to the job pages. */
   brief?: boolean
+  /** The page's Save context: a Save control in each row (the jobs list, the saved page). */
+  save?: SaveContext | null
+  /** The title as text, not a link: positions that are no longer open (the saved page). */
+  plainTitle?: boolean
 }
 
 // A job in a list (PLAN §3.2 "Job card", §7.5 "Job row", §9.3): the title linking to the job
-// page, institution, place, position type, deadline with days left and gauge, up to three tags
-// and the original posting. The metadata are separate labelled elements (§7.6), with the labels
-// for screen readers only.
+// page, institution, place, position type, deadline with days left and gauge, up to three tags,
+// the original posting and, where the page has them, the Save control. The metadata are separate
+// labelled elements (§7.6), with the labels for screen readers only.
 export async function JobRow({
   job,
   now,
@@ -31,6 +37,8 @@ export async function JobRow({
   showInstitution = true,
   compact = false,
   brief = false,
+  save,
+  plainTitle = false,
 }: JobRowOptions & { job: JobCard; now: Date; locale: Locale }) {
   const t = await getTranslations({ locale, namespace: 'jobs' })
   const Heading = `h${headingLevel}` as const
@@ -39,13 +47,20 @@ export async function JobRow({
   const place = city && country ? t('place', { city, country }) : (city ?? country)
   const tags = compact ? null : rowTags(job)
   const lang = job.originalLanguage !== locale ? job.originalLanguage : undefined
+  const posting = !brief && job.originalUrl && deadline?.open !== false ? job.originalUrl : null
 
   return (
     <div className="job-row">
       <Heading className="font-display text-card leading-tight font-bold">
-        <a href={job.path} lang={lang} dir={textDirection(lang)}>
-          {job.title}
-        </a>
+        {plainTitle ? (
+          <span lang={lang} dir={textDirection(lang)}>
+            {job.title}
+          </span>
+        ) : (
+          <a href={job.path} lang={lang} dir={textDirection(lang)}>
+            {job.title}
+          </a>
+        )}
       </Heading>
       <dl className="job-meta">
         {showInstitution && job.institution && (
@@ -90,12 +105,11 @@ export async function JobRow({
           )}
         </ul>
       )}
-      {!brief && job.originalUrl && deadline?.open !== false && (
-        <OriginalPostingLink
-          href={job.originalUrl}
-          locale={locale}
-          className="justify-self-start"
-        />
+      {(posting || save) && (
+        <div className="job-row-actions">
+          {posting && <OriginalPostingLink href={posting} locale={locale} />}
+          {save && <SaveControl job={job} context={save} />}
+        </div>
       )}
     </div>
   )

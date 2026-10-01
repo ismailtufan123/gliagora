@@ -23,6 +23,9 @@ import { useEffect } from 'react'
 // devices, <html data-apple>) and from the header's Search link, which leads to the search page
 // without JavaScript. Only the opening is here: the rest of the dialog's code loads on first use
 // (search-dialog.ts), so every page carries a few hundred bytes for search (PLAN §17.3).
+// Likewise for Save (src/components/account/SaveControl.tsx): a Save form submitted here is taken
+// over, and its code loads on first use (save-toggle.ts), or already when focus reaches a Save
+// form; should it fail to load, the form is sent as it would be without JavaScript.
 
 const SELECTOR = 'details[data-disclosure]'
 const MODAL = 'details[data-modal]'
@@ -40,6 +43,9 @@ function openSearch(from: Element | null) {
   dialog.showModal()
   void import('./search-dialog').then((module) => module.enhance(dialog, from))
 }
+
+const SAVE_FORM = 'form[data-save]'
+const saveModule = () => import('./save-toggle')
 
 function close(menu: HTMLDetailsElement, returnFocus: boolean) {
   menu.open = false
@@ -200,6 +206,17 @@ export function DisclosureEnhancer({ desktopQuery }: { desktopQuery: string }) {
     let lastFocused: Element | null = null
     const onFocusIn = (event: FocusEvent) => {
       lastFocused = event.target instanceof Element ? event.target : null
+      if (lastFocused?.closest(SAVE_FORM)) saveModule().catch(() => {})
+    }
+
+    const onSubmit = (event: SubmitEvent) => {
+      const form = event.target
+      if (!(form instanceof HTMLFormElement) || !form.matches(SAVE_FORM)) return
+      event.preventDefault()
+      saveModule().then(
+        (module) => module.toggle(form),
+        () => form.submit(),
+      )
     }
 
     const desktop = window.matchMedia(desktopQuery)
@@ -236,6 +253,7 @@ export function DisclosureEnhancer({ desktopQuery }: { desktopQuery: string }) {
     document.addEventListener('focusin', onOutside)
     document.addEventListener('focusin', onFocusIn)
     document.addEventListener('click', onClick)
+    document.addEventListener('submit', onSubmit)
     desktop.addEventListener('change', onBreakpoint)
 
     // A menu opened before the page became interactive: keep only the last one open and apply
@@ -258,6 +276,7 @@ export function DisclosureEnhancer({ desktopQuery }: { desktopQuery: string }) {
       document.removeEventListener('focusin', onOutside)
       document.removeEventListener('focusin', onFocusIn)
       document.removeEventListener('click', onClick)
+      document.removeEventListener('submit', onSubmit)
       desktop.removeEventListener('change', onBreakpoint)
     }
   }, [desktopQuery])

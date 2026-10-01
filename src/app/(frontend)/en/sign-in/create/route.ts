@@ -15,6 +15,8 @@ import { MEMBER_PATHS } from '@/lib/members/paths'
 import { rotateSession, signInWithProvider } from '@/lib/members/provider-sign-in'
 import { formValue, forbidden, readForm, seeOther } from '@/lib/members/responses'
 import { DEFAULT_NEXT } from '@/lib/members/return-path'
+import { saveAfterSignIn } from '@/lib/members/saved'
+import { saveStore } from '@/lib/members/saved-store'
 import { openSignIn } from '@/lib/members/seal'
 import { memberDb } from '@/lib/members/store'
 
@@ -25,8 +27,9 @@ import { memberDb } from '@/lib/members/store'
 // never from the form, which only says whether to keep the ORCID record's name. It is checked
 // again: if an account has it by now, that account is signed in to (and Google added to it, when
 // that account has the address Google manages). Then a new session, the
-// sign-in cookie goes, and a 303 to where the person was going. A failure keeps the cookie, so
-// Back and the button again can still work.
+// sign-in cookie goes, a position the person pressed Save on before signing in is saved (if it is
+// still public), and a 303 to where the person was going. A failure keeps the cookie, so Back and
+// the button again can still work.
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
@@ -40,7 +43,7 @@ export async function POST(request: Request) {
     return seeOther(outcomePath(MEMBER_PATHS.signIn, { error: 'expired' }), [cleared])
   }
   if (!memberAuthConfig()[pending.p].on) return seeOther(MEMBER_PATHS.signIn, [cleared])
-  const keep = { next: pending.next === DEFAULT_NEXT ? null : pending.next }
+  const keep = { next: pending.next === DEFAULT_NEXT ? null : pending.next, save: pending.save }
   const form = await readForm(request)
   const displayName =
     pending.p === 'orcid' && pending.name && formValue(form, 'use-name') === 'yes'
@@ -71,8 +74,15 @@ export async function POST(request: Request) {
       replaces: jar.get(SESSION_COOKIE)?.value,
       endOthers: changed,
     })
+    const saved = await saveAfterSignIn(
+      saveStore(payload, now),
+      done.memberId,
+      pending.save,
+      pending.next,
+    )
     const target =
-      pending.next === DEFAULT_NEXT
+      saved ??
+      (pending.next === DEFAULT_NEXT
         ? outcomePath(MEMBER_PATHS.account, {
             done:
               done.kind === 'created'
@@ -82,7 +92,7 @@ export async function POST(request: Request) {
                   : 'signed-in',
             othersEnded: othersEnded > 0,
           })
-        : pending.next
+        : pending.next)
     return seeOther(target, [cookie, cleared])
   } catch (error) {
     const reference = newReference()

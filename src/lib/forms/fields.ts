@@ -25,6 +25,8 @@ export const FORM_INPUTS = {
   item: 'item',
   /** Sign-in: where to go afterwards, a path on the site (src/lib/members/return-path.ts). */
   next: 'next',
+  /** Sign-in: the position to save afterwards (`job:{shortId}`), from a Save link. */
+  save: 'save',
 } as const
 
 /** The longest note, in UTF-16 code units: what the browser counts, and what Payload checks. */

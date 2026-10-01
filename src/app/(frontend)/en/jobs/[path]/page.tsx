@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
+import { SaveControl, SaveRegion } from '@/components/account/SaveControl'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { DeadlineText } from '@/components/jobs/DeadlineText'
 import { JobList } from '@/components/jobs/JobList'
@@ -13,6 +14,8 @@ import { listingState } from '@/lib/jobs/deadline'
 import { deadlineView, formatDay, languageName, listOf } from '@/lib/jobs/format'
 import { textDirection } from '@/lib/jobs/languages'
 import { jobsHref } from '@/lib/filters/jobs'
+import { saveContext } from '@/lib/members/save-context'
+import { SAVE_CONTROL_ID } from '@/lib/members/saved'
 import { type TermRef, subfieldHubPath } from '@/lib/jobs/view'
 import { jobByShortId, openJobsAtInstitution, requestTime, similarOpenJobs } from '@/lib/records'
 import { reportHref } from '@/lib/reports/item'
@@ -22,7 +25,9 @@ import { reportHref } from '@/lib/reports/item'
 // ended, or the job was marked expired) it shows the closed notice and similar open positions
 // first, without the way to apply, and is not indexed (§2.5). The proxy has already answered 404
 // for unknown jobs, drafts and jobs in review, 410 for withdrawn jobs and jobs closed 30 days
-// ago, and redirected outdated slugs.
+// ago, and redirected outdated slugs. Once a way of signing in is on, a Save control follows the
+// institution and place (open jobs and those closed less than 30 days ago: every job this page
+// shows); the lists of other positions have none.
 export const dynamic = 'force-dynamic'
 
 const MORE_AT_INSTITUTION = 3
@@ -111,6 +116,7 @@ export default async function Page({ params }: Props) {
     'en',
     SIMILAR,
   )
+  const save = await saveContext(job.path, [job.id])
 
   const similarSection = (
     <section aria-labelledby="similar" className="grid max-w-(--measure) content-start gap-4">
@@ -183,6 +189,8 @@ export default async function Page({ params }: Props) {
           {institution && <a href={institution.path}>{institution.name}</a>}
           {place && <span>{place}</span>}
         </p>
+        {save && <SaveControl job={job} context={save} id={SAVE_CONTROL_ID} />}
+        <SaveRegion context={save} />
       </div>
 
       {!open && (

@@ -18,9 +18,18 @@ import { SignInForm } from './SignInForm'
 // `form-action 'self'`), the email form, the privacy line and the terms and age line. Only the
 // ways that are switched on are offered; with none (production until the operator sets the keys),
 // the panel says that signing in is not available yet. `next` is where sign-in leads afterwards,
-// checked here and again where it is used; `path` is the page the panel is on.
+// checked here and again where it is used; `save` the position a Save link asked to save then
+// (`job:{shortId}`, already checked by the page); `path` is the page the panel is on.
 
-export async function SignInPanel({ next, path }: { next: string | null; path: string }) {
+export async function SignInPanel({
+  next,
+  path,
+  save = null,
+}: {
+  next: string | null
+  path: string
+  save?: string | null
+}) {
   const t = await getTranslations({ locale: 'en', namespace: 'signIn' })
   const { origin, methods } = await memberRequest()
   const privacyEmail = (chunks: ReactNode) => <a href={`mailto:${PRIVACY_EMAIL}`}>{chunks}</a>
@@ -39,8 +48,11 @@ export async function SignInPanel({ next, path }: { next: string | null; path: s
   const providers = (['google', 'orcid'] as const).filter((provider) => methods[provider])
   // The texts name only the providers that are on.
   const which = providers.length === 2 ? 'both' : providers[0]
-  const startQuery =
-    safe && safe !== DEFAULT_NEXT ? `?${new URLSearchParams({ next: safe }).toString()}` : ''
+  // What sign-in carries along: where to go afterwards, and the position to save then.
+  const carried = new URLSearchParams()
+  if (safe && safe !== DEFAULT_NEXT) carried.set('next', safe)
+  if (save) carried.set('save', save)
+  const startQuery = carried.size > 0 ? `?${carried.toString()}` : ''
   const providerLinks =
     providers.length > 0 ? (
       <section aria-labelledby="sign-in-providers-heading" className="grid gap-4">
@@ -62,12 +74,15 @@ export async function SignInPanel({ next, path }: { next: string | null; path: s
         <p className="text-text-muted">{t('providers.note', { methods: which! })}</p>
       </section>
     ) : null
-  // Where the form goes without JavaScript: this page with only the `next` the sign-in page reads
-  // from its address (the account page passes its own), never with an outcome (`?error=`,
-  // `#outcome`), whose old message would come back above the form's errors and, through the
-  // fragment, take the focus their summary should get. The same at that address, as it must be.
-  const permalink =
-    path === MEMBER_PATHS.signIn && safe ? `${path}?${new URLSearchParams({ next: safe })}` : path
+  // Where the form goes without JavaScript: this page with only the `next` and `save` the sign-in
+  // page reads from its address (the account page passes its own), never with an outcome
+  // (`?error=`, `#outcome`), whose old message would come back above the form's errors and,
+  // through the fragment, take the focus their summary should get. The same at that address, as
+  // it must be.
+  const kept = new URLSearchParams()
+  if (safe) kept.set('next', safe)
+  if (save) kept.set('save', save)
+  const permalink = path === MEMBER_PATHS.signIn && kept.size > 0 ? `${path}?${kept}` : path
   const email =
     methods.email && key ? (
       <section aria-labelledby="sign-in-email-heading" className="grid gap-4">
@@ -80,7 +95,7 @@ export async function SignInPanel({ next, path }: { next: string | null; path: s
         </noscript>
         <SignInForm
           action={sendSignInLink}
-          initial={await initialFormState(emptySignInValues(safe), key)}
+          initial={await initialFormState(emptySignInValues(safe, save), key)}
           permalink={permalink}
           text={{
             errorTitle: t('errors.title'),

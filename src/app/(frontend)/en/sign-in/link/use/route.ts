@@ -10,6 +10,8 @@ import { outcomePath } from '@/lib/members/outcome'
 import { MEMBER_PATHS } from '@/lib/members/paths'
 import { formValue, forbidden, readForm, seeOther } from '@/lib/members/responses'
 import { DEFAULT_NEXT, safeNext } from '@/lib/members/return-path'
+import { saveAfterSignIn } from '@/lib/members/saved'
+import { saveStore } from '@/lib/members/saved-store'
 import { redeemSignInLink } from '@/lib/members/sign-in-link'
 import { createSession, memberDb } from '@/lib/members/store'
 
@@ -17,8 +19,10 @@ import { createSession, memberDb } from '@/lib/members/store'
 // link opens posts here. Only from the site's own pages (`sameOrigin`). The link is consumed for
 // its purpose in one statement; the address then signs in to its member or makes the account,
 // the address's other pending links stop working, and the browser gets a new session (the one it
-// carried, if any, is ended) and loses its sign-in cookie. Then a 303 to where the person was
-// going, or to the account with what happened. An unknown, used or expired link leads back to the
+// carried, if any, is ended) and loses its sign-in cookie. A position the person pressed Save on
+// before asking for the link is saved now, if it is still public (src/lib/members/saved.ts). Then
+// a 303 to where the person was going (at that position's Save control), or to the account with
+// what happened. An unknown, used or expired link leads back to the
 // sign-in page with "This link has expired"; any other failure with a reference, which the log
 // line repeats with the error's class and code only.
 export const dynamic = 'force-dynamic'
@@ -30,7 +34,8 @@ export async function POST(request: Request) {
   const jar = await cookies()
   const now = new Date()
   try {
-    const db = memberDb(await getPayload({ config }))
+    const payload = await getPayload({ config })
+    const db = memberDb(payload)
     const used = await redeemSignInLink(db, formValue(form, 'token'), now)
     // The sign-in cookie stays: it may bind a newer link this browser asked for.
     if (!used) return seeOther(outcomePath(MEMBER_PATHS.signIn, { error: 'link-expired' }))
@@ -38,11 +43,13 @@ export async function POST(request: Request) {
       replaces: jar.get(SESSION_COOKIE)?.value,
     })
     const next = used.next ? safeNext(used.next, origin) : DEFAULT_NEXT
+    const saved = await saveAfterSignIn(saveStore(payload, now), used.memberId, used.save, next)
     // Back on the account page itself, say what happened; elsewhere the page speaks for itself.
     const target =
-      next === DEFAULT_NEXT
+      saved ??
+      (next === DEFAULT_NEXT
         ? outcomePath(MEMBER_PATHS.account, { done: used.created ? 'created' : 'signed-in' })
-        : next
+        : next)
     return seeOther(target, [
       sessionCookie(session.token, session.expiresAt, now),
       clearedCookie(SIGN_IN_COOKIE),

@@ -24,11 +24,12 @@ import { hashToken, newBinding } from '@/lib/members/tokens'
 
 // The Server Action behind "Email me a sign-in link" (M4b, D49; the M4b design §7.1). The checks
 // are those of every public form (src/lib/forms/sign-in.ts); once they pass, this stores the link
-// (only its SHA-256), emails it while the person waits, and binds it to this browser: the sealed
-// sign-in cookie holds a random value whose hash the link keeps, so the page the link opens can
-// warn when it is opened in another browser. If the mail server does not take the email within
-// 20 seconds, the link is deleted again and the form says it could not send the email. Every
-// address gets the same answer, whether it has an account or not.
+// (only its SHA-256) with where to go afterwards and the position to save then (from a Save link),
+// emails it while the person waits, and binds it to this browser: the sealed sign-in cookie holds
+// a random value whose hash the link keeps, so the page the link opens can warn when it is opened
+// in another browser. If the mail server does not take the email within 20 seconds, the link is
+// deleted again and the form says it could not send the email. Every address gets the same
+// answer, whether it has an account or not.
 
 export async function sendSignInLink(previous: SignInState, form: FormData): Promise<SignInState> {
   const now = new Date()
@@ -58,6 +59,7 @@ export async function sendSignInLink(previous: SignInState, form: FormData): Pro
           email: data.email,
           browserHash: hashToken(binding),
           next: data.next ? safeNext(data.next, origin!) : null,
+          save: data.save,
           locale: data.locale,
         },
         now,

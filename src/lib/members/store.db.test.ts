@@ -32,8 +32,10 @@ import {
   findMember,
   findSession,
   isUniqueViolation,
+  listSavedJobs,
   markEmailVerified,
   saveJob,
+  savedJobIds,
   touchMember,
   unsaveJob,
 } from './store'
@@ -642,6 +644,36 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       expect(results.sort()).toEqual(['full', 'saved'])
       expect(await countSavedItems(store, member.id)).toBe(500)
     })
+
+    it('say which of a page’s jobs the member saved', async () => {
+      const member = await newMember()
+      const other = await newMember()
+      await saveJob(store, member.id, jobs[0]!, NOW)
+      await saveJob(store, member.id, jobs[2]!, NOW)
+      await saveJob(store, other.id, jobs[1]!, NOW)
+      expect(await savedJobIds(store, member.id, jobs)).toEqual(new Set([jobs[0], jobs[2]]))
+      expect(await savedJobIds(store, member.id, [jobs[1]!])).toEqual(new Set())
+      expect(await savedJobIds(store, member.id, [])).toEqual(new Set())
+    })
+
+    it('list the saved jobs, the last saved first, with what says whether they are open', async () => {
+      const member = await newMember()
+      await saveJob(store, member.id, jobs[1]!, at(-2))
+      await saveJob(store, member.id, jobs[0]!, at(-1))
+      // A saved item whose job is gone is left out.
+      await db.execute(sql`
+        insert into saved_items (member_id, item_type, job_id) values (${member.id}, 'job', null)`)
+      const listed = await listSavedJobs(store, member.id)
+      expect(listed.map((row) => row.jobId)).toEqual([jobs[0], jobs[1]])
+      expect(listed[0]).toMatchObject({
+        savedAt: at(-1),
+        status: 'published',
+        deadlineKind: 'fixed',
+        deadlineAt: at(30),
+        expiredAt: null,
+        withdrawnAt: null,
+      })
+    })
   })
 
   describe('deleting an account', () => {
@@ -802,7 +834,7 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
   })
 
   describe('redeeming a sign-in link (sign-in-link.ts)', () => {
-    const link = async (address: string, next: string | null = null) =>
+    const link = async (address: string, next: string | null = null, save: string | null = null) =>
       (
         await createEmailToken(
           store,
@@ -811,6 +843,7 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
             email: address,
             browserHash: hashToken(newBinding()),
             next,
+            save,
             locale: 'en',
           },
           NOW,
@@ -822,7 +855,12 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       const first = await link(address, '/en/jobs/')
       const other = await link(address)
       const used = await redeemSignInLink(store, first, at(0))
-      expect(used).toEqual({ memberId: expect.any(Number), created: true, next: '/en/jobs/' })
+      expect(used).toEqual({
+        memberId: expect.any(Number),
+        created: true,
+        next: '/en/jobs/',
+        save: null,
+      })
       expect(await findMember(store, { email: address })).toMatchObject({
         id: used!.memberId,
         emailVerifiedBy: 'link',
@@ -837,7 +875,15 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
         memberId: member.id,
         created: false,
         next: null,
+        save: null,
       })
+    })
+
+    it('gives back the position a Save link asked to save, for the route to save', async () => {
+      const member = await newMember()
+      expect(
+        await redeemSignInLink(store, await link(member.email!, '/en/jobs/', 'job:k3f9a'), NOW),
+      ).toMatchObject({ memberId: member.id, next: '/en/jobs/', save: 'job:k3f9a' })
     })
 
     it('gives two links to one new address used at once one account', async () => {

@@ -76,6 +76,7 @@ describe('parseSignIn', () => {
       data: {
         email: 'someone.else+news@example.org',
         next: '/en/jobs/?type=phd',
+        save: null,
         locale: 'en',
       },
     })
@@ -86,6 +87,18 @@ describe('parseSignIn', () => {
       ok: true,
       data: { next: null, locale: 'en' },
     })
+  })
+
+  it('keeps a well-formed save and drops anything else', () => {
+    const withSave = (save: string) => {
+      const data = make('a@example.org', '/en/jobs/')
+      data.set('save', save)
+      return parseSignIn(readSignInValues(data), 'en')
+    }
+    expect(withSave(' job:test1 ')).toMatchObject({ ok: true, data: { save: 'job:test1' } })
+    for (const save of ['', 'job:TEST1', 'job:test', 'event:test1', 'job:test1x', 'job:il0ou']) {
+      expect(withSave(save)).toMatchObject({ ok: true, data: { save: null } })
+    }
   })
 
   it('reads at most 2,000 characters of next', () => {

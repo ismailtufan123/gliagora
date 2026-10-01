@@ -609,6 +609,7 @@
     "title": "Oturum aç",
     "description": "Gliagora'da oturum açın. Gliagora parolası yoktur.",
     "intro": "Üyeler pozisyonları kaydedebilir, iş listesinin ve aylık bültenin önce neyi göstereceğini seçebilir. Parola yoktur.",
+    "save": "Oturum açtıktan sonra bu pozisyonu sizin için kaydederiz: <strong>{title}</strong>",
     "notAvailable": "Oturum açma henüz kullanılamıyor.",
     "notAvailableContact": "Verilerinizle ilgili sorularınız mı var? <email>privacy@gliagora.com</email> adresine yazın.",
     "providers": {
@@ -632,7 +633,8 @@
     "signedIn": {
       "title": "Oturumunuz açık",
       "account": "Hesabınıza gidin",
-      "other": "Başka bir hesap kullanmak için önce oturumu kapatın."
+      "other": "Başka bir hesap kullanmak için önce oturumu kapatın.",
+      "save": "Bu pozisyonu kaydetmek için bir bağlantı açtınız: <strong>{title}</strong>"
     },
     "errors": {
       "title": "Bir sorun var",
@@ -700,6 +702,8 @@
     "navLabel": "Hesabınız",
     "nav": {
       "overview": "Hesap",
+      "saved": "Kaydedilenler",
+      "savedCount": "Kaydedilenler ({count})",
       "signOut": "Oturumu kapat"
     },
     "who": {
@@ -733,6 +737,24 @@
       "everywhere": "Her yerde oturumu kapat"
     }
   },
+  "save": {
+    "label": "Kaydet<hidden>: <job>{title}</job></hidden>",
+    "savedStatus": "Kaydedildi: {title}",
+    "removedStatus": "Kaydettiğiniz pozisyonlardan çıkarıldı: {title}",
+    "signInNote": "Pozisyonları kaydetmek için oturum açmanız gerekir."
+  },
+  "saved": {
+    "title": "Kaydettiğiniz pozisyonlar",
+    "description": "Gliagora'da kaydettiğiniz pozisyonlar.",
+    "signedOutTitle": "Kaydettiğiniz pozisyonları görmek için oturum açın",
+    "intro": "{count, plural, one {Bir pozisyon kaydettiniz.} other {# pozisyon kaydettiniz.}} Birini çıkarmak için Kaydet düğmesine yeniden basın.",
+    "empty": "Henüz bir pozisyon kaydetmediniz. Bir pozisyonu burada tutmak için <link>pozisyon listesinde</link> ya da pozisyonun sayfasında Kaydet düğmesine basın.",
+    "open": "Açık pozisyonlar",
+    "closed": "Artık açık değil",
+    "closedText": "Bu pozisyonların son başvuru tarihi geçti ya da pozisyonlar geri çekildi; artık başvuramazsınız. Birini bu listeden çıkarmak için Kaydet düğmesine basın.",
+    "pastEnd": "Kaydettiğiniz pozisyonlar {pages, plural, one {yalnızca # sayfa} other {# sayfa}} tutuyor.",
+    "firstPage": "İlk sayfaya git"
+  },
   "outcome": {
     "done": {
       "signed-in": "Oturumunuz açıldı.",
@@ -742,6 +764,7 @@
       "linked-orcid": "ORCID kimliğiniz bağlandı: artık onunla oturum açabilirsiniz.",
       "unlinked-google": "Google kaldırıldı: artık onunla oturum açamazsınız.",
       "unlinked-orcid": "ORCID kaldırıldı: artık onunla oturum açamazsınız.",
+      "removed": "Pozisyon, kaydettiğiniz pozisyonlardan çıkarıldı.",
       "othersEnded": "Oturumunuzun açık olduğu diğer tarayıcılarda oturumunuz kapatıldı."
     },
     "error": {
@@ -760,7 +783,9 @@
       "orcid-elsewhere": "Bu ORCID kimliği başka bir Gliagora hesabı tarafından kullanılıyor. Onu buraya bağlamak istiyorsanız önce o kimlikle oturum açıp o hesabı silin.",
       "google-already-linked": "Hesabınıza zaten başka bir Google hesabı bağlı. Önce onu kaldırın, sonra bunu bağlayın.",
       "orcid-already-linked": "Hesabınıza zaten başka bir ORCID kimliği bağlı. Önce onu kaldırın, sonra bunu bağlayın.",
-      "last-method": "Hesabınıza girmenin tek yolu bu olduğu için kaldırılamaz. Önce başka bir oturum açma yolu ekleyin."
+      "last-method": "Hesabınıza girmenin tek yolu bu olduğu için kaldırılamaz. Önce başka bir oturum açma yolu ekleyin.",
+      "saved-full": "En fazla 500 pozisyon kaydedilebilir ve bu sayıya ulaştınız. Artık gerekmeyenlerden bazılarını çıkarın, sonra yeniden kaydedin.",
+      "not-public": "Bu pozisyon artık kaydedilemez: son başvuru tarihinin üzerinden 30 günden fazla geçti ya da pozisyon geri çekildi."
     }
   },
   "emails": {

@@ -24,6 +24,10 @@ export const MEMBER_PATHS = {
   signInCreate: '/en/sign-in/create/',
   /** The POST route of the account's settings (`intent=`): removing Google or ORCID, for now. */
   accountSettings: '/en/account/settings/',
+  /** The member's saved positions (`?page=`, `?done=`, `?error=`). */
+  saved: '/en/account/saved/',
+  /** The POST route behind every Save button (`item`, `saved`, `back`). */
+  savedToggle: '/en/account/saved/toggle/',
 } as const
 
 /**

@@ -5,6 +5,8 @@ import type { Payload } from 'payload'
 import { z } from 'zod'
 
 import { errorCode } from '@/lib/errors'
+import type { DeadlineKind } from '@/lib/jobs/deadline'
+import type { JobStatus } from '@/lib/jobs/status'
 import {
   DATA_REQUEST_LINK_HOURS,
   INACTIVITY_GRACE_DAYS,
@@ -647,6 +649,70 @@ export function countSavedItems(db: MemberDb, memberId: number): Promise<number>
     const { rows } = await db.execute<{ n: number }>(sql`
       SELECT count(*)::int AS n FROM saved_items WHERE member_id = ${checked(id, memberId, 'id')}`)
     return Number(rows[0]?.n ?? 0)
+  })
+}
+
+/** Which of `jobIds` (the rows a page shows, at most a few dozen) the member has saved. */
+export function savedJobIds(
+  db: MemberDb,
+  memberId: number,
+  jobIds: readonly number[],
+): Promise<Set<number>> {
+  return guarded(async () => {
+    const member = checked(id, memberId, 'id')
+    const jobs = checked(z.array(id).max(MAX_SAVED_ITEMS), [...new Set(jobIds)], 'jobIds')
+    if (jobs.length === 0) return new Set()
+    const { rows } = await db.execute<{ job_id: number }>(sql`
+      SELECT job_id FROM saved_items
+      WHERE member_id = ${member} AND job_id IN (${sql.join(
+        jobs.map((job) => sql`${job}`),
+        sql`, `,
+      )})`)
+    return new Set(rows.map((row) => Number(row.job_id)))
+  })
+}
+
+/** A saved job with what decides whether it is still open (listingState). */
+export type SavedJobRow = {
+  jobId: number
+  savedAt: Date
+  status: JobStatus
+  deadlineKind: DeadlineKind
+  deadlineAt: Date | null
+  expiredAt: Date | null
+  withdrawnAt: Date | null
+}
+
+/**
+ * Every job the member has saved (at most MAX_SAVED_ITEMS), the last saved first, with the dates
+ * that say whether it is still open, for the saved page to order and divide.
+ */
+export function listSavedJobs(db: MemberDb, memberId: number): Promise<SavedJobRow[]> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{
+      job_id: number
+      created_at: unknown
+      status: SavedJobRow['status']
+      deadline_kind: SavedJobRow['deadlineKind']
+      deadline_at: unknown
+      expired_at: unknown
+      withdrawn_at: unknown
+    }>(sql`
+      SELECT s.job_id, s.created_at, j.status, j.deadline_kind, j.deadline_at, j.expired_at,
+        j.withdrawn_at
+      FROM saved_items s JOIN jobs j ON j.id = s.job_id
+      WHERE s.member_id = ${checked(id, memberId, 'id')}
+      ORDER BY s.created_at DESC, s.id DESC
+      LIMIT ${MAX_SAVED_ITEMS}`)
+    return rows.map((row) => ({
+      jobId: Number(row.job_id),
+      savedAt: toDate(row.created_at) as Date,
+      status: row.status,
+      deadlineKind: row.deadline_kind,
+      deadlineAt: toDate(row.deadline_at),
+      expiredAt: toDate(row.expired_at),
+      withdrawnAt: toDate(row.withdrawn_at),
+    }))
   })
 }
 

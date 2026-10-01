@@ -609,6 +609,7 @@
     "title": "Sign in",
     "description": "Sign in to Gliagora. There are no Gliagora passwords.",
     "intro": "Members can save positions and choose what the jobs list and the monthly digest show first. There are no passwords.",
+    "save": "After you sign in, we save this position for you: <strong>{title}</strong>",
     "notAvailable": "Signing in is not available yet.",
     "notAvailableContact": "Questions about your data? Write to <email>privacy@gliagora.com</email>.",
     "providers": {
@@ -632,7 +633,8 @@
     "signedIn": {
       "title": "You are signed in",
       "account": "Go to your account",
-      "other": "To use another account, sign out first."
+      "other": "To use another account, sign out first.",
+      "save": "You opened a link to save this position: <strong>{title}</strong>"
     },
     "errors": {
       "title": "There is a problem",
@@ -700,6 +702,8 @@
     "navLabel": "Your account",
     "nav": {
       "overview": "Account",
+      "saved": "Saved",
+      "savedCount": "Saved ({count})",
       "signOut": "Sign out"
     },
     "who": {
@@ -733,6 +737,24 @@
       "everywhere": "Sign out everywhere"
     }
   },
+  "save": {
+    "label": "Save<hidden>: <job>{title}</job></hidden>",
+    "savedStatus": "Saved: {title}",
+    "removedStatus": "Removed from your saved positions: {title}",
+    "signInNote": "You need to sign in to save positions."
+  },
+  "saved": {
+    "title": "Saved positions",
+    "description": "The positions you have saved on Gliagora.",
+    "signedOutTitle": "Sign in to see your saved positions",
+    "intro": "{count, plural, one {You have saved one position.} other {You have saved # positions.}} To remove one, press its Save button again.",
+    "empty": "You have not saved any positions yet. Press Save beside a position in the <link>jobs list</link> or on its page to keep it here.",
+    "open": "Open positions",
+    "closed": "No longer open",
+    "closedText": "These positions have closed or were withdrawn, so you can no longer apply. Press Save to remove one from this list.",
+    "pastEnd": "Your saved positions fill {pages, plural, one {only # page} other {# pages}}.",
+    "firstPage": "Go to the first page"
+  },
   "outcome": {
     "done": {
       "signed-in": "You are signed in.",
@@ -742,6 +764,7 @@
       "linked-orcid": "Your ORCID iD has been linked: you can now sign in with it.",
       "unlinked-google": "Google has been removed: you can no longer sign in with it.",
       "unlinked-orcid": "ORCID has been removed: you can no longer sign in with it.",
+      "removed": "The position has been removed from your saved positions.",
       "othersEnded": "Other browsers where you were signed in have been signed out."
     },
     "error": {
@@ -760,7 +783,9 @@
       "orcid-elsewhere": "This ORCID iD is used by another Gliagora account. Sign in with it and delete that account first, if you want to link it here.",
       "google-already-linked": "Your account already has another Google account. Remove it first, then link this one.",
       "orcid-already-linked": "Your account already has another ORCID iD. Remove it first, then link this one.",
-      "last-method": "This is the only way into your account, so it cannot be removed. Add another way to sign in first."
+      "last-method": "This is the only way into your account, so it cannot be removed. Add another way to sign in first.",
+      "saved-full": "You have saved 500 positions, the most there can be. Remove some you no longer need, then save again.",
+      "not-public": "This position can no longer be saved: it closed more than 30 days ago, or it was withdrawn."
     }
   },
   "emails": {

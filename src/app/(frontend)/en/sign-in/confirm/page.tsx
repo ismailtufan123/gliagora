@@ -1,11 +1,15 @@
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
+import { unstable_rethrow } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
 
+import { MemberUnavailable } from '@/components/account/MemberUnavailable'
+import { SaveNotice } from '@/components/account/SaveControl'
 import { memberPageIndexed } from '@/lib/indexing'
 import { SIGN_IN_COOKIE } from '@/lib/members/cookies'
 import { MEMBER_LEGAL_LINKS, MEMBER_PATHS } from '@/lib/members/paths'
+import { type SaveJob, positionToSave } from '@/lib/members/save-context'
 import { openSignIn } from '@/lib/members/seal'
 import { memberRequest } from '@/lib/members/session'
 import { requestTime } from '@/lib/records'
@@ -16,9 +20,10 @@ import { requestTime } from '@/lib/records'
 // sign-in cookie (15 minutes, this browser only); the page shows what the account will have: the
 // Google address, if Google manages it (otherwise a note that it is not added), or the ORCID iD,
 // with an unticked box to take the record's name as display name. For an account without an
-// address, a hint for people who already have an account. The button posts to
-// /en/sign-in/create/; Cancel leads back to the sign-in page (the cookie then expires). Rendered
-// for each request, never indexed.
+// address, a hint for people who already have an account; when signing in will save a position
+// (a Save link's, carried along), that position's name. The button posts to /en/sign-in/create/;
+// Cancel leads back to the sign-in page (the cookie then expires). Rendered for each request,
+// never indexed.
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -56,6 +61,14 @@ export default async function Page() {
     )
   }
 
+  let toSave: SaveJob | null
+  try {
+    toSave = await positionToSave(pending.save)
+  } catch (error) {
+    unstable_rethrow(error)
+    return <MemberUnavailable title={t('title')} name="Create account page" error={error} />
+  }
+
   // Addresses and iDs can be long, with no place to break: they may break anywhere.
   const strong = (chunks: ReactNode) => <strong className="wrap-anywhere">{chunks}</strong>
   const signInLink = (chunks: ReactNode) => <a href={MEMBER_PATHS.signIn}>{chunks}</a>
@@ -78,6 +91,7 @@ export default async function Page() {
           </p>
         )}
         {!pending.email && <p>{t.rich('existing', { method: pending.p, link: signInLink })}</p>}
+        {toSave && <SaveNotice job={toSave} />}
         <form method="post" action={MEMBER_PATHS.signInCreate} className="grid gap-6">
           {pending.p === 'orcid' && pending.name && (
             <div className="field">

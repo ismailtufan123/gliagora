@@ -797,6 +797,8 @@ export const AREAS: Area[] = [
         'Sign in (/en/sign-in/) - heading and browser tab; the browser tab of the page an emailed sign-in link opens',
       'signIn.description': 'Sign in - description in link previews',
       'signIn.intro': 'Sign in - first paragraph under the heading',
+      'signIn.save':
+        'Sign in, opened from a Save button while signed out - line under the first paragraph, naming the position that signing in will save; also on the "Create your Gliagora account" page and the page an emailed sign-in link opens, when signing in will save a position',
       'signIn.notAvailable':
         'Sign in, and the account page when signed out - shown instead of the form while signing in is switched off',
       'signIn.notAvailableContact':
@@ -825,6 +827,8 @@ export const AREAS: Area[] = [
       'signIn.signedIn.title': 'Sign in, when already signed in - heading',
       'signIn.signedIn.account': 'Sign in, when already signed in - button to the account page',
       'signIn.signedIn.other': 'Sign in, when already signed in - paragraph above the buttons',
+      'signIn.signedIn.save':
+        "Sign in, when already signed in and opened from a Save button's link - line above that position's Save button",
       'signIn.errors.title':
         'Sign-in form, after sending with problems - heading of the list of problems at the top of the form',
       'signIn.errors.prefix':
@@ -908,6 +912,10 @@ export const AREAS: Area[] = [
       'account.navLabel':
         'Account pages - name of the account navigation at the top, read by screen readers',
       'account.nav.overview': 'Account pages - account navigation - link to the account page',
+      'account.nav.saved':
+        'Account pages - account navigation - link to the saved positions, when their number cannot be read',
+      'account.nav.savedCount':
+        'Account pages - account navigation - link to the saved positions, with how many there are',
       'account.nav.signOut':
         'Account pages - account navigation - Sign out button; also on the sign-in page when signed in',
       'account.who.email':
@@ -986,6 +994,40 @@ export const AREAS: Area[] = [
         'Sign-in and account pages - message at the top when something went wrong',
       'outcome.error.failedReference':
         'Sign-in and account pages - message at the top when something went wrong, with the reference that finds it in our log',
+    },
+  },
+  {
+    title: 'Save buttons and saved positions',
+    shown: false,
+    note: `The Save buttons are on the jobs list and the job pages, and the saved positions on /en/account/saved/, all only in English, ${ENGLISH_ONLY}. They show only once a way of signing in is switched on.`,
+    places: {
+      'save.label':
+        "Jobs list (each position), job page (under the heading) and saved positions - the Save button; screen readers hear the position's title after it; also on the sign-in page (/en/sign-in/), when already signed in and opened from a Save button's link",
+      'save.savedStatus':
+        "Jobs list, job page and saved positions - read by screen readers after pressing Save, when the position has been saved; also on the sign-in page (/en/sign-in/), when already signed in and opened from a Save button's link",
+      'save.removedStatus':
+        "Jobs list, job page and saved positions - read by screen readers after pressing Save again, when the position has been removed; also on the sign-in page (/en/sign-in/), when already signed in and opened from a Save button's link",
+      'save.signInNote':
+        'Jobs list and job page, when signed out - read by screen readers with each Save button, which leads to the sign-in page',
+      'saved.title': 'Saved positions (/en/account/saved/) - heading and browser tab',
+      'saved.description': 'Saved positions - description in link previews',
+      'saved.signedOutTitle': 'Saved positions, when signed out - heading above the sign-in form',
+      'saved.intro': 'Saved positions - paragraph under the heading, with how many there are',
+      'saved.empty':
+        'Saved positions, when there are none - paragraph under the heading (the link leads to the jobs list)',
+      'saved.open': 'Saved positions - heading of the positions that are still open',
+      'saved.closed':
+        'Saved positions - heading of the positions that have closed or were withdrawn',
+      'saved.closedText': 'Saved positions - paragraph under that heading',
+      'saved.pastEnd':
+        'Saved positions, opened at a page number past the last page - line at the end of the page',
+      'saved.firstPage': 'Saved positions, past the last page - link to the first page',
+      'outcome.done.removed':
+        'Saved positions - message at the top after removing a position with JavaScript turned off',
+      'outcome.error.saved-full':
+        'Saved positions - message at the top when a position could not be saved because 500 are saved already',
+      'outcome.error.not-public':
+        'Saved positions - message at the top when a position could not be saved because it closed more than 30 days ago or was withdrawn',
     },
   },
   {

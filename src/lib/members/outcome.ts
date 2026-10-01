@@ -11,7 +11,8 @@ import { OUTCOME_ID } from './paths'
 /**
  * What a redirect reports as done. Messages under `outcome.done`. `signed-in-linked-google`: a
  * Google sign-in that found the account by the address Google manages, and so added Google to it
- * (the M4b design §7.3).
+ * (the M4b design §7.3). `removed`: a saved position removed on the saved page without JavaScript,
+ * whose row is then gone.
  */
 export const DONE_CODES = [
   'signed-in',
@@ -21,6 +22,7 @@ export const DONE_CODES = [
   'linked-orcid',
   'unlinked-google',
   'unlinked-orcid',
+  'removed',
 ] as const
 /**
  * What a redirect reports as gone wrong. Messages under `outcome.error`. Besides the email link's
@@ -29,7 +31,9 @@ export const DONE_CODES = [
  * lost its session while linking (`link-interrupted`); a Link button whose request did not say it
  * came from the site (`link-not-started`: an old browser without Sec-Fetch-Site, or the address
  * opened from elsewhere); too many accounts created from one connection (`create-limited`); and
- * the refusals of the account rules (src/lib/members/identity.ts, `Refusal`).
+ * the refusals of the account rules (src/lib/members/identity.ts, `Refusal`); and a Save refused
+ * because the member has saved the most there may be (`saved-full`) or the position is no longer
+ * public (`not-public`), shown on the saved page.
  */
 export const ERROR_CODES = [
   'link-expired',
@@ -46,6 +50,8 @@ export const ERROR_CODES = [
   'google-already-linked',
   'orcid-already-linked',
   'last-method',
+  'saved-full',
+  'not-public',
 ] as const
 
 export type DoneCode = (typeof DONE_CODES)[number]
