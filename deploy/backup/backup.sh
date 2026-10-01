@@ -11,6 +11,9 @@
 #      used spam-check answers, kept 24 hours in the app database only, D34) are left out; the
 #      table itself is dumped, so a restore starts with empty form limits.
 #   2. Adds the files needed to rebuild the server: .env, admin-auth.caddy, Compose files.
+#      Never the map's basemap (/opt/gliagora/basemap, about 4 GB): it is downloaded again
+#      (deploy/basemap/fetch-basemap.sh), so it stays out of the backups and of the weekly copy.
+#      Keep the list in step 2 to these files; never add a whole folder such as /opt/gliagora.
 # Nightly runs only (other tags, such as pre-update and pre-restore, never delete anything):
 #   3. Keeps everything from the last 2 days plus 7 daily, 4 weekly and 6 monthly snapshots.
 #   4. On Sundays, checks the repository for damage.
@@ -69,7 +72,8 @@ for db in $DATABASES; do
   log "Stored $db in snapshot ${snapshot:0:8}"
 done
 
-# 2. Settings needed to rebuild the server (never the repository password itself).
+# 2. Settings needed to rebuild the server (never the repository password itself, never the
+#    basemap): named one by one.
 settings=()
 for f in .env admin-auth.caddy compose.prod.yml Caddyfile postgres; do
   [[ -e "$COMPOSE_DIR/$f" ]] && settings+=("$COMPOSE_DIR/$f")
