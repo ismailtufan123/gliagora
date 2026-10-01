@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { Lockup } from '@/components/Lockup'
 import type { Locale } from '@/i18n/routing'
+import { MEMBER_PATHS } from '@/lib/members/paths'
 import { MEGA_MENUS, hasMenu } from '@/lib/navigation'
 import { WINDOWS, paths } from '@/lib/site'
 
@@ -18,8 +19,8 @@ import { SearchDialog } from './SearchDialog'
 const DESKTOP_QUERY = '(min-width: 80rem)'
 
 // PLAN §2.3, §7.5: lockup, the six windows (Jobs, Events and Resources open a mega-menu from a
-// separate button; the label itself is a real link), search, language, and the digest button.
-// Sign in (M4b) is added with its feature.
+// separate button; the label itself is a real link), search, language, the account and the digest
+// button.
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale })
 
@@ -121,6 +122,19 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
               chevron: <Icon name="chevronDown" size={16} className="chevron" />,
             }}
           />
+          {/* The account (M4b, D49): the same static link for everyone, signed in or not, so pages
+              stay static and the header needs no cookie or script; the account page shows the
+              sign-in panel to visitors who are signed out. An icon with its name for screen
+              readers, like search (an icon-only exception to PLAN §7.4): a word would not fit
+              beside the full lockup at 1280px. Below 1280px it is a row in the mobile menu. */}
+          <NavLink
+            href={MEMBER_PATHS.account}
+            hrefLang={locale === 'en' ? undefined : 'en'}
+            className="button button-secondary account-link hidden xl:inline-flex"
+          >
+            <Icon name="user" size={18} />
+            <span className="sr-only">{t('header.account')}</span>
+          </NavLink>
           {/* A longer label wraps within 15rem: two lines for one 40% longer than the English. */}
           <a
             className="button button-primary hidden max-w-60 leading-tight md:inline-flex"

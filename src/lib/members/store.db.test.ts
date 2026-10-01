@@ -10,6 +10,7 @@ import * as members from '@/migrations/20261001_142245_members'
 import * as constraints from '@/migrations/20261001_142246_member_constraints'
 
 import { orcidCheckCharacter } from './orcid-id'
+import { redeemSignInLink } from './sign-in-link'
 import { hashToken, newBinding, newToken } from './tokens'
 import {
   type MemberDb,
@@ -797,6 +798,73 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       await db.execute(sql`
         update members set last_seen_at = ${at(-2000).toISOString()} where id = ${withEmail.id}`)
       expect(await deleteMember(store, withEmail.id, condition, NOW)).toBe(false)
+    })
+  })
+
+  describe('redeeming a sign-in link (sign-in-link.ts)', () => {
+    const link = async (address: string, next: string | null = null) =>
+      (
+        await createEmailToken(
+          store,
+          {
+            purpose: 'sign-in',
+            email: address,
+            browserHash: hashToken(newBinding()),
+            next,
+            locale: 'en',
+          },
+          NOW,
+        )
+      ).token
+
+    it('makes the account for a new address, once, and ends its other links', async () => {
+      const address = email()
+      const first = await link(address, '/en/jobs/')
+      const other = await link(address)
+      const used = await redeemSignInLink(store, first, at(0))
+      expect(used).toEqual({ memberId: expect.any(Number), created: true, next: '/en/jobs/' })
+      expect(await findMember(store, { email: address })).toMatchObject({
+        id: used!.memberId,
+        emailVerifiedBy: 'link',
+      })
+      expect(await redeemSignInLink(store, first, at(0))).toBeNull()
+      expect(await findEmailToken(store, other, NOW)).toBeNull()
+    })
+
+    it('signs in to the member who has the address', async () => {
+      const member = await newMember()
+      expect(await redeemSignInLink(store, await link(member.email!), NOW)).toEqual({
+        memberId: member.id,
+        created: false,
+        next: null,
+      })
+    })
+
+    it('gives two links to one new address used at once one account', async () => {
+      const address = email()
+      const [a, b] = [await link(address), await link(address)]
+      const results = await Promise.all([
+        redeemSignInLink(store, a, NOW),
+        redeemSignInLink(store, b, NOW),
+      ])
+      const used = results.filter((result) => result !== null)
+      expect(used.length).toBeGreaterThanOrEqual(1)
+      expect(new Set(used.map((result) => result.memberId)).size).toBe(1)
+      expect(used.filter((result) => result.created)).toHaveLength(1)
+    })
+
+    it('uses no link of another purpose, and none that has expired', async () => {
+      const member = await newMember()
+      const { token: verify } = await createEmailToken(
+        store,
+        { purpose: 'verify-email', email: email(), memberId: member.id, locale: 'en' },
+        NOW,
+      )
+      expect(await redeemSignInLink(store, verify, NOW)).toBeNull()
+      expect(await findEmailToken(store, verify, NOW)).not.toBeNull()
+      const old = await link(email())
+      expect(await redeemSignInLink(store, old, at(1))).toBeNull()
+      expect(await redeemSignInLink(store, 'not a token', NOW)).toBeNull()
     })
   })
 

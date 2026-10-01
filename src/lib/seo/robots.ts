@@ -1,16 +1,25 @@
 // robots.txt (PLAN §2.2, §16.1): everything public may be crawled, except the admin, the API,
-// search results and addresses with a query string. src/app/robots.ts writes these rules; the
-// tests check that no page in the sitemaps is among them. No imports, so the end-to-end tests
-// can load this file as it is.
+// search results, sign-in and the account pages, and addresses with a query string.
+// src/app/robots.ts writes these rules; the tests check that no page in the sitemaps is among them.
+// No imports, so the end-to-end tests can load this file as it is.
 
 /**
- * What crawlers are asked to leave alone: the admin, the API, search results (M4.9) and every
- * address with a query string, such as filtered and later pages of a list. Those pages point to
- * the unfiltered list as their canonical page, and every page worth indexing is in the sitemaps
- * and names its own canonical address, so crawlers need no query string to find anything. The
- * `*` wildcard is understood by Google and Bing.
+ * What crawlers are asked to leave alone: the admin, the API, search results (M4.9), sign-in,
+ * sign-out and the account pages (M4b: each is about one visitor, and never indexed) and every
+ * address with a query string, such as filtered and later pages of a list. Those pages point to the
+ * unfiltered list as their canonical page, and every page worth indexing is in the sitemaps and
+ * names its own canonical address, so crawlers need no query string to find anything. The `*`
+ * wildcard is understood by Google and Bing.
  */
-export const DISALLOW = ['/admin', '/api', '/en/search/', '/*?'] as const
+export const DISALLOW = [
+  '/admin',
+  '/api',
+  '/en/search/',
+  '/en/sign-in/',
+  '/en/sign-out/',
+  '/en/account/',
+  '/*?',
+] as const
 
 const escapeRegExp = (text: string) => text.replace(/[.+?^${}()|[\]\\]/g, '\\$&')
 

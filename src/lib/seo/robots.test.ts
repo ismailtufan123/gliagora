@@ -33,13 +33,16 @@ describe('robotsRuleMatches', () => {
 describe('robots.txt', () => {
   const text = resolveRobots(robots())
 
-  it('keeps crawlers out of the admin, the API, search and addresses with a query', () => {
+  it('keeps crawlers out of the admin, the API, search, sign-in, the account and addresses with a query', () => {
     expect(text).toBe(
       [
         'User-Agent: *',
         'Disallow: /admin',
         'Disallow: /api',
         'Disallow: /en/search/',
+        'Disallow: /en/sign-in/',
+        'Disallow: /en/sign-out/',
+        'Disallow: /en/account/',
         'Disallow: /*?',
         '',
         'Sitemap: https://gliagora.com/sitemap.xml',
@@ -56,6 +59,10 @@ describe('robots.txt', () => {
     '/api/graphql',
     '/en/search/',
     '/en/search/?q=astrocytes',
+    '/en/sign-in/',
+    '/en/sign-in/link/',
+    '/en/sign-out/',
+    '/en/account/',
     '/en/jobs/?type=phd',
     '/en/jobs/?page=2',
     '/en/jobs/?view=map',

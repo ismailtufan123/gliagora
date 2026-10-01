@@ -222,17 +222,32 @@ test.describe('jobs feed', () => {
 test.describe('robots.txt', () => {
   test.skip(({ isMobile }) => isMobile, 'machine files do not depend on the device')
 
-  test('keeps crawlers out of the admin, the API, search and filtered URLs, and names the sitemap', async ({
+  test('keeps crawlers out of the admin, the API, search, sign-in, the account and filtered URLs, and names the sitemap', async ({
     request,
   }) => {
     const response = await request.get('/robots.txt', { maxRedirects: 0 })
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toMatch(/^text\/plain/)
     const text = await response.text()
-    expect(disallowRules(text)).toEqual(['/admin', '/api', '/en/search/', '/*?'])
+    expect(disallowRules(text)).toEqual([
+      '/admin',
+      '/api',
+      '/en/search/',
+      '/en/sign-in/',
+      '/en/sign-out/',
+      '/en/account/',
+      '/*?',
+    ])
     expect(text).not.toMatch(/^Allow:/m)
     expect(text).toContain(`Sitemap: ${ORIGIN}/sitemap.xml`)
-    for (const path of ['/en/jobs/?type=phd', '/en/jobs/?page=2', '/admin', '/api/jobs']) {
+    for (const path of [
+      '/en/jobs/?type=phd',
+      '/en/jobs/?page=2',
+      '/admin',
+      '/api/jobs',
+      '/en/sign-in/',
+      '/en/account/',
+    ]) {
       expect(isDisallowed(path, disallowRules(text)), path).toBe(true)
     }
     for (const path of ['/sitemap.xml', '/sitemaps/jobs.xml', '/en/jobs/feed.xml', '/en/jobs/']) {

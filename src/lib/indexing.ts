@@ -17,6 +17,12 @@ export const contentPageIndexed = (page: { draft: boolean }) => !page.draft
 export const jobsListIndexed = (query: URLSearchParams) =>
   isUnfiltered(JOB_FILTERS, parseJobFilters(query)) && !invalidDeadlineRange(query)
 
+/**
+ * Sign-in, sign-out and the account pages (M4b, D49): never indexed, whoever asks. They are about
+ * one visitor, and robots.txt keeps crawlers out of them too (src/lib/seo/robots.ts).
+ */
+export const memberPageIndexed = (): boolean => false
+
 /** The world map (PLAN §2.2): indexed, like the unfiltered jobs list it shows on a map. */
 export const mapPageIndexed = (): boolean => true
 

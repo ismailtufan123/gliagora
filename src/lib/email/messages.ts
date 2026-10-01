@@ -10,7 +10,7 @@ import { CONTACT_EMAIL, SITE_ORIGIN } from '@/lib/site'
 import en from '../../../messages/en.json'
 import tr from '../../../messages/tr.json'
 
-// The two automatic emails (M4.7), in the language of the form the person used, from the
+// The automatic emails (M4.7, M4b), in the language of the form the person used, from the
 // `emails` messages. Plain text only: short, readable in every mail program, and with nothing that
 // could track whether it was opened. They say what the person sent us only where it identifies the
 // matter (the address they suggested, or the Gliagora page a report is about), never the note or
@@ -114,6 +114,28 @@ export function reportAcknowledgement({
       t(rights ? 'report.retentionPersonalRights' : 'report.retention', {
         privacyUrl: privacyUrl(locale),
       }),
+      ...closing(t),
+    ),
+  }
+}
+
+/**
+ * The sign-in link (M4b, D49; the M4b design §7.1), sent while the person waits, to the address
+ * they typed. Every address gets the same text, whether it has an account or not (the link leads
+ * to "Sign in" or to "Create account"), so the email reveals nothing about who has an account.
+ * `link` is absolute, on the site's own origin (`appOrigin()`): only this server knows the token.
+ */
+export function signInEmail({ locale, link }: { locale: Locale; link: string }): EmailText {
+  const t = translator(locale)
+  return {
+    locale,
+    subject: t('signIn.subject'),
+    text: paragraphs(
+      t('greeting'),
+      `${t('signIn.intro')}\n${link}`,
+      t('signIn.validity'),
+      t('signIn.sameBrowser'),
+      t('signIn.notYou'),
       ...closing(t),
     ),
   }

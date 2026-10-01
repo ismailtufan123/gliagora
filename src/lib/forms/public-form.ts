@@ -5,7 +5,15 @@ import { errorCode } from '@/lib/errors'
 import { type SpamChallenge, checkAnswer, newChallenge } from './altcha'
 import { clientIp, hashClientIp } from './client-ip'
 import { FORM_INPUTS } from './fields'
-import { type Limit, type LimitBucket, type LimitStore, admit, ipLimit } from './rate-limit'
+import {
+  EMAILS_SITE_WIDE,
+  LIMIT_WINDOW_MS,
+  type Limit,
+  type LimitBucket,
+  type LimitStore,
+  admit,
+  ipLimit,
+} from './rate-limit'
 
 // What happens when someone sends a public form ("Suggest a listing", "Report a problem"; from M4b
 // also the forms that email a link; PLAN §3.2, §18.2). The checks run cheapest first: the fields,
@@ -102,6 +110,22 @@ export function logFailure(name: string, reference: string, error: unknown) {
   console.error(`${name} not saved (reference ${reference}):`, kind, errorCode(error) ?? '')
 }
 
+/** When the log last said that the site-wide cap on emails was reached (once an hour at most). */
+let capWarnedAt = Number.NEGATIVE_INFINITY
+
+/**
+ * One warning line in the log when the site-wide cap on the emails the forms send is reached (the
+ * only limit that answers "temporarily unavailable"), so the operator learns that people are being
+ * turned away. Once an hour at most, however many requests the cap refuses.
+ */
+export function warnSiteWideCap(name: string, now: Date) {
+  if (now.getTime() - capWarnedAt < LIMIT_WINDOW_MS) return
+  capWarnedAt = now.getTime()
+  console.warn(
+    `${name}: the site-wide limit on emails from the forms is reached (${EMAILS_SITE_WIDE.hour} an hour, ${EMAILS_SITE_WIDE.day} a day); the forms that send an email say "temporarily unavailable" until it frees up.`,
+  )
+}
+
 export async function handlePublicForm<Values, Data, Errors>(
   form: FormData,
   deps: FormDependencies<Data>,
@@ -152,6 +176,7 @@ export async function handlePublicForm<Values, Data, Errors>(
       return { kind: 'refused', status: 429, problem: 'rateLimited', values }
     }
     if (admission === 'unavailable') {
+      warnSiteWideCap(spec.name, deps.now)
       return { kind: 'refused', status: 503, problem: 'unavailable', values }
     }
     if ((await deps.save(parsed.data)) === 'unavailable') {

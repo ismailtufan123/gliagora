@@ -27,6 +27,12 @@ export const SUGGEST_LIMIT: LimitBucket = { name: 'suggest', perWindow: 5 }
  */
 export const REPORT_LIMIT: LimitBucket = { name: 'report', perWindow: 5 }
 
+/**
+ * Asking for a sign-in link (M4b, D49): 10 an hour per address, besides the budget of the email
+ * address the link goes to and the site-wide cap (`emailLimits`).
+ */
+export const SIGN_IN_LIMIT: LimitBucket = { name: 'signin', perWindow: 10 }
+
 export const SUGGESTIONS_PER_WINDOW = SUGGEST_LIMIT.perWindow
 export const LIMIT_WINDOW_MS = HOUR_MS
 

@@ -143,8 +143,19 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Throwaway secrets for the app, generated once and used by both runs of it below (the smoke
+      # test and the end-to-end tests), so the session and the spam-check keys stay the same.
+      - name: Generate the app's test secrets
+        run: |
+          for name in PAYLOAD_SECRET ALTCHA_HMAC_KEY; do
+            value=$(openssl rand -hex 32)
+            echo "::add-mask::$value"
+            echo "APP_$name=$value" >> "$GITHUB_ENV"
+          done
+
       # Start the image against an empty PostgreSQL: migrations must apply at startup,
-      # /health/ must report the database as reachable and the pages must render.
+      # /health/ must report the database as reachable and the pages must render. Production-like:
+      # no mail server and no test settings, so member sign-in is off (M4b).
       - name: Smoke test
         run: |
           set -euo pipefail
@@ -155,8 +166,8 @@ jobs:
           for i in $(seq 1 30); do docker exec db pg_isready -U gliagora -d gliagora && break; sleep 2; done
           docker run -d --name app --network smoke -p 3000:3000 \
             -e DATABASE_URL=postgres://gliagora:smoke-test-only@db:5432/gliagora \
-            -e PAYLOAD_SECRET="$(openssl rand -hex 32)" \
-            -e ALTCHA_HMAC_KEY="$(openssl rand -hex 32)" \
+            -e PAYLOAD_SECRET="$APP_PAYLOAD_SECRET" \
+            -e ALTCHA_HMAC_KEY="$APP_ALTCHA_HMAC_KEY" \
             gliagora:ci
           for i in $(seq 1 60); do curl -fsS http://localhost:3000/health/ && break; sleep 2; done
           echo
@@ -166,6 +177,10 @@ jobs:
           contains http://localhost:3000/health/ '"ok"'
           contains http://localhost:3000/en/ 'Where neuroscience meets'
           contains http://localhost:3000/en/contact/ 'hello@gliagora.com'
+          # Member sign-in stays off without its settings, and the account page still answers.
+          contains http://localhost:3000/en/sign-in/ 'Signing in is not available yet.'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/en/account/)" = 200
+          logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email off, google off, orcid off' <<<"$logs"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/)" = 308
           test "$(docker exec app id -u)" != 0
           docker exec db psql -U gliagora -d gliagora -tAc 'select name from payload_migrations'
@@ -187,24 +202,47 @@ jobs:
       # the same code as the nightly import. The taxonomy and countries come with the migrations.
       # Then fake jobs at those institutions, including the fixed ones the jobs tests rely on
       # (src/scripts/fake-jobs-fixed.ts), and the editor account the admin API tests sign in with
-      # (src/scripts/e2e-editor.ts; an example.org address, in this throwaway database only).
+      # (src/scripts/e2e-editor.ts; an example.org address, in this throwaway database only), and
+      # the test members with their known sessions (src/scripts/e2e-member.ts, M4b).
       - name: Load test data
         if: needs.tested.outputs.run == ''
         run: |
           pnpm ror:import tests/fixtures/ror/v2.13-2026-09-22-ror-data-sample.zip
           pnpm fake:jobs
           pnpm e2e:editor
+          pnpm e2e:member
         env:
           DATABASE_URL: postgres://gliagora:smoke-test-only@localhost:5432/gliagora
           PAYLOAD_SECRET: test-data-only
           E2E_EDITOR_PASSWORD: e2e-test-only
-      # The app keeps the home page's figures for up to 10 minutes (src/lib/home.ts), and the smoke
-      # test read them from the empty database: start it again so the tests see the test data.
-      - name: Restart the app with the test data
+          E2E_MEMBER_TOKEN: e2e-test-only
+      # The end-to-end tests need what the smoke test leaves out (M4b): a mail server, for the
+      # emails the tests read back (Mailpit, the image compose.yaml pins, only on this machine's
+      # loopback), so the app is made again with SMTP_HOST, on the host's network: the app, the
+      # browser and Mailpit then meet on 127.0.0.1, so the mail server is local to the app (no TLS
+      # needed) and the app's own address is the browser's http://localhost:3000. The same secrets
+      # as the smoke test. This also starts the app afresh, which the home page's figures need: it
+      # keeps them for up to 10 minutes (src/lib/home.ts), and the smoke test read them from the
+      # empty database.
+      - name: Re-create the app with the test settings
         if: needs.tested.outputs.run == ''
         run: |
-          docker restart app
+          set -euo pipefail
+          mailpit_image=$(grep -oE 'axllent/mailpit[^[:space:]]+' compose.yaml | head -n 1)
+          test -n "$mailpit_image"
+          docker run -d --name mailpit -p 127.0.0.1:1025:1025 -p 127.0.0.1:8025:8025 \
+            -e MP_DISABLE_VERSION_CHECK=true "$mailpit_image"
+          docker rm -f app
+          docker run -d --name app --network host \
+            -e DATABASE_URL=postgres://gliagora:smoke-test-only@127.0.0.1:5432/gliagora \
+            -e PAYLOAD_SECRET="$APP_PAYLOAD_SECRET" \
+            -e ALTCHA_HMAC_KEY="$APP_ALTCHA_HMAC_KEY" \
+            -e SMTP_HOST=127.0.0.1 -e SMTP_PORT=1025 \
+            gliagora:ci
           for i in $(seq 1 60); do curl -fsS http://localhost:3000/health/ && break; sleep 2; done
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8025/readyz && break; sleep 1; done
+          echo
+          logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email on, google off, orcid off' <<<"$logs"
       # Tests against a real PostgreSQL (pnpm test:db), on scratch databases dropped afterwards:
       # search (src/lib/search/search.db.test.ts, owned by a throwaway role that is not a superuser,
       # as on the server) and the scheduled tasks (tests/integration/, M4.7, on a migrated scratch
@@ -224,6 +262,8 @@ jobs:
         env:
           BASE_URL: http://localhost:3000
           E2E_EDITOR_PASSWORD: e2e-test-only
+          E2E_MEMBER_TOKEN: e2e-test-only
+          MAILPIT_URL: http://127.0.0.1:8025
 
       # Records that this tree passed every check and test, for the push to main that merges it
       # (job `tested`). Only a pull request run that got this far uploads it. A failure here only
@@ -248,7 +288,9 @@ jobs:
 
       - name: Show container logs
         if: failure()
-        run: docker logs app || true
+        run: |
+          docker logs app || true
+          docker logs mailpit || true
 
       - name: Image tags
         id: meta

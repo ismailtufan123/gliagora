@@ -21,7 +21,7 @@ Everything the production server runs is described in this folder (PLAN §11.5),
 | --- | --- |
 | `setup-server.sh` | One-time hardening of a fresh Ubuntu 24.04 server: admin user, deploy user, firewall, fail2ban, Docker, swap |
 | `compose.prod.yml` | The stack: Caddy, the app, PostgreSQL 18 |
-| `Caddyfile` | HTTPS, security headers, the site-wide password (until M2 the whole site except `/health/`; always `/admin` and `/api`), masked access logs |
+| `Caddyfile` | HTTPS, security headers, the site-wide password (until M2 the whole site except `/health/`; always `/admin` and `/api`), masked logs (the access log and Caddy's own log) |
 | `admin-auth.caddy.example` | Template for the site-wide password |
 | `postgres/init/10-app-database.sh` | Creates the app's own database user on first start |
 | `.env.example` | Template for the server's `.env` (domain, image, secrets) |
@@ -240,6 +240,10 @@ sudo ./restore.sh config latest /root/restored  # get the backed-up .env and set
 
 `restore.sh database` takes a safety backup (tag `pre-restore`) of the current database, stops the app, recreates the database from the snapshot and starts the app again.
 
+**What a restore keeps (M4b, D49).** A restore brings back everything deleted after the snapshot, so `restore.sh database` keeps two tables of the live database: the deletion log (record IDs of the deletions people asked for, or that the inactivity rule made, to be repeated on the restored data) and the data requests (what people asked, and what was done). Before replacing the database it copies their rows into a folder only root can read (`/root/gliagora-restore-carry.…`); after the restore it loads them back, where they replace older copies of the same rows, and in the same transaction moves the ID sequences of `deletion_log`, `data_requests`, `members`, `submissions` and `reports` past every ID it carried over or that the log names, so no new record takes a logged ID and no new request or log row collides with a carried one. It prints the rows and the next IDs, deletes the folder and starts the app. If carrying over fails, the app stays stopped and the folder stays: fix the cause (the message says what failed), then run `sudo ./restore.sh carry /root/gliagora-restore-carry.… [DB]`, which loads it and starts the app.
+
+**Check it:** the monthly `restore.sh test` does the same carry-over from the live database into its temporary copy (it changes nothing live) and reports each table's rows and next ID, and that a new deletion-log row and a new request can be stored afterwards. Run it by hand after any change to the member or data-request tables: `sudo ./restore.sh test latest`.
+
 **New server after losing the old one:**
 
 1. Run steps 1 and 2 (with a new deploy key if the old one is lost). Then redo step 4 for the new server: `DEPLOY_HOST` and `DEPLOY_KNOWN_HOSTS` always change (new IP, new host key), and `DEPLOY_SSH_KEY` if you made a new key.
@@ -265,6 +269,21 @@ The script checks everything it downloads (the pmtiles tool by its checksum, the
 The basemap is not in the backups (`backup/backup.sh` names its files one by one), so it never reaches the weekly copy either: checked on 2026-10-01, the snapshots hold no basemap file and the whole repository is 19 MB.
 
 Refresh it about twice a year (PLAN §14), and after moving to a new server. To update the fonts and sprites, change `ASSETS_COMMIT` and `ASSETS_DIGEST` in the script (and rebuild the test fixture with `tools/basemap/make-fixture.sh`).
+
+## 9. Switching on member sign-in (M4b)
+
+Member sign-in (D49) stays off on the server until its settings exist: `/en/sign-in/` says "Signing in is not available yet", and the app logs one line at start, `Member sign-in: email off, google off, orcid off`. Switch it on only with the operator's go-ahead, in this order:
+
+1. **Copy the deploy files first.** Caddy must remove the query strings of the sign-in, account and data-request addresses from both of its logs (one-time links, Google's and ORCID's answers, where sign-in leads) before any sign-in key or `SMTP_HOST` is set. Backups must leave out sessions and email links, and a restore must keep the deletion log and the data requests (step 7). From your computer, in the repository:
+
+   ```sh
+   scp deploy/Caddyfile deploy/compose.prod.yml gliagora@<server-ip>:/opt/gliagora/
+   scp deploy/backup/backup.sh deploy/backup/restore.sh gliagora@<server-ip>:/opt/gliagora/backup/
+   ```
+
+   On the server: `cd /opt/gliagora && sudo ./update.sh --no-pull`, then check that Caddy took the new file: `docker compose -f compose.prod.yml logs --tail 20 caddy` shows no error, and a request to `https://gliagora.com/en/sign-in/?next=check` (with the site-wide password) appears in `sudo tail -n 1 /var/lib/docker/volumes/gliagora_caddy-logs/_data/access.log` as `/en/sign-in/?[removed]`.
+2. **Then set the keys** in `/opt/gliagora/.env` (`deploy/.env.example` lists them): `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, `ORCID_CLIENT_ID` and `ORCID_CLIENT_SECRET` (ORCID's own issuer; its sandbox is refused here), and, for sign-in by email link, the M2 `SMTP_*` settings (the link form also needs `ALTCHA_HMAC_KEY`, which is set). Each way of signing in switches on by itself once its settings are there; none needs a new secret.
+3. **Restart the app** (`sudo ./update.sh --no-pull`) and check its start line: `docker compose -f compose.prod.yml logs app | grep 'Member sign-in'`. A line naming a setting that switched a way off says which one; it never shows a value.
 
 ## Checking from outside
 

@@ -29,6 +29,15 @@
 // THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 const SHAPES = {
+  bookmark: (
+    <path d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z" />
+  ),
+  bookmarkCheck: (
+    <>
+      <path d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z" />
+      <path d="m9 10 2 2 4-4" />
+    </>
+  ),
   chevronDown: <path d="m6 9 6 6 6-6" />,
   close: (
     <>
@@ -74,6 +83,12 @@ const SHAPES = {
     <>
       <path d="m21 21-4.34-4.34" />
       <circle cx="11" cy="11" r="8" />
+    </>
+  ),
+  user: (
+    <>
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </>
   ),
 }

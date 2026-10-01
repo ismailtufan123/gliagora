@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
@@ -148,6 +148,84 @@ describe('deploy/Caddyfile', () => {
     expect(caddyfile.indexOf('handle @basemap')).toBeLessThan(caddyfile.lastIndexOf('\thandle {'))
   })
 
+  /** The body of the block that starts with `opening` (`(log_fields) {`), its braces matched. */
+  const blockAfter = (text: string, opening: string, from = 0): string => {
+    const start = text.indexOf(opening, from)
+    if (start < 0) return ''
+    let depth = 0
+    for (let i = start + opening.length - 1; i < text.length; i++) {
+      if (text[i] === '{') depth++
+      else if (text[i] === '}' && --depth === 0) return text.slice(start + opening.length, i)
+    }
+    return ''
+  }
+
+  /** A logger's filter fields, with the snippets it imports written out. */
+  const filterFields = (logger: string) => {
+    const filter = blockAfter(logger, 'format filter {')
+    return filter.replace(/^\s*import (\S+)\s*$/gm, (_line, name: string) =>
+      blockAfter(caddyfile, `(${name}) {`),
+    )
+  }
+
+  /** The request>uri rules of a logger's filter, as Caddy applies them (each in turn). */
+  const uriFilter = (fields: string) => {
+    const rules = [
+      ...blockAfter(fields, 'request>uri multi_regexp {').matchAll(/regexp (\S+) (\S+)/g),
+    ]
+    expect(rules.length, 'request>uri rules').toBeGreaterThan(0)
+    return (uri: string) =>
+      rules.reduce(
+        // Caddy writes a group as ${1}; RE2 and JavaScript read these patterns alike.
+        (value, [, pattern, replacement]) =>
+          value.replace(new RegExp(pattern!, 'g'), replacement!.replace(/\$\{(\d+)\}/g, '$$$1')),
+        uri,
+      )
+  }
+
+  it('keeps tokens and the queries of admin and member addresses out of both logs', () => {
+    // The access log and Caddy's own log, which also gets the errors of requests (a 502 while the
+    // app restarts) with the whole address: both import the same fields (M4b, D49).
+    const loggers = {
+      access: blockAfter(caddyfile, '(access_log) {'),
+      default: blockAfter(caddyfile, 'log default {'),
+    }
+    expect(loggers.default).toMatch(/^\s*output stderr$/m)
+    for (const [name, logger] of Object.entries(loggers)) {
+      expect(logger, `${name} log`).toMatch(/format filter \{\s*import log_fields\s*\}/)
+      const fields = filterFields(logger)
+      expect(fields, `${name} log`).toMatch(/^\s*request>remote_ip ip_mask 24 48$/m)
+      expect(fields, `${name} log`).toMatch(/^\s*request>headers>Cookie delete$/m)
+      const filter = uriFilter(fields)
+      for (const [uri, logged] of [
+        ['/admin/reset/abc123token', '/admin/reset/[removed]'],
+        [
+          '/admin/collections/data-requests?where[email][equals]=a',
+          '/admin/collections/data-requests?[removed]',
+        ],
+        ['/api/users/me?depth=1', '/api/users/me?[removed]'],
+        ['/en/sign-in/link/?token=SECRET', '/en/sign-in/link/?[removed]'],
+        ['/en/sign-in/link?token=SECRET', '/en/sign-in/link?[removed]'],
+        ['/en/sign-in/?next=%2Fen%2Fjobs%2F&error=failed', '/en/sign-in/?[removed]'],
+        ['/en/sign-in?next=%2Fen%2F', '/en/sign-in?[removed]'],
+        ['/en/sign-in/google/callback/?code=C&state=S', '/en/sign-in/google/callback/?[removed]'],
+        ['/en/account/?done=created', '/en/account/?[removed]'],
+        [
+          '/en/legal/data-requests/confirm/?token=SECRET',
+          '/en/legal/data-requests/confirm/?[removed]',
+        ],
+        // Other addresses keep their queries: filters, searches.
+        ['/en/jobs/?type=phd', '/en/jobs/?type=phd'],
+        ['/en/search/?q=glia', '/en/search/?q=glia'],
+        ['/en/sign-in-help/?x=1', '/en/sign-in-help/?x=1'],
+        ['/en/accounting/?x=1', '/en/accounting/?x=1'],
+        ['/en/sign-in/', '/en/sign-in/'],
+      ]) {
+        expect(filter(uri!), `${name} log: ${uri}`).toBe(logged)
+      }
+    }
+  })
+
   it('keeps reset tokens and queries out of the logged redirect headers', () => {
     // Next.js's trailing-slash redirect repeats the request address in Location and Refresh.
     for (const header of ['Location', 'Refresh']) {
@@ -185,6 +263,37 @@ describe('the production server’s files', () => {
       expect(compose).toContain(`${name}: \${${name}:-}`)
     }
     expect(compose).toContain('ORCID_ISSUER: ${ORCID_ISSUER:-https://orcid.org}')
+  })
+
+  it('carry every column of the deletion log and the data requests over a restore', () => {
+    // deploy/backup/restore.sh copies these rows by named columns (D49): a column it does not
+    // name would be lost from every carried row. Compared with the newest migration's snapshot of
+    // the tables, which `pnpm migrate:create` writes with each migration.
+    const restore = readFileSync(new URL('../../deploy/backup/restore.sh', import.meta.url), 'utf8')
+    const folder = new URL('../migrations/', import.meta.url)
+    const newest = readdirSync(folder)
+      .filter((file) => file.endsWith('.json'))
+      .sort()
+      .at(-1)!
+    const snapshot = JSON.parse(readFileSync(new URL(newest, folder), 'utf8')) as {
+      tables: Record<string, { columns: Record<string, unknown> }>
+    }
+    for (const table of ['deletion_log', 'data_requests']) {
+      const listed = new RegExp(`^CARRY_COLUMNS_${table}='([^']+)'$`, 'm').exec(restore)?.[1]
+      expect(listed, `CARRY_COLUMNS_${table} in restore.sh`).toBeDefined()
+      expect(listed!.split(', ').sort(), table).toEqual(
+        Object.keys(snapshot.tables[`public.${table}`]!.columns).sort(),
+      )
+    }
+    // Each carried table's sequence moves too, with those of the records the log names.
+    const sequences = /^SEQUENCE_TABLES=\(([^)]*)\)$/m.exec(restore)?.[1]?.split(' ')
+    expect(sequences).toEqual([
+      'members',
+      'submissions',
+      'reports',
+      'data_requests',
+      'deletion_log',
+    ])
   })
 })
 

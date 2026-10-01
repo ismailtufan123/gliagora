@@ -2,6 +2,7 @@ import { gzipSync } from 'node:zlib'
 
 import { type Response, expect, test } from '@playwright/test'
 
+import { asTemplateMember } from './member'
 import { PAGES } from './pages'
 
 // PLAN §17.3: size budgets for every template, measured from what the browser actually
@@ -25,7 +26,8 @@ test.describe('size budgets', () => {
   test.skip(({ isMobile }) => isMobile, 'sizes do not depend on the device')
 
   for (const template of PAGES) {
-    test(`${template.name} stays within the budgets`, async ({ page }) => {
+    test(`${template.name} stays within the budgets`, async ({ page, baseURL }) => {
+      await asTemplateMember(page, template, baseURL)
       const responses: Response[] = []
       page.on('response', (response) => {
         if (

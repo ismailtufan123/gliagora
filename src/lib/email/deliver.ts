@@ -10,7 +10,8 @@ import { canSendEmail } from './settings'
 // is what the email tasks use; `sendOne()` also reports the server's reply code and enhanced status
 // (never the reply's text, which names the recipient), for the cases that must tell an address
 // that does not exist (5.1.x) from a full mailbox, a policy refusal or a server asking to try again
-// later (4xx): the inactivity warnings (the M4b design §7.7).
+// later (4xx): the inactivity warnings (the M4b design §7.7). `deliverWhileWaiting()` is for the
+// forms that email a link while the person waits for the page, with an overall time limit.
 
 export type Delivery = 'sent' | 'refused' | 'unavailable'
 
@@ -107,6 +108,15 @@ export async function sendOne(
   }
 }
 
+/** Logs a message that was not sent, with the error's class and codes only, never the address. */
+function logResult(payload: Payload, task: string, result: SendResult) {
+  if (result.error) {
+    payload.logger.warn(`${task}: a message was not sent (${result.error})`)
+  } else if (result.status === 'refused') {
+    payload.logger.warn(`${task}: the mail server did not accept a message`)
+  }
+}
+
 /**
  * Sends one automatic email (see `sendOne`) for the task named `task`, and logs a failure with the
  * error's class and codes only, never the address. Never call it when `canSendEmail()` is false.
@@ -118,10 +128,39 @@ export async function deliver(
   task: string,
 ): Promise<Delivery> {
   const result = await sendOne(payload, to, message)
-  if (result.error) {
-    payload.logger.warn(`${task}: a message was not sent (${result.error})`)
-  } else if (result.status === 'refused') {
-    payload.logger.warn(`${task}: the mail server did not accept a message`)
-  }
+  logResult(payload, task, result)
   return result.status
+}
+
+/**
+ * The longest a person waits for an email sent while the page waits for it (a sign-in link; the
+ * M4b design §9). The adapter alone may take 15 seconds to connect and 60 seconds per reply
+ * (src/lib/email/adapter.ts), which suits a task but not a person looking at a page.
+ */
+export const WAIT_FOR_SEND_MS = 20_000
+
+/**
+ * Sends one email while a person waits for the page (`deliver`, with an overall time limit). A
+ * send that takes longer counts as `unavailable`: the form then says it could not send the email,
+ * and the caller removes the link the email would have carried, so a message that still arrives
+ * later leads to "This link has expired".
+ */
+export async function deliverWhileWaiting(
+  payload: Payload,
+  to: string,
+  message: EmailText,
+  task: string,
+  limitMs: number = WAIT_FOR_SEND_MS,
+): Promise<Delivery> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<SendResult>((resolve) => {
+    timer = setTimeout(() => resolve({ status: 'unavailable', error: 'Timeout' }), limitMs)
+  })
+  try {
+    const result = await Promise.race([sendOne(payload, to, message), timeout])
+    logResult(payload, task, result)
+    return result.status
+  } finally {
+    clearTimeout(timer)
+  }
 }

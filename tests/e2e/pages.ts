@@ -1,6 +1,7 @@
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
 
 // Public templates covered by the end-to-end tests. Add every new page template here (PLAN §17.2).
+// `member` signs the page in as a test member first (tests/e2e/member.ts, `pnpm e2e:member`).
 export const PAGES = [
   { path: '/en/', name: 'home' },
   { path: '/en/contact/', name: 'contact (en)' },
@@ -48,6 +49,17 @@ export const PAGES = [
     name: 'search (long query)',
   },
   { path: '/en/search/?q=zzqxv', name: 'search (no results)' },
+  // Member sign-in (M4b). The sign-in form shows where the app can send email (SMTP_HOST, as in
+  // CI); without it, the page says that signing in is not available yet. The pages a valid link
+  // opens are checked in their flow (sign-in.spec.ts); an unknown token shows the expired state.
+  { path: '/en/sign-in/', name: 'sign in' },
+  { path: '/en/sign-in/sent/', name: 'sign-in link sent' },
+  { path: '/en/sign-in/link/?token=expired', name: 'sign-in link (expired)' },
+  { path: '/en/sign-in/signed-out/', name: 'signed out' },
+  { path: '/en/account/', name: 'account (signed out)' },
+  { path: '/en/account/', name: 'account (email member)', member: 'email' },
+  { path: '/en/account/', name: 'account (ORCID member)', member: 'orcid' },
+  { path: '/en/sign-in/', name: 'sign in (signed in)', member: 'email' },
   { path: '/this-page-does-not-exist/', name: '404', status: 404 },
   { path: '/en/gone-example/', name: '410', status: 410 },
 ] as const

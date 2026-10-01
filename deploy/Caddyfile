@@ -1,5 +1,53 @@
-# Caddy: HTTPS certificates, security headers, compression and privacy-friendly access logs
+# Caddy: HTTPS certificates, security headers, compression and privacy-friendly logs
 # (PLAN §11.2, §18.2). Certificates come from Let's Encrypt automatically; no email is sent.
+
+# What both logs keep of a request (PLAN §18.1, §18.2): the access log and Caddy's own log, which
+# also gets the errors of requests (a 502 while the app restarts or a deploy rolls back), with the
+# whole address and the visitor's IP address. IP addresses masked (IPv4 to /24, IPv6 to /48), no
+# cookies or credentials, no admin or API query strings, reset tokens, or queries in referrers and
+# redirect targets, and no queries of the sign-in, account and data-request addresses.
+(log_fields) {
+	request>remote_ip ip_mask 24 48
+	request>client_ip ip_mask 24 48
+	# Password-reset links carry a one-time token in the path (/admin/reset/<token>): a credential.
+	# Admin list filters and the admin's searches put what an editor types (e.g. an email address
+	# for a data request) in the query of /admin and /api addresses. The queries of the member
+	# addresses carry one-time tokens (emailed links), Google's and ORCID's answers (code, state)
+	# and where sign-in leads (M4b, D49). src/lib/access.test.ts applies these rules to examples.
+	request>uri multi_regexp {
+		regexp ^/admin/reset/[^/?]+ /admin/reset/[removed]
+		regexp ^(/(?:admin|api)[^?]*)\?.*$ ${1}?[removed]
+		regexp ^(/en/(?:sign-in|account|legal/data-requests)(?:/[^?]*)?)\?.*$ ${1}?[removed]
+	}
+	request>headers>Referer multi_regexp {
+		regexp /admin/reset/[^/?]+ /admin/reset/[removed]
+		regexp \?.*$ ?[removed]
+	}
+	request>headers>Cookie delete
+	request>headers>Authorization delete
+	request>headers>X-Forwarded-For delete
+	resp_headers>Set-Cookie delete
+	# Next.js's trailing-slash redirect (308) repeats the request address in Location and Refresh.
+	resp_headers>Location multi_regexp {
+		regexp /admin/reset/[^/?]+ /admin/reset/[removed]
+		regexp \?.*$ ?[removed]
+	}
+	resp_headers>Refresh multi_regexp {
+		regexp /admin/reset/[^/?]+ /admin/reset/[removed]
+		regexp \?.*$ ?[removed]
+	}
+}
+
+# Caddy's own log, on stderr, which Docker keeps: the same filters as the access log, for the
+# lines about requests that failed (M4b, D49).
+{
+	log default {
+		output stderr
+		format filter {
+			import log_fields
+		}
+	}
+}
 
 (security_headers) {
 	header {
@@ -16,9 +64,7 @@
 	}
 }
 
-# Access logs: IP addresses masked (IPv4 to /24, IPv6 to /48), no cookies or credentials, no
-# admin or API query strings, reset tokens, or queries in referrers and redirect targets, one file
-# per day, deleted after 14 days (PLAN §18.1).
+# Access logs: the fields above, one file per day, deleted after 14 days (PLAN §18.1).
 (access_log) {
 	log {
 		output file /var/log/caddy/access.log {
@@ -26,32 +72,7 @@
 			roll_keep_for 336h
 		}
 		format filter {
-			request>remote_ip ip_mask 24 48
-			request>client_ip ip_mask 24 48
-			# Password-reset links carry a one-time token in the path (/admin/reset/<token>): a credential.
-			# Admin list filters and the admin's searches put what an editor types (e.g. an email address
-			# for a data request) in the query of /admin and /api addresses.
-			request>uri multi_regexp {
-				regexp ^/admin/reset/[^/?]+ /admin/reset/[removed]
-				regexp ^(/(?:admin|api)[^?]*)\?.*$ ${1}?[removed]
-			}
-			request>headers>Referer multi_regexp {
-				regexp /admin/reset/[^/?]+ /admin/reset/[removed]
-				regexp \?.*$ ?[removed]
-			}
-			request>headers>Cookie delete
-			request>headers>Authorization delete
-			request>headers>X-Forwarded-For delete
-			resp_headers>Set-Cookie delete
-			# Next.js's trailing-slash redirect (308) repeats the request address in Location and Refresh.
-			resp_headers>Location multi_regexp {
-				regexp /admin/reset/[^/?]+ /admin/reset/[removed]
-				regexp \?.*$ ?[removed]
-			}
-			resp_headers>Refresh multi_regexp {
-				regexp /admin/reset/[^/?]+ /admin/reset/[removed]
-				regexp \?.*$ ?[removed]
-			}
+			import log_fields
 		}
 	}
 }

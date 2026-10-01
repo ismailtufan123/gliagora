@@ -18,14 +18,15 @@ import {
   testPayload,
   unique,
 } from './helpers'
-import { type Mailpit, dockerAvailable, startMailpit } from './mailpit'
+import { type Mailpit, mailpitAvailable, startMailpit } from './mailpit'
 
-// The automatic emails (M4.7) through a real SMTP server: a Mailpit container on free ports of
-// this computer, read back through its API. Skipped where Docker is not available.
+// The automatic emails (M4.7) through a real SMTP server: a throwaway Mailpit on free ports of this
+// computer (a container, or the program in MAILPIT_BIN), read back through its API. Skipped where
+// neither Docker nor MAILPIT_BIN is available.
 
-const docker = await dockerAvailable()
+const canStartMailpit = await mailpitAvailable()
 
-describe.skipIf(!docker)('automatic emails through Mailpit', () => {
+describe.skipIf(!canStartMailpit)('automatic emails through Mailpit', () => {
   let mailpit: Mailpit
   let payload: Payload
 

@@ -1,6 +1,6 @@
 ## In short
 
-We store in your browser only what is strictly necessary for the site to work, so there is no cookie banner. If you do not sign in, we set no cookies. There are no analytics, advertising or third-party cookies.
+We store in your browser only what is strictly necessary for the site to work, so there is no cookie banner. If you never start signing in, we set no cookies. There are no analytics, advertising or third-party cookies.
 
 ## What we store
 
@@ -8,12 +8,14 @@ Every item in this table is set by gliagora.com itself (first-party cookies) and
 
 | Item | For | Purpose | How long |
 |---|---|---|---|
-| Member session cookie | Members | Keeps you signed in | 30 days |
-| Sign-in security cookies | Members, while signing in | Protect sign-in with Google, ORCID or an email link against misuse | Short-lived |
+| `__Host-gliagora-session` (member session cookie) | Members | Keeps you signed in | 30 days from when you signed in; signing in again starts a new one |
+| `__Host-gliagora-signin` (sign-in cookie) | Anyone who starts signing in | Protects signing in with Google, ORCID or an email link against misuse; for an email link, it lets us warn you when the link is opened in another browser than the one where you asked for it | 15 minutes; deleted once you are signed in |
 | payload-token (editor session cookie) | Editors of Gliagora | Keeps an editor signed in to the editing area | 2 hours after it was set or last renewed |
 | payload-theme | Editors of Gliagora | Remembers an editor's choice of a light or dark editing area | 1 year |
 
-[TO DECIDE: M4b – names of the member cookies and lifetimes of the sign-in security cookies; whether the editors' second sign-in step adds a cookie]
+[TO DECIDE: whether the editors' second sign-in step adds a cookie]
+
+The two member cookies cannot be read by scripts, are sent only over encrypted connections and only to gliagora.com itself (HttpOnly, Secure, and a name starting with `__Host-`). They are sent when you follow a link to Gliagora from another site, so that you arrive signed in, but not with forms sent from other sites (SameSite=Lax). The session cookie holds a random code; we keep only a scrambled form of it, so our database alone signs nobody in. The sign-in cookie is encrypted: only our server can read it.
 
 The editor session cookie cannot be read by scripts, is sent only over encrypted connections and is not sent when you arrive from another site (HttpOnly, Secure, SameSite=Strict). The editing area also keeps some working data in the editor's browser storage, such as a copied field. A copied field stays there until the editor copies something else or clears the browser's storage.
 
