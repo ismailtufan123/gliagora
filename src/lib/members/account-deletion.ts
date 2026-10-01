@@ -1,0 +1,105 @@
+import type { Payload } from 'payload'
+
+import { inTransaction } from '@/jobs/maintenance/task'
+import { AUTOMATIC_ACTION } from '@/lib/data-requests/status'
+import { errorSummary } from '@/lib/errors'
+import { newReference } from '@/lib/forms/public-form'
+import { eraseNewsletter } from '@/lib/newsletter/erase'
+
+import { SESSION_COOKIE, SIGN_IN_COOKIE, clearedCookie } from './cookies'
+import { sameOrigin } from './origin'
+import { outcomePath } from './outcome'
+import { MEMBER_PATHS } from './paths'
+import { forbidden, seeOther } from './responses'
+import { type MemberRecord, deleteMember } from './store'
+
+// "Delete my account" (M4b, D49; the M4b design §5, §7.6): the confirmation page
+// (/en/account/privacy/delete/) says what is deleted and what stays, and its button posts to
+// /en/account/privacy/delete/use/. The deletion is done at once, in one transaction:
+// - a data request is recorded, closed: a deletion asked for in the account settings, deleted
+//   automatically, with the account's address if it has one (the proof that the request was
+//   handled, kept 2 years like every closed request; the final email goes out from it within
+//   minutes, `sendRequestEmails`);
+// - the newsletter subscription of that address (none until M2, `eraseNewsletter`);
+// - the member with everything that is theirs (`deleteMember`: saved positions, sessions, links,
+//   preferred subfields), which writes the deletion log, so the deletion is repeated if a backup is
+//   ever restored.
+// Then this browser's cookies go and the browser is sent to "Your account has been deleted".
+
+/** The account was already gone when the transaction reached it (a second press, elsewhere). */
+class AccountGone extends Error {
+  override name = 'AccountGone'
+}
+
+/**
+ * Deletes `member`'s account at their request (see above). Returns false, changing nothing, when
+ * the account no longer exists.
+ */
+export async function deleteOwnAccount(
+  payload: Payload,
+  member: MemberRecord,
+  now: Date,
+): Promise<boolean> {
+  try {
+    await inTransaction(payload, async (req, db) => {
+      await payload.create({
+        collection: 'data-requests',
+        data: {
+          kind: 'deletion',
+          source: 'account',
+          email: member.email,
+          locale: 'en',
+          status: 'closed',
+          action: AUTOMATIC_ACTION,
+          outcome: { accountDeleted: 1 },
+          // Received and closed at the same moment (the collection closes it as it saves).
+          receivedAt: now.toISOString(),
+        },
+        depth: 0,
+        overrideAccess: true,
+        req,
+      })
+      await eraseNewsletter(member.email)
+      if (!(await deleteMember(db, member.id, { reason: 'request' }, now))) throw new AccountGone()
+    })
+    return true
+  } catch (error) {
+    if (error instanceof AccountGone) return false
+    throw error
+  }
+}
+
+/** What the deletion route reads and does (the route gives the real ones). */
+export type AccountDeletionDeps = {
+  now: Date
+  env?: Record<string, string | undefined>
+  /** The member of the request's session cookie, or null. */
+  member(): Promise<MemberRecord | null>
+  deleteAccount(member: MemberRecord): Promise<boolean>
+}
+
+const SIGNED_OUT = [clearedCookie(SESSION_COOKIE), clearedCookie(SIGN_IN_COOKIE)]
+
+/**
+ * POST `/en/account/privacy/delete/use/`: only from the site's own pages (`sameOrigin`), so no other
+ * site can delete an account, and only while signed in (signed out, the privacy page shows the
+ * sign-in panel). Ends at "Your account has been deleted" without this browser's cookies, also
+ * when the account was already gone (a second press). A failure keeps everything as it was and
+ * leads back to the confirmation page with a reference.
+ */
+export async function handleAccountDeletion(
+  request: Request,
+  deps: AccountDeletionDeps,
+): Promise<Response> {
+  if (!sameOrigin(request.headers, deps.env)) return forbidden()
+  try {
+    const member = await deps.member()
+    if (!member) return seeOther(MEMBER_PATHS.privacy)
+    await deps.deleteAccount(member)
+    return seeOther(MEMBER_PATHS.accountDeleted, SIGNED_OUT)
+  } catch (error) {
+    const reference = newReference()
+    console.error(`Account deletion failed (reference ${reference}): ${errorSummary(error)}`)
+    return seeOther(outcomePath(MEMBER_PATHS.privacyDelete, { error: 'failed', reference }))
+  }
+}

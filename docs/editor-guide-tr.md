@@ -15,6 +15,7 @@ Girişten sonra açılan panonun en üstünde **"Waiting for an editor"** kutusu
 - "In review": yayımlanmaya hazırlanan ilanlar;
 - "Suggestions waiting": formdan gelen öneriler;
 - "Reports": "Report a problem" formundan gelen bildirimler, ve **24 saat içinde yanıtlanması gereken kişilik hakları talepleri** (süresi geçenler kalın yazılır);
+- "Data requests to answer within 7 days": 30 günlük yanıt süresi 7 gün içinde dolan açık veri talepleri ("New" ya da "In progress"; süresi geçenler kalın yazılır);
 - "Closing within 14 days": son başvuru tarihi yaklaşan yayındaki ilanlar.
 
 ## 2. İlan eklemek ve yayımlamak
@@ -88,6 +89,7 @@ Girişten sonra açılan panonun en üstünde **"Waiting for an editor"** kutusu
 - privacy@ adresine e-postayla gelen bir talebi burada "Create New" ile kaydedin. "What the person asks for" alanında ne istendiğini seçin. Talebin geldiği adresi ("Email", zorunlu) ve e-postanın posta kutusuna ulaştığı zamanı ("Received") girin. Kaynak ("Source") kendiliğinden "Email (recorded by an editor)" olur. Bu bilgiler kaydedildikten sonra değiştirilemez.
 - Durumlar: "New" (henüz yanıtlanmadı), "In progress" (kişiye yanıt verdiniz ya da işe başladınız), "Closed". Talep geri "New" yapılamaz. "Not confirmed yet" yalnızca sitedeki formdan gelen ve kişinin henüz onaylamadığı taleplerdir; bunlara dokunmayın. Site formu henüz kurulmadı (M4b).
 - Talepler, geliş tarihinden itibaren **30 gün içinde** yanıtlanır ("Answer by", sağ sütun).
+- Bir üye hesabını kendi ayarlarından sildiğinde ("Delete my account"), site bunu kendiliğinden kaydeder: kaynak "Account settings", durum "Closed", yapılan "Deleted automatically". Sizin bir şey yapmanız gerekmez. Hesabın e-posta adresi varsa kişiye silmeyi doğrulayan tek bir e-posta gider ("Confirmation emailed", posta kutusu M2'de kurulunca).
 - Kapatmak için "What was done" seçilmelidir: "Answered" (istenen yapıldı), "Refused" (kişiye gerekçesi bildirildi) ya da "Not applicable" (spam, yanlışlık ya da bizdeki verilerle ilgisi yok). "Note on what was done" yalnızca editörler içindir.
 - Talepler elle hiç silinmez. Yanlışlıkla açılan bir kaydı "Not applicable" ile kapatın. Kapanan talepler 2 yıl sonra silinir.
 

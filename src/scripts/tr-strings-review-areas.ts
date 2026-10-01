@@ -1050,9 +1050,53 @@ export const AREAS: Area[] = [
       'account.name.label': 'Account - display name section - label of the text field',
       'account.name.hint': 'Account - display name section - hint under that label ({max} is 80)',
       'account.name.save': 'Account - display name section - save button',
-      'account.signOut.heading': 'Account - heading of the section about signing out',
-      'account.signOut.text': 'Account - paragraph about signing out everywhere',
-      'account.signOut.everywhere': 'Account - Sign out everywhere button',
+      'account.nav.privacy':
+        'Account pages - account navigation - link to the privacy page (download your data, sign out everywhere, delete the account)',
+      'account.privacy.title':
+        'Privacy and your data (/en/account/privacy/) - heading and browser tab',
+      'account.privacy.description': 'Privacy and your data - description in link previews',
+      'account.privacy.signedOutTitle':
+        'Privacy and your data, when signed out - heading above the sign-in form',
+      'account.privacy.download.heading': 'Privacy and your data - heading of the download section',
+      'account.privacy.download.text':
+        'Privacy and your data - download section - what the file holds',
+      'account.privacy.download.link':
+        'Privacy and your data - download section - button that downloads the file',
+      'account.privacy.download.format':
+        'Privacy and your data - download section - note under the button about the file format',
+      'account.privacy.signOut.heading':
+        'Privacy and your data - heading of the section about signing out',
+      'account.privacy.signOut.text':
+        'Privacy and your data - paragraph about signing out everywhere',
+      'account.privacy.signOut.everywhere': 'Privacy and your data - Sign out everywhere button',
+      'account.privacy.delete.heading':
+        'Privacy and your data - heading of the section about deleting the account',
+      'account.privacy.delete.text': 'Privacy and your data - delete section - paragraph',
+      'account.privacy.delete.link':
+        'Privacy and your data - delete section - button that leads to the confirmation page',
+      'account.privacy.more':
+        'Privacy and your data - last paragraph, with links to the privacy policy and the data requests page',
+      'account.delete.title':
+        'Delete your account? (/en/account/privacy/delete/, the confirmation page) - heading and browser tab',
+      'account.delete.description': 'Delete your account? - description in link previews',
+      'account.delete.signedOutTitle':
+        'Delete your account?, when signed out - heading above the sign-in form',
+      'account.delete.intro': 'Delete your account? - paragraph under the heading',
+      'account.delete.goneHeading': 'Delete your account? - heading of the list of what is deleted',
+      'account.delete.gone': 'Delete your account? - list of what is deleted - items',
+      'account.delete.keptHeading': 'Delete your account? - heading of the list of what stays',
+      'account.delete.kept': 'Delete your account? - list of what stays - items',
+      'account.delete.email':
+        'Delete your account?, for an account with an email address - paragraph above the buttons',
+      'account.delete.submit': 'Delete your account? - button that deletes the account',
+      'account.delete.cancel': 'Delete your account? - button beside it, back to the privacy page',
+      'account.deleted.metaTitle': 'Account deleted (/en/account/deleted/) - browser tab',
+      'account.deleted.title': 'Account deleted - heading',
+      'account.deleted.text': 'Account deleted - first paragraph',
+      'account.deleted.kept': 'Account deleted - paragraph about what stays',
+      'account.deleted.email': 'Account deleted - paragraph about the confirmation email',
+      'account.deleted.jobs': 'Account deleted - first link (the jobs list)',
+      'account.deleted.home': 'Account deleted - second link (the home page)',
       'outcome.done.signed-in':
         'Account - message at the top after signing in, with an emailed link, Google or ORCID (also after "Create account" when the account already existed by then)',
       'outcome.done.signed-in-linked-google':
@@ -1117,7 +1161,7 @@ export const AREAS: Area[] = [
       'outcome.error.name-invalid':
         'Account - message at the top when the display name was too long or had control characters',
       'outcome.error.failed':
-        'Sign-in and account pages - message at the top when something went wrong',
+        'Sign-in and account pages - message at the top when something went wrong (on the privacy pages: the download, or deleting the account)',
       'outcome.error.failedReference':
         'Sign-in and account pages - message at the top when something went wrong, with the reference that finds it in our log',
     },
@@ -1208,6 +1252,18 @@ export const AREAS: Area[] = [
         'Email with a link to add an address to an account - how long the link works',
       'emails.verifyEmail.notYou':
         'Email with a link to add an address to an account - what to do if you did not ask for it',
+      'emails.account.deleted.subject': 'Email after a member deleted their account - subject',
+      'emails.account.deleted.text': 'Email after a member deleted their account - first paragraph',
+      'emails.account.deleted.kept':
+        'Email after a member deleted their account - what stays, with the link to the privacy notice',
+      'emails.account.inactiveWarning.subject':
+        'Email to a member who has not used the account for 2 years - subject',
+      'emails.account.inactiveWarning.text':
+        'Email to a member who has not used the account for 2 years - first paragraph, with the date ({date}, such as 31 Eki 2026), followed by the link to the sign-in page',
+      'emails.account.inactiveWarning.after':
+        'Email to a member who has not used the account for 2 years - what happens if they do not sign in',
+      'emails.account.inactiveWarning.why':
+        'Email to a member who has not used the account for 2 years - why, with the link to the privacy notice',
       'emails.automatic': 'Every automatic email - line before the signature',
       'emails.signature': 'Every automatic email - signature',
     },

@@ -9,15 +9,16 @@ import type { DeadlineKind } from '@/lib/jobs/deadline'
 import type { JobStatus } from '@/lib/jobs/status'
 import {
   DATA_REQUEST_LINK_HOURS,
-  INACTIVITY_GRACE_DAYS,
-  INACTIVITY_MONTHS,
   MAX_PREFERRED_SUBFIELDS,
   MAX_SAVED_ITEMS,
   MAX_SESSIONS,
   SESSION_DAYS,
   SIGN_IN_LINK_MINUTES,
   VERIFY_LINK_HOURS,
-  addMonthsUtc,
+  inactiveWithoutEmailCutoff,
+  inactivityCutoff,
+  warningExpiredCutoff,
+  warningRetryCutoff,
 } from '@/lib/retention/rules'
 
 import { DISPLAY_NAME_MAX, UNSAFE_IN_NAME } from './display-name'
@@ -855,6 +856,83 @@ export function listSavedJobs(db: MemberDb, memberId: number): Promise<SavedJobR
 }
 
 // ---------------------------------------------------------------------------------------------
+// "Download my data" (the M4b design §7.5): what the export reads of the member's own rows
+
+/**
+ * Every preferred subfield the member has stored, retired ones too (they stay stored but no longer
+ * count), in the subfields' order, with the English label and whether it is still active.
+ */
+export function storedSubfieldPrefs(
+  db: MemberDb,
+  memberId: number,
+): Promise<{ slug: string; label: string | null; active: boolean }[]> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{ slug: string; label: string | null; active: boolean }>(sql`
+      SELECT t.slug, l.label, (t.is_active IS NOT FALSE) AS active
+      FROM members_rels r
+        JOIN terms t ON t.id = r.terms_id
+        LEFT JOIN terms_locales l ON l._parent_id = t.id AND l._locale = 'en'
+      WHERE r.parent_id = ${checked(id, memberId, 'id')} AND r.path = 'subfieldPrefs'
+      ORDER BY t.sort_order, t.id`)
+    return rows.map((row) => ({ slug: row.slug, label: row.label, active: row.active === true }))
+  })
+}
+
+/** When each of the member's sessions that has not ended yet ends (never their tokens). */
+export function sessionExpiries(db: MemberDb, memberId: number, now: Date): Promise<Date[]> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{ expires_at: unknown }>(sql`
+      SELECT expires_at FROM member_sessions
+      WHERE member_id = ${checked(id, memberId, 'id')} AND expires_at > ${iso(now)}
+      ORDER BY expires_at`)
+    return rows.map((row) => toDate(row.expires_at) as Date)
+  })
+}
+
+/** A saved job as the export lists it: its title and address, with the dates of SavedJobRow. */
+export type SavedJobExportRow = SavedJobRow & {
+  title: string
+  slug: string | null
+  shortId: string | null
+}
+
+/** Every job the member has saved, the last saved first, for the export. */
+export function savedJobsForExport(db: MemberDb, memberId: number): Promise<SavedJobExportRow[]> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{
+      job_id: number
+      created_at: unknown
+      title: string
+      slug: string | null
+      short_id: string | null
+      status: SavedJobRow['status']
+      deadline_kind: SavedJobRow['deadlineKind']
+      deadline_at: unknown
+      expired_at: unknown
+      withdrawn_at: unknown
+    }>(sql`
+      SELECT s.job_id, s.created_at, j.title, j.slug, j.short_id, j.status, j.deadline_kind,
+        j.deadline_at, j.expired_at, j.withdrawn_at
+      FROM saved_items s JOIN jobs j ON j.id = s.job_id
+      WHERE s.member_id = ${checked(id, memberId, 'id')}
+      ORDER BY s.created_at DESC, s.id DESC
+      LIMIT ${MAX_SAVED_ITEMS}`)
+    return rows.map((row) => ({
+      jobId: Number(row.job_id),
+      savedAt: toDate(row.created_at) as Date,
+      title: row.title,
+      slug: row.slug,
+      shortId: row.short_id,
+      status: row.status,
+      deadlineKind: row.deadline_kind,
+      deadlineAt: toDate(row.deadline_at),
+      expiredAt: toDate(row.expired_at),
+      withdrawnAt: toDate(row.withdrawn_at),
+    }))
+  })
+}
+
+// ---------------------------------------------------------------------------------------------
 // Deleting an account
 
 export type MemberDeletion =
@@ -893,15 +971,12 @@ export function deleteMember(
       const member = checked(id, memberId, 'id')
       let condition = sql``
       if (deletion.reason === 'inactivity') {
+        // The same rules as the task's selection (src/lib/retention/rules.ts), checked again here.
         condition =
           deletion.condition === 'warned'
-            ? sql` AND deletion_warned_at <= ${iso(new Date(now.getTime() - INACTIVITY_GRACE_DAYS * DAY_MS))}
+            ? sql` AND deletion_warned_at <= ${iso(warningExpiredCutoff(now))}
                 AND last_seen_at < deletion_warned_at`
-            : sql` AND email IS NULL AND last_seen_at <= ${iso(
-                new Date(
-                  addMonthsUtc(now, -INACTIVITY_MONTHS).getTime() - INACTIVITY_GRACE_DAYS * DAY_MS,
-                ),
-              )}`
+            : sql` AND email IS NULL AND last_seen_at <= ${iso(inactiveWithoutEmailCutoff(now))}`
       } else if (deletion.reason === 'reapply') {
         const loggedAt = checked(z.date(), deletion.loggedAt, 'loggedAt')
         condition = sql` AND created_at <= ${iso(loggedAt)}`
@@ -925,4 +1000,176 @@ export function deleteMember(
       return true
     }),
   )
+}
+
+// ---------------------------------------------------------------------------------------------
+// The member tasks (src/jobs/maintenance/): inactivity, expired sign-in rows, the deletion log
+
+/** A page of a task's work: rows with an ID above `after`, at most `limit` of them. */
+export type Page = { after: number; limit: number }
+
+const page = (value: Page) =>
+  checked(
+    z.object({ after: z.number().int().min(0), limit: z.number().int().min(1).max(1000) }),
+    value,
+    'page',
+  )
+
+/** A member to warn of the deletion of their account (the M4b design §7.7). */
+export type WarningCandidate = { id: number; email: string; warningRefusedAt: Date | null }
+
+/**
+ * Members with an email address, not seen for 24 months and not warned yet, by ID: those whose
+ * earlier warning was refused as "no such address" only once 7 days have passed since.
+ */
+export function membersToWarn(db: MemberDb, now: Date, at: Page): Promise<WarningCandidate[]> {
+  return guarded(async () => {
+    const { after, limit } = page(at)
+    const { rows } = await db.execute<{
+      id: number
+      email: string
+      warning_refused_at: unknown
+    }>(sql`
+      SELECT id, email, warning_refused_at FROM members
+      WHERE id > ${after} AND email IS NOT NULL AND deletion_warned_at IS NULL
+        AND last_seen_at <= ${iso(inactivityCutoff(now))}
+        AND (warning_refused_at IS NULL OR warning_refused_at <= ${iso(warningRetryCutoff(now))})
+      ORDER BY id
+      LIMIT ${limit}`)
+    return rows.map((row) => ({
+      id: Number(row.id),
+      email: row.email,
+      warningRefusedAt: toDate(row.warning_refused_at),
+    }))
+  })
+}
+
+/** The rule a member is still due for a warning by, checked again with every change. */
+const stillInactive = (now: Date) =>
+  sql`deletion_warned_at IS NULL AND last_seen_at <= ${iso(inactivityCutoff(now))}`
+
+/**
+ * After the mail server accepted the warning: the 30 days start. Only while the member is still
+ * inactive and unwarned (one who signed in meanwhile keeps the account). Returns whether it did.
+ */
+export function markWarned(db: MemberDb, memberId: number, now: Date): Promise<boolean> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{ id: number }>(sql`
+      UPDATE members SET deletion_warned_at = ${iso(now)}, updated_at = ${iso(now)}
+      WHERE id = ${checked(id, memberId, 'id')} AND ${stillInactive(now)}
+      RETURNING id`)
+    return rows.length === 1
+  })
+}
+
+/**
+ * After the mail server refused the warning as "no such address" (5.1.x): the first time, the
+ * refusal is recorded and the member is tried again 7 days later; refused again then, the address
+ * counts as unreachable and the 30 days start without a delivered warning, as for members without
+ * an address. Returns `first`, `unreachable`, or null when the member is no longer due.
+ */
+export function markWarningRefused(
+  db: MemberDb,
+  memberId: number,
+  now: Date,
+): Promise<'first' | 'unreachable' | null> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{ unreachable: boolean }>(sql`
+      UPDATE members SET
+        deletion_warned_at = CASE
+          WHEN warning_refused_at IS NOT NULL
+            AND warning_refused_at <= ${iso(warningRetryCutoff(now))} THEN ${iso(now)}::timestamptz
+          ELSE NULL END,
+        warning_refused_at = COALESCE(warning_refused_at, ${iso(now)}::timestamptz),
+        updated_at = ${iso(now)}
+      WHERE id = ${checked(id, memberId, 'id')} AND ${stillInactive(now)}
+        AND (warning_refused_at IS NULL OR warning_refused_at <= ${iso(warningRetryCutoff(now))})
+      RETURNING (deletion_warned_at IS NOT NULL) AS unreachable`)
+    const row = first(rows)
+    if (!row) return null
+    return row.unreachable ? 'unreachable' : 'first'
+  })
+}
+
+/**
+ * Members due for deletion by the inactivity rule, by ID: `warned`, 30 days after a warning with
+ * no activity since; `without-email`, 24 months and 30 days after the last activity. Each is
+ * deleted by deleteMember, which checks the same rule again under the row's lock.
+ */
+export function membersToDelete(
+  db: MemberDb,
+  condition: 'warned' | 'without-email',
+  now: Date,
+  at: Page,
+): Promise<number[]> {
+  return guarded(async () => {
+    const { after, limit } = page(at)
+    const rule =
+      condition === 'warned'
+        ? sql`deletion_warned_at <= ${iso(warningExpiredCutoff(now))}
+            AND last_seen_at < deletion_warned_at`
+        : sql`email IS NULL AND last_seen_at <= ${iso(inactiveWithoutEmailCutoff(now))}`
+    const { rows } = await db.execute<{ id: number }>(sql`
+      SELECT id FROM members WHERE id > ${after} AND ${rule} ORDER BY id LIMIT ${limit}`)
+    return rows.map((row) => Number(row.id))
+  })
+}
+
+/**
+ * Deletes at most `limit` rows that no longer serve: sessions and email links past their end, and
+ * saved items whose job or member is gone (the database clears such a link rather than refusing
+ * the deletion; the jobs collection deletes a job's saved items itself, so this is a safety net).
+ * Returns how many of each it deleted.
+ */
+export function deleteExpiredMemberRows(
+  db: MemberDb,
+  now: Date,
+  limit: number,
+): Promise<{ sessions: number; emailLinks: number; savedItems: number }> {
+  return guarded(async () => {
+    const n = checked(z.number().int().min(1).max(10_000), limit, 'limit')
+    const at = iso(now)
+    const sessions = await db.execute<{ id: number }>(sql`
+      DELETE FROM member_sessions WHERE id IN (
+        SELECT id FROM member_sessions WHERE expires_at <= ${at} ORDER BY id LIMIT ${n})
+      RETURNING id`)
+    const emailLinks = await db.execute<{ id: number }>(sql`
+      DELETE FROM email_tokens WHERE id IN (
+        SELECT id FROM email_tokens WHERE expires_at <= ${at} ORDER BY id LIMIT ${n})
+      RETURNING id`)
+    const savedItems = await db.execute<{ id: number }>(sql`
+      DELETE FROM saved_items WHERE id IN (
+        SELECT id FROM saved_items WHERE job_id IS NULL OR member_id IS NULL ORDER BY id LIMIT ${n})
+      RETURNING id`)
+    return {
+      sessions: sessions.rows.length,
+      emailLinks: emailLinks.rows.length,
+      savedItems: savedItems.rows.length,
+    }
+  })
+}
+
+/** A logged deletion of a member whose record exists again (a restore brought it back). */
+export type RevivedMember = { logId: number; memberId: number; loggedAt: Date }
+
+/**
+ * Logged deletions of members whose record exists again and was created no later than the logged
+ * deletion, by the log row's ID: a member who joined after a restore can have a logged ID, and
+ * keeps the account (deleteMember checks the same condition again).
+ */
+export function revivedMembers(db: MemberDb, at: Page): Promise<RevivedMember[]> {
+  return guarded(async () => {
+    const { after, limit } = page(at)
+    const { rows } = await db.execute<{ id: number; target_id: number; at: unknown }>(sql`
+      SELECT l.id, l.target_id, l.at
+      FROM deletion_log l JOIN members m ON m.id = l.target_id AND m.created_at <= l.at
+      WHERE l.id > ${after} AND l.target_collection = 'members' AND l.action = 'delete'
+      ORDER BY l.id
+      LIMIT ${limit}`)
+    return rows.map((row) => ({
+      logId: Number(row.id),
+      memberId: Number(row.target_id),
+      loggedAt: toDate(row.at) as Date,
+    }))
+  })
 }

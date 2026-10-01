@@ -668,6 +668,7 @@ test.describe('linking and removing sign-in methods', () => {
     await startAt(other, 'google', {
       fields: { sub: member.sub!, email: member.email!, hd: 'example.org' },
     })
+    await other.goto('/en/account/privacy/')
     await other.getByRole('button', { name: 'Sign out everywhere' }).click()
     await answerAtProvider(page, 'orcid', { decision: 'deny' })
     await expect(page).toHaveURL(/\/en\/account\/\?error=cancelled-orcid#outcome$/)

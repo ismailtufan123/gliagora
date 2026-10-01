@@ -8,6 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { migrations } from '@/migrations'
 import * as members from '@/migrations/20261001_142245_members'
 import * as constraints from '@/migrations/20261001_142246_member_constraints'
+import * as memberTasks from '@/migrations/20261001_201739_member_tasks'
 
 import { orcidCheckCharacter } from './orcid-id'
 import { redeemSignInLink } from './sign-in-link'
@@ -1119,6 +1120,40 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
 
   // Last: it drops the member tables and makes them again, empty.
   describe('the migrations', () => {
+    it('of the member tasks can be undone and redone, with the trigger that keeps a recorded send', async () => {
+      const trigger = () =>
+        count(sql`
+          select count(*)::int as n from pg_trigger
+          where tgname = 'data_requests_keep_confirmation_sent_at'`)
+      const taskNames = () =>
+        count(sql`
+          select count(*)::int as n from pg_enum e join pg_type t on t.oid = e.enumtypid
+          where t.typname in ('enum_payload_jobs_task_slug', 'enum_payload_jobs_log_task_slug')
+            and e.enumlabel in ('applyDeletionLog', 'purgeMemberAuth', 'cleanInactiveMembers',
+              'sendRequestEmails')`)
+      expect(await trigger()).toBe(1)
+      expect(await taskNames()).toBe(8)
+      // A recorded send stays, against a save that read the row before the email went.
+      const { rows: created } = await db.execute<{ id: number }>(sql`
+        insert into data_requests (kind, source, status, action, locale, received_at,
+          closed_at, confirmation_sent_at)
+        values ('deletion', 'account', 'closed', 'deleted-automatically', 'en', now(), now(), now())
+        returning id`)
+      const id = created[0]!.id
+      await db.execute(sql`update data_requests set confirmation_sent_at = null where id = ${id}`)
+      expect(
+        await count(sql`
+          select count(*)::int as n from data_requests
+          where id = ${id} and confirmation_sent_at is not null`),
+      ).toBe(1)
+      await memberTasks.down({ db } as never)
+      expect(await trigger()).toBe(0)
+      expect(await taskNames()).toBe(0)
+      await memberTasks.up({ db } as never)
+      expect(await trigger()).toBe(1)
+      expect(await taskNames()).toBe(8)
+    })
+
     it('can be undone and redone, the constraints first', async () => {
       const tables = () =>
         rows<{ table_name: string }>(sql`

@@ -718,6 +718,7 @@
       "overview": "Account",
       "saved": "Saved",
       "savedCount": "Saved ({count})",
+      "privacy": "Privacy",
       "signOut": "Sign out"
     },
     "who": {
@@ -806,10 +807,58 @@
       "hint": "Optional, up to {max} characters. Leave the field empty to remove it.",
       "save": "Save display name"
     },
-    "signOut": {
-      "heading": "Signing out",
-      "text": "Signed in on a computer or phone you no longer use? Signing out everywhere ends every session of your account, this one too.",
-      "everywhere": "Sign out everywhere"
+    "privacy": {
+      "title": "Privacy and your data",
+      "description": "Download your data, sign out everywhere or delete your Gliagora account.",
+      "signedOutTitle": "Sign in to manage your data",
+      "download": {
+        "heading": "Download your data",
+        "text": "A file with everything Gliagora holds about your account: your email address and ways to sign in, your Glia Notes choice, preferred subfields, saved positions and sessions, and the suggestions, reports and data requests sent with your email address.",
+        "link": "Download my data",
+        "format": "The file is in JSON, a text format that programs and text editors can open."
+      },
+      "signOut": {
+        "heading": "Signing out",
+        "text": "Signed in on a computer or phone you no longer use? Signing out everywhere ends every session of your account, this one too.",
+        "everywhere": "Sign out everywhere"
+      },
+      "delete": {
+        "heading": "Delete your account",
+        "text": "Deleting your account removes it at once, with your saved positions and your settings. You can create a new account at any time.",
+        "link": "Delete my account"
+      },
+      "more": "How we handle your data is explained in our <privacy>privacy policy</privacy>. For anything else about your data, such as a correction, see <requests>data requests</requests>."
+    },
+    "delete": {
+      "title": "Delete your account?",
+      "description": "Delete your Gliagora account.",
+      "signedOutTitle": "Sign in to delete your account",
+      "intro": "This deletes your Gliagora account at once. It cannot be undone.",
+      "goneHeading": "What is deleted",
+      "gone": {
+        "account": "Your account and the ways you sign in to it",
+        "saved": "Your saved positions",
+        "settings": "Your Glia Notes choice, preferred subfields and display name",
+        "sessions": "Your sessions: you are signed out in every browser"
+      },
+      "keptHeading": "What stays",
+      "kept": {
+        "record": "A record of your request: that the account was deleted at your request, when, and its email address, if it has one. We keep it for 2 years, to show that we handled the request.",
+        "backups": "Our backups, which may hold your account for up to 6 months. If a backup is ever restored, your account is deleted again.",
+        "other": "Suggestions and reports you sent with your email address are not part of your account. To have them deleted too, see <link>data requests</link>."
+      },
+      "email": "We will send one email to <strong>{email}</strong> to confirm that your account was deleted.",
+      "submit": "Delete my account",
+      "cancel": "Cancel"
+    },
+    "deleted": {
+      "metaTitle": "Account deleted",
+      "title": "Your account has been deleted",
+      "text": "Your Gliagora account, your saved positions and your settings have been deleted, and you have been signed out in every browser.",
+      "kept": "We keep a record of your request for 2 years, to show that we handled it. Our backups may hold your account for up to 6 months; if a backup is ever restored, your account is deleted again.",
+      "email": "If your account had an email address, we will send one email there to confirm the deletion.",
+      "jobs": "Browse positions",
+      "home": "Go to the home page"
     }
   },
   "save": {
@@ -921,6 +970,19 @@
       "intro": "Someone signed in to a Gliagora account asked to add this address to that account. If it was you, open this link in the browser where you are signed in:",
       "validity": "The link works for 24 hours and only once.",
       "notYou": "If it was not you, ignore this email: nothing changes."
+    },
+    "account": {
+      "deleted": {
+        "subject": "Your Gliagora account has been deleted",
+        "text": "As you asked, we have deleted your Gliagora | Neuroscience account, with your saved positions and your settings.",
+        "kept": "We keep a record of your request, with this email address, for 2 years, to show that we handled it. Our backups may hold your account for up to 6 months; if a backup is ever restored, your account is deleted again. How we handle your data: {privacyUrl}"
+      },
+      "inactiveWarning": {
+        "subject": "Your Gliagora account will be deleted",
+        "text": "You have not used your Gliagora | Neuroscience account for 2 years. To keep it, sign in before {date}:",
+        "after": "If you do not sign in before then, we will delete the account on that day or soon after, with your saved positions and your settings. If you no longer need it, you need not do anything.",
+        "why": "We delete accounts that have not been used for 2 years, so that we keep no data we no longer need. How we handle your data: {privacyUrl}"
+      }
     }
   }
 }

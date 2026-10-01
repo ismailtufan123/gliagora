@@ -63,12 +63,17 @@ function freePort(): Promise<number> {
 }
 
 /** Starts the Mailpit program as a child process; it is ended by `stop()`. */
-function startBinary(file: string, smtpPort: number, apiPort: number): ChildProcess {
+function startBinary(
+  file: string,
+  smtpPort: number,
+  apiPort: number,
+  settings: Record<string, string>,
+): ChildProcess {
   const child = spawn(
     file,
     ['--smtp', `127.0.0.1:${smtpPort}`, '--listen', `127.0.0.1:${apiPort}`],
     {
-      env: { ...process.env, MP_DISABLE_VERSION_CHECK: 'true', MP_DATABASE: '' },
+      env: { ...process.env, MP_DISABLE_VERSION_CHECK: 'true', MP_DATABASE: '', ...settings },
       stdio: 'ignore',
     },
   )
@@ -76,10 +81,22 @@ function startBinary(file: string, smtpPort: number, apiPort: number): ChildProc
   return child
 }
 
-export async function startMailpit() {
+/**
+ * How the throwaway Mailpit answers, for the tests that need a refusal (M4b, the inactivity
+ * warnings): `allowedRecipients`, a regular expression (Go's syntax), makes it refuse every other
+ * recipient with `550 5.1.0` (an address that does not exist); `chaos` lets a test make it refuse
+ * every recipient with a code of its choice (`mailpit.refuseAll(451)`), without enhanced status.
+ */
+export type MailpitOptions = { allowedRecipients?: string; chaos?: boolean }
+
+export async function startMailpit({ allowedRecipients, chaos = false }: MailpitOptions = {}) {
   const smtpPort = await freePort()
   const apiPort = await freePort()
   const name = `gliagora-test-mailpit-${randomBytes(4).toString('hex')}`
+  const settings: Record<string, string> = {
+    ...(allowedRecipients ? { MP_SMTP_ALLOWED_RECIPIENTS: allowedRecipients } : {}),
+    ...(chaos ? { MP_ENABLE_CHAOS: 'true' } : {}),
+  }
   let child: ChildProcess | null = null
   if (await dockerAvailable()) {
     await run('docker', [
@@ -94,12 +111,13 @@ export async function startMailpit() {
       `127.0.0.1:${apiPort}:8025`,
       '--env',
       'MP_DISABLE_VERSION_CHECK=true',
+      ...Object.entries(settings).flatMap(([key, value]) => ['--env', `${key}=${value}`]),
       MAILPIT_IMAGE,
     ])
   } else {
     const file = mailpitBinary()
     if (!file) throw new Error('Neither Docker nor MAILPIT_BIN is available for Mailpit')
-    child = startBinary(file, smtpPort, apiPort)
+    child = startBinary(file, smtpPort, apiPort, settings)
   }
   const api = `http://127.0.0.1:${apiPort}`
   let stopped = false
@@ -125,6 +143,20 @@ export async function startMailpit() {
         m.To.some((to) => to.Address === address),
       )
       return Promise.all(found.map((m) => mailpit.message(m.ID)))
+    },
+    /**
+     * With `chaos`: refuses every recipient with `code` (`451`, `552`, …) from now on, or, with
+     * null, accepts them again.
+     */
+    async refuseAll(code: number | null) {
+      const response = await fetch(`${api}/api/v1/chaos`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          Recipient: { ErrorCode: code ?? 451, Probability: code === null ? 0 : 100 },
+        }),
+      })
+      if (!response.ok) throw new Error(`Mailpit chaos answered ${response.status}`)
     },
     /** Stops (and so removes) this container, or ends this process, only. */
     async stop() {

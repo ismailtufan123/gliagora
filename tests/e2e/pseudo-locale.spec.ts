@@ -228,6 +228,17 @@ for (const viewport of [
       await expectLayoutHolds(page, testInfo, 'account without an address')
     })
 
+    // Privacy and your data (M4b), and the confirmation page of a deletion (nothing is pressed).
+    test('privacy and deleting the account', async ({ page, baseURL }, testInfo) => {
+      await signInAs(page.context(), 'email', baseURL!)
+      await page.goto('/en/account/privacy/')
+      await expect(page.getByRole('button', { name: 'Sign out everywhere' })).toBeVisible()
+      await expectLayoutHolds(page, testInfo, 'privacy')
+      await page.goto('/en/account/privacy/delete/')
+      await expect(page.getByRole('button', { name: 'Delete my account' })).toBeVisible()
+      await expectLayoutHolds(page, testInfo, 'delete your account?')
+    })
+
     test('jobs list with the preferred subfields applied', async ({ page, baseURL }, testInfo) => {
       await signInAs(page.context(), 'email', baseURL!)
       await page.goto('/en/jobs/')

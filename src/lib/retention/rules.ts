@@ -39,8 +39,10 @@ export const ACK_WINDOW_DAYS = 7
 
 export { SUBMISSION_RETENTION_DAYS }
 
-// Member accounts and self-service privacy (M4b, D49; PLAN §18.1). The tasks that apply them come
-// with the account pages; the sign-in core (src/lib/members/) uses the lifetimes already.
+// Member accounts and self-service privacy (M4b, D49; PLAN §18.1). The sign-in core
+// (src/lib/members/) uses the lifetimes; the member tasks (src/jobs/maintenance/:
+// cleanInactiveMembers, purgeMemberAuth, applyDeletionLog, sendRequestEmails) and the retention
+// task apply the periods, through the functions below.
 
 /** A session lasts this long from sign-in, never extended (PLAN §18.1). */
 export const SESSION_DAYS = 30
@@ -68,6 +70,12 @@ export const UNCONFIRMED_REQUEST_DAYS = 60
  * can hold the deleted data, so a restore of any backup can still repeat each deletion.
  */
 export const DELETION_LOG_MONTHS = 7
+/**
+ * The final email about a data request (an account deleted in its settings, M4b) goes out only for
+ * a request received within this many days: after an outage of the mail server, or when email is
+ * first set up (M2), nobody gets one for something done long ago.
+ */
+export const REQUEST_EMAIL_WINDOW_DAYS = 7
 /** Limits on what one member can store. */
 export const MAX_SAVED_ITEMS = 500
 export const MAX_SESSIONS = 20
@@ -148,4 +156,79 @@ export function retireSearchCutoff(now: Instant): Date {
 /** Reports received before this instant get no automatic acknowledgement any more. */
 export function ackCutoff(now: Instant): Date {
   return new Date(toMs(now) - ACK_WINDOW_DAYS * DAY_MS)
+}
+
+/**
+ * The same UTC day and time `months` months earlier; a day the earlier month does not have becomes
+ * that month's last day (29 February 2028 minus 24 months is 28 February 2026). A period counted
+ * back from now this way is never shorter than its months, at most a day longer: a member last
+ * seen at noon on 28 February 2026 counts as 24 months away from the run at 05:30 on 1 March 2028,
+ * not from the one on 29 February (which looks back to 05:30 on 28 February). `addMonthsUtc`, for
+ * periods counted forward, runs over into the next month instead, with the same effect.
+ */
+export function monthsBeforeUtc(value: Instant, months: number): Date {
+  const date = new Date(toMs(value))
+  const day = date.getUTCDate()
+  date.setUTCDate(1)
+  date.setUTCMonth(date.getUTCMonth() - months)
+  const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate()
+  date.setUTCDate(Math.min(day, lastDay))
+  return date
+}
+
+/**
+ * Members with an email address last seen at or before this instant are warned that their account
+ * will be deleted (24 months without activity, PLAN §18.1).
+ */
+export function inactivityCutoff(now: Instant): Date {
+  return monthsBeforeUtc(now, INACTIVITY_MONTHS)
+}
+
+/**
+ * Members without an email address (nobody to warn) last seen at or before this instant are
+ * deleted: 24 months and 30 days after their last activity.
+ */
+export function inactiveWithoutEmailCutoff(now: Instant): Date {
+  return new Date(inactivityCutoff(now).getTime() - INACTIVITY_GRACE_DAYS * DAY_MS)
+}
+
+/**
+ * Members warned at or before this instant, and not seen since the warning, are deleted: 30 days
+ * after the warning.
+ */
+export function warningExpiredCutoff(now: Instant): Date {
+  return new Date(toMs(now) - INACTIVITY_GRACE_DAYS * DAY_MS)
+}
+
+/**
+ * When an account warned at `warnedAt` is due for deletion (30 days later): the warning names this
+ * day, and the daily run deletes it that day or the next (a run at the same minute 30 days on can
+ * come a few seconds early).
+ */
+export function deletionDueAt(warnedAt: Instant): Date {
+  return new Date(toMs(warnedAt) + INACTIVITY_GRACE_DAYS * DAY_MS)
+}
+
+/**
+ * A warning the mail server refused as "no such address" (5.1.x) at or before this instant is
+ * sent again: refused again, the address counts as unreachable and the 30 days start without a
+ * delivered warning. Refused later than this, the member is not tried again yet.
+ */
+export function warningRetryCutoff(now: Instant): Date {
+  return new Date(toMs(now) - WARNING_REFUSAL_RETRY_DAYS * DAY_MS)
+}
+
+/** Data requests nobody confirmed, received at or before this instant, are deleted (60 days). */
+export function unconfirmedRequestCutoff(now: Instant): Date {
+  return new Date(toMs(now) - UNCONFIRMED_REQUEST_DAYS * DAY_MS)
+}
+
+/** Rows of the deletion log written at or before this instant are deleted (7 months). */
+export function deletionLogCutoff(now: Instant): Date {
+  return monthsBeforeUtc(now, DELETION_LOG_MONTHS)
+}
+
+/** Data requests received before this instant get no final email any more (7 days). */
+export function requestEmailCutoff(now: Instant): Date {
+  return new Date(toMs(now) - REQUEST_EMAIL_WINDOW_DAYS * DAY_MS)
 }

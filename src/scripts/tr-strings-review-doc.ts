@@ -55,9 +55,14 @@ export function placeOf(key: string): Placed | undefined {
 /** Keys without a description of where they appear. */
 export const missingPlaces = (keys: readonly string[]) => keys.filter((key) => !placeOf(key))
 
-/** Descriptions that no key uses any more (the key was renamed or removed). */
-export const unusedPlaces = (keys: readonly string[]) =>
-  PLACES.filter((place) => !keys.some((key) => placeOf(key) === place)).map((place) => place.match)
+/**
+ * Descriptions that no key uses any more (the key was renamed or removed). Each key's place is
+ * looked up once: looking them all up again for every description took seconds.
+ */
+export function unusedPlaces(keys: readonly string[]): string[] {
+  const used = new Set(keys.map((key) => placeOf(key)))
+  return PLACES.filter((place) => !used.has(place)).map((place) => place.match)
+}
 
 /** The entry of PUBLIC_AT_M2 for a key (its longest matching key or prefix), if it has one. */
 export function publicAtM2(key: string): { match: string; where: string } | undefined {

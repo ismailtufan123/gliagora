@@ -3,6 +3,8 @@ import { createTranslator } from 'next-intl'
 import { type Locale, defaultLocale, locales } from '@/i18n/routing'
 import { CONTENT_PAGES } from '@/lib/content'
 import { matchDetailRoute } from '@/lib/detail-routes'
+import { formatDay } from '@/lib/jobs/format'
+import { MEMBER_PATHS } from '@/lib/members/paths'
 import type { ReportKind } from '@/lib/reports/status'
 import type { RejectionReason } from '@/lib/review/status'
 import { CONTACT_EMAIL, SITE_ORIGIN } from '@/lib/site'
@@ -158,6 +160,53 @@ export function verifyEmailEmail({ locale, link }: { locale: Locale; link: strin
       `${t('verifyEmail.intro')}\n${link}`,
       t('verifyEmail.validity'),
       t('verifyEmail.notYou'),
+      ...closing(t),
+    ),
+  }
+}
+
+/**
+ * The one email after a member deleted their account in its settings (M4b, D49; the M4b design
+ * §7.6), sent by `sendRequestEmails` from the request's record within minutes: what was deleted and
+ * what stays (the record of the request, the backups). Nothing about the account itself.
+ */
+export function accountDeletedEmail({ locale }: { locale: Locale }): EmailText {
+  const t = translator(locale)
+  return {
+    locale,
+    subject: t('account.deleted.subject'),
+    text: paragraphs(
+      t('greeting'),
+      t('account.deleted.text'),
+      t('account.deleted.kept', { privacyUrl: privacyUrl(locale) }),
+      ...closing(t),
+    ),
+  }
+}
+
+/**
+ * The warning before an account is deleted for inactivity (M4b, D49; the M4b design §7.7; PLAN
+ * §18.1), sent by `cleanInactiveMembers` 24 months after the member's last activity: the day from
+ * which the account is deleted (`deleteOn`, its calendar day in UTC) and a plain link to the
+ * sign-in page, which carries no token (signing in by any method keeps the account).
+ */
+export function inactivityWarningEmail({
+  locale,
+  deleteOn,
+}: {
+  locale: Locale
+  deleteOn: Date
+}): EmailText {
+  const t = translator(locale)
+  const date = formatDay(deleteOn.toISOString().slice(0, 10), locale)
+  return {
+    locale,
+    subject: t('account.inactiveWarning.subject'),
+    text: paragraphs(
+      t('greeting'),
+      `${t('account.inactiveWarning.text', { date })}\n${siteUrl(MEMBER_PATHS.signIn)}`,
+      t('account.inactiveWarning.after'),
+      t('account.inactiveWarning.why', { privacyUrl: privacyUrl(locale) }),
       ...closing(t),
     ),
   }

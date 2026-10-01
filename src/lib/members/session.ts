@@ -8,7 +8,7 @@ import { requestTime } from '@/lib/records'
 import { memberAuthConfig } from './config'
 import { SESSION_COOKIE } from './cookies'
 import { appOrigin } from './origin'
-import { type MemberRecord, findSession, memberDb, touchMember } from './store'
+import { type MemberDb, type MemberRecord, findSession, memberDb, touchMember } from './store'
 
 // Who is signed in, for the pages that show it (M4b, D49; the M4b design §8): the sign-in and
 // account pages. Only dynamic pages call this: the header is the same for everyone (a static
@@ -42,6 +42,24 @@ export const currentMember = cache(async (): Promise<CurrentMember | null> => {
   }
   return { member: session.member, token, expiresAt: session.expiresAt }
 })
+
+/**
+ * The member of a route handler's session cookie (`token`), or null; records activity at most once
+ * a day, as the pages do. Throws a MemberStoreError when the database cannot be read.
+ */
+export async function routeMember(
+  db: MemberDb,
+  token: string | null | undefined,
+  now: Date,
+): Promise<MemberRecord | null> {
+  if (!token) return null
+  const session = await findSession(db, token, now)
+  if (!session) return null
+  if (now.getTime() - session.member.lastSeenAt.getTime() >= DAY_MS) {
+    await touchMember(db, session.member.id, now)
+  }
+  return session.member
+}
 
 /** Which ways of signing in a page offers. */
 export type SignInMethods = { email: boolean; google: boolean; orcid: boolean }

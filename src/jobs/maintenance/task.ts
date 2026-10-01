@@ -72,12 +72,19 @@ export async function withTaskLock<T>(
 export type SqlRunner = Pick<PostgresAdapter['drizzle'], 'execute'>
 
 /**
+ * Raw SQL in the transaction of a request, which can also open a nested transaction (a savepoint):
+ * what the member store's functions take (src/lib/members/store.ts, `MemberDb`).
+ */
+export type TransactionDb = Pick<PostgresAdapter['drizzle'], 'execute' | 'transaction'>
+
+/**
  * Runs `work` in one database transaction, shared by the local API (through `req`) and raw SQL
- * (through `db`): committed if `work` returns, rolled back if it throws.
+ * (through `db`, Drizzle's transaction object): committed if `work` returns, rolled back if it
+ * throws.
  */
 export async function inTransaction<T>(
   payload: Payload,
-  work: (req: PayloadRequest, db: SqlRunner) => Promise<T>,
+  work: (req: PayloadRequest, db: TransactionDb) => Promise<T>,
   context: RequestContext = {},
 ): Promise<T> {
   const req = await createLocalReq({ context }, payload)
@@ -86,7 +93,7 @@ export async function inTransaction<T>(
   const id = await req.transactionID
   const db = (id !== undefined && adapter.sessions[String(id)]?.db) || adapter.drizzle
   try {
-    const result = await work(req, db as SqlRunner)
+    const result = await work(req, db as TransactionDb)
     await commitTransaction(req)
     return result
   } catch (error) {
