@@ -1393,7 +1393,7 @@ Server Components by default (lists and filters render on the server; only contr
 
 ## 20. Build roadmap
 
-Milestones run in this order: M0 → M1 → M3 → M4 (built and tested locally while S waits, D38) → **S (one-time server setup)** → one-time lawyer review → M2 → M4b → M5 → M6 → M7 … M14 (D23, D32, D38, D39). The server setup came after M3 so that nothing depends on a live server earlier; M2 (newsletter) follows S and the lawyer review because it needs the mailbox, listmonk and the server, and it is when the first legal texts go live. The whole site stays private until M2 (D32). At M2 only the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public; jobs and the other sections stay private until the M6 public launch, once the §3.4 gate is met (D39, D41).
+Milestones run in this order: M0 → M1 → M3 → M4 (built and tested locally while S waits, D38) → **S (one-time server setup)** → one-time lawyer review → M2 → M4b → M5 → M6 → M7 … M14 (D23, D32, D38, D39). At the operator's request, M5 and M6's home page were built ahead of the lawyer review and M2 (2026-10-01, D45), behind the site-wide password; M6's public launch keeps its place. The server setup came after M3 so that nothing depends on a live server earlier; M2 (newsletter) follows S and the lawyer review because it needs the mailbox, listmonk and the server, and it is when the first legal texts go live. The whole site stays private until M2 (D32). At M2 only the coming-soon page, the newsletter signup, the About page and the legal texts the operator has approved go public; jobs and the other sections stay private until the M6 public launch, once the §3.4 gate is met (D39, D41).
 
 Until S, each milestone ends merged to `main` with CI green and its image in GHCR. From S on, each milestone ends deployed to production, which doubles as staging while the site is private (D42).
 
@@ -1407,7 +1407,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
 | M4 | Jobs | Job collection; review queue v1; "Suggest a listing"; list, filters, chips, URL state; detail; closing soon; auto-expiry; sitemaps; basic search | Jobs window built and tested locally with fake data (D38); deployed at S, private; public at the M6 launch, once the §3.4 gate is met (D39) | 2–3 weeks |
 | M4b | Accounts and self-service privacy | Member sign-in (Google, ORCID, email link); saved items; digest settings and subfield preferences; export and delete; inactivity clean-up; automatic acknowledgements for requests | Accounts ready on the deployed site, still private, released with M6 | 1.5–2 weeks |
 | M5 | Map | Basemap extract and assets; `/en/map/`; jobs split view; clustering; institution panel; list sync | **Built and deployed 2026-10-01** (M5 notes below), with the basemap on the server, behind the password; public with M6 (D39) | 1–2 weeks |
-| M6 | Home and public launch | Home with static poster hero, live counts, latest positions and deadlines, windows overview, newsletter blocks; the full header and footer, and links to the suggest and report forms again in place of email (D41); the first Glia Notes issue, the launch issue (D41); pre-launch checklist below and the §3.4 gate | **Public launch (Phase 1a)**: jobs and the other sections go public once the §3.4 gate is met (D39) | 1 week + seeding |
+| M6 | Home and public launch | Home with static poster hero, live counts, latest positions and deadlines, windows overview, newsletter blocks; the full header and footer, and links to the suggest and report forms again in place of email (D41); the first Glia Notes issue, the launch issue (D41); pre-launch checklist below and the §3.4 gate | **Home page built and deployed 2026-10-01**, behind the password, ahead of M2 (M6 notes, D45). **Public launch (Phase 1a)**: jobs and the other sections go public once the §3.4 gate is met (D39) | 1 week + seeding |
 | M7 | Curation automation | Source register; allowed monitors; dedupe; link checker; dashboard widgets; local tag suggester; optional AI tier | Faster curation | 1–2 weeks |
 | M8 | Events and alerts | Events, deadlines, list and month views, iCal feeds, add to calendar, eligible Event markup; saved searches with weekly job alerts | Events window and alerts live | 2–3 weeks |
 | M9 | Funding | Programs, calls, country sets, eligibility finder, last-verified rules and alerts | Funding window live | 2 weeks |
@@ -1542,6 +1542,29 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
   - **Checked from outside:** `/basemap/` answers 401 without the password. With a temporary second user (a random password that never left the server unpiped, removed afterwards), `current.json` was `no-cache` and the tiles answered 206 to range requests. In Chromium, the world map drew the basemap with its labels, MapLibre and its worker loaded from our origin, nothing came from other domains, and there was no CSP violation under the real policy; on desktop and on a phone the credits read "MapLibre | Protomaps | © OpenStreetMap contributors", under the map too.
   - **Backups:** the operator asked that the basemap stay out of the backups and the weekly copy. `backup/backup.sh` names its files one by one, so the snapshots hold no basemap file; the repository is 19 MB. It now says so in the script and the runbook.
   - Events on the map come with M8.
+
+**M6 notes (2026-10-01; the home page, built ahead of the lawyer review and M2 at the operator's request, D45).** The steps after M5 first, then the home page; each tested locally on Node 24 and PostgreSQL 18 with the ROR sample and the fake jobs, as in CI, and each reviewed before merging by independent reviewers whose findings were checked by others.
+
+- **The M5 decisions** (#56): D45; the OpenStreetMap credit (map data and the time zones of deadlines) on the About page, in a new "Data and credits" section with ROR, Protomaps and MapLibre, as well as in the terms; B20 stays open.
+- **The jobs list's savings pass** (#57, D45 point 4):
+  - the site's seven icons are drawn on the server as plain SVG (`src/components/Icon.tsx`, Lucide's shapes), and `lucide-react` is gone: −0.96 KB on every page;
+  - the list's behaviour without page loads (`ListBehaviour`) loads when the reader first reaches for the filters, chips or sort order; what they do before it arrives is kept and done, and if it cannot load (a broken connection, or a deploy since the page was opened) that action loads its page, as without JavaScript;
+  - JavaScript: every page 135.54 → 134.58 KB, the jobs list 139.90 → 136.33 KB (136.48 KB after M6), now with a budget of its own, ≤137 KB.
+  - **The ≤130 KB of D45 cannot be reached**: the chunks that hold only React, Next.js 16.3 and Turbopack's runtime weigh 131.84 KB on every page (a webpack build was no smaller). The operator decides what replaces that target (§17.3).
+- **The editor guide in the admin** (#58): `/admin/help/`, "Yardım" at the end of the side menu, rendering `docs/editor-guide-tr.md` (kept in the image and the server build).
+- **The home page** (#59), at `/en/` in place of the coming-soon page:
+  - the hero: the tagline as the H1 (the LCP element), the subline, "Find positions" and "Explore the map";
+  - the static poster (§10, L1): an inline SVG of 7.3 KB, the brain from the side with its folds drawn as contours of its outline, and one calcium wave drawn in once in 1.2 s (not with reduced motion; the system's colours in forced-colours mode). Four drafts in different styles (line art, points, an astrocyte, contours) were drawn and judged side by side for anatomy, polish and accessibility; the contour draft won and was refined. It is generated by `tools/poster`;
+  - the windows that are built (`LIVE_WINDOWS`: Jobs until M8) as links around the brain, with their counts;
+  - four live figures (open positions, deadlines this month, institutions, countries), each equal to the number on the list its link opens, kept for 10 minutes and read again when the month changes;
+  - the latest positions and the next deadlines (six each, four on phones), read with each request;
+  - "Where is your next lab?" with the countries as links (no picture of the map, D45);
+  - the windows overview (Jobs, with its three largest position types);
+  - Glia Notes near the hero and before the footer, leading to `/en/newsletter/` until the signup opens (M2).
+- **Measured** (`budgets.spec.ts`): the home page loads 134.58 KB of JavaScript (none of its own), 10.13 KB of CSS and 19.71 KB of HTML; the poster is 7.3 KB of the 15 KB allowed.
+- **Tests:** 1049 unit tests, and 632 end-to-end tests locally; CI runs both, and now restarts the app after loading its test data, since the smoke test reads the home page from the empty database and the figures are kept for 10 minutes.
+- **On the server:** deployed by itself after the merge, behind the password. Until positions are published there, its figures read 0 and its lists say so.
+- **Still to come for M6**, the launch itself, when the operator says so: the §3.4 gate and the pre-launch checklist below; the full header and footer, and the forms' links in place of email (D41); the launch issue of Glia Notes; opening the map. At M2, before that, the public `/en/` shows the coming-soon text again (M2 row).
 
 **Pre-launch checklist** (after S, before the M6 public launch; M6 works through it together with the §3.4 gate):
 
