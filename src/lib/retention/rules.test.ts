@@ -24,9 +24,14 @@ import {
   UNCONFIRMED_REQUEST_DAYS,
   VERIFY_LINK_HOURS,
   WARNING_REFUSAL_RETRY_DAYS,
+  REQUEST_EMAIL_WINDOW_DAYS,
   ackCutoff,
   addMonthsUtc,
+  deletionDueAt,
+  deletionLogCutoff,
   formLimitCutoff,
+  inactiveWithoutEmailCutoff,
+  inactivityCutoff,
   isRetirable,
   retireAt,
   retireSearchCutoff,
@@ -34,6 +39,12 @@ import {
   snippetExpired,
   suggestionExpired,
   suggestionLinkCutoff,
+  monthsBeforeUtc,
+  requestEmailCutoff,
+  unconfirmedRequestCutoff,
+  warningDeadlineDay,
+  warningExpiredCutoff,
+  warningRetryCutoff,
 } from './rules'
 
 const HOUR = 3_600_000
@@ -245,5 +256,143 @@ describe('retireSearchCutoff', () => {
 describe('ackCutoff', () => {
   it('acknowledges reports received within the last 7 days', () => {
     expect(ackCutoff(NOW)).toEqual(before(7 * DAY))
+  })
+})
+
+describe('monthsBeforeUtc', () => {
+  it('keeps the UTC day and time of day', () => {
+    expect(monthsBeforeUtc('2026-10-15T04:15:00.000Z', 24).toISOString()).toBe(
+      '2024-10-15T04:15:00.000Z',
+    )
+    expect(monthsBeforeUtc('2026-10-15T04:15:00.000Z', 7).toISOString()).toBe(
+      '2026-03-15T04:15:00.000Z',
+    )
+  })
+
+  it('takes a day the earlier month lacks as its last day, so a period is never shorter', () => {
+    // 29 February, 24 months back: 2026 has no 29 February.
+    expect(monthsBeforeUtc('2028-02-29T05:30:00.000Z', 24).toISOString()).toBe(
+      '2026-02-28T05:30:00.000Z',
+    )
+    // 31 May, 7 months back: October has 31 days; 31 October, 7 months back: 31 March.
+    expect(monthsBeforeUtc('2027-05-31T05:30:00.000Z', 7).toISOString()).toBe(
+      '2026-10-31T05:30:00.000Z',
+    )
+    expect(monthsBeforeUtc('2026-09-30T05:30:00.000Z', 7).toISOString()).toBe(
+      '2026-02-28T05:30:00.000Z',
+    )
+    // Counted forward again, never past the moment counted back from.
+    for (const now of [
+      '2028-02-29T05:30:00.000Z',
+      '2026-12-31T05:30:00.000Z',
+      '2027-03-31T00:00:00.000Z',
+    ]) {
+      for (const months of [1, 7, 24]) {
+        expect(addMonthsUtc(monthsBeforeUtc(now, months), months).getTime()).toBeLessThanOrEqual(
+          new Date(now).getTime(),
+        )
+      }
+    }
+  })
+})
+
+describe('inactivity (PLAN §18.1, the M4b design §7.7)', () => {
+  const RUN = new Date('2026-10-01T05:30:00.000Z')
+
+  it('warns members with an address 24 months after their last activity, to the minute', () => {
+    expect(inactivityCutoff(RUN).toISOString()).toBe('2024-10-01T05:30:00.000Z')
+    const lastSeen = (iso: string) => new Date(iso).getTime() <= inactivityCutoff(RUN).getTime()
+    expect(lastSeen('2024-10-01T05:30:00.000Z')).toBe(true)
+    expect(lastSeen('2024-10-01T05:30:00.001Z')).toBe(false)
+  })
+
+  it('around 29 February: never before 24 calendar months', () => {
+    const leap = new Date('2028-02-29T05:30:00.000Z')
+    expect(inactivityCutoff(leap).toISOString()).toBe('2026-02-28T05:30:00.000Z')
+    // A member last seen on the leap day itself: 2030 has no 29 February, so the 24 months end on
+    // 28 February at noon; the first run after that is the one on 1 March.
+    const fromLeapDay = new Date('2028-02-29T12:00:00.000Z').getTime()
+    expect(fromLeapDay <= inactivityCutoff('2030-02-28T05:30:00.000Z').getTime()).toBe(false)
+    expect(fromLeapDay <= inactivityCutoff('2030-03-01T05:30:00.000Z').getTime()).toBe(true)
+  })
+
+  it('deletes members without an address at 24 months and 30 days, without warning', () => {
+    expect(inactiveWithoutEmailCutoff(RUN).toISOString()).toBe('2024-09-01T05:30:00.000Z')
+    expect(inactiveWithoutEmailCutoff('2028-02-29T05:30:00.000Z').toISOString()).toBe(
+      '2026-01-29T05:30:00.000Z',
+    )
+  })
+
+  it('deletes warned members 30 days after the warning, at the earliest', () => {
+    expect(warningExpiredCutoff(RUN)).toEqual(new Date(RUN.getTime() - 30 * DAY))
+    const warned = new Date('2026-10-01T05:30:12.000Z')
+    expect(deletionDueAt(warned).toISOString()).toBe('2026-10-31T05:30:12.000Z')
+    // The run 30 days later, at 05:30:00, comes a few seconds early; the next day's deletes.
+    expect(warned.getTime() <= warningExpiredCutoff('2026-10-31T05:30:00.000Z').getTime()).toBe(
+      false,
+    )
+    expect(warned.getTime() <= warningExpiredCutoff('2026-11-01T05:30:00.000Z').getTime()).toBe(
+      true,
+    )
+    // A run that comes a little later than the warning's did deletes on that UTC day.
+    expect(warned.getTime() <= warningExpiredCutoff('2026-10-31T05:30:20.000Z').getTime()).toBe(
+      true,
+    )
+  })
+
+  it('names a day in the warning that holds in every time zone, down to UTC−12', () => {
+    // The daily run at 05:30 UTC: "sign in before 30 Oct" for a deletion from 31 Oct 05:30 UTC.
+    expect(warningDeadlineDay('2026-10-01T05:30:12.000Z')).toBe('2026-10-30')
+    // The day before the named day ends at UTC−12 at noon UTC of the named day: no later than the
+    // earliest moment of the deletion, for a warning at any time of day (a run started by hand).
+    // The day after the named one would not hold: the named day is the latest that does.
+    const noonUtc = (day: string, plusDays = 0) =>
+      Date.parse(`${day}T12:00:00.000Z`) + plusDays * DAY
+    for (let minute = 0; minute < 24 * 60; minute += 7) {
+      const warnedAt = new Date(Date.parse('2026-10-01T00:00:00.000Z') + minute * 60_000)
+      const day = warningDeadlineDay(warnedAt)
+      const earliest = deletionDueAt(warnedAt).getTime()
+      expect(noonUtc(day), warnedAt.toISOString()).toBeLessThanOrEqual(earliest)
+      expect(noonUtc(day, 1), warnedAt.toISOString()).toBeGreaterThan(earliest)
+      // And the end of that day before, in Etc/GMT+12, is the same instant.
+      const lastMoment = new Date(noonUtc(day) - 1)
+      expect(new Intl.DateTimeFormat('en-CA', { timeZone: 'Etc/GMT+12' }).format(lastMoment)).toBe(
+        new Date(noonUtc(day, -1)).toISOString().slice(0, 10),
+      )
+    }
+  })
+
+  it('counts an address as unreachable only when refused again at least 7 days later', () => {
+    expect(warningRetryCutoff(RUN)).toEqual(new Date(RUN.getTime() - 7 * DAY))
+    const refused = new Date('2026-09-24T05:30:00.000Z')
+    expect(refused.getTime() <= warningRetryCutoff(RUN).getTime()).toBe(true)
+    // Six days later: not tried again yet.
+    expect(refused.getTime() <= warningRetryCutoff('2026-09-30T05:30:00.000Z').getTime()).toBe(
+      false,
+    )
+  })
+})
+
+describe('data requests and the deletion log (the M4b design §6)', () => {
+  it('deletes an unconfirmed request 60 days after it arrived', () => {
+    expect(unconfirmedRequestCutoff(NOW)).toEqual(before(60 * DAY))
+  })
+
+  it('keeps deletion-log rows 7 calendar months, longer than any backup', () => {
+    expect(deletionLogCutoff(NOW).toISOString()).toBe('2026-03-15T04:15:00.000Z')
+    expect(deletionLogCutoff('2026-09-30T04:15:00.000Z').toISOString()).toBe(
+      '2026-02-28T04:15:00.000Z',
+    )
+    // Never less than 6 months plus a day.
+    for (const now of ['2026-09-30T04:15:00.000Z', '2027-08-31T04:15:00.000Z']) {
+      expect(addMonthsUtc(deletionLogCutoff(now), 6).getTime() + DAY).toBeLessThan(
+        new Date(now).getTime(),
+      )
+    }
+  })
+
+  it('sends the final email of a request received within the last 7 days', () => {
+    expect(REQUEST_EMAIL_WINDOW_DAYS).toBe(7)
+    expect(requestEmailCutoff(NOW)).toEqual(before(7 * DAY))
   })
 })

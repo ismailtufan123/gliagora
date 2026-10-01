@@ -4,8 +4,8 @@ import { CLOSING_SOON_DAYS, calendarDay } from '@/lib/jobs/deadline'
 import { PERSONAL_RIGHTS, PERSONAL_RIGHTS_ANSWER_HOURS } from '@/lib/reports/status'
 
 // The counts on the admin dashboard (src/admin/ReviewDashboard.tsx): the review queue, jobs in
-// review, suggestions waiting for a decision, reports and requests, and the deadline tracker
-// (PLAN §3.2, admin core). Every count filters on indexed fields (status, kind, respondBy,
+// review, suggestions waiting for a decision, reports and requests, data requests whose answer is
+// due (M4b), and the deadline tracker (PLAN §3.2, admin core). Every count filters on indexed fields (status, kind, respondBy,
 // deadlineAt) and is a count, not a list, so each stays bounded however many records there are.
 
 const DAY_MS = 86_400_000
@@ -14,6 +14,9 @@ const HOUR_MS = 3_600_000
 /** How many of the jobs closing soonest the deadline tracker lists. */
 export const TRACKER_LIMIT = 10
 
+/** How many days ahead the dashboard counts the data requests whose answer is due. */
+export const DATA_REQUEST_DUE_DAYS = 7
+
 export type ClosingJob = { id: number; title: string; shortId: string | null; day: string | null }
 
 export type ReviewSummary = {
@@ -21,6 +24,7 @@ export type ReviewSummary = {
   jobsInReview: number
   suggestions: { waiting: number; notQueued: number }
   reports: { new: number; personalRightsDue: number; personalRightsOverdue: number }
+  dataRequests: { due: number; overdue: number }
   closing: { total: number; next: ClosingJob[] }
 }
 
@@ -65,6 +69,31 @@ export const personalRightsOverdueWhere = (now: Date): Where => ({
   ],
 })
 
+/**
+ * Data requests still open (New or In progress) whose answer is due within the next 7 days, or
+ * overdue: each confirmed request is answered within 30 days of receipt (KVKK Art. 13; M4b, D49).
+ * A request nobody confirmed is never counted: there is nothing to answer until the person
+ * confirms it, and it holds no address to answer to.
+ */
+export const dataRequestsDueWhere = (now: Date): Where => ({
+  and: [
+    { status: { in: ['new', 'in-progress'] } },
+    {
+      respondBy: {
+        less_than_equal: new Date(now.getTime() + DATA_REQUEST_DUE_DAYS * DAY_MS).toISOString(),
+      },
+    },
+  ],
+})
+
+/** The same requests whose answer is already late. */
+export const dataRequestsOverdueWhere = (now: Date): Where => ({
+  and: [
+    { status: { in: ['new', 'in-progress'] } },
+    { respondBy: { less_than: now.toISOString() } },
+  ],
+})
+
 export const WHERE = {
   newCandidates: { status: { equals: 'new' } },
   triagedCandidates: { status: { equals: 'triaged' } },
@@ -92,6 +121,8 @@ export async function reviewSummary(
     newReports,
     personalRightsDue,
     personalRightsOverdue,
+    dataRequestsDue,
+    dataRequestsOverdue,
     closing,
   ] = await Promise.all([
     count('candidates', WHERE.newCandidates),
@@ -102,6 +133,8 @@ export async function reviewSummary(
     count('reports', WHERE.newReports),
     count('reports', personalRightsDueWhere(now)),
     count('reports', personalRightsOverdueWhere(now)),
+    count('data-requests', dataRequestsDueWhere(now)),
+    count('data-requests', dataRequestsOverdueWhere(now)),
     payload.find({
       collection: 'jobs',
       where: closingWhere(now),
@@ -119,6 +152,7 @@ export async function reviewSummary(
     jobsInReview,
     suggestions: { waiting, notQueued },
     reports: { new: newReports, personalRightsDue, personalRightsOverdue },
+    dataRequests: { due: dataRequestsDue, overdue: dataRequestsOverdue },
     closing: {
       total: closing.totalDocs,
       next: closing.docs.map((job) => ({

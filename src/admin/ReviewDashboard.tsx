@@ -4,9 +4,12 @@ import { formatAdminURL } from 'payload/shared'
 import { CLOSING_SOON_DAYS } from '@/lib/jobs/deadline'
 import { PERSONAL_RIGHTS_ANSWER_HOURS } from '@/lib/reports/status'
 import {
+  DATA_REQUEST_DUE_DAYS,
   type ReviewSummary,
   WHERE,
   closingWhere,
+  dataRequestsDueWhere,
+  dataRequestsOverdueWhere,
   personalRightsDueWhere,
   personalRightsOverdueWhere,
   reviewSummary,
@@ -14,8 +17,8 @@ import {
 } from '@/lib/review/dashboard'
 
 // The review queue at the top of the admin dashboard (PLAN §3.2, admin core): what waits for an
-// editor, reports and removal requests with the personal-rights ones due soon, and the deadline
-// tracker. A server component that reads through the local API. Admin
+// editor, reports and removal requests with the personal-rights ones due soon, data requests
+// whose answer is due (M4b), and the deadline tracker. A server component that reads through the local API. Admin
 // text is plain English written here, like the labels in the collection configs: the admin is
 // not translated through messages/*.json.
 
@@ -44,7 +47,7 @@ export function ReviewDashboardView({
   links: Links
   now: Date
 }) {
-  const { candidates, jobsInReview, suggestions, reports, closing } = summary
+  const { candidates, jobsInReview, suggestions, reports, dataRequests, closing } = summary
   return (
     <section className="review-dashboard" aria-labelledby="review-dashboard-title">
       <h2 id="review-dashboard-title" className="review-dashboard__title">
@@ -92,6 +95,20 @@ export function ReviewDashboardView({
               (
               <a href={links.list('reports', personalRightsOverdueWhere(now))}>
                 <strong>{reports.personalRightsOverdue} overdue</strong>
+              </a>
+              )
+            </>
+          ) : null}
+        </li>
+        <li>
+          Data requests to answer within {DATA_REQUEST_DUE_DAYS} days:{' '}
+          <a href={links.list('data-requests', dataRequestsDueWhere(now))}>{dataRequests.due}</a>
+          {dataRequests.overdue > 0 ? (
+            <>
+              {' '}
+              (
+              <a href={links.list('data-requests', dataRequestsOverdueWhere(now))}>
+                <strong>{dataRequests.overdue} overdue</strong>
               </a>
               )
             </>

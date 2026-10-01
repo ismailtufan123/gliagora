@@ -1,11 +1,19 @@
 import { type Browser, type BrowserContext, type Page, expect, test } from '@playwright/test'
 
-import { E2E_MEMBER_EMAIL } from '../../src/scripts/e2e-member-account'
+import { readFile } from 'node:fs/promises'
+
+import {
+  E2E_MEMBER_EMAIL,
+  E2E_MEMBER_ORCID,
+  e2eMemberToken,
+} from '../../src/scripts/e2e-member-account'
+import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
 import { expectNoSeriousAxeIssues, summary } from './forms'
 import { latestEmailTo, signInLinkTo } from './mailpit'
 import {
   SESSION_COOKIE,
   freshMember,
+  memberToken,
   isSignedIn,
   needsMailpit,
   newAddress,
@@ -464,6 +472,156 @@ test.describe('display name', () => {
     await expect(page).toHaveURL(endsWith('/en/account/?done=name-removed#outcome'))
     await expect(page.getByRole('main')).not.toContainText('Your display name:')
     await context.close()
+  })
+})
+
+// "Download my data" (the M4b design §7.5): the shared test members, read only (the export records
+// activity, as every signed-in page does).
+test.describe('downloading your data', () => {
+  type Export = {
+    schema: string
+    exportedAt: string
+    account: Record<string, unknown>
+    gliaNotes: { on: boolean }
+    preferredSubfields: { slug: string; label: string | null; active: boolean }[]
+    savedPositions: { title: string; url: string; savedAt: string; state: string }[]
+    sessions: { count: number; expiresAt: string[] }
+    suggestions?: unknown[]
+    reports?: unknown[]
+    dataRequests?: unknown[]
+  }
+
+  test('is a JSON file to download, which nobody stores', async ({ page, baseURL }) => {
+    await signInAs(page.context(), 'email', baseURL!)
+    const response = await page.request.get('/en/account/privacy/export/', { maxRedirects: 0 })
+    expect(response.status()).toBe(200)
+    const headers = response.headers()
+    expect(headers['content-type']).toBe('application/json; charset=utf-8')
+    expect(headers['content-disposition']).toMatch(
+      /^attachment; filename="gliagora-data-\d{4}-\d{2}-\d{2}\.json"$/,
+    )
+    expect(headers['cache-control']).toBe('no-store')
+
+    // As a person gets it: the button on the privacy page downloads the file.
+    await page.goto('/en/account/privacy/')
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('link', { name: 'Download my data' }).click(),
+    ])
+    expect(download.suggestedFilename()).toMatch(/^gliagora-data-\d{4}-\d{2}-\d{2}\.json$/)
+    const file = JSON.parse(await readFile((await download.path())!, 'utf8')) as Export
+    expect(file.schema).toBe('gliagora-export/1')
+    expect(Date.parse(file.exportedAt)).not.toBeNaN()
+    expect(file.account).toMatchObject({
+      email: E2E_MEMBER_EMAIL,
+      emailVerifiedBy: 'link',
+      orcidId: null,
+      inactivityWarningAt: null,
+    })
+    expect(Object.keys(file.account).sort()).toEqual([
+      'displayName',
+      'email',
+      'emailVerifiedAt',
+      'emailVerifiedBy',
+      'googleAccountId',
+      'inactivityWarningAt',
+      'inactivityWarningRefusedAt',
+      'joinedAt',
+      'lastActiveAt',
+      'orcidId',
+    ])
+    expect(file.gliaNotes.on).toBe(false)
+    expect(file.preferredSubfields.map((subfield) => subfield.slug).sort()).toEqual([
+      'cognitive',
+      'glia',
+    ])
+    // The three fixed jobs it saved (pnpm e2e:member), the last saved first, with their state.
+    expect(
+      file.savedPositions.map(({ title, url, state }) => ({
+        title,
+        url: new URL(url).pathname,
+        state,
+      })),
+    ).toEqual([
+      { title: FIXED_JOBS.open.title, url: jobPath(FIXED_JOBS.open), state: 'open' },
+      {
+        title: FIXED_JOBS.expiredRecently.title,
+        url: jobPath(FIXED_JOBS.expiredRecently),
+        state: 'closed',
+      },
+      { title: FIXED_JOBS.withdrawn.title, url: jobPath(FIXED_JOBS.withdrawn), state: 'gone' },
+    ])
+    expect(file.sessions.count).toBeGreaterThanOrEqual(1)
+    expect(file.sessions.expiresAt).toHaveLength(file.sessions.count)
+    // The records sent with the address: lists, empty or not.
+    expect(Array.isArray(file.suggestions)).toBe(true)
+    expect(Array.isArray(file.reports)).toBe(true)
+    expect(Array.isArray(file.dataRequests)).toBe(true)
+    // Never the session's token, nor any hash.
+    const text = JSON.stringify(file)
+    expect(text).not.toContain(e2eMemberToken(memberToken!, 'email'))
+    expect(text).not.toMatch(/[0-9a-f]{64}/)
+  })
+
+  test('of an account without an address holds no records under one', async ({ page, baseURL }) => {
+    await signInAs(page.context(), 'orcid', baseURL!)
+    const response = await page.request.get('/en/account/privacy/export/')
+    const file = (await response.json()) as Export
+    expect(file.account).toMatchObject({ email: null, orcidId: E2E_MEMBER_ORCID })
+    expect(file).not.toHaveProperty('suggestions')
+    expect(file).not.toHaveProperty('reports')
+    expect(file).not.toHaveProperty('dataRequests')
+  })
+
+  test('signed out, leads to the privacy page, which offers signing in', async ({ page }) => {
+    const response = await page.request.get('/en/account/privacy/export/', { maxRedirects: 0 })
+    expect(response.status()).toBe(303)
+    expect(response.headers()['location']).toBe('/en/account/privacy/')
+    await page.goto('/en/account/privacy/export/')
+    await expect(page).toHaveURL(/\/en\/account\/privacy\/$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sign in to manage your data')
+  })
+})
+
+// Deleting the account is tested in account-delete.spec.ts (a project of its own, after the
+// others); here only what refuses to delete anything.
+test.describe('the account deletion route', () => {
+  test('refuses posts from other sites, and answers a plain visit with the confirmation page', async ({
+    page,
+    baseURL,
+  }) => {
+    await signInAs(page.context(), 'email', baseURL!)
+    const own = new URL(baseURL!).origin
+    for (const headers of <Record<string, string>[]>[
+      { Origin: 'https://example.org' },
+      { Origin: 'null' },
+      { Origin: own, 'Sec-Fetch-Site': 'cross-site' },
+      {},
+    ]) {
+      const response = await page.request.post('/en/account/privacy/delete/use/', {
+        headers,
+        maxRedirects: 0,
+      })
+      expect(response.status(), JSON.stringify(headers)).toBe(403)
+    }
+    const visit = await page.request.get('/en/account/privacy/delete/use/', { maxRedirects: 0 })
+    expect(visit.status()).toBe(303)
+    expect(visit.headers()['location']).toBe('/en/account/privacy/delete/')
+    // The member is still there.
+    await page.goto('/en/account/')
+    await expect(page.getByRole('main')).toContainText(`You are signed in as ${E2E_MEMBER_EMAIL}.`)
+  })
+
+  test('signed out, deletes nothing and leads to the privacy page', async ({
+    request,
+    baseURL,
+  }) => {
+    const response = await request.post('/en/account/privacy/delete/use/', {
+      headers: { Origin: new URL(baseURL!).origin },
+      maxRedirects: 0,
+    })
+    expect(response.status()).toBe(303)
+    expect(response.headers()['location']).toBe('/en/account/privacy/?done=not-signed-in#outcome')
   })
 })
 

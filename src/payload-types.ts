@@ -141,6 +141,10 @@ export interface Config {
       purgeRetention: TaskPurgeRetention;
       notifySubmitters: TaskNotifySubmitters;
       acknowledgeReports: TaskAcknowledgeReports;
+      applyDeletionLog: TaskApplyDeletionLog;
+      purgeMemberAuth: TaskPurgeMemberAuth;
+      cleanInactiveMembers: TaskCleanInactiveMembers;
+      sendRequestEmails: TaskSendRequestEmails;
       inline: {
         input: unknown;
         output: unknown;
@@ -1863,7 +1867,11 @@ export interface PayloadJob {
           | 'syncJobPlaces'
           | 'purgeRetention'
           | 'notifySubmitters'
-          | 'acknowledgeReports';
+          | 'acknowledgeReports'
+          | 'applyDeletionLog'
+          | 'purgeMemberAuth'
+          | 'cleanInactiveMembers'
+          | 'sendRequestEmails';
         taskID: string;
         input?:
           | {
@@ -1906,6 +1914,10 @@ export interface PayloadJob {
         | 'purgeRetention'
         | 'notifySubmitters'
         | 'acknowledgeReports'
+        | 'applyDeletionLog'
+        | 'purgeMemberAuth'
+        | 'cleanInactiveMembers'
+        | 'sendRequestEmails'
       )
     | null;
   queue?: string | null;
@@ -2584,6 +2596,9 @@ export interface TaskPurgeRetention {
     listings?: number | null;
     listingsFailed?: number | null;
     reports?: number | null;
+    dataRequests?: number | null;
+    unconfirmedRequests?: number | null;
+    deletionLog?: number | null;
     skipped?: boolean | null;
   };
 }
@@ -2605,6 +2620,63 @@ export interface TaskNotifySubmitters {
  * via the `definition` "TaskAcknowledgeReports".
  */
 export interface TaskAcknowledgeReports {
+  input?: unknown;
+  output: {
+    sent?: number | null;
+    failed?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskApplyDeletionLog".
+ */
+export interface TaskApplyDeletionLog {
+  input?: unknown;
+  output: {
+    members?: number | null;
+    suggestions?: number | null;
+    reports?: number | null;
+    reportAddresses?: number | null;
+    failed?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskPurgeMemberAuth".
+ */
+export interface TaskPurgeMemberAuth {
+  input?: unknown;
+  output: {
+    sessions?: number | null;
+    emailLinks?: number | null;
+    savedItems?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskCleanInactiveMembers".
+ */
+export interface TaskCleanInactiveMembers {
+  input?: unknown;
+  output: {
+    warned?: number | null;
+    refusedOnce?: number | null;
+    unreachable?: number | null;
+    skipped?: boolean | null;
+    stopped?: number | null;
+    deleted?: number | null;
+    deletedWithoutEmail?: number | null;
+    kept?: number | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSendRequestEmails".
+ */
+export interface TaskSendRequestEmails {
   input?: unknown;
   output: {
     sent?: number | null;

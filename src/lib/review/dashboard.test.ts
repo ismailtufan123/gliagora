@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   TRACKER_LIMIT,
   closingWhere,
+  dataRequestsDueWhere,
+  dataRequestsOverdueWhere,
   personalRightsDueWhere,
   personalRightsOverdueWhere,
   reviewSummary,
@@ -22,6 +24,8 @@ const fakePayload = () => {
     'reports:new': 4,
     'reports:personal-rights-due': 2,
     'reports:personal-rights-overdue': 1,
+    'data-requests:due': 3,
+    'data-requests:overdue': 1,
   }
   const count = vi.fn(
     async ({
@@ -33,7 +37,8 @@ const fakePayload = () => {
     }) => {
       if (where.and) {
         const late = where.and.some((part) => part.respondBy?.less_than !== undefined)
-        return { totalDocs: totals[`${collection}:personal-rights-${late ? 'overdue' : 'due'}`] }
+        const kind = collection === 'reports' ? 'personal-rights-' : ''
+        return { totalDocs: totals[`${collection}:${kind}${late ? 'overdue' : 'due'}`] }
       }
       const status = where.status!.equals ?? (where.status!.in as string[]).join(',')
       return { totalDocs: totals[`${collection}:${status}`] ?? 0 }
@@ -61,6 +66,7 @@ describe('reviewSummary', () => {
       jobsInReview: 1,
       suggestions: { waiting: 5, notQueued: 2 },
       reports: { new: 4, personalRightsDue: 2, personalRightsOverdue: 1 },
+      dataRequests: { due: 3, overdue: 1 },
       closing: {
         total: 12,
         next: [{ id: 7, title: 'Postdoc in glia', shortId: 'k3f9a', day: '2026-10-02' }],
@@ -118,6 +124,31 @@ describe('personal-rights requests on the dashboard', () => {
         { respondBy: { less_than: '2026-09-28T09:00:00.000Z' } },
       ],
     })
+  })
+})
+
+describe('data requests on the dashboard', () => {
+  it('are the open ones whose answer is due within 7 days, overdue ones included', () => {
+    expect(dataRequestsDueWhere(now)).toEqual({
+      and: [
+        { status: { in: ['new', 'in-progress'] } },
+        { respondBy: { less_than_equal: '2026-10-05T09:00:00.000Z' } },
+      ],
+    })
+    expect(dataRequestsOverdueWhere(now)).toEqual({
+      and: [
+        { status: { in: ['new', 'in-progress'] } },
+        { respondBy: { less_than: '2026-09-28T09:00:00.000Z' } },
+      ],
+    })
+  })
+
+  it('never count a request nobody confirmed, nor a closed one', () => {
+    for (const where of [dataRequestsDueWhere(now), dataRequestsOverdueWhere(now)]) {
+      const statuses = (where.and as { status?: { in: string[] } }[]).find((part) => part.status)
+      expect(statuses?.status?.in).not.toContain('unconfirmed')
+      expect(statuses?.status?.in).not.toContain('closed')
+    }
   })
 })
 

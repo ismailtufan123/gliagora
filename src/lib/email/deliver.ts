@@ -7,16 +7,33 @@ import type { EmailText } from './messages'
 import { canSendEmail } from './settings'
 
 // Sending one automatic email (M4.7, M4b) and knowing what the mail server answered. `deliver()`
-// is what the email tasks use; `sendOne()` also reports the server's reply code and enhanced status
-// (never the reply's text, which names the recipient), for the cases that must tell an address
-// that does not exist (5.1.x) from a full mailbox, a policy refusal or a server asking to try again
-// later (4xx): the inactivity warnings (the M4b design §7.7). `deliverWhileWaiting()` is for the
-// forms that email a link while the person waits for the page, with an overall time limit.
+// is what the email tasks use; `sendOne()` also reports the server's reply code, enhanced status
+// and the command it answered (never the reply's text, which names the recipient), for the cases
+// that must tell a recipient that does not exist (5.1.1 at RCPT TO) from a sender the server
+// refuses, a full mailbox, a policy refusal or a server asking to try again later (4xx): the
+// inactivity warnings (the M4b design §7.7). `deliverWhileWaiting()` is for the forms that email a
+// link while the person waits for the page, with an overall time limit.
 
 export type Delivery = 'sent' | 'refused' | 'unavailable'
 
-/** The SMTP reply: its code (250, 450, 550 …) and enhanced status (RFC 3463, `5.1.1`), if any. */
-export type SmtpReply = { code: number; enhanced?: string }
+/**
+ * The SMTP command a refusal answered, as Nodemailer reports it (`error.command`): `MAIL FROM`
+ * refuses the sender, `RCPT TO` the recipient, `DATA` the message. Other values are not kept.
+ */
+export type SmtpCommand = 'MAIL FROM' | 'RCPT TO' | 'DATA'
+
+const SMTP_COMMANDS: readonly SmtpCommand[] = ['MAIL FROM', 'RCPT TO', 'DATA']
+
+/** `value` if it is one of the SMTP commands above, else undefined. */
+export function smtpCommand(value: unknown): SmtpCommand | undefined {
+  return SMTP_COMMANDS.find((command) => command === value)
+}
+
+/**
+ * The SMTP reply: its code (250, 450, 550 …), its enhanced status (RFC 3463, `5.1.1`) and, for a
+ * refusal, the command it answered, as far as they are known.
+ */
+export type SmtpReply = { code: number; enhanced?: string; command?: SmtpCommand }
 
 export type SendResult = {
   status: Delivery
@@ -57,16 +74,22 @@ export function enhancedStatus(response: unknown): string | undefined {
   return /^\d{3}[ -]([245]\.\d{1,3}\.\d{1,3})(?=\s|$)/.exec(response)?.[1]
 }
 
-/** The reply code and enhanced status of a result or an error, if they are known. */
+/** The reply code, enhanced status and command of a result or an error, if they are known. */
 function replyOf(value: unknown): SmtpReply | undefined {
-  const fields = (value ?? {}) as { responseCode?: unknown; response?: unknown; enhanced?: unknown }
+  const fields = (value ?? {}) as {
+    responseCode?: unknown
+    response?: unknown
+    enhanced?: unknown
+    command?: unknown
+  }
   const fromText = typeof fields.response === 'string' ? /^(\d{3})\b/.exec(fields.response) : null
   const code =
     typeof fields.responseCode === 'number' ? fields.responseCode : Number(fromText?.[1] ?? NaN)
   if (!Number.isInteger(code)) return undefined
   const enhanced =
     typeof fields.enhanced === 'string' ? fields.enhanced : enhancedStatus(fields.response)
-  return enhanced ? { code, enhanced } : { code }
+  const command = smtpCommand(fields.command)
+  return { code, ...(enhanced ? { enhanced } : {}), ...(command ? { command } : {}) }
 }
 
 /**

@@ -13,3 +13,12 @@ import type { RequestContext } from 'payload'
 export const RETENTION = Symbol.for('gliagora.retention')
 
 export const isRetention = (context: RequestContext | undefined) => context?.retention === RETENTION
+
+/**
+ * Marks the deletions of `applyDeletionLog` (src/jobs/maintenance/applyDeletionLog.ts), which
+ * repeat a deletion already in the deletion log after a restore: the `logDeletions()` hooks do not
+ * log them a second time.
+ */
+export const REAPPLY = Symbol.for('gliagora.reapply')
+
+export const isReapply = (context: RequestContext | undefined) => context?.reapply === REAPPLY

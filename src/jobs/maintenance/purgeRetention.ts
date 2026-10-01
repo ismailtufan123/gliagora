@@ -8,10 +8,12 @@ import { GONE_AFTER_DAYS } from '@/lib/jobs/deadline'
 import type { JobStatus } from '@/lib/jobs/status'
 import { RETENTION } from '@/lib/retention/context'
 import {
+  deletionLogCutoff,
   isRetirable,
   retireSearchCutoff,
   snippetCutoff,
   suggestionLinkCutoff,
+  unconfirmedRequestCutoff,
 } from '@/lib/retention/rules'
 
 import { type SqlRunner, inTransaction, logCounts, maintenanceTask } from './task'
@@ -33,8 +35,13 @@ import { type SqlRunner, inTransaction, logCounts, maintenanceTask } from './tas
 //   the candidate it was made from and those marked as its duplicate keep their decision, without
 //   the posting's address and title (also in their versions), and reports that pointed to it keep
 //   theirs, without the link;
-// - a closed report, 2 years after it was closed (`purgeAt`), with any versions.
-// Form-limit rows (hashed IP addresses) go hourly, in purgeFormLimits.
+// - a closed report, 2 years after it was closed (`purgeAt`), with any versions;
+// - a closed data request, 2 years after it was closed (`purgeAt`), and one nobody confirmed (kind,
+//   date and keyed address hash only), 60 days after it arrived (M4b, D49; no versions);
+// - rows of the deletion log, 7 calendar months after the deletion, once no backup can hold the
+//   deleted record any more (6 months).
+// Form-limit rows (hashed IP addresses) go hourly, in purgeFormLimits; expired member sessions and
+// email links hourly, in purgeMemberAuth.
 //
 // Its deletions are not written to the deletion log (src/collections/DeletionLog.ts, M4b): if a
 // backup is ever restored, the restored records' deletion dates have still passed, so the next
@@ -332,11 +339,75 @@ export async function purgeReports(payload: Payload, now: Date): Promise<number>
   return deleted
 }
 
+/**
+ * (f) Data requests: closed ones whose 2 years after closing have passed (`purgeAt`), and those
+ * nobody confirmed, 60 days after they arrived. Returns how many of each were deleted.
+ */
+export async function purgeDataRequests(
+  payload: Payload,
+  now: Date,
+): Promise<{ closed: number; unconfirmed: number }> {
+  const at = now.toISOString()
+  const unconfirmedBy = unconfirmedRequestCutoff(now).toISOString()
+  const result = { closed: 0, unconfirmed: 0 }
+  const rules = {
+    closed: {
+      sql: sql`status = 'closed' AND purge_at <= ${at}`,
+      where: [{ status: { equals: 'closed' } }, { purgeAt: { less_than_equal: at } }],
+    },
+    unconfirmed: {
+      sql: sql`status = 'unconfirmed' AND received_at <= ${unconfirmedBy}`,
+      where: [
+        { status: { equals: 'unconfirmed' } },
+        { receivedAt: { less_than_equal: unconfirmedBy } },
+      ],
+    },
+  } as const
+  for (const kind of ['closed', 'unconfirmed'] as const) {
+    await eachBatch(
+      (after) => sql`
+        SELECT id FROM data_requests WHERE id > ${after} AND ${rules[kind].sql}
+        ORDER BY id LIMIT ${BATCH}`,
+      payload,
+      async (ids) => {
+        // Through the collection (editors can never delete a request; the local API bypasses
+        // access control), checked again by its rule.
+        const done = await payload.delete({
+          collection: 'data-requests',
+          where: { and: [{ id: { in: ids } }, ...rules[kind].where] },
+          depth: 0,
+          context: { retention: RETENTION },
+        })
+        if (done.errors.length > 0) throw new Error('A data request could not be deleted')
+        result[kind] += done.docs.length
+      },
+    )
+  }
+  return result
+}
+
+/** (g) Rows of the deletion log older than 7 calendar months. Returns how many were deleted. */
+export async function purgeDeletionLog(payload: Payload, now: Date): Promise<number> {
+  const cutoff = deletionLogCutoff(now).toISOString()
+  let deleted = 0
+  for (let batch = 0; batch < MAX_BATCHES; batch++) {
+    const { rows } = await drizzle(payload).execute<{ id: number }>(sql`
+      DELETE FROM deletion_log WHERE id IN (
+        SELECT id FROM deletion_log WHERE at <= ${cutoff} ORDER BY id LIMIT ${BATCH})
+      RETURNING id`)
+    deleted += rows.length
+    if (rows.length < BATCH) break
+  }
+  return deleted
+}
+
 export async function purgeRetention(payload: Payload, now: Date) {
   const snippets = await purgeSnippets(payload, now)
   const suggestions = await purgeSuggestions(payload, now)
   const listings = await retireListings(payload, now)
   const reports = await purgeReports(payload, now)
+  const dataRequests = await purgeDataRequests(payload, now)
+  const deletionLog = await purgeDeletionLog(payload, now)
   const counts = {
     snippets,
     suggestions: suggestions.suggestions,
@@ -344,6 +415,9 @@ export async function purgeRetention(payload: Payload, now: Date) {
     listings: listings.retired,
     listingsFailed: listings.failed,
     reports,
+    dataRequests: dataRequests.closed,
+    unconfirmedRequests: dataRequests.unconfirmed,
+    deletionLog,
   }
   logCounts(payload, 'purgeRetention', counts)
   return counts
@@ -354,6 +428,16 @@ export const PurgeRetentionTask = maintenanceTask({
   label: 'Delete personal data and old listings when their retention period ends',
   // Every night at 04:15 UTC, after the ROR import (03:30).
   cron: '15 4 * * *',
-  counts: ['snippets', 'suggestions', 'candidateLinks', 'listings', 'listingsFailed', 'reports'],
+  counts: [
+    'snippets',
+    'suggestions',
+    'candidateLinks',
+    'listings',
+    'listingsFailed',
+    'reports',
+    'dataRequests',
+    'unconfirmedRequests',
+    'deletionLog',
+  ],
   run: purgeRetention,
 })

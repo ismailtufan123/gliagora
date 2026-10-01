@@ -607,6 +607,9 @@ describe('purgeRetention', () => {
       listings: 0,
       listingsFailed: 0,
       reports: 0,
+      dataRequests: 0,
+      unconfirmedRequests: 0,
+      deletionLog: 0,
     })
   })
 })

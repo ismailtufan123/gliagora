@@ -4,7 +4,9 @@ import { REJECTION_REASONS } from '@/lib/review/status'
 
 import {
   type NotAddedReason,
+  accountDeletedEmail,
   emailLocale,
+  inactivityWarningEmail,
   privacyUrl,
   reportAcknowledgement,
   siteUrl,
@@ -203,5 +205,55 @@ describe('helpers', () => {
     expect(siteUrl('/en/jobs/')).toBe('https://gliagora.com/en/jobs/')
     expect(privacyUrl('en')).toBe('https://gliagora.com/en/legal/privacy/')
     expect(privacyUrl('tr')).toBe('https://gliagora.com/tr/legal/kvkk-aydinlatma-metni/')
+  })
+})
+
+describe('accountDeletedEmail', () => {
+  it('confirms the deletion and says what stays, in plain text', () => {
+    const email = accountDeletedEmail({ locale: 'en' })
+    expect(email.subject).toBe('Your Gliagora account has been deleted')
+    expect(email.text.startsWith('Hello,\n\nAs you asked, we have deleted your Gliagora')).toBe(
+      true,
+    )
+    expect(email.text).toContain('for 2 years')
+    expect(email.text).toContain('up to 6 months')
+    expect(email.text).toContain('https://gliagora.com/en/legal/privacy/')
+    expect(email.text.endsWith('Gliagora | Neuroscience\nhttps://gliagora.com/\n')).toBe(true)
+    // No link that signs in or acts, and no address but ours.
+    expect(email.text).not.toContain('/en/sign-in/')
+    expect(email.text).not.toMatch(/@(?!gliagora\.com)/)
+  })
+
+  it('has a Turkish draft that points to the KVKK notice', () => {
+    const email = accountDeletedEmail({ locale: 'tr' })
+    expect(email.subject).toBe('Gliagora hesabınız silindi')
+    expect(email.locale).toBe('tr')
+    expect(email.text).toContain('https://gliagora.com/tr/legal/kvkk-aydinlatma-metni/')
+  })
+})
+
+describe('inactivityWarningEmail', () => {
+  const day = '2026-10-30'
+
+  it('names the day before which to sign in, with a plain sign-in link', () => {
+    const email = inactivityWarningEmail({ locale: 'en', day })
+    expect(email.subject).toBe('Your Gliagora account will be deleted')
+    expect(email.text).toContain(
+      'You have not used your Gliagora | Neuroscience account for 2 years. To keep it, sign in before 30 Oct 2026:\nhttps://gliagora.com/en/sign-in/\n',
+    )
+    expect(email.text).toContain('we will delete the account on that day or soon after')
+    expect(email.text).toContain('https://gliagora.com/en/legal/privacy/')
+    // The link carries nothing: no token, no address.
+    expect(email.text).not.toMatch(/token=|\?next=/)
+    expect(email.text).not.toMatch(/@(?!gliagora\.com)/)
+  })
+
+  it('writes the day as given, whatever the server’s time zone', () => {
+    expect(inactivityWarningEmail({ locale: 'en', day: '2026-10-31' }).text).toContain(
+      'sign in before 31 Oct 2026:',
+    )
+    expect(inactivityWarningEmail({ locale: 'tr', day }).text).toContain(
+      '30 Eki 2026 tarihinden önce oturum açın:',
+    )
   })
 })

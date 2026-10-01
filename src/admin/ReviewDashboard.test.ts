@@ -13,6 +13,7 @@ const summary = (overrides: Partial<ReviewSummary> = {}): ReviewSummary => ({
   jobsInReview: 1,
   suggestions: { waiting: 4, notQueued: 2 },
   reports: { new: 3, personalRightsDue: 2, personalRightsOverdue: 1 },
+  dataRequests: { due: 2, overdue: 1 },
   closing: {
     total: 11,
     next: [
@@ -68,11 +69,22 @@ describe('ReviewDashboardView', () => {
       'href="/admin/collections/reports?where={&quot;status&quot;:{&quot;equals&quot;:&quot;new&quot;}}"',
     )
     const calm = render(
-      summary({ reports: { new: 0, personalRightsDue: 0, personalRightsOverdue: 0 } }),
+      summary({
+        reports: { new: 0, personalRightsDue: 0, personalRightsOverdue: 0 },
+        dataRequests: { due: 0, overdue: 0 },
+      }),
     )
     expect(text(calm)).toContain('Reports: 0 new')
     expect(text(calm)).toContain('Personal-rights requests due within 24 hours: 0')
     expect(text(calm)).not.toContain('overdue')
+  })
+
+  it('counts the open data requests due within 7 days, with the overdue ones', () => {
+    const html = render(summary())
+    expect(text(html)).toContain('Data requests to answer within 7 days: 2 (1 overdue)')
+    const calm = render(summary({ dataRequests: { due: 0, overdue: 0 } }))
+    expect(text(calm)).toContain('Data requests to answer within 7 days: 0')
+    expect(text(calm)).not.toMatch(/Data requests[^<]*overdue/)
   })
 
   it('has a heading for the section and one for the deadline tracker', () => {
@@ -118,6 +130,9 @@ describe('ReviewDashboard', () => {
     expect(html).toContain('href="/admin/collections/reports?where[status][equals]=new"')
     expect(html).toMatch(
       /href="\/admin\/collections\/reports\?where\[and\]\[0\]\[kind\]\[equals\]=personal-rights&amp;where\[and\]\[1\]\[status\]\[equals\]=new&amp;where\[and\]\[2\]\[respondBy\]\[less_than_equal\]=[^"]+"/,
+    )
+    expect(html).toMatch(
+      /href="\/admin\/collections\/data-requests\?where\[and\]\[0\]\[status\]\[in\]\[0\]=new&amp;where\[and\]\[0\]\[status\]\[in\]\[1\]=in-progress&amp;where\[and\]\[1\]\[respondBy\]\[less_than_equal\]=[^"]+"/,
     )
     // Payload saves a list URL's sort as the editor's preference for that list.
     expect(html).not.toContain('sort=')

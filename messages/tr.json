@@ -718,6 +718,7 @@
       "overview": "Hesap",
       "saved": "Kaydedilenler",
       "savedCount": "Kaydedilenler ({count})",
+      "privacy": "Gizlilik",
       "signOut": "Oturumu kapat"
     },
     "who": {
@@ -806,10 +807,58 @@
       "hint": "İsteğe bağlı, en fazla {max} karakter. Kaldırmak için alanı boş bırakın.",
       "save": "Görünen adı kaydet"
     },
-    "signOut": {
-      "heading": "Oturumu kapatma",
-      "text": "Artık kullanmadığınız bir bilgisayarda ya da telefonda oturumunuz mu açık? Her yerde oturumu kapatmak, hesabınızın bu oturum da dahil tüm oturumlarını sonlandırır.",
-      "everywhere": "Her yerde oturumu kapat"
+    "privacy": {
+      "title": "Gizlilik ve verileriniz",
+      "description": "Verilerinizi indirin, her yerde oturumu kapatın ya da Gliagora hesabınızı silin.",
+      "signedOutTitle": "Verilerinizi yönetmek için oturum açın",
+      "download": {
+        "heading": "Verilerinizi indirin",
+        "text": "Gliagora'nın hesabınızla ilgili tuttuğu her şeyi içeren bir dosya: e-posta adresiniz ve oturum açma yollarınız, Glia Notes tercihiniz, tercih ettiğiniz alt alanlar, kaydettiğiniz pozisyonlar ve oturumlarınız; ayrıca e-posta adresinizle gönderilen öneriler, bildirimler ve veri talepleri.",
+        "link": "Verilerimi indir",
+        "format": "Dosya, programların ve metin düzenleyicilerin açabildiği bir metin biçimi olan JSON biçimindedir."
+      },
+      "signOut": {
+        "heading": "Oturumu kapatma",
+        "text": "Artık kullanmadığınız bir bilgisayarda ya da telefonda oturumunuz mu açık? Her yerde oturumu kapatmak, hesabınızın bu oturum da dahil tüm oturumlarını sonlandırır.",
+        "everywhere": "Her yerde oturumu kapat"
+      },
+      "delete": {
+        "heading": "Hesabınızı silin",
+        "text": "Hesabınızı silmek onu, kaydettiğiniz pozisyonlar ve ayarlarınızla birlikte hemen kaldırır. İstediğiniz zaman yeni bir hesap oluşturabilirsiniz.",
+        "link": "Hesabımı sil"
+      },
+      "more": "Verilerinizi nasıl işlediğimiz <privacy>gizlilik politikamızda</privacy> açıklanır. Verilerinizle ilgili başka her şey için, örneğin bir düzeltme, <requests>veri talepleri</requests> sayfasına bakın."
+    },
+    "delete": {
+      "title": "Hesabınız silinsin mi?",
+      "description": "Gliagora hesabınızı silin.",
+      "signedOutTitle": "Hesabınızı silmek için oturum açın",
+      "intro": "Bu işlem Gliagora hesabınızı hemen siler. Geri alınamaz.",
+      "goneHeading": "Silinenler",
+      "gone": {
+        "account": "Hesabınız ve hesabınızda oturum açma yollarınız",
+        "saved": "Kaydettiğiniz pozisyonlar",
+        "settings": "Glia Notes tercihiniz, tercih ettiğiniz alt alanlar ve görünen adınız",
+        "sessions": "Oturumlarınız: tüm tarayıcılarda oturumunuz kapatılır"
+      },
+      "keptHeading": "Kalanlar",
+      "kept": {
+        "record": "Talebinizin kaydı: hesabın talebiniz üzerine silindiği, ne zaman silindiği ve varsa e-posta adresi. Talebi yerine getirdiğimizi gösterebilmek için bu kaydı 2 yıl saklarız.",
+        "backups": "Hesabınızı en fazla 6 ay tutabilecek yedeklerimiz. Bir yedek geri yüklenirse hesabınız yeniden silinir.",
+        "other": "E-posta adresinizle gönderdiğiniz öneriler ve bildirimler hesabınızın parçası değildir. Bunların da silinmesi için <link>veri talepleri</link> sayfasına bakın."
+      },
+      "email": "Hesabınızın silindiğini doğrulamak için <strong>{email}</strong> adresine bir e-posta göndereceğiz.",
+      "submit": "Hesabımı sil",
+      "cancel": "Vazgeç"
+    },
+    "deleted": {
+      "metaTitle": "Hesap silindi",
+      "title": "Hesabınız silindi",
+      "text": "Gliagora hesabınız, kaydettiğiniz pozisyonlar ve ayarlarınız silindi; tüm tarayıcılarda oturumunuz kapatıldı.",
+      "kept": "Talebinizi yerine getirdiğimizi gösterebilmek için talebinizin kaydını 2 yıl saklarız. Yedeklerimiz hesabınızı en fazla 6 ay tutabilir; bir yedek geri yüklenirse hesabınız yeniden silinir.",
+      "email": "Hesabınızın bir e-posta adresi varsa silme işlemini doğrulayan bir e-postayı da o adrese alabilirsiniz.",
+      "jobs": "Pozisyonlara göz atın",
+      "home": "Ana sayfaya gidin"
     }
   },
   "save": {
@@ -847,6 +896,7 @@
       "subfields-removed": "Artık tercih ettiğiniz alt alan yok: iş ilanları listesi tüm pozisyonları gösterir.",
       "name-saved": "Görünen adınız kaydedildi.",
       "name-removed": "Görünen adınız kaldırıldı.",
+      "not-signed-in": "Oturumunuz açık değil. Hesabınızı az önce sildiyseniz hesabınız silindi.",
       "othersEnded": "Oturumunuzun açık olduğu diğer tarayıcılarda oturumunuz kapatıldı."
     },
     "error": {
@@ -854,6 +904,8 @@
       "linkExpiredSignedIn": "Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış; bu nedenle oturumunuz önceki gibi açık.",
       "failed": "Bir sorun oluştu. Lütfen yeniden deneyin.",
       "failedReference": "Bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin.",
+      "deleteFailed": "Hesabınız silinmedi: bir sorun oluştu. Lütfen yeniden deneyin.",
+      "deleteFailedReference": "Hesabınız silinmedi: bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin.",
       "expired": "Oturum açma ya da bağlama 15 dakikadan uzun sürdü veya başka bir tarayıcıya ya da eski bir sekmeye döndü; bu nedenle hiçbir şey değişmedi. Lütfen yeniden deneyin.",
       "cancelled-google": "Google'ın sayfasında vazgeçtiniz; hiçbir şey değişmedi.",
       "cancelled-orcid": "ORCID'in sayfasında vazgeçtiniz; hiçbir şey değişmedi.",
@@ -921,6 +973,19 @@
       "intro": "Bir Gliagora hesabında oturum açmış biri, bu adresin o hesaba eklenmesini istedi. Bunu siz istediyseniz bu bağlantıyı, oturumunuzun açık olduğu tarayıcıda açın:",
       "validity": "Bağlantı 24 saat boyunca ve yalnızca bir kez çalışır.",
       "notYou": "Bunu siz istemediyseniz bu e-postayı dikkate almayın: hiçbir şey değişmez."
+    },
+    "account": {
+      "deleted": {
+        "subject": "Gliagora hesabınız silindi",
+        "text": "İsteğiniz üzerine Gliagora | Neuroscience hesabınızı, kaydettiğiniz pozisyonlar ve ayarlarınızla birlikte sildik.",
+        "kept": "Talebinizi yerine getirdiğimizi gösterebilmek için talebinizin kaydını bu e-posta adresiyle birlikte 2 yıl saklarız. Yedeklerimiz hesabınızı en fazla 6 ay tutabilir; bir yedek geri yüklenirse hesabınız yeniden silinir. Verilerinizi nasıl işlediğimiz: {privacyUrl}"
+      },
+      "inactiveWarning": {
+        "subject": "Gliagora hesabınız silinecek",
+        "text": "Gliagora | Neuroscience hesabınızı 2 yıldır kullanmadınız. Hesabınızı korumak için {date} tarihinden önce oturum açın:",
+        "after": "O tarihten önce oturum açmazsanız hesabınızı, kaydettiğiniz pozisyonlar ve ayarlarınızla birlikte o gün ya da kısa süre sonra sileriz. Hesaba artık ihtiyacınız yoksa hiçbir şey yapmanız gerekmez.",
+        "why": "Artık ihtiyaç duymadığımız verileri saklamamak için 2 yıldır kullanılmayan hesapları sileriz. Verilerinizi nasıl işlediğimiz: {privacyUrl}"
+      }
     }
   }
 }

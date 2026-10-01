@@ -35,12 +35,12 @@ async function cookiesOf(context: BrowserContext) {
 const tokenOf = (link: string) => new URL(link).searchParams.get('token')!
 
 /**
- * Whether the account page shows a member: its "Sign out everywhere" button, which neither the
- * sign-in panel nor the page that says the account cannot be shown just now has.
+ * Whether the account page shows a member: its account navigation, which neither the sign-in panel
+ * nor the page that says the account cannot be shown just now has.
  */
 async function signedIn(page: Page) {
   await page.goto('/en/account/')
-  return page.getByRole('button', { name: 'Sign out everywhere' }).isVisible()
+  return page.getByRole('navigation', { name: 'Your account' }).isVisible()
 }
 
 test.describe('sign-in form', () => {
@@ -336,7 +336,7 @@ test.describe('signing out', () => {
     await signInByLink(page, first.address)
     expect(await signedIn(first.page)).toBe(true)
 
-    await page.goto('/en/account/')
+    await page.goto('/en/account/privacy/')
     await page.getByRole('button', { name: 'Sign out everywhere' }).click()
     await expect(page).toHaveURL(/\/en\/sign-in\/signed-out\/$/)
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('You are signed out')

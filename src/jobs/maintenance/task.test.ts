@@ -51,6 +51,10 @@ describe('the maintenance tasks', () => {
       purgeRetention: ['15 4 * * *'],
       notifySubmitters: ['*/15 * * * *'],
       acknowledgeReports: ['*/5 * * * *'],
+      applyDeletionLog: ['*/10 * * * *'],
+      purgeMemberAuth: ['10 * * * *'],
+      cleanInactiveMembers: ['30 5 * * *'],
+      sendRequestEmails: ['*/5 * * * *'],
     })
     for (const task of MAINTENANCE_TASKS) {
       expect(task.schedule?.every((s) => s.queue === MAINTENANCE_QUEUE)).toBe(true)

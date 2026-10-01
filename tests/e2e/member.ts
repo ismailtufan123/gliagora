@@ -174,10 +174,13 @@ export async function startAt(
   await answerAtProvider(page, provider, answer)
 }
 
-/** Whether the account page shows a member (its "Sign out everywhere" button). */
+/**
+ * Whether the account page shows a member: its account navigation, which neither the sign-in panel
+ * nor the page that says the account cannot be shown just now has.
+ */
 export async function isSignedIn(page: Page) {
   await page.goto('/en/account/')
-  return page.getByRole('button', { name: 'Sign out everywhere' }).isVisible()
+  return page.getByRole('navigation', { name: 'Your account' }).isVisible()
 }
 
 /**

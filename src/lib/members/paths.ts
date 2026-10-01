@@ -33,6 +33,16 @@ export const MEMBER_PATHS = {
   saved: '/en/account/saved/',
   /** The POST route behind every Save button (`item`, `saved`, `back`). */
   savedToggle: '/en/account/saved/toggle/',
+  /** "Your data": download it, sign out everywhere, delete the account (`?error=`). */
+  privacy: '/en/account/privacy/',
+  /** The GET route that answers the member's data as a JSON file. */
+  privacyExport: '/en/account/privacy/export/',
+  /** "Delete your account?": what goes and what stays, and the button (`?error=`). */
+  privacyDelete: '/en/account/privacy/delete/',
+  /** The POST route behind that button. */
+  privacyDeleteUse: '/en/account/privacy/delete/use/',
+  /** After the account was deleted. */
+  accountDeleted: '/en/account/deleted/',
 } as const
 
 /**

@@ -1,6 +1,6 @@
 import type { CollectionAfterDeleteHook, CollectionConfig } from 'payload'
 
-import { isRetention } from '@/lib/retention/context'
+import { isReapply, isRetention } from '@/lib/retention/context'
 
 import { HIDDEN_RECORDS } from './hidden'
 import { isFakeData } from './Jobs'
@@ -16,10 +16,11 @@ export const DELETION_ACTIONS = ['delete', 'clear-email'] as const
 // brings back everything deleted after it was taken. So every deletion of personal data that a
 // person asked for (a data request, an account deleted in its settings, an editor deleting a
 // suggestion or report on request) or that the inactivity rule made writes a row here, in the same
-// transaction. A restore keeps this table's rows (deploy/backup/restore.sh carries them over); the
-// task that repeats each logged deletion whose record exists again (`applyDeletionLog`) comes
-// later in M4b. Record IDs only, no personal data; rows are deleted 7 months after `at`, once no
-// backup can hold the deleted data any more (6 months).
+// transaction. A restore keeps this table's rows (deploy/backup/restore.sh carries them over), and
+// the task `applyDeletionLog` (src/jobs/maintenance/applyDeletionLog.ts) repeats every 10 minutes
+// each logged deletion whose record exists again, without logging it a second time. Record IDs
+// only, no personal data; the retention task deletes rows 7 months after `at`, once no backup can
+// hold the deleted data any more (6 months).
 //
 // A restore also sets the ID sequences back, so a record made after it can get a logged ID. Two
 // rules keep that from deleting someone else's record: a logged deletion is repeated only on a
@@ -64,7 +65,7 @@ export const DeletionLog: CollectionConfig = {
  */
 export function logDeletions(collection: Exclude<LoggedCollection, 'members'>) {
   const hook: CollectionAfterDeleteHook = async ({ id, req, context }) => {
-    if (isRetention(context) || isFakeData(context)) return
+    if (isRetention(context) || isReapply(context) || isFakeData(context)) return
     await req.payload.create({
       collection: 'deletion-log',
       data: {

@@ -4,7 +4,7 @@ import { unstable_rethrow } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getPayload } from 'payload'
 
-import { AccountNav, SignOutForm } from '@/components/account/AccountNav'
+import { AccountNav } from '@/components/account/AccountNav'
 import {
   DigestSettings,
   DisplayNameSettings,
@@ -26,8 +26,9 @@ import { activeSubfields } from '@/lib/records'
 // The account (M4b, D49; the M4b design §2, §5, §7.4): who is signed in; Glia Notes; the preferred
 // subfields, the jobs list's default filter (D35); the email address, added or changed through an
 // emailed link; the ways to sign in (Google and ORCID can be linked, through their start routes
-// with `link=1`, and removed, unless one is the last way in); the display name; and signing out
-// everywhere. For a visitor who is signed out, the same address shows the sign-in panel (200, not
+// with `link=1`, and removed, unless one is the last way in); and the display name. Downloading
+// the data, signing out everywhere and deleting the account are on the privacy page
+// (/en/account/privacy/). For a visitor who is signed out, the same address shows the sign-in panel (200, not
 // a redirect: the header links here, and every header link must lead to a page). `?done=` and
 // `?error=` are the outcomes of the routes and links that lead here (OutcomeMessage). Rendered for
 // each request, never indexed.
@@ -221,14 +222,6 @@ export default async function Page({ searchParams }: Props) {
         </section>
 
         <DisplayNameSettings member={member} />
-
-        <section aria-labelledby="sign-out-heading" className="grid justify-items-start gap-4">
-          <h2 id="sign-out-heading" className="text-h2">
-            {t('signOut.heading')}
-          </h2>
-          <p>{t('signOut.text')}</p>
-          <SignOutForm label={t('signOut.everywhere')} scope="everywhere" />
-        </section>
       </div>
     </main>
   )
