@@ -2,7 +2,7 @@
 
 Every text of the Gliagora interface in Turkish, next to its English original and where it appears, so that a native speaker can review them all in one pass (PLAN §12, D40). Until then the Turkish texts are drafts.
 
-Updated 2026-10-01: 447 strings in 18 areas, 74 of them shown on the Turkish site now.
+Updated 2026-10-01: 451 strings in 18 areas, 74 of them shown on the Turkish site now.
 
 This file is generated from `messages/en.json` and `messages/tr.json` by `pnpm tr:review`; do not edit it by hand. A test fails when it no longer matches the messages.
 
@@ -40,12 +40,12 @@ The rows of the table are grouped by these areas, in this order.
 - **12. Institution pages**: 14 strings, shown on the Turkish site now: not yet. Institution pages exist only in English (/en/institutions/…/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
 - **13. Subfields**: 10 strings, shown on the Turkish site now: not yet. The subfield pages exist only in English (/en/subfields/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
 - **14. Search page**: 26 strings, shown on the Turkish site now: not yet. The search page exists only in English (/en/search/), like the rest of the site until the Turkish locale gate (PLAN §3.4). The search box of the header is in area 1.
-- **15. Map**: 36 strings, shown on the Turkish site now: not yet. The map exists only in English (/en/map/, and the jobs list's map view), like the rest of the site until the Turkish locale gate (PLAN §3.4).
+- **15. Map**: 40 strings, shown on the Turkish site now: not yet. The map exists only in English (/en/map/, and the jobs list's map view), like the rest of the site until the Turkish locale gate (PLAN §3.4).
 - **16. Suggest a listing**: 56 strings, shown on the Turkish site now: not yet. The form exists only in English (/en/suggest/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
 - **17. Report a problem**: 57 strings, shown on the Turkish site now: not yet. The form exists only in English (/en/report/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
 - **18. Automatic emails**: 26 strings, shown on the Turkish site now: not yet. Each email goes out in the language of the form the person used, and both forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).
 
-Total: 447 strings, 74 of them shown on the Turkish site now.
+Total: 451 strings, 74 of them shown on the Turkish site now.
 
 ## Strings
 
@@ -359,6 +359,10 @@ Total: 447 strings, 74 of them shown on the Turkish site now.
 | 15. Map | `map.panel.openPositions` | Open positions (`{count}`) | Açık pozisyonlar (`{count}`) | Map - an institution's panel - heading of its open positions | not yet |
 | 15. Map | `map.panel.institutionPage` | Institution page | Kurum sayfası | Map - an institution's panel - link to the institution page | not yet |
 | 15. Map | `map.panel.inList` | These positions in the list | Bu pozisyonlar listede | Map - an institution's panel - link to the jobs list with its positions | not yet |
+| 15. Map | `jobs.view.showMap` | Show the map | Haritayı göster | Jobs list - link above the results that shows the map beside them | not yet |
+| 15. Map | `jobs.view.hideMap` | Hide the map | Haritayı gizle | Jobs list's map view - link above the results that hides the map | not yet |
+| 15. Map | `jobs.view.institutions` | Institutions on the map | Haritadaki kurumlar | Jobs list's map view - heading of the list of institutions under the map, before it has loaded | not yet |
+| 15. Map | `jobs.view.noJs` | The map needs JavaScript. The positions are in the list. | Harita için JavaScript gerekir. Pozisyonlar listede yer alıyor. | Jobs list's map view - message under the map when JavaScript is off | not yet |
 | 16. Suggest a listing | `suggest.title` | Suggest a listing | İlan önerin | Suggest a listing (/en/suggest/) - heading and browser tab | not yet |
 | 16. Suggest a listing | `suggest.description` | Send us the link to a neuroscience position on the employer’s own page, or to an event, funding call or resource. An editor checks every suggestion; nothing is published automatically. | İşverenin kendi sayfasındaki bir sinirbilim pozisyonunun ya da bir etkinlik, fon çağrısı veya kaynağın bağlantısını bize gönderin. Her öneriyi bir editör inceler; hiçbir şey otomatik olarak yayımlanmaz. | Suggest a listing - description in search results and link previews | not yet |
 | 16. Suggest a listing | `suggest.intro` | Know of a neuroscience position that is not on Gliagora yet? Send us the link to the original posting, and an editor will check it. | Gliagora'da henüz yer almayan bir sinirbilim pozisyonu mu biliyorsunuz? Asıl ilanın bağlantısını bize gönderin; bir editör inceleyecektir. | Suggest a listing - first paragraph under the heading | not yet |

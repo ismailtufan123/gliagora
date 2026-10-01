@@ -29,6 +29,7 @@ export const PAGES = [
   { path: '/en/jobs/', name: 'jobs list' },
   { path: '/en/jobs/?subfield=glia&type=phd,postdoc&deadline=90d', name: 'jobs list (filtered)' },
   { path: '/en/jobs/?type=phd&q=no+such+position', name: 'jobs list (empty)' },
+  { path: '/en/jobs/?view=map', name: 'jobs list (map)', map: true },
   { path: jobPath(FIXED_JOBS.open), name: 'job (open)' },
   { path: jobPath(FIXED_JOBS.expiredRecently), name: 'job (closed)' },
   // The world map (M5): MapLibre and its data load after the page; `map` gives it the map budget.

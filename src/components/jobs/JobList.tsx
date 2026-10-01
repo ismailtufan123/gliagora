@@ -14,7 +14,8 @@ export function JobList({
   return (
     <ul role="list" className="job-list">
       {jobs.map((job) => (
-        <li key={job.id}>
+        // The map view highlights the pin of the row under the pointer (src/components/map).
+        <li key={job.id} data-institution={job.institution?.id}>
           <JobRow job={job} now={now} locale={locale} {...options} />
         </li>
       ))}

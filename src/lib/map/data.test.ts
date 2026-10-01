@@ -127,11 +127,20 @@ describe('mapJson', () => {
 })
 
 describe('mapQuery', () => {
-  it('keys an answer by the filters only, in their canonical order', () => {
+  it('keys an answer by the filters and the view, in their canonical order', () => {
     const a = parseJobFilters(new URLSearchParams('country=NL,DE&type=phd&sort=newest&page=2'))
-    const b = parseJobFilters(new URLSearchParams('type=phd&country=DE&country=NL&view=map'))
+    const b = parseJobFilters(new URLSearchParams('type=phd&country=DE&country=NL'))
     expect(mapQuery(a)).toBe('type=phd&country=DE,NL')
     expect(mapQuery(b)).toBe(mapQuery(a))
+    // The panel's link to the list keeps the view, so the view is part of the key.
+    expect(mapQuery({ ...b, view: 'map' })).toBe('type=phd&country=DE,NL&view=map')
     expect(mapQuery(emptyFilters(JOB_FILTERS))).toBe('')
+  })
+
+  it('links the panel to the list in the same view', () => {
+    const filters = parseJobFilters(new URLSearchParams('type=phd&view=map'))
+    const info = mapJson({ institutions: [institution()], unmapped: 0 }, filters, NOW, 'en', texts)
+      .institutions['7']
+    expect(info?.listPath).toBe('/en/jobs/?type=phd&institution=05dxps055&view=map')
   })
 })

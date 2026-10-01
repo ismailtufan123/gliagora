@@ -64,9 +64,11 @@ test.describe('world map', () => {
     await mapReady(page)
     const list = page.locator('#map-list')
     await expect(list.getByRole('heading', { level: 2 })).toContainText('Institutions in view')
+    // The list follows the map once it has reported what is in view; then the first one is chosen.
+    await expect(page.locator('#map-list[data-view-known]')).toBeAttached()
     const first = list.getByRole('button').first()
-    const name = (await first.locator('span').first().textContent())!.trim()
     await first.click()
+    const name = (await page.locator('#map-panel-title').textContent())!.trim()
 
     const panel = page.getByRole('complementary', { name })
     await expect(panel).toBeVisible()
@@ -186,5 +188,77 @@ test.describe('the map’s data', () => {
       expect(feature.properties.jobs).toBeGreaterThan(0)
       expect(feature.geometry.coordinates).toHaveLength(2)
     }
+  })
+})
+
+test.describe('the jobs list’s map view', () => {
+  const institutionsInView = (page: Page) => page.locator('#map-list > ul > li')
+
+  test('“Show the map” opens it beside the list; “Hide the map” closes it', async ({ page }) => {
+    await page.goto('/en/jobs/')
+    await expect(page.locator('html[data-js]')).toBeAttached()
+    await page.getByRole('link', { name: 'Show the map' }).click()
+    await expect(page).toHaveURL(/\/en\/jobs\/\?view=map$/)
+    await mapReady(page)
+    // The positions stay in the list next to it.
+    await expect(page.locator('#job-results .job-list > li').first()).toBeVisible()
+    await page.getByRole('link', { name: 'Hide the map' }).click()
+    await expect(page).toHaveURL(/\/en\/jobs\/$/)
+    await expect(page.locator('.map-view')).toHaveCount(0)
+  })
+
+  test('filters keep the map open and change its pins', async ({ page, request }) => {
+    const phd = (await (await request.get('/api/map/institutions/?type=phd&view=map')).json()) as {
+      features: unknown[]
+    }
+    const all = (await (await request.get('/api/map/institutions/?view=map')).json()) as {
+      features: unknown[]
+    }
+    expect(phd.features.length).toBeLessThan(all.features.length)
+
+    await page.goto('/en/jobs/?type=phd&view=map')
+    await mapReady(page)
+    await expect(institutionsInView(page)).toHaveCount(phd.features.length)
+    // Removing the chip keeps the view and brings back every pin (on a phone not all of them fit
+    // in view at once: the list says how many there are).
+    await page.locator('a[data-chip]').first().click()
+    await expect(page).toHaveURL(/\/en\/jobs\/\?view=map$/)
+    await expect(page.locator('#map-list-title')).toContainText(`of ${all.features.length})`)
+    await expect(page.locator('.map-view')).toHaveAttribute('data-status', 'ready')
+  })
+
+  test('“Clear all” keeps the map open', async ({ page }) => {
+    await page.goto('/en/jobs/?type=phd&view=map')
+    await mapReady(page)
+    await page.getByRole('link', { name: 'Clear all', exact: true }).click()
+    await expect(page).toHaveURL(/\/en\/jobs\/\?view=map$/)
+    await mapReady(page)
+  })
+
+  test('the panel’s link filters the list by the institution, with its chip, and keeps the map', async ({
+    page,
+  }) => {
+    await page.goto('/en/jobs/?view=map')
+    await mapReady(page)
+    await expect(page.locator('#map-list[data-view-known]')).toBeAttached()
+    await page.locator('#map-list').getByRole('button').first().click()
+    const name = (await page.locator('#map-panel-title').textContent())!.trim()
+    await page
+      .getByRole('complementary', { name })
+      .getByRole('link', { name: 'These positions in the list' })
+      .click()
+    await expect(page).toHaveURL(/\/en\/jobs\/\?institution=\w+&view=map$/)
+    await expect(page.locator('a[data-chip]', { hasText: name })).toBeVisible()
+    await mapReady(page)
+    await expect(institutionsInView(page)).toHaveCount(1)
+  })
+
+  test('each position in the list names its institution for the map', async ({ page }) => {
+    await page.goto('/en/jobs/?view=map')
+    const ids = await page
+      .locator('#job-results .job-list > li')
+      .evaluateAll((rows) => rows.map((row) => (row as HTMLElement).dataset.institution))
+    expect(ids.length).toBeGreaterThan(0)
+    for (const id of ids) expect(id).toMatch(/^\d+$/)
   })
 })

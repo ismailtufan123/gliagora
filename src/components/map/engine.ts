@@ -379,12 +379,15 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     },
     setData(next) {
       data = next
-      mark(null)
+      if (marked !== null && !next.features.some((feature) => feature.id === marked)) mark(null)
       map.getSource<GeoJSONSource>(SOURCE)?.setData({
         type: 'FeatureCollection',
         features: next.features,
       })
-      reportView()
+      // New filters: show their pins (World → country, PLAN §14), or keep the view if none.
+      const fit = bounds(next)
+      if (fit) map.fitBounds(fit, { padding: 48, maxZoom: 6, duration: duration() })
+      else reportView()
     },
     resize() {
       map.resize()

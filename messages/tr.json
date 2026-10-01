@@ -189,6 +189,12 @@
       "pastEnd": "Bu listede {pages, plural, one {yalnızca # sayfa} other {# sayfa}} var.",
       "firstPage": "İlk sayfaya git"
     },
+    "view": {
+      "showMap": "Haritayı göster",
+      "hideMap": "Haritayı gizle",
+      "institutions": "Haritadaki kurumlar",
+      "noJs": "Harita için JavaScript gerekir. Pozisyonlar listede yer alıyor."
+    },
     "filters": {
       "label": "Pozisyonları filtrele",
       "title": "Filtreler",

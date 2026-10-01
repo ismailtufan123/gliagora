@@ -34,7 +34,7 @@ export type MapInstitutionInfo = {
   website: string | null
   /** The ROR record (https://ror.org/…), when the institution has a ROR ID. */
   ror: string | null
-  /** The jobs list with the same filters and this institution. */
+  /** The jobs list with the same filters, view and order, and this institution. */
   listPath: string
   jobs: MapJob[]
 }
@@ -66,9 +66,13 @@ export type MapTexts = {
   untilFilled: string
 }
 
-/** The filters without the list's sort, view and page: the key of an answer. */
+/**
+ * The filters without the list's sort and page: the key of an answer. The view stays, because the
+ * panel's link to the list keeps it (the world map links to the list, the jobs list's map view to
+ * itself).
+ */
 export const mapQuery = (filters: JobFilters) =>
-  serializeFilters(JOB_FILTERS, { ...filters, sort: 'deadline', view: 'list', page: 1 }).toString()
+  serializeFilters(JOB_FILTERS, { ...filters, sort: 'deadline', page: 1 }).toString()
 
 /** About 1 m: enough for a pin, and the answer stays small. */
 const round = (value: number) => Math.round(value * 1e5) / 1e5
@@ -95,7 +99,7 @@ function info(
     path: institution.path,
     website: institution.website,
     ror: institution.rorId ? `https://ror.org/${institution.rorId}` : null,
-    listPath: jobsHref({ ...filters, institution: [institution.key], view: 'list', page: 1 }),
+    listPath: jobsHref({ ...filters, institution: [institution.key], page: 1 }),
     jobs: institution.jobs.map((job) => {
       const view = deadlineView(job, now, locale)
       return {

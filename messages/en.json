@@ -189,6 +189,12 @@
       "pastEnd": "This list has {pages, plural, one {only # page} other {# pages}}.",
       "firstPage": "Go to the first page"
     },
+    "view": {
+      "showMap": "Show the map",
+      "hideMap": "Hide the map",
+      "institutions": "Institutions on the map",
+      "noJs": "The map needs JavaScript. The positions are in the list."
+    },
     "filters": {
       "label": "Filter positions",
       "title": "Filters",
