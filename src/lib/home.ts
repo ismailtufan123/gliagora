@@ -9,52 +9,69 @@ import {
 } from '@/lib/records'
 
 // What the home page shows from the database (PLAN §3.2 "Home", §9.1): the live figures, each the
-// number its link's list shows; the latest positions; the next deadlines; the position types.
-// Read at most once every 10 minutes and kept here in between, so the home page costs the
-// database a handful of queries per 10 minutes however often it is opened.
+// number its link's list shows, and the position types, read at most once every 10 minutes and
+// kept here in between (and read again when the month changes, for "deadlines this month"); and
+// the latest positions and the next deadlines, two short queries read with each request, so they
+// never show a position that has closed or been withdrawn since.
 
-/** How long the figures and lists are kept (PLAN §3.2: cached for at most 10 minutes). */
-export const HOME_DATA_MAX_AGE_MS = 10 * 60_000
+/** How long the figures are kept (PLAN §3.2: cached for at most 10 minutes). */
+export const HOME_FIGURES_MAX_AGE_MS = 10 * 60_000
 
 /** Rows in "Latest positions" and "Deadlines coming up" (four of them on phones, in CSS). */
 export const HOME_LIST_LENGTH = 6
 
-export type HomeData = OpenJobsCoverage & {
+export type HomeFigures = OpenJobsCoverage & {
   /** Open positions whose deadline day is in this month (`deadline=this-month`). */
   deadlinesThisMonth: number
-  /** The positions published last, newest first. */
-  latest: JobCard[]
-  /** The fixed deadlines coming up, the nearest first. */
-  deadlines: JobCard[]
   /** Position types with open positions, in taxonomy order. */
   types: { slug: string; label: string; jobs: number }[]
 }
 
-async function readHomeData(now: Date): Promise<HomeData> {
-  const [coverage, deadlinesThisMonth, latest, deadlines, types] = await Promise.all([
-    openJobsCoverage('en', now),
-    countOpenJobs({ deadline: 'this-month' }, 'en', now),
-    latestOpenJobs(now, HOME_LIST_LENGTH, 'en'),
-    // One more than shown, in case one closes while the list is kept (dropped when shown).
-    nextDeadlines('en', HOME_LIST_LENGTH + 1),
-    openJobsByType('en', now),
-  ])
-  return { ...coverage, deadlinesThisMonth, latest, deadlines, types }
+export type HomeData = HomeFigures & {
+  /** The positions published last, newest first. */
+  latest: JobCard[]
+  /** The fixed deadlines coming up, the nearest first. */
+  deadlines: JobCard[]
 }
 
-let kept: { at: number; data: HomeData } | null = null
-let reading: Promise<HomeData> | null = null
+async function readFigures(now: Date): Promise<HomeFigures> {
+  const [coverage, deadlinesThisMonth, types] = await Promise.all([
+    openJobsCoverage('en', now),
+    countOpenJobs({ deadline: 'this-month' }, 'en', now),
+    openJobsByType('en', now),
+  ])
+  return { ...coverage, deadlinesThisMonth, types }
+}
 
-/** The home page's data, at most 10 minutes old; requests that come while it is read share it. */
-export function homeData(now: Date): Promise<HomeData> {
-  if (kept && now.getTime() - kept.at < HOME_DATA_MAX_AGE_MS) return Promise.resolve(kept.data)
-  reading ??= readHomeData(now)
-    .then((data) => {
-      kept = { at: now.getTime(), data }
-      return data
+/** When figures read at `at` must be read again: after 10 minutes, or when the month changes. */
+export function figuresKeptUntil(at: Date): number {
+  const nextMonth = Date.UTC(at.getUTCFullYear(), at.getUTCMonth() + 1, 1)
+  return Math.min(at.getTime() + HOME_FIGURES_MAX_AGE_MS, nextMonth)
+}
+
+let kept: { until: number; figures: HomeFigures } | null = null
+let reading: Promise<HomeFigures> | null = null
+
+/** The figures, kept as above; requests that come while they are read share the read. */
+export function homeFigures(now: Date): Promise<HomeFigures> {
+  if (kept && now.getTime() < kept.until) return Promise.resolve(kept.figures)
+  reading ??= readFigures(now)
+    .then((figures) => {
+      kept = { until: figuresKeptUntil(now), figures }
+      return figures
     })
     .finally(() => {
       reading = null
     })
   return reading
+}
+
+/** Everything the home page shows from the database. */
+export async function homeData(now: Date): Promise<HomeData> {
+  const [figures, latest, deadlines] = await Promise.all([
+    homeFigures(now),
+    latestOpenJobs(now, HOME_LIST_LENGTH, 'en'),
+    nextDeadlines('en', HOME_LIST_LENGTH),
+  ])
+  return { ...figures, latest, deadlines }
 }

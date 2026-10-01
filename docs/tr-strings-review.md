@@ -2,7 +2,7 @@
 
 Every text of the Gliagora interface in Turkish, next to its English original and where it appears, so that a native speaker can review them all in one pass (PLAN §12, D40). Until then the Turkish texts are drafts.
 
-Updated 2026-10-01: 482 strings in 18 areas, 74 of them shown on the Turkish site now.
+Updated 2026-10-01: 483 strings in 18 areas, 74 of them shown on the Turkish site now.
 
 This file is generated from `messages/en.json` and `messages/tr.json` by `pnpm tr:review`; do not edit it by hand. A test fails when it no longer matches the messages.
 
@@ -30,7 +30,7 @@ The rows of the table are grouped by these areas, in this order.
 - **2. Footer**: 11 strings, shown on the Turkish site now: partly (8 of 11). On every page, so also on the Turkish pages. The social media links stay hidden on every page until the addresses of the profiles are known (D31).
 - **3. Browser tab titles and link previews**: 4 strings, shown on the Turkish site now: partly (2 of 4). The title pattern and the site name are used on the Turkish pages. The home page title and the general description are not: every Turkish page has a title and a description of its own, and the home page exists only in English.
 - **4. Legal and contact pages**: 20 strings, shown on the Turkish site now: partly (13 of 20). The Turkish contact page and the two Turkish legal texts show their own titles and descriptions, and every Turkish page shows the titles of all legal pages in its footer. The descriptions of the English legal pages and of the About page are not yet shown: those pages exist only in English. The texts of the pages themselves are reviewed separately (see the top of this file).
-- **5. Home page**: 34 strings, shown on the Turkish site now: not yet. The home page (M6) is in English only (/en/); there is no Turkish home page yet.
+- **5. Home page**: 35 strings, shown on the Turkish site now: not yet. The home page (M6) is in English only (/en/); there is no Turkish home page yet.
 - **6. Pages being built**: 5 strings, shown on the Turkish site now: not yet. These stand-in pages for the sections that are not built yet exist only in English (/en/events/, /en/funding/, /en/papers/, /en/news/, /en/resources/, /en/map/, /en/learn/, /en/learn/bench-to-bedside/, /en/newsletter/).
 - **7. Error pages**: 7 strings, shown on the Turkish site now: not yet. Always in English. The not-found page answers every unknown address, also under /tr/; the removed page and the short answer while the database is unreachable are in English too.
 - **8. Jobs list**: 68 strings, shown on the Turkish site now: not yet. The jobs list exists only in English (/en/jobs/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
@@ -45,7 +45,7 @@ The rows of the table are grouped by these areas, in this order.
 - **17. Report a problem**: 57 strings, shown on the Turkish site now: not yet. The form exists only in English (/en/report/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
 - **18. Automatic emails**: 26 strings, shown on the Turkish site now: not yet. Each email goes out in the language of the form the person used, and both forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).
 
-Total: 482 strings, 74 of them shown on the Turkish site now.
+Total: 483 strings, 74 of them shown on the Turkish site now.
 
 ## Strings
 
@@ -162,6 +162,7 @@ Total: 482 strings, 74 of them shown on the Turkish site now.
 | 5. Home page | `home.nextLab.text` | Zoom from the world to a country, an institution and its open positions. | Dünyadan bir ülkeye, bir kuruma ve onun açık pozisyonlarına yakınlaşın. | Home page - text of the map section | not yet |
 | 5. Home page | `home.nextLab.link` | Explore the map | Haritayı keşfedin | Home page - button to the map | not yet |
 | 5. Home page | `home.nextLab.countries` | Open positions by country | Ülkelere göre açık pozisyonlar | Home page - heading of the list of countries | not yet |
+| 5. Home page | `home.nextLab.noCountries` | No country has open positions just now. | Şu anda açık pozisyonu olan bir ülke yok. | Home page - text when no country has open positions | not yet |
 | 5. Home page | `home.nextLab.country` | `{name}` (`{count}`) | `{name}` (`{count}`) | Home page - a country with its number of positions | not yet |
 | 5. Home page | `home.nextLab.more` | `{count, plural, one {and # more country on the map} other {and # more countries on the map}}` | `{count, plural, one {ve haritada # ülke daha} other {ve haritada # ülke daha}}` | Home page - link under the list of countries | not yet |
 | 5. Home page | `home.windows.title` | What you will find here | Burada neler bulacaksınız | Home page - heading of the sections overview | not yet |

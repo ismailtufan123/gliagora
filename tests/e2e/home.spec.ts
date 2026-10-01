@@ -83,6 +83,37 @@ test.describe('home page', () => {
   })
 })
 
+test.describe('the hero beside the poster', () => {
+  test.skip(({ isMobile }) => isMobile, 'the sizes are set explicitly')
+
+  for (const fonts of ['web fonts', 'fallback fonts']) {
+    for (const width of [1024, 1080, 1280]) {
+      test(`at ${width}px with the ${fonts}, the heading breaks only between words`, async ({
+        page,
+      }) => {
+        if (fonts === 'fallback fonts') await page.route('**/*.woff2', (route) => route.abort())
+        await page.setViewportSize({ width, height: 800 })
+        await page.goto('/en/')
+        await page.evaluate(() => document.fonts.ready)
+        // The words of the heading that run over two lines.
+        const split = await page.locator('h1').evaluate((h1) => {
+          const text = h1.firstChild as Text
+          return [...text.data.matchAll(/\S+/g)]
+            .filter((word) => {
+              const range = document.createRange()
+              range.setStart(text, word.index)
+              range.setEnd(text, word.index + word[0].length)
+              const lines = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)))
+              return lines.size > 1
+            })
+            .map((word) => word[0])
+        })
+        expect(split).toEqual([])
+      })
+    }
+  }
+})
+
 test.describe('home page figures and lists', () => {
   test.skip(({ isMobile }) => isMobile, 'the same data on every screen')
 
@@ -100,13 +131,11 @@ test.describe('home page figures and lists', () => {
       await listMatches(request, '/en/jobs/?deadline=this-month'),
     )
 
-    // Institutions: those on the map (all of the fake jobs' institutions have a place).
+    // Institutions: those the map pins.
     await expect(figure(page, /institutions?/)).toHaveAttribute('href', '/en/map/')
     const map = (await (await request.get('/api/map/institutions/')).json()) as {
       features: unknown[]
-      unmapped: number
     }
-    expect(map.unmapped).toBe(0)
     expect(await figureNumber(page, /institutions?/)).toBe(map.features.length)
 
     // Countries: those the jobs list's country filter offers, listed further down the page.
@@ -146,7 +175,7 @@ test.describe('home page figures and lists', () => {
     request,
   }) => {
     await page.goto('/en/')
-    const country = page.locator('#countries li a').first()
+    const country = page.locator('.home-next-lab li a').first()
     const href = (await country.getAttribute('href'))!
     expect(href).toMatch(/^\/en\/jobs\/\?country=[A-Z]{2}$/)
     expect(Number(/\((\d+)\)$/.exec((await country.textContent())!)?.[1])).toBe(
@@ -184,7 +213,7 @@ test.describe('home page without JavaScript', () => {
     await page.goto('/en/')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Where neuroscience meets')
     await expect(page.locator('.home-figures a')).toHaveCount(4)
-    await expect(page.locator('#countries li').first()).toBeVisible()
+    await expect(page.locator('.home-next-lab li').first()).toBeVisible()
   })
 })
 

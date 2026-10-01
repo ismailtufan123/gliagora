@@ -1871,46 +1871,61 @@
     color: var(--text-muted);
   }
 
-  /* Where each window's label sits around the brain (tools/poster/anchors.json, in percent). */
+  /*
+   * Where each window's label sits around the brain (tools/poster/anchors.json, in percent), and
+   * the way it runs from that point: by its corner that faces away from the brain, so the label
+   * stays clear of the outline.
+   */
   .home-poster-links > [data-window='jobs'] {
     --x: 26.9%;
     --y: 17.2%;
-    --shift: -100%;
+    --shift-x: -100%;
+    --shift-y: -100%;
     --align: end;
   }
 
   .home-poster-links > [data-window='events'] {
     --x: 71.2%;
     --y: 16.6%;
+    --shift-x: 0%;
+    --shift-y: -100%;
   }
 
   .home-poster-links > [data-window='funding'] {
     --x: 81.9%;
     --y: 39.8%;
+    --shift-x: 0%;
+    --shift-y: -50%;
   }
 
   .home-poster-links > [data-window='papers'] {
     --x: 76.9%;
     --y: 68.6%;
+    --shift-x: 0%;
+    --shift-y: 0%;
   }
 
   .home-poster-links > [data-window='news'] {
     --x: 36.8%;
     --y: 61.4%;
-    --shift: -100%;
+    --shift-x: -100%;
+    --shift-y: 0%;
     --align: end;
   }
 
   .home-poster-links > [data-window='resources'] {
     --x: 17.8%;
     --y: 39.2%;
-    --shift: -100%;
+    --shift-x: -100%;
+    --shift-y: -50%;
     --align: end;
   }
 
   @media (min-width: 64rem) {
+    /* The text column takes a little more than half, so the H1's longest word, "neuroscience",
+       keeps to one line at 64rem in the web font and in its fallback. */
     .home-hero-grid {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
     }
 
     .home-poster-links {
@@ -1918,29 +1933,42 @@
       display: block;
     }
 
-    /* From its point, a label runs away from the brain: to the left (`--shift: -100%`) or right. */
     .home-poster-links > li {
       position: absolute;
       inset-inline-start: var(--x);
       inset-block-start: var(--y);
       inline-size: max-content;
       max-inline-size: 12rem;
-      translate: var(--shift, 0%) -50%;
+      translate: var(--shift-x, 0%) var(--shift-y, -50%);
       text-align: var(--align, start);
     }
   }
 
-  /* The live figures (PLAN §3.2 "Home"): two by two on small screens, in one row from 64rem. */
+  /* The live figures (PLAN §3.2 "Home", §9.2). */
   .home-figures {
     border-block: 1px solid var(--line);
     background: var(--surface);
+    container-type: inline-size;
   }
 
   .home-figures ul {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
     gap: var(--space-6) var(--space-8);
     padding-block: var(--space-8);
+  }
+
+  /* Two by two once there is room, in one row on wide screens; in rem, so that enlarged text
+     (WCAG 1.4.4) keeps one figure per row on a small screen. */
+  @container (min-width: 20rem) {
+    .home-figures ul {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @container (min-width: 56rem) {
+    .home-figures ul {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 
   .home-figures a {

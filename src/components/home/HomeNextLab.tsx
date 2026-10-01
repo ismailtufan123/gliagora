@@ -29,9 +29,12 @@ export async function HomeNextLab({ data }: { data: HomeData }) {
             {t('link')}
           </a>
         </div>
-        {shown.length > 0 && (
-          <div id={COUNTRIES_ID} tabIndex={-1}>
-            <h3 className="text-card">{t('countries')}</h3>
+        {/* Always there: the countries figure links to its heading. */}
+        <div>
+          <h3 id={COUNTRIES_ID} tabIndex={-1} className="text-card">
+            {t('countries')}
+          </h3>
+          {shown.length > 0 ? (
             <ul role="list">
               {shown.map((country) => (
                 <li key={country.code}>
@@ -41,13 +44,15 @@ export async function HomeNextLab({ data }: { data: HomeData }) {
                 </li>
               ))}
             </ul>
-            {more > 0 && (
-              <p className="text-text-muted">
-                <a href={paths.section('map')}>{t('more', { count: more })}</a>
-              </p>
-            )}
-          </div>
-        )}
+          ) : (
+            <p className="text-text-muted">{t('noCountries')}</p>
+          )}
+          {more > 0 && (
+            <p className="text-text-muted">
+              <a href={paths.section('map')}>{t('more', { count: more })}</a>
+            </p>
+          )}
+        </div>
       </div>
     </section>
   )

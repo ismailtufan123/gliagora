@@ -528,7 +528,7 @@ export async function nextDeadlines(locale: Locale, limit: number): Promise<JobC
 export type OpenJobsCoverage = {
   /** All open jobs. */
   open: number
-  /** Institutions with open jobs. */
+  /** Institutions with open jobs that the map shows (those with a place, as mapInstitutions). */
   institutions: number
   /** Countries with open jobs, the most jobs first. */
   countries: { code: string; name: string; jobs: number }[]
@@ -536,17 +536,15 @@ export type OpenJobsCoverage = {
 
 export async function openJobsCoverage(locale: Locale, now: Date): Promise<OpenJobsCoverage> {
   const payload = await getPayload({ config })
-  const { docs, totalDocs } = await payload.find({
+  // Two small fields of every open job: a few thousand rows at most (PLAN §3.4 expects hundreds).
+  const { docs } = await payload.find({
     collection: 'jobs',
     where: openJobsWhere(now),
     select: { institution: true, country: true },
     locale,
-    limit: MAP_MAX_JOBS,
+    pagination: false,
     depth: 0,
   })
-  if (totalDocs > MAP_MAX_JOBS) {
-    console.warn(`The home page counts ${MAP_MAX_JOBS} of ${totalDocs} open positions.`)
-  }
   const institutions = new Set<number>()
   const byCountry = new Map<string, number>()
   for (const doc of docs) {
@@ -555,9 +553,9 @@ export async function openJobsCoverage(locale: Locale, now: Date): Promise<OpenJ
     const country = typeof doc.country === 'object' ? doc.country?.id : doc.country
     if (country) byCountry.set(country, (byCountry.get(country) ?? 0) + 1)
   }
-  const names =
+  const [names, places] = await Promise.all([
     byCountry.size > 0
-      ? await payload.find({
+      ? payload.find({
           collection: 'countries',
           where: { id: { in: [...byCountry.keys()] } },
           select: { name: true },
@@ -565,7 +563,25 @@ export async function openJobsCoverage(locale: Locale, now: Date): Promise<OpenJ
           pagination: false,
           depth: 0,
         })
-      : null
+      : null,
+    institutions.size > 0
+      ? payload.find({
+          collection: 'institutions',
+          where: { id: { in: [...institutions] } },
+          select: { slug: true, rorId: true, shortId: true, lat: true, lng: true },
+          pagination: false,
+          depth: 0,
+        })
+      : null,
+  ])
+  // The institutions the map pins (mapInstitutions): with a place and an address of their own.
+  const mapped = (places?.docs ?? []).filter(
+    (doc) =>
+      typeof doc.lat === 'number' &&
+      typeof doc.lng === 'number' &&
+      !!(doc.rorId || doc.shortId) &&
+      !!doc.slug,
+  )
   const collator = new Intl.Collator(intlLocale(locale))
   const countries = [...byCountry]
     .map(([code, jobs]) => ({
@@ -574,7 +590,7 @@ export async function openJobsCoverage(locale: Locale, now: Date): Promise<OpenJ
       jobs,
     }))
     .sort((a, b) => b.jobs - a.jobs || collator.compare(a.name, b.name))
-  return { open: totalDocs, institutions: institutions.size, countries }
+  return { open: docs.length, institutions: mapped.length, countries }
 }
 
 /** The position types (PLAN §4.5), each with its open jobs, as the jobs list counts them. */

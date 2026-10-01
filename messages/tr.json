@@ -65,6 +65,7 @@
       "text": "Dünyadan bir ülkeye, bir kuruma ve onun açık pozisyonlarına yakınlaşın.",
       "link": "Haritayı keşfedin",
       "countries": "Ülkelere göre açık pozisyonlar",
+      "noCountries": "Şu anda açık pozisyonu olan bir ülke yok.",
       "country": "{name} ({count})",
       "more": "{count, plural, one {ve haritada # ülke daha} other {ve haritada # ülke daha}}"
     },

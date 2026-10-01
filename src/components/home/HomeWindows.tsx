@@ -5,8 +5,9 @@ import type { HomeData } from '@/lib/home'
 import { LIVE_WINDOWS, paths } from '@/lib/site'
 
 // The windows overview (PLAN §9.1): each window that is built (LIVE_WINDOWS) with a short
-// description, a few live ways in and its link; Jobs takes the full width. Until a second window
-// is built (M8), Jobs is the only one, with its position types as the ways in.
+// description, a few live ways in and its link; Jobs takes the full width. Each window gets its
+// card here in the milestone that builds it; until M8, Jobs is the only one, with its position
+// types as the ways in.
 
 /** Position types shown, the most positions first. */
 const TYPES = 3

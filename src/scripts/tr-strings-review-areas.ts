@@ -236,6 +236,7 @@ export const AREAS: Area[] = [
       'home.nextLab.text': 'Home page - text of the map section',
       'home.nextLab.link': 'Home page - button to the map',
       'home.nextLab.countries': 'Home page - heading of the list of countries',
+      'home.nextLab.noCountries': 'Home page - text when no country has open positions',
       'home.nextLab.country': 'Home page - a country with its number of positions',
       'home.nextLab.more': 'Home page - link under the list of countries',
       'home.windows.title': 'Home page - heading of the sections overview',
