@@ -2,7 +2,7 @@ import type { Payload } from 'payload'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { EmailNotSentError } from './adapter'
-import { deliver, enhancedStatus, sendOne } from './deliver'
+import { WAIT_FOR_SEND_MS, deliver, deliverWhileWaiting, enhancedStatus, sendOne } from './deliver'
 
 // What the mail server answered, as `sendOne` reports it (src/lib/email/deliver.ts): the reply code
 // and the enhanced status, never the reply's text. The inactivity warnings (M4b) tell an address
@@ -118,6 +118,37 @@ describe('deliver', () => {
     const off = sending(async () => ({}))
     expect(await deliver(off, 'x@example.org', message, 'task')).toBe('unavailable')
     expect(off.logger.warn).not.toHaveBeenCalled()
+  })
+})
+
+describe('deliverWhileWaiting', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('gives up after its time limit, as if the server could not be reached', async () => {
+    vi.stubEnv('SMTP_HOST', '127.0.0.1')
+    vi.useFakeTimers()
+    const stuck = sending(() => new Promise(() => {}))
+    const sent = deliverWhileWaiting(stuck, 'x@example.org', message, 'Sign-in link', 1000)
+    await vi.advanceTimersByTimeAsync(999)
+    let settled = false
+    void sent.then(() => (settled = true))
+    await Promise.resolve()
+    expect(settled).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(await sent).toBe('unavailable')
+    expect(stuck.logger.warn).toHaveBeenCalledWith('Sign-in link: a message was not sent (Timeout)')
+  })
+
+  it('waits 20 seconds by default and answers as deliver does', async () => {
+    expect(WAIT_FOR_SEND_MS).toBe(20_000)
+    vi.stubEnv('SMTP_HOST', '127.0.0.1')
+    const taken = sending(async () => ({ accepted: ['x@example.org'], rejected: [] }))
+    expect(await deliverWhileWaiting(taken, 'x@example.org', message, 'task')).toBe('sent')
+    expect(taken.logger.warn).not.toHaveBeenCalled()
+    const refused = sending(async () => ({ accepted: [], rejected: ['x@example.org'] }))
+    expect(await deliverWhileWaiting(refused, 'x@example.org', message, 'task')).toBe('refused')
   })
 })
 

@@ -104,7 +104,8 @@
     "navLabel": "Main",
     "menuFor": "{window} menu",
     "digest": "Get the monthly digest",
-    "menu": "Menu"
+    "menu": "Menu",
+    "account": "Account"
   },
   "locale": {
     "heading": "Language",
@@ -604,6 +605,111 @@
       "jobs": "Browse positions"
     }
   },
+  "signIn": {
+    "title": "Sign in",
+    "description": "Sign in to Gliagora with a link we email you. There are no passwords.",
+    "intro": "Members can save positions and choose what the jobs list and the monthly digest show first. There are no passwords.",
+    "notAvailable": "Signing in is not available yet.",
+    "notAvailableContact": "Questions about your data? Write to <email>privacy@gliagora.com</email>.",
+    "emailHeading": "Sign in with your email address",
+    "email": {
+      "label": "Email address",
+      "hint": "We email you a link that signs you in. It works once, for 15 minutes: open it in this browser."
+    },
+    "noscript": "The spam check on this form needs JavaScript. Without JavaScript, you cannot ask for a sign-in link.",
+    "honeypot": "Leave this field empty",
+    "spamNote": "To keep out spam programs, your browser solves a small puzzle before the form is sent, and we keep scrambled forms of your IP address and of the email address for 24 hours to limit how many links can be sent. <link>How we protect the form</link>",
+    "submit": "Email me a sign-in link",
+    "sending": "Sending the link…",
+    "privacy": "We use your email address only to sign you in and for what you choose in your account. <link>How we handle member accounts</link>",
+    "terms": "If you do not have an account yet, the link lets you create one. By creating an account, you accept the <link>terms of use</link> and confirm that you are 16 or older.",
+    "signedIn": {
+      "title": "You are signed in",
+      "account": "Go to your account",
+      "other": "To use another account, sign out first."
+    },
+    "errors": {
+      "title": "There is a problem",
+      "prefix": "Error:",
+      "emailMissing": "Enter your email address.",
+      "emailInvalid": "Enter an email address in the correct format, such as name@example.org.",
+      "emailTooLong": "Enter an email address of 254 characters or fewer.",
+      "needsJs": "The spam check did not run: the page had not finished loading, or JavaScript is turned off or blocked in your browser. Wait until the page has loaded and send the form again.",
+      "spamCheck": "The spam check has expired or did not work. Please send the form again.",
+      "rateLimited": "Too many sign-in links have been asked for recently, from here or for this address. Please try again later, or tomorrow.",
+      "unavailable": "We could not send the email just now. Please try again in a few minutes.",
+      "failed": "Something went wrong and no link was sent. Please try again later, or write to privacy@gliagora.com and mention reference {reference}."
+    },
+    "sent": {
+      "metaTitle": "Check your inbox",
+      "title": "Check your inbox",
+      "text": "We have emailed a sign-in link to the address you entered.",
+      "validity": "The link works for 15 minutes and only once.",
+      "sameBrowser": "Open it in this browser, the one where you asked for it.",
+      "missing": "No email? Check your spam folder, and check that you typed your address correctly. You can <link>ask for a new link</link>."
+    },
+    "link": {
+      "signInTitle": "Sign in to Gliagora",
+      "signIn": "Sign in as <strong>{email}</strong>.",
+      "signInButton": "Sign in",
+      "createTitle": "Create your Gliagora account",
+      "create": "Create your Gliagora account for <strong>{email}</strong>.",
+      "terms": "By creating an account, you accept the <link>terms of use</link> and confirm that you are 16 or older.",
+      "createButton": "Create account",
+      "otherBrowser": "This link was opened in a different browser from the one where it was requested. Continue only if you asked for a sign-in link for {email} just now.",
+      "expiredTitle": "This link has expired",
+      "expired": "Sign-in links work for 15 minutes and only once. If you have not used this one, ask for a new link.",
+      "again": "Ask for a new link"
+    },
+    "signedOut": {
+      "metaTitle": "Signed out",
+      "title": "You are signed out",
+      "text": "To sign in again, ask for a new link.",
+      "again": "Sign in again",
+      "jobs": "Browse positions"
+    }
+  },
+  "account": {
+    "title": "Your account",
+    "description": "Your Gliagora account: how you sign in.",
+    "signedOutTitle": "Sign in to see your account",
+    "navLabel": "Your account",
+    "nav": {
+      "overview": "Account",
+      "signOut": "Sign out"
+    },
+    "who": {
+      "email": "You are signed in as <strong>{email}</strong>.",
+      "orcid": "You are signed in with the ORCID iD <strong>{orcid}</strong>.",
+      "google": "You are signed in with your Google account."
+    },
+    "methods": {
+      "heading": "Ways to sign in",
+      "email": "Email link",
+      "google": "Google",
+      "orcid": "ORCID",
+      "noEmail": "No email address",
+      "linked": "Linked",
+      "notLinked": "Not linked"
+    },
+    "signOut": {
+      "heading": "Signing out",
+      "text": "Signed in on a computer or phone you no longer use? Signing out everywhere ends every session of your account, this one too.",
+      "everywhere": "Sign out everywhere"
+    }
+  },
+  "outcome": {
+    "done": {
+      "signed-in": "You are signed in.",
+      "created": "Your account has been created, and you are signed in."
+    },
+    "error": {
+      "link-expired": "This sign-in link has expired or has already been used. Ask for a new link below.",
+      "linkExpiredSignedIn": "This sign-in link has expired or has already been used, so you are still signed in as before.",
+      "failed": "Something went wrong. Please try again.",
+      "failedReference": "Something went wrong. Please try again, or write to privacy@gliagora.com and mention reference {reference}."
+    }
+  },
   "emails": {
     "greeting": "Hello,",
     "automatic": "This email was sent automatically. To reach us, reply to it or write to {email}.",
@@ -636,6 +742,13 @@
       "nextPersonalRights": "Our editor will answer you within 24 hours, and we usually decide within 72 hours. If we decide to remove an item, it goes offline at once.",
       "retention": "We keep your report, with your email address, for 2 years after we close it. How we handle your data: {privacyUrl}",
       "retentionPersonalRights": "We keep your request, with your email address, for 2 years after we close it. How we handle your data: {privacyUrl}"
+    },
+    "signIn": {
+      "subject": "Your link to sign in to Gliagora",
+      "intro": "Someone asked for a link to sign in to Gliagora | Neuroscience with this email address. To sign in, open this link:",
+      "validity": "The link works for 15 minutes and only once. If there is no Gliagora account for this address yet, it lets you create one; no account is created unless you open the link and confirm.",
+      "sameBrowser": "Open the link in the browser where you asked for it. If you open it elsewhere, the page warns you before you continue.",
+      "notYou": "If you did not ask for this link, ignore this email: nothing happens, and no account is created."
     }
   }
 }

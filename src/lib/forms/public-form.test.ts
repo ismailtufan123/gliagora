@@ -123,16 +123,24 @@ describe('the forms that send an email', () => {
     expect(save).toHaveBeenCalledTimes(EMAILS_PER_ADDRESS.hour)
   })
 
-  it('say "temporarily unavailable" at the site-wide cap', async () => {
+  it('say "temporarily unavailable" at the site-wide cap, with one warning an hour in the log', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    // The only test here that reaches the cap, so the once-an-hour warning starts afresh.
     const { deps, store } = dependencies()
     // The cap's rows, as other people's emails left them a moment ago.
     const at = deps.now.getTime() - 1000
     for (let i = 0; i < EMAILS_SITE_WIDE.hour; i++) store.rows.push({ key: 'mail:all', at })
-    expect(await handlePublicForm(await form(), deps, FORM)).toMatchObject({
-      kind: 'refused',
-      status: 503,
-      problem: 'unavailable',
-    })
+    for (const minutes of [0, 30]) {
+      const later = { ...deps, now: new Date(deps.now.getTime() + minutes * 60_000) }
+      expect(await handlePublicForm(await form(), later, FORM)).toMatchObject({
+        kind: 'refused',
+        status: 503,
+        problem: 'unavailable',
+      })
+    }
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn.mock.calls[0]![0]).toMatch(/^Test request: the site-wide limit on emails/)
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('someone@example.org')
   })
 
   it('say "temporarily unavailable" when the email could not be sent', async () => {

@@ -81,7 +81,7 @@ export const CONTENT_PAGES = {
     messages: 'cookies',
     path: '/en/legal/cookies/',
     file: 'en/legal/cookies.md',
-    updated: '2026-09-27',
+    updated: '2026-10-01',
     draft: true,
   },
   terms: {

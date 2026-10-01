@@ -2,6 +2,7 @@ import { Icon } from '@/components/Icon'
 import { getTranslations } from 'next-intl/server'
 
 import type { Locale } from '@/i18n/routing'
+import { MEMBER_PATHS } from '@/lib/members/paths'
 import type { WindowKey } from '@/lib/site'
 import { paths } from '@/lib/site'
 
@@ -23,8 +24,8 @@ function withWindowLink({ label, href, menu = [] }: MenuWindowLinks) {
 }
 
 // PLAN §2.3, §7.5: below the `xl` breakpoint, a full-height panel with the six windows
-// (expandable), the map, Learn, About, the digest button and, on small screens, the languages
-// (and, below 360px, search).
+// (expandable), the map, Learn, About, the account, the digest button and, on small screens, the
+// languages (and, below 360px, search).
 // DisclosureEnhancer makes the page behind it inert while it is open.
 export async function MobileMenu({
   locale,
@@ -89,6 +90,15 @@ export async function MobileMenu({
             ))}
           </ul>
         </nav>
+        {/* The account (M4b): the header's icon link from 1280px, a row with its name here. */}
+        <NavLink
+          href={MEMBER_PATHS.account}
+          hrefLang={locale === 'en' ? undefined : 'en'}
+          className="mobile-row justify-start gap-2 border-b border-line"
+        >
+          <Icon name="user" size={20} />
+          {t('header.account')}
+        </NavLink>
         <a
           className="button button-primary mt-6 w-full justify-center"
           href={paths.section('newsletter')}

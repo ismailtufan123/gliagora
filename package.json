@@ -26,6 +26,7 @@
     "ror:import": "payload run src/scripts/ror-import.ts",
     "fake:jobs": "payload run src/scripts/fake-jobs.ts",
     "e2e:editor": "payload run src/scripts/e2e-editor.ts",
+    "e2e:member": "payload run src/scripts/e2e-member.ts",
     "jobs:run": "payload run src/scripts/jobs-run.ts",
     "tr:review": "payload run src/scripts/tr-strings-review.ts",
     "test:e2e": "playwright test"

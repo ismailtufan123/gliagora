@@ -128,6 +128,8 @@ export const AREAS: Area[] = [
         'Every page - language menu and language list - note under the languages',
       'locale.heading': 'Every page - mobile menu, below 768px - heading of the language list',
       'header.digest': 'Every page - header (from 768px) and mobile menu - newsletter button',
+      'header.account':
+        'Every page - header, from 1280px - the account button (a person icon), name read by screen readers; below 1280px a row with the icon in the mobile menu, after About',
       'header.menu':
         'Every page - header below 1280px - Menu button (the word shows from 640px; narrower, it is read by screen readers)',
       'sections.map':
@@ -787,12 +789,131 @@ export const AREAS: Area[] = [
     },
   },
   {
+    title: 'Sign-in and account pages',
+    shown: false,
+    note: `Sign-in, sign-out and the account pages exist only in English (/en/sign-in/, /en/account/), ${ENGLISH_ONLY}; Turkish pages link to them from the header and the mobile menu.`,
+    places: {
+      'signIn.title':
+        'Sign in (/en/sign-in/) - heading and browser tab; the browser tab of the page an emailed sign-in link opens',
+      'signIn.description': 'Sign in - description in link previews',
+      'signIn.intro': 'Sign in - first paragraph under the heading',
+      'signIn.notAvailable':
+        'Sign in, and the account page when signed out - shown instead of the form while signing in is switched off',
+      'signIn.notAvailableContact':
+        'Sign in, and the account page when signed out - paragraph under that, while signing in is switched off',
+      'signIn.emailHeading':
+        'Sign in, and the account page when signed out - heading above the form',
+      'signIn.email.label': 'Sign-in form - label of the email field',
+      'signIn.email.hint': 'Sign-in form - hint under that label',
+      'signIn.noscript': 'Sign-in form - note above the form when JavaScript is off',
+      'signIn.honeypot': 'Sign-in form - label of a hidden field that only spam programs see',
+      'signIn.spamNote': 'Sign-in form - note above the send button',
+      'signIn.submit': 'Sign-in form - send button',
+      'signIn.sending': 'Sign-in form - the send button while the form is sent',
+      'signIn.privacy':
+        'Sign in, and the account page when signed out - first line under the form (the link leads to the privacy policy)',
+      'signIn.terms':
+        'Sign in, and the account page when signed out - second line under the form (the link leads to the terms of use)',
+      'signIn.signedIn.title': 'Sign in, when already signed in - heading',
+      'signIn.signedIn.account': 'Sign in, when already signed in - button to the account page',
+      'signIn.signedIn.other': 'Sign in, when already signed in - paragraph above the buttons',
+      'signIn.errors.title':
+        'Sign-in form, after sending with problems - heading of the list of problems at the top of the form',
+      'signIn.errors.prefix':
+        'Sign-in form, after sending with problems - word before the message at the field, read by screen readers',
+      'signIn.errors.emailMissing': 'Sign-in form - error at the email field',
+      'signIn.errors.emailInvalid': 'Sign-in form - error at the email field',
+      'signIn.errors.emailTooLong': 'Sign-in form - error at the email field',
+      'signIn.errors.needsJs':
+        'Sign-in form - error at the top of the form, when the spam check did not run',
+      'signIn.errors.spamCheck':
+        'Sign-in form - error at the top of the form, when the spam check failed',
+      'signIn.errors.rateLimited':
+        'Sign-in form - error at the top of the form, after too many links asked for from one connection or for one email address (within an hour, or 5 for one email address within a day)',
+      'signIn.errors.unavailable':
+        'Sign-in form - error at the top of the form, when the email could not be sent or the form is switched off',
+      'signIn.errors.failed':
+        'Sign-in form - error at the top of the form, when something went wrong',
+      'signIn.sent.metaTitle': 'Sign-in link sent (/en/sign-in/sent/) - browser tab',
+      'signIn.sent.title': 'Sign-in link sent - heading',
+      'signIn.sent.text': 'Sign-in link sent - first paragraph',
+      'signIn.sent.validity': 'Sign-in link sent - first point of the list',
+      'signIn.sent.sameBrowser': 'Sign-in link sent - second point of the list',
+      'signIn.sent.missing': 'Sign-in link sent - paragraph after the list',
+      'signIn.link.signInTitle':
+        'The page an emailed sign-in link opens (/en/sign-in/link/), for an address with an account - heading',
+      'signIn.link.signIn':
+        'The page a sign-in link opens, for an address with an account - paragraph above the button',
+      'signIn.link.signInButton':
+        'The page a sign-in link opens, for an address with an account - button',
+      'signIn.link.createTitle':
+        'The page a sign-in link opens, for an address without an account - heading',
+      'signIn.link.create':
+        'The page a sign-in link opens, for an address without an account - paragraph above the button',
+      'signIn.link.terms':
+        'The page a sign-in link opens, for an address without an account - line about the terms of use and the minimum age',
+      'signIn.link.createButton':
+        'The page a sign-in link opens, for an address without an account - button',
+      'signIn.link.otherBrowser':
+        'The page a sign-in link opens, in a browser other than the one that asked for it - warning above the text',
+      'signIn.link.expiredTitle':
+        'The page a sign-in link opens, when the link has expired or was used - heading',
+      'signIn.link.expired':
+        'The page a sign-in link opens, when the link has expired or was used - paragraph',
+      'signIn.link.again':
+        'The page a sign-in link opens, when the link has expired or was used - button to the sign-in page',
+      'signIn.signedOut.metaTitle': 'Signed out (/en/sign-in/signed-out/) - browser tab',
+      'signIn.signedOut.title': 'Signed out - heading',
+      'signIn.signedOut.text': 'Signed out - paragraph',
+      'signIn.signedOut.again': 'Signed out - first link',
+      'signIn.signedOut.jobs': 'Signed out - second link',
+      'account.title': 'Account (/en/account/) - heading and browser tab',
+      'account.description': 'Account - description in link previews',
+      'account.signedOutTitle': 'Account, when signed out - heading above the sign-in form',
+      'account.navLabel':
+        'Account pages - name of the account navigation at the top, read by screen readers',
+      'account.nav.overview': 'Account pages - account navigation - link to the account page',
+      'account.nav.signOut':
+        'Account pages - account navigation - Sign out button; also on the sign-in page when signed in',
+      'account.who.email':
+        'Account, and the sign-in page when signed in - who is signed in, for an account with an email address',
+      'account.who.orcid':
+        'Account, and the sign-in page when signed in - who is signed in, for an account with an ORCID iD and no email address',
+      'account.who.google':
+        'Account, and the sign-in page when signed in - who is signed in, for an account with only Google',
+      'account.methods.heading': 'Account - heading of the ways to sign in',
+      'account.methods.email': 'Account - ways to sign in - the email link',
+      'account.methods.google': 'Account - ways to sign in - Google',
+      'account.methods.orcid': 'Account - ways to sign in - ORCID',
+      'account.methods.noEmail':
+        'Account - ways to sign in - beside the email link, for an account without an email address',
+      'account.methods.linked': 'Account - ways to sign in - beside Google, when it is linked',
+      'account.methods.notLinked':
+        'Account - ways to sign in - beside Google or ORCID, when it is not linked',
+      'account.signOut.heading': 'Account - heading of the section about signing out',
+      'account.signOut.text': 'Account - paragraph about signing out everywhere',
+      'account.signOut.everywhere': 'Account - Sign out everywhere button',
+      'outcome.done.signed-in':
+        'Account - message at the top after signing in with an emailed link',
+      'outcome.done.created':
+        'Account - message at the top after creating an account with an emailed link',
+      'outcome.error.link-expired':
+        'Sign in - message at the top when an emailed link had expired or was used',
+      'outcome.error.linkExpiredSignedIn':
+        'Sign in, when already signed in - message at the top when an emailed link had expired or was used (the browser stays signed in to the same account)',
+      'outcome.error.failed':
+        'Sign-in and account pages - message at the top when something went wrong',
+      'outcome.error.failedReference':
+        'Sign-in and account pages - message at the top when something went wrong, with the reference that finds it in our log',
+    },
+  },
+  {
     title: 'Automatic emails',
     shown: false,
-    note: 'Each email goes out in the language of the form the person used, and both forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).',
+    note: 'Each email goes out in the language of the form the person used, and those forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).',
     places: {
       'emails.greeting':
-        'Both automatic emails (the outcome of a suggestion, the confirmation of a report) - first line',
+        'Every automatic email (the outcome of a suggestion, the confirmation of a report, a sign-in link) - first line',
       'emails.suggestion.subjectPublished':
         'Email about the outcome of a suggestion, when it was published - subject',
       'emails.suggestion.subjectNotAdded':
@@ -825,8 +946,13 @@ export const AREAS: Area[] = [
         'Confirmation of a report - last paragraph before the closing lines (the link leads to the privacy policy, and in the Turkish email to the KVKK notice)',
       'emails.report.retentionPersonalRights':
         'Confirmation of a request about personal rights - last paragraph before the closing lines (the link leads to the privacy policy, and in the Turkish email to the KVKK notice)',
-      'emails.automatic': 'Both automatic emails - line before the signature',
-      'emails.signature': 'Both automatic emails - signature',
+      'emails.signIn.subject': 'Email with a sign-in link - subject',
+      'emails.signIn.intro': 'Email with a sign-in link - first paragraph, followed by the link',
+      'emails.signIn.validity': 'Email with a sign-in link - how long the link works',
+      'emails.signIn.sameBrowser': 'Email with a sign-in link - where to open the link',
+      'emails.signIn.notYou': 'Email with a sign-in link - what to do if you did not ask for it',
+      'emails.automatic': 'Every automatic email - line before the signature',
+      'emails.signature': 'Every automatic email - signature',
     },
   },
 ]

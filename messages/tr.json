@@ -104,7 +104,8 @@
     "navLabel": "Ana menü",
     "menuFor": "{window} menüsü",
     "digest": "Aylık bülteni alın",
-    "menu": "Menü"
+    "menu": "Menü",
+    "account": "Hesap"
   },
   "locale": {
     "heading": "Dil",
@@ -604,6 +605,111 @@
       "jobs": "Pozisyonlara göz atın"
     }
   },
+  "signIn": {
+    "title": "Oturum aç",
+    "description": "Size e-postayla gönderdiğimiz bir bağlantıyla Gliagora'da oturum açın. Parola yoktur.",
+    "intro": "Üyeler pozisyonları kaydedebilir, iş listesinin ve aylık bültenin önce neyi göstereceğini seçebilir. Parola yoktur.",
+    "notAvailable": "Oturum açma henüz kullanılamıyor.",
+    "notAvailableContact": "Verilerinizle ilgili sorularınız mı var? <email>privacy@gliagora.com</email> adresine yazın.",
+    "emailHeading": "E-posta adresinizle oturum açın",
+    "email": {
+      "label": "E-posta adresi",
+      "hint": "Size oturum açmanızı sağlayan bir bağlantı e-postayla gönderiyoruz. Bağlantı yalnızca bir kez ve 15 dakika boyunca çalışır: onu bu tarayıcıda açın."
+    },
+    "noscript": "Bu formdaki spam kontrolü JavaScript gerektirir. JavaScript olmadan oturum açma bağlantısı isteyemezsiniz.",
+    "honeypot": "Bu alanı boş bırakın",
+    "spamNote": "Spam programlarını engellemek için tarayıcınız form gönderilmeden önce küçük bir bulmaca çözer; kaç bağlantı gönderilebileceğini sınırlamak için de IP adresinizin ve e-posta adresinin karma (hash) değerlerini 24 saat saklarız. <link>Formu nasıl koruduğumuz</link>",
+    "submit": "Bana oturum açma bağlantısı gönder",
+    "sending": "Bağlantı gönderiliyor…",
+    "privacy": "E-posta adresinizi yalnızca oturum açmanız ve hesabınızda seçtikleriniz için kullanırız. <link>Üye hesaplarını nasıl ele aldığımız</link>",
+    "terms": "Henüz bir hesabınız yoksa bağlantı, hesap oluşturmanızı sağlar. Hesap oluşturarak <link>kullanım koşullarını</link> kabul etmiş ve 16 yaşında ya da daha büyük olduğunuzu onaylamış olursunuz.",
+    "signedIn": {
+      "title": "Oturumunuz açık",
+      "account": "Hesabınıza gidin",
+      "other": "Başka bir hesap kullanmak için önce oturumu kapatın."
+    },
+    "errors": {
+      "title": "Bir sorun var",
+      "prefix": "Hata:",
+      "emailMissing": "E-posta adresinizi girin.",
+      "emailInvalid": "E-posta adresini doğru biçimde girin, örneğin ad@example.org.",
+      "emailTooLong": "En fazla 254 karakterlik bir e-posta adresi girin.",
+      "needsJs": "Spam kontrolü çalışmadı: sayfa henüz tam yüklenmemişti ya da tarayıcınızda JavaScript kapalı veya engellenmiş. Sayfanın yüklenmesini bekleyip formu yeniden gönderin.",
+      "spamCheck": "Spam kontrolünün süresi doldu veya kontrol tamamlanamadı. Lütfen formu yeniden gönderin.",
+      "rateLimited": "Kısa süre içinde buradan ya da bu adres için çok fazla oturum açma bağlantısı istendi. Lütfen daha sonra ya da yarın yeniden deneyin.",
+      "unavailable": "E-postayı şu anda gönderemedik. Lütfen birkaç dakika sonra yeniden deneyin.",
+      "failed": "Bir sorun oluştu ve bağlantı gönderilmedi. Lütfen daha sonra yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin."
+    },
+    "sent": {
+      "metaTitle": "Gelen kutunuza bakın",
+      "title": "Gelen kutunuza bakın",
+      "text": "Girdiğiniz adrese bir oturum açma bağlantısı gönderdik.",
+      "validity": "Bağlantı 15 dakika boyunca ve yalnızca bir kez çalışır.",
+      "sameBrowser": "Bağlantıyı bu tarayıcıda, yani onu istediğiniz tarayıcıda açın.",
+      "missing": "E-posta gelmedi mi? Spam klasörünüze bakın ve adresinizi doğru yazdığınızdan emin olun. <link>Yeni bir bağlantı isteyebilirsiniz</link>."
+    },
+    "link": {
+      "signInTitle": "Gliagora'da oturum açın",
+      "signIn": "<strong>{email}</strong> olarak oturum açın.",
+      "signInButton": "Oturum aç",
+      "createTitle": "Gliagora hesabınızı oluşturun",
+      "create": "<strong>{email}</strong> için Gliagora hesabınızı oluşturun.",
+      "terms": "Hesap oluşturarak <link>kullanım koşullarını</link> kabul etmiş ve 16 yaşında ya da daha büyük olduğunuzu onaylamış olursunuz.",
+      "createButton": "Hesap oluştur",
+      "otherBrowser": "Bu bağlantı, istendiği tarayıcıdan farklı bir tarayıcıda açıldı. Yalnızca az önce {email} için bir oturum açma bağlantısı istediyseniz devam edin.",
+      "expiredTitle": "Bu bağlantının süresi doldu",
+      "expired": "Oturum açma bağlantıları 15 dakika boyunca ve yalnızca bir kez çalışır. Bu bağlantıyı kullanmadıysanız yeni bir bağlantı isteyin.",
+      "again": "Yeni bağlantı iste"
+    },
+    "signedOut": {
+      "metaTitle": "Oturum kapatıldı",
+      "title": "Oturumunuz kapatıldı",
+      "text": "Yeniden oturum açmak için yeni bir bağlantı isteyin.",
+      "again": "Yeniden oturum aç",
+      "jobs": "Pozisyonlara göz atın"
+    }
+  },
+  "account": {
+    "title": "Hesabınız",
+    "description": "Gliagora hesabınız: nasıl oturum açtığınız.",
+    "signedOutTitle": "Hesabınızı görmek için oturum açın",
+    "navLabel": "Hesabınız",
+    "nav": {
+      "overview": "Hesap",
+      "signOut": "Oturumu kapat"
+    },
+    "who": {
+      "email": "<strong>{email}</strong> olarak oturum açtınız.",
+      "orcid": "<strong>{orcid}</strong> ORCID kimliğiyle oturum açtınız.",
+      "google": "Google hesabınızla oturum açtınız."
+    },
+    "methods": {
+      "heading": "Oturum açma yolları",
+      "email": "E-posta bağlantısı",
+      "google": "Google",
+      "orcid": "ORCID",
+      "noEmail": "E-posta adresi yok",
+      "linked": "Bağlı",
+      "notLinked": "Bağlı değil"
+    },
+    "signOut": {
+      "heading": "Oturumu kapatma",
+      "text": "Artık kullanmadığınız bir bilgisayarda ya da telefonda oturumunuz mu açık? Her yerde oturumu kapatmak, hesabınızın bu oturum da dahil tüm oturumlarını sonlandırır.",
+      "everywhere": "Her yerde oturumu kapat"
+    }
+  },
+  "outcome": {
+    "done": {
+      "signed-in": "Oturumunuz açıldı.",
+      "created": "Hesabınız oluşturuldu ve oturumunuz açıldı."
+    },
+    "error": {
+      "link-expired": "Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış. Aşağıdan yeni bir bağlantı isteyin.",
+      "linkExpiredSignedIn": "Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış; bu nedenle oturumunuz önceki gibi açık.",
+      "failed": "Bir sorun oluştu. Lütfen yeniden deneyin.",
+      "failedReference": "Bir sorun oluştu. Lütfen yeniden deneyin ya da privacy@gliagora.com adresine yazıp {reference} referans kodunu belirtin."
+    }
+  },
   "emails": {
     "greeting": "Merhaba,",
     "automatic": "Bu e-posta otomatik olarak gönderildi. Bize ulaşmak için bu e-postayı yanıtlayabilir veya {email} adresine yazabilirsiniz.",
@@ -636,6 +742,13 @@
       "nextPersonalRights": "Editörümüz size 24 saat içinde yanıt verecek; genellikle 72 saat içinde karar veririz. Bir içeriği kaldırmaya karar verirsek içerik hemen yayından kalkar.",
       "retention": "Bildiriminizi ve e-posta adresinizi, bildirim kapatıldıktan sonra 2 yıl saklarız. Kişisel verilerinizi nasıl işlediğimiz: {privacyUrl}",
       "retentionPersonalRights": "Talebinizi ve e-posta adresinizi, talep kapatıldıktan sonra 2 yıl saklarız. Kişisel verilerinizi nasıl işlediğimiz: {privacyUrl}"
+    },
+    "signIn": {
+      "subject": "Gliagora'da oturum açma bağlantınız",
+      "intro": "Birisi bu e-posta adresiyle Gliagora | Neuroscience'ta oturum açmak için bir bağlantı istedi. Oturum açmak için bu bağlantıyı açın:",
+      "validity": "Bağlantı 15 dakika boyunca ve yalnızca bir kez çalışır. Bu adres için henüz bir Gliagora hesabı yoksa bağlantı, hesap oluşturmanızı sağlar; bağlantıyı açıp onaylamadıkça hesap oluşturulmaz.",
+      "sameBrowser": "Bağlantıyı, onu istediğiniz tarayıcıda açın. Başka bir yerde açarsanız sayfa, devam etmeden önce sizi uyarır.",
+      "notYou": "Bu bağlantıyı siz istemediyseniz bu e-postayı dikkate almayın: hiçbir şey olmaz ve hesap oluşturulmaz."
     }
   }
 }

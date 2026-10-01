@@ -6,9 +6,10 @@ import { defineConfig } from 'vitest/config'
 // create their own scratch database and role and drop them afterwards. Those under
 // `tests/integration/` (the scheduled tasks, M4.7) share one scratch database, which
 // tests/integration/global-setup.ts creates, migrates and drops again; the email tests also start
-// a throwaway Mailpit container with Docker, and are skipped without Docker. They need a
-// connection that may create databases: TEST_DATABASE_URL, or locally the DATABASE_URL of .env
-// (the development superuser; `docker compose up -d db`). Fake data only.
+// a throwaway Mailpit (a container with Docker, or else the program in MAILPIT_BIN), and are
+// skipped without either. They need a connection that may create databases: TEST_DATABASE_URL, or
+// locally the DATABASE_URL of .env (the development superuser; `docker compose up -d db`). Fake
+// data only.
 if (existsSync('.env')) process.loadEnvFile('.env')
 process.env.TEST_DATABASE_URL ??= process.env.DATABASE_URL
 

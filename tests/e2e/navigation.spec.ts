@@ -65,6 +65,18 @@ test.describe('desktop navigation', () => {
     expect(await page.evaluate(() => window.scrollY)).toBe(beforeShiftTab)
   })
 
+  test('the Account link sits between the language and the digest buttons', async ({ page }) => {
+    await page.goto('/tr/iletisim/')
+    const account = header(page).getByRole('link', { name: 'Hesap' })
+    await expect(account).toHaveAttribute('href', '/en/account/')
+    await expect(account).toHaveAttribute('hreflang', 'en')
+    await header(page).getByRole('link', { name: 'Aylık bülteni alın' }).focus()
+    await page.keyboard.press('Shift+Tab')
+    await expect(account).toBeFocused()
+    await page.keyboard.press('Shift+Tab')
+    await expect(header(page).getByLabel('Dil: Türkçe (TR)')).toBeFocused()
+  })
+
   test('the current page is marked in the navigation', async ({ page }) => {
     await page.goto('/en/jobs/')
     const nav = header(page).getByRole('navigation', { name: 'Main' })

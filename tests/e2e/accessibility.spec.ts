@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
+import { asTemplateMember } from './member'
 import { PAGES } from './pages'
 
 // PLAN §17.2: every template × light/dark × desktop/mobile, 0 serious or critical axe issues,
@@ -17,6 +18,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
           const url = new URL(request.url())
           if (url.protocol.startsWith('http') && url.origin !== origin) foreign.push(url.href)
         })
+        await asTemplateMember(tab, page, baseURL)
 
         const response = await tab.goto(page.path, { waitUntil: 'networkidle' })
         expect(response?.status()).toBe('status' in page ? page.status : 200)

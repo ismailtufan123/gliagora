@@ -2,6 +2,8 @@ import { type Page, type TestInfo, expect, test } from '@playwright/test'
 
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
 import { clientAddress, summary } from './forms'
+import { signInLinkTo } from './mailpit'
+import { askForLink, needsMailpit, newAddress, ownContext, signInAs } from './member'
 import { PAGES } from './pages'
 import { hiddenWhenFocused, layoutProblems, pseudoLocalise } from './pseudo-locale'
 
@@ -135,6 +137,36 @@ for (const viewport of [
       await page.getByRole('button', { name: 'Send report' }).click()
       await expect(summary(page)).toBeFocused()
       await expectLayoutHolds(page, testInfo, 'report a problem about an institution, errors')
+    })
+
+    test('sign in, with errors', async ({ page }, testInfo) => {
+      needsMailpit()
+      await page.setExtraHTTPHeaders({ 'X-Forwarded-For': clientAddress() })
+      await page.goto('/en/sign-in/')
+      await page.getByRole('button', { name: 'Email me a sign-in link' }).click()
+      await expect(summary(page)).toBeFocused()
+      await expectLayoutHolds(page, testInfo, 'sign in, errors')
+    })
+
+    test('a sign-in link opened in another browser', async ({ browser }, testInfo) => {
+      needsMailpit()
+      const asking = await ownContext(browser)
+      const address = newAddress()
+      await askForLink(await asking.newPage(), address)
+      const other = await browser.newContext({ viewport })
+      const page = await other.newPage()
+      await page.goto(await signInLinkTo(address))
+      await expect(page.getByRole('note')).toBeVisible()
+      await expectLayoutHolds(page, testInfo, 'sign-in link, another browser')
+      await asking.close()
+      await other.close()
+    })
+
+    test('account, signed in', async ({ page, baseURL }, testInfo) => {
+      await signInAs(page.context(), 'email', baseURL!)
+      await page.goto('/en/account/')
+      await expect(page.getByRole('navigation', { name: 'Your account' })).toBeVisible()
+      await expectLayoutHolds(page, testInfo, 'account')
     })
 
     test('search results', async ({ page }, testInfo) => {

@@ -10,15 +10,23 @@ import { solveChallenge } from './solve'
 // Every check and message comes from the server (the Server Action returns the next state), so
 // the forms work the same without JavaScript, apart from the spam check. This adds only what
 // needs the browser: the spam check (solve.ts, started when the form is first used), the busy
-// state and moving focus to the error summary after a failed send.
+// state and moving focus to the error summary after a failed send. `permalink` is where a send
+// without JavaScript (or before it has loaded) goes instead of the page's current address, for a
+// page whose address can carry what should not come back with the form's answer (the sign-in
+// page's outcome message); React finds the form's answer there by it, so the page must render the
+// same permalink at that address.
 
 export type FormAction<Values> = (
   state: FormState<Values>,
   form: FormData,
 ) => Promise<FormState<Values>>
 
-export function usePublicForm<Values>(action: FormAction<Values>, initial: FormState<Values>) {
-  const [state, formAction, pending] = useActionState(action, initial)
+export function usePublicForm<Values>(
+  action: FormAction<Values>,
+  initial: FormState<Values>,
+  permalink?: string,
+) {
+  const [state, formAction, pending] = useActionState(action, initial, permalink)
   const [waiting, setWaiting] = useState(false)
   const answer = useRef<HTMLInputElement>(null)
   const summary = useRef<HTMLDivElement>(null)

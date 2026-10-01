@@ -114,8 +114,8 @@ const sidebarDate = (name: string, label: string, description: string): Field =>
 // No versions: a request holds personal data, and the 2-year deletion removes the whole record
 // (the retention task, once it covers data requests). Editors never delete one (a request recorded
 // by mistake is closed as "Not applicable"): the record is the proof that the request was handled,
-// and the restore step (deploy/backup/restore.sh, the M4b design §7.9) is to carry the table over a
-// restore.
+// and a restore keeps the table's rows (deploy/backup/restore.sh carries them over, the M4b design
+// §7.9).
 export const DataRequests: CollectionConfig = {
   slug: 'data-requests',
   labels: { singular: 'Data request', plural: 'Data requests' },

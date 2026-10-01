@@ -1,6 +1,7 @@
 import { type Locator, type Page, expect, test } from '@playwright/test'
 
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
+import { asTemplateMember } from './member'
 import { PAGES } from './pages'
 import { hiddenWhenFocused, pseudoLocalise } from './pseudo-locale'
 
@@ -73,6 +74,26 @@ const lockupProblems = (page: Page) =>
   })
 
 /**
+ * The visible parts of the header that reach above or below it. Its box is 64px high whatever it
+ * holds (global.css fixes the height), so a label that wraps to more lines shows only here. The
+ * closed menus' panels do not count.
+ */
+const headerOverflow = (page: Page) =>
+  page.locator('.site-header').evaluate((header) => {
+    const box = header.getBoundingClientRect()
+    return [...header.querySelectorAll('.page-frame *')].flatMap((element) => {
+      const rect = element.getBoundingClientRect()
+      if (!rect.width || !rect.height) return []
+      if (element.closest('details:not([open]) > :not(summary)')) return []
+      return rect.top < box.top - 0.5 || rect.bottom > box.bottom + 0.5
+        ? [
+            `${element.tagName.toLowerCase()}.${String(element.className).split(' ')[0]} ${rect.top}–${rect.bottom}px`,
+          ]
+        : []
+    })
+  })
+
+/**
  * The browser's own text size (its default font size, as a person sets it), which rem media
  * queries follow, unlike TEXT_200. A Chromium protocol command; set before the page loads.
  */
@@ -88,14 +109,19 @@ test.describe('reflow at 320px', () => {
   test.use({ viewport: { width: 320, height: 640 } })
 
   for (const template of PAGES) {
-    test(`${template.name}: no horizontal scroll, also with text spacing`, async ({ page }) => {
+    test(`${template.name}: no horizontal scroll, also with text spacing`, async ({
+      page,
+      baseURL,
+    }) => {
+      await asTemplateMember(page, template, baseURL)
       await page.goto(template.path)
       expect(await sidewaysScroll(page)).toBeLessThanOrEqual(0)
       await page.addStyleTag({ content: TEXT_SPACING })
       expect(await sidewaysScroll(page)).toBeLessThanOrEqual(0)
     })
 
-    test(`${template.name}: no horizontal scroll with text at 200%`, async ({ page }) => {
+    test(`${template.name}: no horizontal scroll with text at 200%`, async ({ page, baseURL }) => {
+      await asTemplateMember(page, template, baseURL)
       await page.goto(template.path)
       await page.addStyleTag({ content: TEXT_200 })
       expect(await sidewaysScroll(page)).toBeLessThanOrEqual(0)
@@ -184,6 +210,44 @@ test('the header lockup never gets narrower than its mark', async ({ page, isMob
   await pseudoLocalise(page)
   await page.evaluate(() => document.fonts.ready)
   expect(await lockupProblems(page)).toEqual([])
+})
+
+// The header's Account link (M4b, D49) sits beside the search, language and digest buttons from
+// 1280px, the narrowest desktop layout. It is an icon so that the lockup keeps its descriptor
+// there at the default text size, in English and in Turkish (the descriptor is never cut: where it
+// does not fit, global.css hides it, so a width of a pixel or so means it went), and so that
+// labels 40% longer still leave the header one line high (the lockup gives way first).
+test.describe('header at 1280px with the Account link', () => {
+  test.skip(({ isMobile }) => isMobile, 'the width is set explicitly')
+  test.use({ viewport: { width: 1280, height: 800 } })
+
+  for (const path of ['/en/', '/tr/iletisim/']) {
+    test(`${path}: the lockup keeps its descriptor`, async ({ page }) => {
+      await page.goto(path)
+      await page.evaluate(() => document.fonts.ready)
+      await expect(page.locator('.site-header .account-link')).toBeVisible()
+      const descriptor = await page.locator('.site-header .lockup-descriptor').boundingBox()
+      expect(descriptor?.width ?? 0).toBeGreaterThan(40)
+      expect(await lockupProblems(page)).toEqual([])
+    })
+  }
+
+  for (const path of ['/en/', '/tr/iletisim/']) {
+    test(`${path} with labels 40% longer: the header stays one line, 64px high`, async ({
+      page,
+    }) => {
+      await page.goto(path)
+      await pseudoLocalise(page)
+      await page.evaluate(() => document.fonts.ready)
+      const header = await page.locator('.site-header').boundingBox()
+      expect(header?.height).toBe(64)
+      // The box is fixed; what is in it must fit too.
+      expect(await headerOverflow(page)).toEqual([])
+      await expect(page.locator('.site-header .account-link')).toBeVisible()
+      expect(await sidewaysScroll(page)).toBeLessThanOrEqual(0)
+      expect(await lockupProblems(page)).toEqual([])
+    })
+  }
 })
 
 test.describe('fonts', () => {

@@ -16,10 +16,10 @@ export const DELETION_ACTIONS = ['delete', 'clear-email'] as const
 // brings back everything deleted after it was taken. So every deletion of personal data that a
 // person asked for (a data request, an account deleted in its settings, an editor deleting a
 // suggestion or report on request) or that the inactivity rule made writes a row here, in the same
-// transaction. The restore step (deploy/backup/restore.sh) and the task that repeats each logged
-// deletion whose record exists again (`applyDeletionLog`) come later in M4b. Record IDs only, no
-// personal data; rows are deleted 7 months after `at`, once no backup can hold the deleted data
-// any more (6 months).
+// transaction. A restore keeps this table's rows (deploy/backup/restore.sh carries them over); the
+// task that repeats each logged deletion whose record exists again (`applyDeletionLog`) comes
+// later in M4b. Record IDs only, no personal data; rows are deleted 7 months after `at`, once no
+// backup can hold the deleted data any more (6 months).
 //
 // A restore also sets the ID sequences back, so a record made after it can get a logged ID. Two
 // rules keep that from deleting someone else's record: a logged deletion is repeated only on a

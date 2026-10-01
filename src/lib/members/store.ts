@@ -285,7 +285,8 @@ export function markEmailVerified(db: MemberDb, memberId: number, now: Date): Pr
 
 /**
  * Records activity (any signed-in request, at most once a day): sets `last_seen_at` and cancels a
- * pending inactivity warning (PLAN §18.1). Returns whether the row changed.
+ * pending inactivity warning (PLAN §18.1). Returns whether the row changed. Signing in records it
+ * too, every time (createSession).
  */
 export function touchMember(db: MemberDb, memberId: number, now: Date): Promise<boolean> {
   return guarded(async () => {
@@ -309,7 +310,9 @@ export type NewSession = { token: string; expiresAt: Date }
  * A new session for `memberId`, at every sign-in and account creation: a new random token, 30
  * days from now, never extended. The session the request carried (`replaces`, the old cookie's
  * token) is deleted whoever's it was, so a sign-in never reuses a session someone else may know.
- * Beyond MAX_SESSIONS per member, the oldest go.
+ * Beyond MAX_SESSIONS per member, the oldest go. Signing in is activity: in the same transaction
+ * it sets `last_seen_at` and cancels a pending inactivity warning (the M4b design §7.7), whatever
+ * page the member goes to next.
  */
 export function createSession(
   db: MemberDb,
@@ -325,6 +328,11 @@ export function createSession(
       await tx.execute(sql`
         INSERT INTO member_sessions (member_id, token_hash, expires_at, created_at, updated_at)
         VALUES (${member}, ${hashToken(token)}, ${iso(expiresAt)}, ${iso(now)}, ${iso(now)})`)
+      await tx.execute(sql`
+        UPDATE members
+        SET last_seen_at = ${iso(now)}, deletion_warned_at = NULL, warning_refused_at = NULL,
+          updated_at = ${iso(now)}
+        WHERE id = ${member}`)
       if (isToken(replaces)) {
         await tx.execute(sql`DELETE FROM member_sessions WHERE token_hash = ${hashToken(replaces)}`)
       }

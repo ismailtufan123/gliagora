@@ -364,8 +364,10 @@
     }
   }
 
+  /* 6px at the sides (M4b): with the Account link the header needs about 40px more at 1280px,
+     and the lockup keeps its descriptor there (layout.spec.ts). */
   .nav-link {
-    padding: var(--space-2) var(--space-2);
+    padding: var(--space-2) 0.375rem;
     border-radius: var(--corner-control);
     color: var(--text);
     font-weight: 700;
@@ -766,6 +768,21 @@
   .error-summary a {
     color: var(--danger);
     font-weight: 700;
+  }
+
+  /* What a member page says after a redirect (OutcomeMessage.tsx): done, or an error. Focused by
+     the browser through the address's #outcome, so its focus outline shows around it. */
+  .outcome {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--success);
+    border-inline-start-width: 4px;
+    background: var(--surface);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .outcome-error {
+    border-color: var(--danger);
   }
 
   /* A notice about the state of an item, such as a closed position. */
@@ -1193,6 +1210,12 @@
 
   .search-hint {
     display: none;
+  }
+
+  /* The header's Account link (M4b, SiteHeader.tsx): the person icon, named for screen readers
+     (PLAN §7.4). Narrow (34px), so the lockup keeps its descriptor at 1280px (layout.spec.ts). */
+  .account-link {
+    padding-inline: 0.4375rem;
   }
 
   @media (width >= 80rem) and (hover: hover) and (pointer: fine) {

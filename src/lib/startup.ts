@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 
 import { releaseInterruptedJobs } from '@/jobs/release'
 import { altchaKey } from '@/lib/forms/altcha'
+import { describeMemberAuth, memberAuthConfig } from '@/lib/members/config'
 
 /**
  * Connects Payload when the production server starts, which applies pending database migrations
@@ -18,6 +19,9 @@ import { altchaKey } from '@/lib/forms/altcha'
  *
  * A missing ALTCHA_HMAC_KEY only disables the "Suggest a listing" form (it says it is temporarily
  * unavailable), so the site starts anyway, with a warning in the log.
+ *
+ * One line says which ways of member sign-in are on (M4b, D49), by name only, and one line each
+ * names a setting that switched a way off; never a value.
  */
 export async function connectOnStart(): Promise<void> {
   if (process.env.NODE_ENV !== 'production') return
@@ -26,6 +30,9 @@ export async function connectOnStart(): Promise<void> {
       'ALTCHA_HMAC_KEY is missing or too short: the "Suggest a listing" form is unavailable.',
     )
   }
+  const memberAuth = memberAuthConfig()
+  console.log(describeMemberAuth(memberAuth))
+  for (const problem of memberAuth.problems) console.error(problem)
   try {
     const payload = await getPayload({ config })
     await releaseInterruptedJobs(payload)
