@@ -13,8 +13,8 @@
 # (never sourced: `EMAIL_FROM=Gliagora <…>` is not shell syntax). Without SMTP_HOST or ALERT_EMAIL
 # it says "alerts off" in the journal and sends nothing. Sent with curl: on port 587 STARTTLS is
 # required, with SMTP_SECURE=true TLS from the start (smtps://), without TLS only to this computer
-# (127.0.0.1, localhost). The SMTP password reaches curl through a file descriptor, never in a
-# command line; never add -v (it shows the login) or `set -x`.
+# (localhost, 127.0.0.1, ::1), as the app sends. The SMTP password reaches curl through a file
+# descriptor, never in a command line; never add -v (it shows the login) or `set -x`.
 #
 # The email holds the unit, its result and this run's own lines from backup.sh or restore.sh
 # (theirs only, the ones that start with a time: database names, snapshot IDs, counts), with any
@@ -128,7 +128,7 @@ from_header=$(trim "$(env_value EMAIL_FROM)")
 from=$(bare_address "$from_header")
 if [[ "$secure" == true ]]; then
   url="smtps://$host:$port" tls=required
-elif [[ "$(tr '[:upper:]' '[:lower:]' <<<"$host")" =~ ^(localhost|127\.0\.0\.1)$ ]]; then
+elif [[ "$(tr '[:upper:]' '[:lower:]' <<<"$host")" =~ ^(localhost|127\.0\.0\.1|::1|\[::1\])$ ]]; then
   url="smtp://$host:$port" tls=none
 else
   url="smtp://$host:$port" tls=required

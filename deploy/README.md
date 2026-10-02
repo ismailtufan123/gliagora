@@ -392,7 +392,7 @@ On a new server, steps 1–5 already do all of this. On the server running since
 5. **Apply it:** `cd /opt/gliagora && sudo ./update.sh --no-pull`. It recreates the database container (its new setting and log driver), backs up, prepares listmonk (creates its database, installs it and generates `/root/listmonk-admin-password`, applies its settings) and starts it, then recreates every container with its logs going to the journal.
 6. **Check:**
    - `docker compose -f compose.prod.yml ps`: four services, each `healthy`;
-   - `curl -s http://127.0.0.1:9000/health` on the server prints `{"data":true}`, and the same from your computer to `<server-ip>:9000` gets no answer;
+   - `curl -s http://127.0.0.1:9000/health` on the server prints `{"data":true}`, and the same from your computer to `<server-ip>:9000` gets no answer; `docker version --format '{{.Server.Version}}'` is 28 or later (older Docker let machines on the same network segment reach ports published on 127.0.0.1);
    - `docker compose -f compose.prod.yml logs --tail 5 app` shows the app's lines (now read from the journal), including `Email cap of the forms: 50 an hour, 200 a day (default)`;
    - `cd backup && sudo ./backup.sh`, then `sudo ./restore.sh test latest`: both databases are stored and restored ("Restore tests passed: gliagora listmonk."), and `docker volume ls -f dangling=true` lists nothing new;
    - the site still asks for the password: `curl -s -o /dev/null -w '%{http_code}\n' https://gliagora.com/en/` answers `401`, and `https://gliagora.com/health/` `200`;

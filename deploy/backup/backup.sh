@@ -18,9 +18,9 @@
 #      but the server does not have yet (listmonk before its first start) is skipped.
 #   2. Adds the files needed to rebuild the server: .env, admin-auth.caddy, Compose files, the
 #      database and listmonk set-up scripts (postgres/, listmonk/). Never the map's basemap
-#      (/opt/gliagora/basemap, about 4 GB): it is downloaded again (deploy/basemap/fetch-basemap.sh),
-#      so it stays out of the backups and of the weekly copy. Keep the list in step 2 to these
-#      files; never add a whole folder such as /opt/gliagora.
+#      (/opt/gliagora/basemap, about 4 GB): it is downloaded again
+#      (deploy/basemap/fetch-basemap.sh), so it stays out of the backups and of the weekly copy.
+#      Keep the list in step 2 to these files; never add a whole folder such as /opt/gliagora.
 # Nightly runs only (other tags, such as pre-update and pre-restore, never delete anything):
 #   3. Keeps everything from the last 2 days plus 7 daily, 4 weekly and 6 monthly snapshots.
 #   4. On Sundays, checks the repository for damage.
@@ -143,8 +143,8 @@ if [[ "$TAG" == nightly && -n "${COPY_REPOSITORY:-}" ]]; then
 fi
 
 # The drift guard of step 1, now that everything listed is stored.
-[[ -z "$unlisted" ]] || fail "The server has databases that DATABASES (in $CONFIG) does not name, so \
-they were not backed up: $unlisted. Add them there."
+[[ -z "$unlisted" ]] || fail "The server has databases that DATABASES (in $CONFIG) does not \
+name, so they were not backed up: $unlisted. Add them there."
 
 if [[ -d "$RESTIC_REPOSITORY" ]]; then
   backup_root=$(dirname "$RESTIC_REPOSITORY")

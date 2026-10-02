@@ -118,6 +118,12 @@ describe('the production stack (deploy/compose.prod.yml)', () => {
     expect(image(local)).toBe(image(compose))
   })
 
+  it('is what CI tests with: the same PostgreSQL image', () => {
+    const image = /image:\s*(postgres:\S+)/.exec(compose)?.[1]
+    expect(image).toMatch(/^postgres:[\d.]+@sha256:[0-9a-f]{64}$/)
+    expect(/^\s*POSTGRES_IMAGE: (\S+)$/m.exec(read('.github/workflows/ci.yml'))?.[1]).toBe(image)
+  })
+
   it('publishes listmonk on the server’s loopback only, and nothing depends on it', () => {
     for (const text of [compose, local]) {
       const ports =
@@ -186,6 +192,13 @@ describe('the production stack (deploy/compose.prod.yml)', () => {
 
 describe('backup/backup.sh', () => {
   const SCRIPT = join(DEPLOY, 'backup/backup.sh')
+
+  it('backs up the app’s and listmonk’s databases, and emails no one until set', () => {
+    const example = read('deploy/backup/backup.env.example')
+    expect(example).toMatch(/^DATABASES="gliagora listmonk"$/m)
+    // Never a real address in the repository.
+    expect(example).toMatch(/^ALERT_EMAIL=$/m)
+  })
 
   it('leaves out the rows that never go into backups, for each database', () => {
     const excluded = (db: string) => sourced('deploy/backup/backup.sh', `excluded_data ${db}`)
