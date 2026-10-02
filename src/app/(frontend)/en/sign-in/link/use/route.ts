@@ -14,6 +14,7 @@ import { DEFAULT_NEXT, safeNext } from '@/lib/members/return-path'
 import { saveAfterSignIn } from '@/lib/members/saved'
 import { saveStore } from '@/lib/members/saved-store'
 import { redeemSignInLink } from '@/lib/members/sign-in-link'
+import { syncSoon } from '@/lib/newsletter/sync-soon'
 import {
   type MemberDb,
   createSession,
@@ -41,6 +42,10 @@ import { redeemVerifyLink } from '@/lib/members/verify-email'
 // account has it (`?error=email-taken`); a change of address gives this browser a new session and
 // ends every other session of the member, as every change of the ways to sign in does.
 //
+// A new account and a new address are carried to Glia Notes right after the answer (`syncSoon`,
+// M2, D50): the member's subscription moves to the new address, and an address that already has
+// Glia Notes through the newsletter page is looked for (src/lib/newsletter/members.ts).
+//
 // Any other failure leads back with a reference, which the log line repeats with the error's
 // class and code only.
 export const dynamic = 'force-dynamic'
@@ -65,6 +70,7 @@ export async function POST(request: Request) {
     const used = await redeemSignInLink(db, token, now)
     // The sign-in cookie stays: it may bind a newer link this browser asked for.
     if (!used) return seeOther(outcomePath(MEMBER_PATHS.signIn, { error: 'link-expired' }))
+    if (used.created) syncSoon(db, used.memberId, 'a new account')
     const session = await createSession(db, used.memberId, now, {
       replaces: jar.get(SESSION_COOKIE)?.value,
     })
@@ -113,6 +119,7 @@ async function addAddressByLink(
   }
   if (!result.changed)
     return seeOther(outcomePath(MEMBER_PATHS.account, { done: 'email-verified' }))
+  syncSoon(db, session.member.id, 'an address change')
   const { cookie, othersEnded } = await rotateSession(db, session.member.id, now, {
     replaces: sessionToken,
     endOthers: true,

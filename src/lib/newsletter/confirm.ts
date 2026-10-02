@@ -14,6 +14,7 @@ import {
   consumeEmailToken,
   deletePendingLinks,
   joinDigestBySignup,
+  releaseDigestSubscriber,
 } from '@/lib/members/store'
 import { isToken } from '@/lib/members/tokens'
 
@@ -35,8 +36,11 @@ import { recordConsent } from './store'
 //    form was sent (kept in the link, also for a link from "Send it again"), `confirmed` now, both
 //    with the consent text's version the form showed and the source `newsletter-form`;
 // 4. the address's other pending signup links stop working;
-// 5. a member with that address has Glia Notes on from now, with the form's consent version and the
-//    subscriber, synced (`joinDigestBySignup`; the form's records stand for the member's).
+// 5. a member with that address has Glia Notes on from now, with the form's consent version, the
+//    form's time and the subscriber, synced (`joinDigestBySignup`; the form's records stand for the
+//    member's); when listmonk had the address already, a member whose row still names that
+//    subscriber under another address (an address change the sync has not carried yet) no longer
+//    holds it (`releaseDigestSubscriber`), so that member's sync never moves this signup away.
 // A failure in 1–2 changes nothing in the app and the link still works ("try again"). A failure in
 // 3–4 rolls the app's side back; if step 2 made a new subscriber, it is deleted again in listmonk
 // before the transaction ends (best effort, logged by class), so listmonk keeps no subscriber
@@ -121,11 +125,13 @@ export async function confirmInTransaction(
       now,
     )
     await deletePendingLinks(db, 'newsletter', link.email)
+    const held = { id: subscriber.id, uuid: subscriber.uuid }
+    if (!subscriber.created) await releaseDigestSubscriber(db, link.email, held, now)
     await joinDigestBySignup(
       db,
       link.email,
-      { id: subscriber.id, uuid: subscriber.uuid },
-      pending.version,
+      held,
+      { version: pending.version, requestedAt: new Date(pending.requestedAt) },
       now,
     )
   } catch (error) {

@@ -5817,6 +5817,25 @@
           "primaryKey": false,
           "notNull": false
         },
+        "digest_consent_source": {
+          "name": "digest_consent_source",
+          "type": "enum_members_digest_consent_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "digest_requested_at": {
+          "name": "digest_requested_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "digest_adopt_check_at": {
+          "name": "digest_adopt_check_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "digest_synced_at": {
           "name": "digest_synced_at",
           "type": "timestamp(3) with time zone",
@@ -10076,6 +10095,14 @@
         "google"
       ]
     },
+    "public.enum_members_digest_consent_source": {
+      "name": "enum_members_digest_consent_source",
+      "schema": "public",
+      "values": [
+        "account",
+        "newsletter-form"
+      ]
+    },
     "public.enum_email_tokens_purpose": {
       "name": "enum_email_tokens_purpose",
       "schema": "public",
@@ -10200,6 +10227,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "09d2f7f6-e849-4910-a8b5-d0e3ffff81ce",
+  "id": "c78d939f-dabf-49f2-9f5c-20cb47fcabdd",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

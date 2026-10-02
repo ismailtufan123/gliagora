@@ -26,8 +26,11 @@ const member = (changes: Partial<MemberRecord> = {}): MemberRecord => ({
   digestOptIn: true,
   digestChangedAt: new Date('2026-09-30T11:00:00Z'),
   digestConsentVersion: '2026-09-27',
+  digestConsentSource: 'account',
+  digestRequestedAt: new Date('2026-09-30T11:00:00Z'),
   digestSyncedAt: null,
   digestSubscriber: null,
+  digestAdoptCheckAt: null,
   lastSeenAt: new Date('2026-10-01T08:00:00Z'),
   deletionWarnedAt: null,
   warningRefusedAt: null,
@@ -155,6 +158,8 @@ describe('exportDocument', () => {
       on: true,
       changedAt: '2026-09-30T11:00:00.000Z',
       consentVersion: '2026-09-27',
+      consentGivenOn: 'account',
+      consentRequestedAt: '2026-09-30T11:00:00.000Z',
       consentRecords: [
         {
           event: 'requested',

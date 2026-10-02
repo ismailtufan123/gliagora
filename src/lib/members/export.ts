@@ -22,12 +22,17 @@ import {
 
 // "Download my data" (M4b, D49; the M4b design §7.5): GET /en/account/privacy/export/ answers a
 // JSON file with everything Gliagora holds about the signed-in member: the account, the Glia Notes
-// choice with the consent records of the member's subscription (M2: what was agreed to, when and
-// where; never listmonk's UUID, the credential of the unsubscribe links), the preferred subfields, the saved positions, the sessions (how many, and when each ends;
-// never their tokens) and, when the account has an email address (always one the member proved),
-// the suggestions, reports and data requests sent with that address, matched without case (the
-// forms keep an address as it was typed). A download (`Content-Disposition: attachment`), never
-// stored by caches. Signed out, it leads to the privacy page, which shows the sign-in panel.
+// choice (where and when its consent was given) with the consent records of the subscription the
+// account holds (M2: what was agreed to, when and where; never listmonk's UUID, the credential of
+// the unsubscribe links, nor its ID; a subscription the account's address made on the newsletter
+// page is the account's once the sync has looked for the address, src/lib/newsletter/members.ts),
+// the preferred subfields, the saved positions, the sessions (how many, and when each ends; never
+// their tokens) and, when the account has an email address (always one the member proved), the
+// suggestions, reports and data requests sent with that address, matched without case (the forms
+// keep an address as it was typed). Records of subscriptions that had ended before (an earlier
+// unsubscribe or "off") are no longer tied to the account and are not in it. A download
+// (`Content-Disposition: attachment`), never stored by caches. Signed out, it leads to the privacy
+// page, which shows the sign-in panel.
 
 /** The export's format, for anyone who reads the file with a program. */
 export const EXPORT_SCHEMA = 'gliagora-export/1'
@@ -105,6 +110,8 @@ export function exportDocument(data: ExportData, now: Date) {
       on: member.digestOptIn,
       changedAt: date(member.digestChangedAt),
       consentVersion: member.digestConsentVersion,
+      consentGivenOn: member.digestConsentSource,
+      consentRequestedAt: date(member.digestRequestedAt),
       consentRecords: data.consent.map((record) => ({
         event: record.event,
         consentVersion: record.consentVersion,

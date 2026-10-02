@@ -15,6 +15,17 @@ import * as newsletterConstraints from '@/migrations/20261002_190000_newsletter_
 import * as membersSync from '@/migrations/20261002_200000_members_sync'
 import * as membersSyncConstraints from '@/migrations/20261002_210000_members_sync_constraints'
 
+import {
+  NewsletterStoreError,
+  consentRecordsOf,
+  newsletterInUse,
+  recordConsent,
+  recordEndedSubscriptions,
+  runningConsent,
+  unlinkConsent,
+  withdrawalOf,
+} from '@/lib/newsletter/store'
+
 import { orcidCheckCharacter } from './orcid-id'
 import { redeemSignInLink } from './sign-in-link'
 import { hashToken, newBinding, newToken } from './tokens'
@@ -23,7 +34,9 @@ import {
   type MemberDb,
   type MemberRecord,
   MemberStoreError,
+  adoptDigest,
   applyChanges,
+  clearAdoptCheck,
   consumeEmailToken,
   countSavedItems,
   createEmailToken,
@@ -35,6 +48,7 @@ import {
   deleteSignInTokens,
   digestHolders,
   endAllSessions,
+  endDigestByWithdrawal,
   endOtherSessions,
   endSession,
   findEmailToken,
@@ -49,12 +63,14 @@ import {
   markEmailVerified,
   pendingDigestMembers,
   preferredSubfields,
+  releaseDigestSubscriber,
   saveJob,
   savedJobIds,
   setDigest,
   setDisplayName,
   setPreferredSubfields,
   storeDigestSync,
+  subscriberHeldByOther,
   touchMember,
   unsaveJob,
 } from './store'
@@ -300,9 +316,9 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
           select conname from pg_constraint where contype = 'c' and right(conname, 6) = '_check'
             and conrelid::regclass::text in ('members', 'member_sessions', 'email_tokens', 'data_requests')
           order by conname`)
-      // Ten for members and data requests (M4b), one for Glia Notes' links and four for members'
+      // Ten for members and data requests (M4b), one for Glia Notes' links and six for members'
       // Glia Notes (M2).
-      expect(await names()).toHaveLength(15)
+      expect(await names()).toHaveLength(17)
       // The later migrations first (one widens a check, others add more), as migrations run
       // backwards.
       await membersSyncConstraints.down({ db } as never)
@@ -314,7 +330,7 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       await requestGuards.up({ db } as never)
       await newsletterConstraints.up({ db } as never)
       await membersSyncConstraints.up({ db } as never)
-      expect(await names()).toHaveLength(15)
+      expect(await names()).toHaveLength(17)
     })
 
     it("refuse a member's Glia Notes subscriber named by half, or malformed, and a free-text version (M2)", async () => {
@@ -330,12 +346,35 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
         [sql`digest_subscriber_id = 2147483648, digest_subscriber_uuid = ${uuid}`, 'id too large'],
         [sql`digest_subscriber_id = 1, digest_subscriber_uuid = ${uuid.toUpperCase()}`, 'uuid'],
         [sql`digest_consent_version = 'someone@example.org'`, 'version'],
+        // Where and when the consent was asked for: set exactly while on, together, and never
+        // after the choice.
+        [
+          sql`digest_consent_source = 'account', digest_requested_at = ${NOW.toISOString()}`,
+          'source while off',
+        ],
+        [
+          sql`digest_opt_in = true, digest_changed_at = ${NOW.toISOString()}, digest_consent_version = '2026-09-27'`,
+          'on without source',
+        ],
+        [
+          sql`digest_opt_in = true, digest_changed_at = ${NOW.toISOString()}, digest_consent_version = '2026-09-27', digest_consent_source = 'account'`,
+          'source without time',
+        ],
+        [
+          sql`digest_opt_in = true, digest_changed_at = ${NOW.toISOString()}, digest_consent_version = '2026-09-27', digest_consent_source = 'account', digest_requested_at = ${at(1).toISOString()}`,
+          'requested after the choice',
+        ],
       ] as const) {
         expect(await set(values), name).toBe('23514')
       }
       expect(await set(sql`digest_subscriber_id = 1, digest_subscriber_uuid = ${uuid}`)).toBe(
         'no error',
       )
+      expect(
+        await set(
+          sql`digest_opt_in = true, digest_changed_at = ${NOW.toISOString()}, digest_consent_version = '2026-09-27', digest_consent_source = 'newsletter-form', digest_requested_at = ${at(-1).toISOString()}`,
+        ),
+      ).toBe('no error')
     })
   })
 
@@ -1181,6 +1220,10 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       const member = await newMember()
       const waiting = async () =>
         (await pendingDigestMembers(store, { after: 0, limit: 1000 })).includes(member.id)
+      // A new account with an address waits for the sync's look for that address (once).
+      expect(await findMember(store, { id: member.id })).toMatchObject({ digestAdoptCheckAt: NOW })
+      expect(await waiting()).toBe(true)
+      await clearAdoptCheck(store, member.id, NOW)
       expect(await waiting()).toBe(false)
       expect(await setDigest(store, member.id, { optIn: true, version: '2026-09-27' }, NOW)).toBe(
         true,
@@ -1206,6 +1249,8 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       expect(await waiting()).toBe(false)
       expect(await findMember(store, { id: member.id })).toMatchObject({
         digestSyncedAt: at(1),
+        digestConsentSource: 'account',
+        digestRequestedAt: NOW,
         digestSubscriber: { id: 7, uuid: '0b2c6f8e-3f0a-4c1e-9d55-000000000007' },
       })
       expect(await lockPendingDigest(store, member.id)).toBeNull()
@@ -1218,6 +1263,7 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       expect(await findMember(store, { id: member.id })).toMatchObject({
         digestChangedAt: NOW,
         digestSyncedAt: null,
+        digestAdoptCheckAt: at(2),
       })
       await storeDigestSync(
         store,
@@ -1230,9 +1276,19 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       // A change made while the sync held the row, with an earlier clock, still waits.
       expect(await setDigest(store, member.id, { optIn: false }, at(2))).toBe(true)
       expect(await waiting()).toBe(true)
-      // Off, a new address does not wait.
+      // Off, a new address waits only for the look for it in Glia Notes.
       await storeDigestSync(store, member.id, null, at(5))
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestConsentSource: null,
+        digestRequestedAt: null,
+        digestAdoptCheckAt: null,
+      })
       await applyChanges(store, member.id, { email: email(), emailVerifiedBy: 'link' }, at(6))
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestSyncedAt: at(5),
+        digestAdoptCheckAt: at(6),
+      })
+      await clearAdoptCheck(store, member.id, at(6))
       expect(await waiting()).toBe(false)
       // A version that is not one is refused before the database is asked.
       await expect(
@@ -1249,7 +1305,7 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
           store,
           member.email!,
           { id: 11, uuid: uuid(11) },
-          '2026-09-27',
+          { version: '2026-09-27', requestedAt: at(0.5) },
           at(1),
         ),
       ).toBe(1)
@@ -1258,7 +1314,10 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
         digestChangedAt: at(1),
         digestSyncedAt: at(1),
         digestConsentVersion: '2026-09-27',
+        digestConsentSource: 'newsletter-form',
+        digestRequestedAt: at(0.5),
         digestSubscriber: { id: 11, uuid: uuid(11) },
+        digestAdoptCheckAt: null,
       })
       // Unsubscribed: off, synced, without a subscriber.
       expect(
@@ -1268,6 +1327,8 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
         digestOptIn: false,
         digestChangedAt: at(2),
         digestSyncedAt: at(2),
+        digestConsentSource: null,
+        digestRequestedAt: null,
         digestSubscriber: null,
       })
       // A member already off without a subscriber is left as it was.
@@ -1283,7 +1344,7 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
           store,
           member.email!,
           { id: 13, uuid: uuid(13) },
-          '2026-09-27',
+          { version: '2026-09-27', requestedAt: at(4.5) },
           at(5),
         ),
       ).toBe(1)
@@ -1319,16 +1380,22 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       const held = (await digestHolders(store, { after: 0, limit: 1000 })).find(
         (holder) => holder.memberId === member.id,
       )
-      expect(held).toEqual({ memberId: member.id, subscriber: { id: 21, uuid } })
+      expect(held).toEqual({
+        memberId: member.id,
+        email: member.email,
+        changedAt: NOW,
+        subscriber: { id: 21, uuid },
+      })
       expect(
         await markDigestPending(
           store,
-          {
-            memberId: member.id,
-            subscriber: { id: 21, uuid: '0b2c6f8e-3f0a-4c1e-9d55-000000000022' },
-          },
+          { ...held!, subscriber: { id: 21, uuid: '0b2c6f8e-3f0a-4c1e-9d55-000000000022' } },
           at(2),
         ),
+      ).toBe(false)
+      // Nor once the address the check read has changed.
+      expect(
+        await markDigestPending(store, { ...held!, email: 'another@example.org' }, at(2)),
       ).toBe(false)
       expect(await markDigestPending(store, held!, at(2))).toBe(true)
       expect(await findMember(store, { id: member.id })).toMatchObject({ digestSyncedAt: null })
@@ -1338,6 +1405,149 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
           (holder) => holder.memberId === member.id,
         ),
       ).toBe(false)
+    })
+
+    it('take over a subscription of the address once, with its consent, only while off and unnamed (M2)', async () => {
+      const uuid = (n: number) => `0b2c6f8e-3f0a-4c1e-9d55-${String(n).padStart(12, '0')}`
+      const member = await newMember()
+      const consent = {
+        version: '2026-09-27',
+        source: 'newsletter-form' as const,
+        requestedAt: at(-2),
+        confirmedAt: at(-1),
+      }
+      // Another address than the member's: nothing.
+      expect(
+        await adoptDigest(
+          store,
+          member.id,
+          'someone@example.org',
+          { id: 31, uuid: uuid(31) },
+          consent,
+          NOW,
+        ),
+      ).toBe(false)
+      expect(
+        await adoptDigest(
+          store,
+          member.id,
+          member.email!,
+          { id: 31, uuid: uuid(31) },
+          consent,
+          NOW,
+        ),
+      ).toBe(true)
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestOptIn: true,
+        digestChangedAt: at(-1),
+        digestConsentVersion: '2026-09-27',
+        digestConsentSource: 'newsletter-form',
+        digestRequestedAt: at(-2),
+        digestSyncedAt: NOW,
+        digestSubscriber: { id: 31, uuid: uuid(31) },
+        digestAdoptCheckAt: null,
+      })
+      expect(await pendingDigestMembers(store, { after: member.id - 1, limit: 1 })).not.toContain(
+        member.id,
+      )
+      // On already: nothing more.
+      expect(
+        await adoptDigest(
+          store,
+          member.id,
+          member.email!,
+          { id: 32, uuid: uuid(32) },
+          consent,
+          NOW,
+        ),
+      ).toBe(false)
+      // Another member names that subscriber; the member itself does not count.
+      const other = await newMember()
+      expect(await subscriberHeldByOther(store, { id: 31, uuid: uuid(31) }, other.id)).toBe(true)
+      expect(await subscriberHeldByOther(store, { id: 31, uuid: uuid(31) }, member.id)).toBe(false)
+      expect(await subscriberHeldByOther(store, { id: 31, uuid: uuid(32) }, other.id)).toBe(false)
+    })
+
+    it('release a subscriber a new signup reused from members with another address (M2)', async () => {
+      const uuid = '0b2c6f8e-3f0a-4c1e-9d55-000000000041'
+      const moved = await newMember()
+      await setDigest(store, moved.id, { optIn: true, version: '2026-09-27' }, NOW)
+      await storeDigestSync(store, moved.id, { id: 41, uuid }, at(1))
+      // The member's address changed; the sync has not carried it yet.
+      const oldAddress = moved.email!
+      await applyChanges(store, moved.id, { email: email(), emailVerifiedBy: 'link' }, at(2))
+      // A signup of the old address: the member with that address keeps it, the other is released.
+      expect(await releaseDigestSubscriber(store, oldAddress, { id: 41, uuid }, at(3))).toBe(1)
+      expect(await findMember(store, { id: moved.id })).toMatchObject({
+        digestOptIn: true,
+        digestSyncedAt: null,
+        digestSubscriber: null,
+      })
+      const same = await newMember()
+      await setDigest(store, same.id, { optIn: true, version: '2026-09-27' }, NOW)
+      await storeDigestSync(store, same.id, { id: 42, uuid: uuid.replace(/41$/, '42') }, at(1))
+      expect(
+        await releaseDigestSubscriber(
+          store,
+          same.email!,
+          { id: 42, uuid: uuid.replace(/41$/, '42') },
+          at(3),
+        ),
+      ).toBe(0)
+    })
+
+    it('switch Glia Notes off after a withdrawal, only while the row names that subscriber (M2)', async () => {
+      const uuid = '0b2c6f8e-3f0a-4c1e-9d55-000000000051'
+      const member = await newMember()
+      await setDigest(store, member.id, { optIn: true, version: '2026-09-27' }, NOW)
+      await storeDigestSync(store, member.id, { id: 51, uuid }, at(1))
+      const holder = { memberId: member.id, subscriber: { id: 51, uuid } }
+      expect(
+        await endDigestByWithdrawal(
+          store,
+          { ...holder, subscriber: { id: 52, uuid } },
+          at(2),
+          at(3),
+        ),
+      ).toBe(false)
+      expect(await endDigestByWithdrawal(store, holder, at(2), at(3))).toBe(true)
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestOptIn: false,
+        digestChangedAt: at(2),
+        digestConsentSource: null,
+        digestRequestedAt: null,
+        digestSyncedAt: at(3),
+        digestSubscriber: null,
+      })
+      expect(await pendingDigestMembers(store, { after: member.id - 1, limit: 1 })).not.toContain(
+        member.id,
+      )
+    })
+
+    it('leave a member the deletion log names to the deletion log, in the sync and the check (M2)', async () => {
+      const uuid = '0b2c6f8e-3f0a-4c1e-9d55-000000000061'
+      const member = await newMember()
+      await setDigest(store, member.id, { optIn: true, version: '2026-09-27' }, NOW)
+      await storeDigestSync(store, member.id, { id: 61, uuid }, at(1))
+      const held = async () =>
+        (await digestHolders(store, { after: 0, limit: 1000 })).some(
+          (holder) => holder.memberId === member.id,
+        )
+      expect(await held()).toBe(true)
+      await setDigest(store, member.id, { optIn: false }, at(2))
+      expect(await pendingDigestMembers(store, { after: 0, limit: 1000 })).toContain(member.id)
+      // A restore brought the deleted account back: the log names it, created before the deletion.
+      await db.execute(sql`
+        insert into deletion_log (target_collection, target_id, action, at)
+        values ('members', ${member.id}, 'delete', ${at(3).toISOString()})`)
+      expect(await pendingDigestMembers(store, { after: 0, limit: 1000 })).not.toContain(member.id)
+      expect(await lockPendingDigest(store, member.id)).toBeNull()
+      await setDigest(store, member.id, { optIn: true, version: '2026-09-27' }, at(2))
+      await storeDigestSync(store, member.id, { id: 61, uuid }, at(2))
+      expect(await held()).toBe(false)
+      await db.execute(sql`
+        delete from deletion_log where target_collection = 'members' and target_id = ${member.id}`)
+      expect(await held()).toBe(true)
     })
 
     it('store the preferred subfields that are active subfields, at most 12, and replace them', async () => {
@@ -1491,6 +1701,110 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
   })
 
   // Last: it drops the member tables and makes them again, empty.
+  describe("Glia Notes' consent records (M2)", () => {
+    const uuid = (n: number) => `0b2c6f8e-3f0a-4c1e-9d55-${String(n).padStart(12, '0')}`
+    const named = (n: number) => ({ subscriberUuid: uuid(n), subscriberId: n })
+    const record = (
+      n: number,
+      event: 'requested' | 'confirmed' | 'unsubscribed',
+      source: 'newsletter-form' | 'account' | 'unsubscribe-link' | 'one-click' | 'listmonk',
+      when: Date,
+      consentVersion: string | null = event === 'unsubscribed' ? null : '2026-09-27',
+    ) => ({ ...named(n), event, source, at: when, consentVersion })
+
+    it("read a subscriber's own records, oldest first, without the UUID or the ID", async () => {
+      // Written out of order, with another subscriber's beside them.
+      await recordConsent(
+        store,
+        [
+          record(71, 'confirmed', 'newsletter-form', at(2)),
+          record(72, 'requested', 'account', at(1)),
+          record(71, 'requested', 'newsletter-form', at(1)),
+          record(71, 'unsubscribed', 'one-click', at(3)),
+        ],
+        NOW,
+      )
+      expect(await consentRecordsOf(store, uuid(71))).toEqual([
+        { event: 'requested', consentVersion: '2026-09-27', source: 'newsletter-form', at: at(1) },
+        { event: 'confirmed', consentVersion: '2026-09-27', source: 'newsletter-form', at: at(2) },
+        { event: 'unsubscribed', consentVersion: null, source: 'one-click', at: at(3) },
+      ])
+      expect(await consentRecordsOf(store, uuid(79))).toEqual([])
+      await expect(consentRecordsOf(store, 'not-a-uuid')).rejects.toThrow(NewsletterStoreError)
+      expect(await newsletterInUse(store)).toBe(true)
+    })
+
+    it("tell a withdrawal on the site from an end listmonk noted, and a running consent's details", async () => {
+      await recordConsent(
+        store,
+        [
+          record(73, 'requested', 'newsletter-form', at(1)),
+          record(73, 'confirmed', 'newsletter-form', at(2)),
+        ],
+        NOW,
+      )
+      expect(await withdrawalOf(store, uuid(73))).toBeNull()
+      expect(await runningConsent(store, uuid(73))).toEqual({
+        version: '2026-09-27',
+        source: 'newsletter-form',
+        requestedAt: at(1),
+        confirmedAt: at(2),
+      })
+      // listmonk lost it: not a withdrawal, and no longer running.
+      await recordConsent(store, [record(73, 'unsubscribed', 'listmonk', at(3))], NOW)
+      expect(await withdrawalOf(store, uuid(73))).toBeNull()
+      expect(await runningConsent(store, uuid(73))).toBeNull()
+      // A withdrawal on the site, by any way but listmonk's.
+      for (const [n, source] of [
+        [74, 'account'],
+        [75, 'unsubscribe-link'],
+        [76, 'one-click'],
+      ] as const) {
+        await recordConsent(
+          store,
+          [record(n, 'confirmed', 'account', at(1)), record(n, 'unsubscribed', source, at(4))],
+          NOW,
+        )
+        expect(await withdrawalOf(store, uuid(n)), source).toEqual(at(4))
+      }
+      expect(await withdrawalOf(store, uuid(78))).toBeNull()
+      expect(await runningConsent(store, uuid(78))).toBeNull()
+    })
+
+    it('unlink records without touching their time of change, and end no unlinked subscription', async () => {
+      await recordConsent(
+        store,
+        [
+          record(77, 'requested', 'newsletter-form', at(1)),
+          record(77, 'confirmed', 'newsletter-form', at(2)),
+        ],
+        NOW,
+      )
+      const before = await rows<{ id: number; updated_at: unknown }>(
+        sql`select id, updated_at from consent_log where subscriber_uuid = ${uuid(77)} order by id`,
+      )
+      expect(await unlinkConsent(store, [uuid(77)], at(5))).toBe(2)
+      const after = await rows<{ id: number; updated_at: unknown; subscriber_id: unknown }>(
+        sql`select id, updated_at, subscriber_id from consent_log
+          where id in (${sql.join(
+            before.map((row) => sql`${row.id}`),
+            sql`, `,
+          )}) order by id`,
+      )
+      expect(after.map((row) => [row.id, String(row.updated_at), row.subscriber_id])).toEqual(
+        before.map((row) => [row.id, String(row.updated_at), null]),
+      )
+      // An end noted afterwards (a check of listmonk that read the records before the erasure)
+      // writes nothing that names the erased subscriber again.
+      for (const source of ['listmonk', 'account'] as const) {
+        expect(
+          await recordEndedSubscriptions(store, [{ uuid: uuid(77), id: 77 }], at(6), source),
+        ).toBe(0)
+      }
+      expect(await consentRecordsOf(store, uuid(77))).toEqual([])
+    })
+  })
+
   describe('the migrations', () => {
     it('of the member tasks can be undone and redone, with the trigger that keeps a recorded send', async () => {
       const trigger = () =>
@@ -1647,12 +1961,17 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
         count(sql`
           select count(*)::int as n from information_schema.columns
           where table_name = 'members' and column_name in ('digest_synced_at',
-            'digest_subscriber_id', 'digest_subscriber_uuid')`)
+            'digest_subscriber_id', 'digest_subscriber_uuid', 'digest_consent_source',
+            'digest_requested_at', 'digest_adopt_check_at')`)
       const enumLabels = (type: string) =>
         rows<{ label: string }>(sql`
           select e.enumlabel as label from pg_enum e join pg_type t on t.oid = e.enumtypid
           where t.typname = ${type} order by e.enumsortorder`).then((r) => r.map((x) => x.label))
-      expect(await columns()).toBe(3)
+      expect(await columns()).toBe(6)
+      // A member who is on keeps a consent the constraints accept after the redo: the account's
+      // settings, at the time of the choice.
+      const on = await newMember()
+      await setDigest(store, on.id, { optIn: true, version: '2026-09-27' }, at(1))
       // Rows of the new values, which the old types cannot hold, go with the down; others stay.
       await db.execute(sql`
         insert into deletion_log (target_collection, target_id, action, at)
@@ -1668,7 +1987,12 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       ).toBe(1)
       await membersSync.up({ db } as never)
       await membersSyncConstraints.up({ db } as never)
-      expect(await columns()).toBe(3)
+      expect(await columns()).toBe(6)
+      expect(await findMember(store, { id: on.id })).toMatchObject({
+        digestOptIn: true,
+        digestConsentSource: 'account',
+        digestRequestedAt: at(1),
+      })
       expect(await enumLabels('enum_deletion_log_action')).toContain('unlink')
       expect(await enumLabels('enum_payload_jobs_task_slug')).toEqual(
         expect.arrayContaining(['syncGliaNotes', 'checkGliaNotesMembers']),

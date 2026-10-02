@@ -17,6 +17,7 @@ import {
 } from '@/lib/members/store'
 import { isToken } from '@/lib/members/tokens'
 import { eraseNewsletter, finishNewsletterErasure } from '@/lib/newsletter/erase'
+import { type ListmonkClient, listmonkFromEnv } from '@/lib/newsletter/listmonk'
 import { PERSONAL_RIGHTS } from '@/lib/reports/status'
 import type { DataRequest } from '@/payload-types'
 
@@ -37,7 +38,8 @@ import { AUTOMATIC_ACTION } from './status'
 //     decision and each deletion is logged (the `logDeletions()` hook);
 //   - its Glia Notes subscription, and the subscriber of a member with it (`eraseNewsletter`, M2:
 //     logged deletions in listmonk, deleted there after the commit, and unlinked consent records;
-//     listmonk unreachable fails the whole confirmation, and the link still works);
+//     listmonk unreachable, or not configured while there may be something to erase, fails the
+//     whole confirmation, and the link still works);
 //   - a member account with it (`deleteMember`, which logs it too);
 //   - the address on the reports sent with it, each logged as `clear-email`, except requests about
 //     personal rights (Law No. 5651), whose handling we must be able to show: they keep it for
@@ -91,6 +93,7 @@ export async function eraseByAddress(
   db: TransactionDb,
   email: string,
   now: Date,
+  listmonk: ListmonkClient | null = listmonkFromEnv(),
 ): Promise<AddressErasure> {
   const at = now.toISOString()
 
@@ -115,6 +118,7 @@ export async function eraseByAddress(
     db,
     { email, member: member && { id: member.id, subscriber: member.digestSubscriber } },
     now,
+    listmonk,
   )
   const accountDeleted =
     member && (await deleteMember(db, member.id, { reason: 'request' }, now)) ? 1 : 0
@@ -200,12 +204,14 @@ async function settle(
 /**
  * Uses a data-request link (see above): what happened, or null when the link is unknown, used,
  * expired or made for something else. After the commit, the erased Glia Notes subscribers are
- * deleted in listmonk (best effort: the deletion log repeats it).
+ * deleted in listmonk (best effort: the deletion log repeats it). `listmonk` is the newsletter's
+ * client (the environment's by default; tests pass their own).
  */
 export async function confirmDataRequest(
   payload: Payload,
   token: string | null | undefined,
   now: Date,
+  listmonk: ListmonkClient | null = listmonkFromEnv(),
 ): Promise<Confirmation | null> {
   let subscriberIds: number[] = []
   const confirmation = await inTransaction(
@@ -216,7 +222,7 @@ export async function confirmDataRequest(
       const pending = pendingRequest(link)
       if (!pending) throw new UnreadableRequest()
       if (pending.kind === 'deletion') {
-        const erased = await eraseByAddress(payload, req, db, link.email, now)
+        const erased = await eraseByAddress(payload, req, db, link.email, now, listmonk)
         const { outcome } = erased
         await settle(
           payload,
@@ -240,7 +246,7 @@ export async function confirmDataRequest(
       return { kind: 'registered' }
     },
   )
-  await finishNewsletterErasure(subscriberIds)
+  await finishNewsletterErasure(subscriberIds, listmonk)
   return confirmation
 }
 

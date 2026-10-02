@@ -9,7 +9,7 @@ import { applyDeletionLog } from '@/jobs/maintenance/applyDeletionLog'
 import { purgeDataRequests } from '@/jobs/maintenance/purgeRetention'
 import { sendRequestEmails } from '@/jobs/maintenance/sendRequestEmails'
 import { requestAddressHash } from '@/lib/data-requests/address'
-import { confirmDataRequest } from '@/lib/data-requests/confirm'
+import { confirmDataRequest as confirmWith } from '@/lib/data-requests/confirm'
 import {
   discardDataRequest,
   recordAndSendDataRequest,
@@ -26,6 +26,7 @@ import {
 } from '@/lib/members/store'
 
 import { DAY, HOUR, rows, suggestion, testPayload, unique } from './helpers'
+import { noSubscribers } from './listmonk'
 import { type Mailpit, mailpitAvailable, startMailpit } from './mailpit'
 
 // The data-request form's requests (M4b, D49; the M4b design §7.8, §7.9, §9) against a real,
@@ -66,6 +67,14 @@ afterAll(async () => {
 })
 
 const address = (prefix: string) => `${unique(prefix)}@example.org`
+
+/**
+ * Confirms a data request as the route does, with a listmonk that has no subscribers (Glia Notes'
+ * erasure is tested with a real one in glia-notes-members.db.test.ts; without listmonk configured,
+ * an erasure refuses once the shared database holds newsletter records).
+ */
+const confirmDataRequest = (token: string | null | undefined, now: Date) =>
+  confirmWith(payload, token, now, noSubscribers)
 
 const iso = (value: Date | string | null | undefined) =>
   value == null ? null : new Date(value).toISOString()
@@ -247,7 +256,7 @@ describe('confirming a deletion', () => {
     const unrelated = await report(address('unrelated'))
 
     const { requestId, token } = await recordDataRequest(payload, request(email), SECRET, now)
-    const confirmed = await confirmDataRequest(payload, token, now)
+    const confirmed = await confirmDataRequest(token, now)
     const outcome = {
       suggestionsDeleted: 1,
       accountDeleted: 1,
@@ -298,7 +307,7 @@ describe('confirming a deletion', () => {
     expect(years).toBeLessThan(2.01)
 
     // The link worked once.
-    expect(await confirmDataRequest(payload, token, now)).toBeNull()
+    expect(await confirmDataRequest(token, now)).toBeNull()
   })
 
   it('records nothing deleted for an address with no data, and still closes the request', async () => {
@@ -309,7 +318,7 @@ describe('confirming a deletion', () => {
       SECRET,
       now,
     )
-    expect(await confirmDataRequest(payload, token, now)).toEqual({
+    expect(await confirmDataRequest(token, now)).toEqual({
       kind: 'deleted',
       outcome: {
         suggestionsDeleted: 0,
@@ -343,7 +352,7 @@ describe('confirming a deletion', () => {
       CREATE TRIGGER ${name} BEFORE UPDATE ON data_requests
         FOR EACH ROW EXECUTE FUNCTION ${name}()`)
     try {
-      await expect(confirmDataRequest(payload, token, now)).rejects.toThrow()
+      await expect(confirmDataRequest(token, now)).rejects.toThrow()
     } finally {
       await store.execute(sql`DROP TRIGGER IF EXISTS ${name} ON data_requests`)
       await store.execute(sql`DROP FUNCTION IF EXISTS ${name}()`)
@@ -377,7 +386,7 @@ describe('confirming a deletion', () => {
     await store.execute(sql`
       update email_tokens set request_data = '{"kind":"remove"}'::jsonb
       where request_id = ${requestId}`)
-    await expect(confirmDataRequest(payload, token, now)).rejects.toThrow()
+    await expect(confirmDataRequest(token, now)).rejects.toThrow()
     expect(await findEmailToken(store, token, now)).not.toBeNull()
     expect(await rows(payload, sql`select id from submissions where id = ${sent.id}`)).toHaveLength(
       1,
@@ -388,9 +397,9 @@ describe('confirming a deletion', () => {
   it('works only for its own purpose and before it expires', async () => {
     const now = new Date()
     const { token } = await recordDataRequest(payload, request(address('late')), SECRET, now)
-    expect(await confirmDataRequest(payload, token, new Date(now.getTime() + DAY + 1))).toBeNull()
-    expect(await confirmDataRequest(payload, 'x'.repeat(43), now)).toBeNull()
-    expect(await confirmDataRequest(payload, null, now)).toBeNull()
+    expect(await confirmDataRequest(token, new Date(now.getTime() + DAY + 1))).toBeNull()
+    expect(await confirmDataRequest('x'.repeat(43), now)).toBeNull()
+    expect(await confirmDataRequest(null, now)).toBeNull()
   })
 })
 
@@ -406,7 +415,7 @@ describe('confirming another request', () => {
       SECRET,
       received,
     )
-    expect(await confirmDataRequest(payload, token, new Date())).toEqual({ kind: 'registered' })
+    expect(await confirmDataRequest(token, new Date())).toEqual({ kind: 'registered' })
     const saved = await record(requestId)
     expect(saved).toMatchObject({
       kind: 'access',
@@ -435,7 +444,7 @@ describe('confirming another request', () => {
       now,
     )
     await store.execute(sql`delete from data_requests where id = ${requestId}`)
-    expect(await confirmDataRequest(payload, token, now)).toEqual({ kind: 'registered' })
+    expect(await confirmDataRequest(token, now)).toEqual({ kind: 'registered' })
     const [found, ...more] = await rows<RequestRow>(
       payload,
       sql`select * from data_requests where email = ${email}`,
@@ -545,7 +554,7 @@ describe('what an editor can do to a request', () => {
       SECRET,
       now,
     )
-    await confirmDataRequest(payload, token, now)
+    await confirmDataRequest(token, now)
     await editorSave(requestId, { status: 'in-progress', actionNote: 'Sent the copy by email.' })
     expect(await record(requestId)).toMatchObject({
       status: 'in-progress',
@@ -572,7 +581,7 @@ describe('what an editor can do to a request', () => {
       const save = editorSave(requestId, { status: 'unconfirmed' })
       try {
         await held.reached
-        expect((await confirmDataRequest(payload, token, now))?.kind).toBe(
+        expect((await confirmDataRequest(token, now))?.kind).toBe(
           fields.kind === 'deletion' ? 'deleted' : 'registered',
         )
       } finally {
@@ -594,7 +603,7 @@ describe('what an editor can do to a request', () => {
     // Nor can SQL; and what the confirmation stored stays.
     const email = address('stale-sql')
     const { requestId, token } = await recordDataRequest(payload, request(email), SECRET, now)
-    await confirmDataRequest(payload, token, now)
+    await confirmDataRequest(token, now)
     expect(
       await sqlError(sql`
         update data_requests set status = 'unconfirmed', email = null, outcome = null,
@@ -674,7 +683,7 @@ describe('the deletion log, after a restore', () => {
     )
     const { created_at: sentAt, url } = restored!
     const { token } = await recordDataRequest(payload, request(email), SECRET, now)
-    await confirmDataRequest(payload, token, now)
+    await confirmDataRequest(token, now)
 
     // A restore from before the deletion brings the suggestion and the address back.
     await store.execute(sql`
@@ -705,7 +714,7 @@ describe('the record of a confirmed deletion', () => {
       SECRET,
       now,
     )
-    await confirmDataRequest(payload, token, now)
+    await confirmDataRequest(token, now)
     expect(await purgeDataRequests(payload, new Date(now.getTime() + 700 * DAY))).toBeDefined()
     expect(await record(requestId)).not.toBeNull()
     const later = new Date(now.getTime() + 732 * DAY)
@@ -725,7 +734,7 @@ describe.skipIf(!canStartMailpit)(
       await suggestion(payload, { email, consent: true })
       await report(email, 'personal-rights')
       const { requestId, token } = await recordDataRequest(payload, request(email), SECRET, now)
-      await confirmDataRequest(payload, token, now)
+      await confirmDataRequest(token, now)
 
       // Not accepted (the server asks to try later): nothing is marked, and it waits.
       await mailpit!.refuseAll(451)
@@ -759,14 +768,14 @@ describe.skipIf(!canStartMailpit)(
         SECRET,
         new Date(now.getTime() - 8 * DAY),
       )
-      await confirmDataRequest(payload, first.token, new Date(now.getTime() - 8 * DAY + 1000))
+      await confirmDataRequest(first.token, new Date(now.getTime() - 8 * DAY + 1000))
       const second = await recordDataRequest(
         payload,
         request(recent),
         SECRET,
         new Date(now.getTime() - 6 * DAY),
       )
-      await confirmDataRequest(payload, second.token, new Date(now.getTime() - 6 * DAY + 1000))
+      await confirmDataRequest(second.token, new Date(now.getTime() - 6 * DAY + 1000))
       await sendRequestEmails(payload, now)
       expect(await mailpit!.to(old)).toEqual([])
       expect(await sentAt(first.requestId)).toBeNull()
@@ -782,7 +791,7 @@ describe.skipIf(!canStartMailpit)(
         SECRET,
         now,
       )
-      await confirmDataRequest(payload, token, now)
+      await confirmDataRequest(token, now)
       await sendRequestEmails(payload, new Date())
       expect(await mailpit!.to(email)).toEqual([])
     })

@@ -1724,6 +1724,9 @@ export interface Member {
   digestOptIn?: boolean | null;
   digestChangedAt?: string | null;
   digestConsentVersion?: string | null;
+  digestConsentSource?: ('account' | 'newsletter-form') | null;
+  digestRequestedAt?: string | null;
+  digestAdoptCheckAt?: string | null;
   digestSyncedAt?: string | null;
   digestSubscriberId?: number | null;
   digestSubscriberUuid?: string | null;
@@ -2339,6 +2342,9 @@ export interface MembersSelect<T extends boolean = true> {
   digestOptIn?: T;
   digestChangedAt?: T;
   digestConsentVersion?: T;
+  digestConsentSource?: T;
+  digestRequestedAt?: T;
+  digestAdoptCheckAt?: T;
   digestSyncedAt?: T;
   digestSubscriberId?: T;
   digestSubscriberUuid?: T;
@@ -2740,6 +2746,7 @@ export interface TaskSyncGliaNotes {
   output: {
     subscribed?: number | null;
     unsubscribed?: number | null;
+    adopted?: number | null;
     failed?: number | null;
     skipped?: boolean | null;
   };
@@ -2753,6 +2760,7 @@ export interface TaskCheckGliaNotesMembers {
   output: {
     checked?: number | null;
     pending?: number | null;
+    off?: number | null;
     failed?: number | null;
     skipped?: boolean | null;
   };

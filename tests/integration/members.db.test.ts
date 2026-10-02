@@ -27,6 +27,7 @@ import {
 import { monthsBeforeUtc, warningDeadlineDay } from '@/lib/retention/rules'
 
 import { DAY, institution, job, rows, suggestion, testPayload, unique } from './helpers'
+import { noSubscribers } from './listmonk'
 import { type Mailpit, mailpitAvailable, startMailpit } from './mailpit'
 
 // The member tasks (M4b, D49; the M4b design §7.6, §7.7, §7.9, §9) against a real, migrated
@@ -510,7 +511,7 @@ describe('deleting one’s own account', () => {
       now,
     )
     await createSession(store, leaving.id, now)
-    expect(await deleteOwnAccount(payload, leaving, now)).toBe(true)
+    expect(await deleteOwnAccount(payload, leaving, now, noSubscribers)).toBe(true)
     expect(await findMember(store, { id: leaving.id })).toBeNull()
     expect(await logged('members', leaving.id)).toEqual(['delete'])
     const [record, ...others] = await rows<Record<string, unknown>>(
@@ -538,7 +539,7 @@ describe('deleting one’s own account', () => {
     expect(record!.purge_at).not.toBeNull()
 
     // Pressed again (another tab): nothing more is recorded.
-    expect(await deleteOwnAccount(payload, leaving, now)).toBe(false)
+    expect(await deleteOwnAccount(payload, leaving, now, noSubscribers)).toBe(false)
     expect(
       await rows(payload, sql`select id from data_requests where email = ${leaving.email}`),
     ).toHaveLength(1)
@@ -551,7 +552,7 @@ describe('deleting one’s own account', () => {
       payload,
       sql`select count(*)::int as n from data_requests where source = 'account' and email is null`,
     )
-    expect(await deleteOwnAccount(payload, orcidOnly, now)).toBe(true)
+    expect(await deleteOwnAccount(payload, orcidOnly, now, noSubscribers)).toBe(true)
     const after = await rows<{ n: number }>(
       payload,
       sql`select count(*)::int as n from data_requests where source = 'account' and email is null`,
@@ -577,7 +578,7 @@ describe.skipIf(!canStartMailpit)('sendRequestEmails, through Mailpit', () => {
       { email: address('deleted'), emailVerifiedBy: 'link' },
       now,
     )
-    await deleteOwnAccount(payload, leaving, now)
+    await deleteOwnAccount(payload, leaving, now, noSubscribers)
     // Not accepted (the server asks to try later): nothing is marked, and it waits.
     await mailpit!.refuseAll(451)
     try {
@@ -617,8 +618,8 @@ describe.skipIf(!canStartMailpit)('sendRequestEmails, through Mailpit', () => {
       { email: address('recent'), emailVerifiedBy: 'link' },
       now,
     )
-    await deleteOwnAccount(payload, old, new Date(now.getTime() - 8 * DAY))
-    await deleteOwnAccount(payload, recent, new Date(now.getTime() - 6 * DAY))
+    await deleteOwnAccount(payload, old, new Date(now.getTime() - 8 * DAY), noSubscribers)
+    await deleteOwnAccount(payload, recent, new Date(now.getTime() - 6 * DAY), noSubscribers)
     await sendRequestEmails(payload, now)
     expect(await mailpit!.to(old.email!)).toEqual([])
     expect(await sentAt(old.email!)).toBeNull()

@@ -160,7 +160,7 @@ export async function applyDeletionLog(payload: Payload, now: Date) {
   counts.reportAddresses = addresses.done
   counts.failed += suggestions.failed + reports.failed + addresses.failed
   for (let batch = 0; batch < MAX_BATCHES; batch++) {
-    const unlinked = await unlinkLoggedConsent(db, now, BATCH)
+    const unlinked = await unlinkLoggedConsent(db, BATCH)
     counts.consentUnlinked += unlinked
     if (unlinked < BATCH) break
   }

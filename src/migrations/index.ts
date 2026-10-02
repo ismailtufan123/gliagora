@@ -136,6 +136,6 @@ export const migrations = [
   {
     up: migration_20261002_210000_members_sync_constraints.up,
     down: migration_20261002_210000_members_sync_constraints.down,
-    name: '20261002_210000_members_sync_constraints',
+    name: '20261002_210000_members_sync_constraints'
   },
 ];

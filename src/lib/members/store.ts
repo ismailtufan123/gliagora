@@ -148,10 +148,19 @@ export type MemberRecord = {
   digestChangedAt: Date | null
   /** The date of the consent text the member agreed to when they last chose the digest. */
   digestConsentVersion: string | null
+  /**
+   * Where the consent behind "on" was asked for and confirmed: the account's settings, or the
+   * newsletter page (a signup the account holds); null while off.
+   */
+  digestConsentSource: DigestConsentSource | null
+  /** When that consent was asked for (the form's time, or the choice in the settings). */
+  digestRequestedAt: Date | null
   /** When listmonk last received the choice (null: never, or a change waits for the sync). */
   digestSyncedAt: Date | null
   /** listmonk's subscriber that holds the member's Glia Notes, or null. */
   digestSubscriber: DigestSubscriber | null
+  /** When an address was proven that the sync has not yet looked for in Glia Notes, or null. */
+  digestAdoptCheckAt: Date | null
   lastSeenAt: Date
   deletionWarnedAt: Date | null
   warningRefusedAt: Date | null
@@ -169,9 +178,12 @@ type MemberRow = {
   digest_opt_in: boolean | null
   digest_changed_at: unknown
   digest_consent_version: string | null
+  digest_consent_source: DigestConsentSource | null
+  digest_requested_at: unknown
   digest_synced_at: unknown
   digest_subscriber_id: number | string | null
   digest_subscriber_uuid: string | null
+  digest_adopt_check_at: unknown
   last_seen_at: unknown
   deletion_warned_at: unknown
   warning_refused_at: unknown
@@ -179,7 +191,7 @@ type MemberRow = {
 }
 
 const MEMBER_COLUMNS = sql.raw(
-  'm.id, m.email, m.email_verified_at, m.email_verified_by, m.google_id, m.orcid_id, m.display_name, m.digest_opt_in, m.digest_changed_at, m.digest_consent_version, m.digest_synced_at, m.digest_subscriber_id, m.digest_subscriber_uuid, m.last_seen_at, m.deletion_warned_at, m.warning_refused_at, m.created_at',
+  'm.id, m.email, m.email_verified_at, m.email_verified_by, m.google_id, m.orcid_id, m.display_name, m.digest_opt_in, m.digest_changed_at, m.digest_consent_version, m.digest_consent_source, m.digest_requested_at, m.digest_synced_at, m.digest_subscriber_id, m.digest_subscriber_uuid, m.digest_adopt_check_at, m.last_seen_at, m.deletion_warned_at, m.warning_refused_at, m.created_at',
 )
 
 const toMember = (row: MemberRow): MemberRecord => ({
@@ -193,11 +205,14 @@ const toMember = (row: MemberRow): MemberRecord => ({
   digestOptIn: row.digest_opt_in === true,
   digestChangedAt: toDate(row.digest_changed_at),
   digestConsentVersion: row.digest_consent_version,
+  digestConsentSource: row.digest_consent_source,
+  digestRequestedAt: toDate(row.digest_requested_at),
   digestSyncedAt: toDate(row.digest_synced_at),
   digestSubscriber:
     row.digest_subscriber_id != null && row.digest_subscriber_uuid
       ? { id: Number(row.digest_subscriber_id), uuid: row.digest_subscriber_uuid }
       : null,
+  digestAdoptCheckAt: toDate(row.digest_adopt_check_at),
   lastSeenAt: toDate(row.last_seen_at) as Date,
   deletionWarnedAt: toDate(row.deletion_warned_at),
   warningRefusedAt: toDate(row.warning_refused_at),
@@ -234,7 +249,9 @@ export function findMember(
 /**
  * Creates a member after "Create account" (or an email link to a new address). A concurrent
  * create with the same address or identity is refused by a unique index (`isUniqueViolation`):
- * the caller then signs in to the member that won.
+ * the caller then signs in to the member that won. A member with an address is marked for the
+ * sync's one-time look for that address in Glia Notes (`digest_adopt_check_at`; M2, D50): a
+ * subscription it made on the newsletter page before the account existed is then the account's.
  */
 export function createMember(
   db: MemberDb,
@@ -256,9 +273,9 @@ export function createMember(
     const at = iso(now)
     const { rows } = await db.execute<MemberRow>(sql`
       INSERT INTO members AS m (email, email_verified_at, email_verified_by, google_id, orcid_id,
-        display_name, digest_opt_in, last_seen_at, created_at, updated_at)
+        display_name, digest_opt_in, digest_adopt_check_at, last_seen_at, created_at, updated_at)
       VALUES (${email}, ${email ? at : null}, ${verifiedBy}, ${google}, ${orcid}, ${name}, false,
-        ${at}, ${at}, ${at})
+        ${email ? at : null}, ${at}, ${at}, ${at})
       RETURNING ${MEMBER_COLUMNS}`)
     return toMember(rows[0]!)
   })
@@ -297,9 +314,13 @@ export function applyChanges(
       const by = checked(z.enum(['link', 'google']), changes.emailVerifiedBy, 'emailVerifiedBy')
       sets.push(sql`email = ${value}, email_verified_at = ${iso(now)}, email_verified_by = ${by}`)
       // Glia Notes goes to the new address: the sync moves the subscriber (M2, D50). The choice
-      // and its time stay as they were (the export shows when the member made it).
+      // and its time stay as they were (the export shows when the member made it). A new address
+      // is also looked for once in Glia Notes: a subscription it has through the newsletter page
+      // is then the account's (src/lib/newsletter/members.ts).
       sets.push(sql`digest_synced_at = CASE WHEN digest_opt_in AND email IS DISTINCT FROM ${value}
         THEN NULL ELSE digest_synced_at END`)
+      sets.push(sql`digest_adopt_check_at = CASE WHEN email IS DISTINCT FROM ${value}
+        THEN ${iso(now)}::timestamptz ELSE digest_adopt_check_at END`)
       // A link proves the address and replaces an earlier one; Google's only fills a gap.
       if (by === 'google') guards.push(sql`(email IS NULL OR email = ${value})`)
     }
@@ -385,11 +406,13 @@ export function setDigest(
           UPDATE members
           SET digest_opt_in = true, digest_changed_at = ${at},
             digest_consent_version = ${checked(z.string().regex(CONSENT_VERSION_PATTERN), choice.version, 'version')},
+            digest_consent_source = 'account', digest_requested_at = ${at},
             digest_synced_at = NULL, updated_at = ${at}
           WHERE id = ${member} AND email IS NOT NULL AND email_verified_at IS NOT NULL
           RETURNING id`)
       : await db.execute<{ id: number }>(sql`
           UPDATE members SET digest_opt_in = false, digest_changed_at = ${at},
+            digest_consent_source = NULL, digest_requested_at = NULL,
             digest_synced_at = NULL, updated_at = ${at}
           WHERE id = ${member}
           RETURNING id`)
@@ -404,44 +427,77 @@ export function setDigest(
 /** listmonk's subscriber that holds a member's Glia Notes. */
 export type DigestSubscriber = { id: number; uuid: string }
 
+/** Where the consent behind a member's "on" was asked for and confirmed. */
+export type DigestConsentSource = 'account' | 'newsletter-form'
+
+/** The consent of a subscription the account takes over (the newsletter page's records). */
+export type AdoptedConsent = {
+  version: string
+  source: DigestConsentSource
+  requestedAt: Date
+  confirmedAt: Date
+}
+
 const digestSubscriber = z.object({
   id: z.number().int().positive().max(SUBSCRIBER_ID_MAX),
   uuid: z.string().regex(SUBSCRIBER_UUID_PATTERN),
 })
+
+const consentVersion = z.string().regex(CONSENT_VERSION_PATTERN)
 
 /** The rule that a member's choice waits for the sync (the same as the index's, if one is added). */
 const DIGEST_PENDING = sql.raw(
   'm.digest_changed_at IS NOT NULL AND (m.digest_synced_at IS NULL OR m.digest_synced_at < m.digest_changed_at)',
 )
 
-/** Members whose Glia Notes choice waits for the sync, by ID. */
+/**
+ * A member the deletion log names as deleted, whose row a restore brought back (created no later
+ * than the logged deletion, as `revivedMembers` reads it): `applyDeletionLog` deletes it again, so
+ * neither the sync nor the daily check touches its Glia Notes meanwhile.
+ */
+const REVIVED = sql.raw(
+  "EXISTS (SELECT 1 FROM deletion_log l WHERE l.target_collection = 'members' AND l.action = 'delete' AND l.target_id = m.id AND m.created_at <= l.at)",
+)
+
+/** What the sync has to do for a member: a choice waits, or a newly proven address. */
+const DIGEST_WAITING = sql`(${DIGEST_PENDING} OR m.digest_adopt_check_at IS NOT NULL) AND NOT ${REVIVED}`
+
+/** Whether the member's choice itself waits for the sync (DIGEST_PENDING, read from the record). */
+export const choiceWaits = (member: Pick<MemberRecord, 'digestChangedAt' | 'digestSyncedAt'>) =>
+  member.digestChangedAt !== null &&
+  (member.digestSyncedAt === null || member.digestSyncedAt < member.digestChangedAt)
+
+/** Members the sync has something to do for (a waiting choice, or an address to look for), by ID. */
 export function pendingDigestMembers(db: MemberDb, at: Page): Promise<number[]> {
   return guarded(async () => {
     const { after, limit } = page(at)
     const { rows } = await db.execute<{ id: number }>(sql`
-      SELECT m.id FROM members m WHERE m.id > ${after} AND ${DIGEST_PENDING}
+      SELECT m.id FROM members m WHERE m.id > ${after} AND ${DIGEST_WAITING}
       ORDER BY m.id LIMIT ${limit}`)
     return rows.map((row) => Number(row.id))
   })
 }
 
 /**
- * The member, locked until the caller's transaction ends, if their choice still waits for the sync
- * and no other transaction holds the row (`SKIP LOCKED`: the task and the attempt right after the
- * settings never work on one member at once). Null otherwise.
+ * The member, locked until the caller's transaction ends, if the sync still has something to do
+ * for them and no other transaction holds the row (`SKIP LOCKED`: the task and the attempt right
+ * after the settings never work on one member at once). Null otherwise.
  */
 export function lockPendingDigest(db: MemberDb, memberId: number): Promise<MemberRecord | null> {
   return guarded(async () => {
     const { rows } = await db.execute<MemberRow>(sql`
       SELECT ${MEMBER_COLUMNS} FROM members m
-      WHERE m.id = ${checked(id, memberId, 'id')} AND ${DIGEST_PENDING}
+      WHERE m.id = ${checked(id, memberId, 'id')} AND ${DIGEST_WAITING}
       FOR UPDATE SKIP LOCKED`)
     const row = first(rows)
     return row ? toMember(row) : null
   })
 }
 
-/** After the sync: listmonk's subscriber that holds the member's Glia Notes (or none), synced now. */
+/**
+ * After the sync: listmonk's subscriber that holds the member's Glia Notes (or none), synced now;
+ * the address has been looked for, too.
+ */
 export function storeDigestSync(
   db: MemberDb,
   memberId: number,
@@ -453,27 +509,70 @@ export function storeDigestSync(
     await db.execute(sql`
       UPDATE members SET digest_subscriber_id = ${held?.id ?? null},
         digest_subscriber_uuid = ${held?.uuid ?? null}, digest_synced_at = ${iso(now)},
-        updated_at = ${iso(now)}
+        digest_adopt_check_at = NULL, updated_at = ${iso(now)}
       WHERE id = ${checked(id, memberId, 'id')}`)
   })
 }
 
+/** The sync looked for the member's address in Glia Notes and found nothing to take over. */
+export function clearAdoptCheck(db: MemberDb, memberId: number, now: Date): Promise<void> {
+  return guarded(async () => {
+    await db.execute(sql`
+      UPDATE members SET digest_adopt_check_at = NULL, updated_at = ${iso(now)}
+      WHERE id = ${checked(id, memberId, 'id')} AND digest_adopt_check_at IS NOT NULL`)
+  })
+}
+
 /**
- * Whether a member other than `memberId` has this address: listmonk's subscriber with it is then
- * that member's Glia Notes, not `memberId`'s. Any address listmonk holds may be asked about; one the
- * site could never store belongs to no member.
+ * The account takes over the subscription its address has through the newsletter page (the
+ * sync's look for a newly proven address): Glia Notes on, with that subscriber and the consent the
+ * newsletter page recorded for it (its version, where and when it was asked for and confirmed; no
+ * new consent records), synced. Only while the member is off and names no subscriber, and the
+ * address is still the one looked for. Returns whether it did.
  */
-export function addressOfOtherMember(
+export function adoptDigest(
   db: MemberDb,
+  memberId: number,
   email: string,
-  memberId: number | null,
+  subscriber: DigestSubscriber,
+  consent: AdoptedConsent,
+  now: Date,
 ): Promise<boolean> {
   return guarded(async () => {
-    const address = normaliseEmail(email)
-    if (!address || address !== email) return false
+    const held = checked(digestSubscriber, subscriber, 'subscriber')
+    const version = checked(consentVersion, consent.version, 'version')
+    const source = checked(z.enum(['account', 'newsletter-form']), consent.source, 'source')
+    const confirmedAt = checked(z.date(), consent.confirmedAt, 'confirmedAt')
+    const requestedAt = checked(z.date(), consent.requestedAt, 'requestedAt')
+    const synced = new Date(Math.max(now.getTime(), confirmedAt.getTime()))
+    const { rows } = await db.execute<{ id: number }>(sql`
+      UPDATE members SET digest_opt_in = true, digest_changed_at = ${iso(confirmedAt)},
+        digest_consent_version = ${version}, digest_consent_source = ${source},
+        digest_requested_at = LEAST(${iso(requestedAt)}::timestamptz, ${iso(confirmedAt)}::timestamptz),
+        digest_subscriber_id = ${held.id}, digest_subscriber_uuid = ${held.uuid},
+        digest_synced_at = ${iso(synced)}, digest_adopt_check_at = NULL, updated_at = ${iso(now)}
+      WHERE id = ${checked(id, memberId, 'id')} AND email = ${checked(storedEmail, email, 'email')}
+        AND NOT digest_opt_in AND digest_subscriber_id IS NULL
+      RETURNING id`)
+    return rows.length === 1
+  })
+}
+
+/**
+ * Whether a member other than `memberId` names this subscriber as theirs: their Glia Notes then,
+ * which the sync of `memberId` never moves, deletes or takes over.
+ */
+export function subscriberHeldByOther(
+  db: MemberDb,
+  subscriber: DigestSubscriber,
+  memberId: number,
+): Promise<boolean> {
+  return guarded(async () => {
+    const held = checked(digestSubscriber, subscriber, 'subscriber')
     const { rows } = await db.execute<{ id: number }>(sql`
       SELECT id FROM members
-      WHERE email = ${address} AND id IS DISTINCT FROM ${memberId === null ? null : checked(id, memberId, 'id')}
+      WHERE digest_subscriber_id = ${held.id} AND digest_subscriber_uuid = ${held.uuid}
+        AND id <> ${checked(id, memberId, 'id')}
       LIMIT 1`)
     return rows.length > 0
   })
@@ -482,31 +581,61 @@ export function addressOfOtherMember(
 /**
  * A confirmed signup through the newsletter form (src/lib/newsletter/confirm.ts), in its
  * transaction: a member with that address has Glia Notes on from now, with the version of the
- * consent text the form showed and listmonk's subscriber, synced (the form's consent records stand
- * for the member's). A member whose row still names another subscriber (an address change the sync
- * has not carried yet) keeps it, waiting for the sync, which deletes it. Returns how many changed.
+ * consent text the form showed, when the form was sent, and listmonk's subscriber, synced (the
+ * form's consent records stand for the member's). A member whose row still names another
+ * subscriber (an address change the sync has not carried yet) keeps it, waiting for the sync,
+ * which deletes it. Returns how many changed.
  */
 export function joinDigestBySignup(
   db: MemberDb,
   email: string,
   subscriber: DigestSubscriber,
-  version: string,
+  consent: { version: string; requestedAt: Date },
   now: Date,
 ): Promise<number> {
   return guarded(async () => {
     const address = checked(storedEmail, email, 'email')
     const held = checked(digestSubscriber, subscriber, 'subscriber')
+    const requestedAt = checked(z.date(), consent.requestedAt, 'requestedAt')
     const at = iso(now)
     const same = sql`(digest_subscriber_id IS NULL
       OR (digest_subscriber_id = ${held.id} AND digest_subscriber_uuid = ${held.uuid}))`
     const { rows } = await db.execute<{ id: number }>(sql`
       UPDATE members SET digest_opt_in = true, digest_changed_at = ${at},
-        digest_consent_version = ${checked(z.string().regex(CONSENT_VERSION_PATTERN), version, 'version')},
+        digest_consent_version = ${checked(consentVersion, consent.version, 'version')},
+        digest_consent_source = 'newsletter-form',
+        digest_requested_at = LEAST(${iso(requestedAt)}::timestamptz, ${at}::timestamptz),
         digest_subscriber_id = CASE WHEN ${same} THEN ${held.id} ELSE digest_subscriber_id END,
         digest_subscriber_uuid = CASE WHEN ${same} THEN ${held.uuid} ELSE digest_subscriber_uuid END,
         digest_synced_at = CASE WHEN ${same} THEN ${at}::timestamptz ELSE NULL END,
-        updated_at = ${at}
+        digest_adopt_check_at = NULL, updated_at = ${at}
       WHERE email = ${address} AND email_verified_at IS NOT NULL
+      RETURNING id`)
+    return rows.length
+  })
+}
+
+/**
+ * A confirmed signup reused a subscriber listmonk already had for its address (src/lib/newsletter/
+ * confirm.ts, in its transaction): a member whose row names that subscriber while the member's
+ * address is another (an address change the sync has not carried yet) no longer holds it, so the
+ * sync never moves the new signup to the member's new address. The member's choice waits for the
+ * sync then, which subscribes the new address anew (or ends nothing, for "off"). A sync that holds
+ * such a member's row at this very moment is waited for. Returns how many it released.
+ */
+export function releaseDigestSubscriber(
+  db: MemberDb,
+  email: string,
+  subscriber: DigestSubscriber,
+  now: Date,
+): Promise<number> {
+  return guarded(async () => {
+    const held = checked(digestSubscriber, subscriber, 'subscriber')
+    const { rows } = await db.execute<{ id: number }>(sql`
+      UPDATE members SET digest_subscriber_id = NULL, digest_subscriber_uuid = NULL,
+        digest_synced_at = NULL, updated_at = ${iso(now)}
+      WHERE digest_subscriber_id = ${held.id} AND digest_subscriber_uuid = ${held.uuid}
+        AND email IS DISTINCT FROM ${checked(storedEmail, email, 'email')}
       RETURNING id`)
     return rows.length
   })
@@ -533,10 +662,11 @@ export function leaveDigestByUnsubscribe(
       OR (digest_subscriber_id = ${held.id} AND digest_subscriber_uuid = ${held.uuid}))`
     const { rows } = await db.execute<{ id: number }>(sql`
       UPDATE members SET digest_opt_in = false, digest_changed_at = ${at},
+        digest_consent_source = NULL, digest_requested_at = NULL,
         digest_subscriber_id = CASE WHEN ${same} THEN NULL ELSE digest_subscriber_id END,
         digest_subscriber_uuid = CASE WHEN ${same} THEN NULL ELSE digest_subscriber_uuid END,
         digest_synced_at = CASE WHEN ${same} THEN ${at}::timestamptz ELSE NULL END,
-        updated_at = ${at}
+        digest_adopt_check_at = NULL, updated_at = ${at}
       WHERE (digest_opt_in OR digest_subscriber_id IS NOT NULL)
         AND (email = ${address} OR (digest_subscriber_id = ${held.id}
           AND digest_subscriber_uuid = ${held.uuid}))
@@ -545,33 +675,79 @@ export function leaveDigestByUnsubscribe(
   })
 }
 
-/** A member with Glia Notes on, synced, and the subscriber listmonk should have for them. */
-export type DigestHolder = { memberId: number; subscriber: DigestSubscriber }
+/**
+ * The records show that the member withdrew the consent of the subscriber their row names, after
+ * the choice the row holds (a restore of the main database brought back an older row; src/lib/
+ * newsletter/members.ts): Glia Notes off, as of that withdrawal, synced, without a subscriber. No
+ * consent record is written (the withdrawal is on record) and listmonk is not asked. Only while
+ * the row still names that subscriber. Returns whether it did.
+ */
+export function endDigestByWithdrawal(
+  db: MemberDb,
+  holder: Pick<DigestHolder, 'memberId' | 'subscriber'>,
+  withdrawnAt: Date,
+  now: Date,
+): Promise<boolean> {
+  return guarded(async () => {
+    const held = checked(digestSubscriber, holder.subscriber, 'subscriber')
+    const withdrawn = checked(z.date(), withdrawnAt, 'withdrawnAt')
+    const synced = new Date(Math.max(now.getTime(), withdrawn.getTime()))
+    const { rows } = await db.execute<{ id: number }>(sql`
+      UPDATE members SET digest_opt_in = false,
+        digest_changed_at = GREATEST(digest_changed_at, ${iso(withdrawn)}::timestamptz),
+        digest_consent_source = NULL, digest_requested_at = NULL,
+        digest_subscriber_id = NULL, digest_subscriber_uuid = NULL,
+        digest_synced_at = ${iso(synced)}, digest_adopt_check_at = NULL, updated_at = ${iso(now)}
+      WHERE id = ${checked(id, holder.memberId, 'id')}
+        AND digest_subscriber_id = ${held.id} AND digest_subscriber_uuid = ${held.uuid}
+      RETURNING id`)
+    return rows.length === 1
+  })
+}
 
-/** Members with Glia Notes on and synced to a subscriber, by ID (the nightly check). */
+/** A member with Glia Notes on, synced, and the subscriber listmonk should have for them. */
+export type DigestHolder = {
+  memberId: number
+  /** The member's address: the subscriber's, unless a restore of listmonk set it back. */
+  email: string | null
+  /** When the member made the choice the row holds. */
+  changedAt: Date | null
+  subscriber: DigestSubscriber
+}
+
+/**
+ * Members with Glia Notes on and synced to a subscriber, by ID (the daily check); not those the
+ * deletion log names (`applyDeletionLog` deletes them again).
+ */
 export function digestHolders(db: MemberDb, at: Page): Promise<DigestHolder[]> {
   return guarded(async () => {
     const { after, limit } = page(at)
     const { rows } = await db.execute<{
       id: number
+      email: string | null
+      digest_changed_at: unknown
       digest_subscriber_id: number | string
       digest_subscriber_uuid: string
     }>(sql`
-      SELECT m.id, m.digest_subscriber_id, m.digest_subscriber_uuid FROM members m
+      SELECT m.id, m.email, m.digest_changed_at, m.digest_subscriber_id, m.digest_subscriber_uuid
+      FROM members m
       WHERE m.id > ${after} AND m.digest_opt_in AND m.digest_subscriber_id IS NOT NULL
-        AND NOT (${DIGEST_PENDING})
+        AND NOT (${DIGEST_PENDING}) AND NOT ${REVIVED}
       ORDER BY m.id LIMIT ${limit}`)
     return rows.map((row) => ({
       memberId: Number(row.id),
+      email: row.email,
+      changedAt: toDate(row.digest_changed_at),
       subscriber: { id: Number(row.digest_subscriber_id), uuid: row.digest_subscriber_uuid },
     }))
   })
 }
 
 /**
- * The nightly check found the member's subscriber gone from listmonk: the choice waits for the
- * sync again, which subscribes the address anew. Only while the row still names that subscriber.
- * Returns whether it did.
+ * The daily check found the member's subscriber gone from listmonk, or under another address (a
+ * restore of listmonk's database): the choice waits for the sync again, which subscribes the
+ * address anew, or moves the subscriber back. Only while the row still names that subscriber and
+ * holds the address the check read. Returns whether it did.
  */
 export function markDigestPending(db: MemberDb, holder: DigestHolder, now: Date): Promise<boolean> {
   return guarded(async () => {
@@ -580,6 +756,7 @@ export function markDigestPending(db: MemberDb, holder: DigestHolder, now: Date)
       UPDATE members SET digest_synced_at = NULL, updated_at = ${iso(now)}
       WHERE id = ${checked(id, holder.memberId, 'id')} AND digest_opt_in
         AND digest_subscriber_id = ${held.id} AND digest_subscriber_uuid = ${held.uuid}
+        AND email IS NOT DISTINCT FROM ${holder.email}
       RETURNING id`)
     return rows.length === 1
   })

@@ -58,8 +58,28 @@ export const Members: CollectionConfig = {
     { name: 'digestChangedAt', type: 'date' },
     // The date of the consent text (`CONTENT_PAGES.acikRiza.updated`) the member agreed to.
     { name: 'digestConsentVersion', type: 'text', maxLength: 40 },
+    // Where and when the consent behind "on" was asked for: the account's settings (asked and
+    // confirmed at `digestChangedAt`), or the newsletter page (asked when its form was sent,
+    // confirmed with the emailed link at `digestChangedAt`). Set while Glia Notes is on, empty
+    // while it is off (database constraints). The sync writes the consent records under a new
+    // subscriber from these, so they say where and when the person agreed (M2, D50).
+    {
+      name: 'digestConsentSource',
+      type: 'select',
+      options: [
+        { value: 'account', label: 'Account settings' },
+        { value: 'newsletter-form', label: 'Newsletter page' },
+      ],
+    },
+    { name: 'digestRequestedAt', type: 'date' },
+    // Set when an address is proven for the member (a new account with an address, a verified
+    // change, Google's address added): the sync asks listmonk once whether that address already
+    // has Glia Notes through the newsletter page, and if so the account holds that subscription
+    // (src/lib/newsletter/members.ts). Empty again once asked.
+    { name: 'digestAdoptCheckAt', type: 'date' },
     // When listmonk last received the choice. Empty again after a change of the choice or of the
-    // address (both wait for the sync then), or when the nightly check finds the subscriber gone.
+    // address (both wait for the sync then), or when the daily check finds the subscriber gone or
+    // under another address.
     { name: 'digestSyncedAt', type: 'date' },
     // listmonk's subscriber that holds the member's Glia Notes: its ID and UUID, both or neither
     // (database constraints, 20261002_210000_members_sync_constraints). The sync finds the

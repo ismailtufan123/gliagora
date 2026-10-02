@@ -1,9 +1,6 @@
 import config from '@payload-config'
 import { cookies } from 'next/headers'
-import { after } from 'next/server'
 import { getPayload } from 'payload'
-
-import { errorSummary } from '@/lib/errors'
 
 import { SESSION_COOKIE } from '@/lib/members/cookies'
 import { MEMBER_PATHS } from '@/lib/members/paths'
@@ -11,8 +8,7 @@ import { rotateSession, unlinkProvider } from '@/lib/members/provider-sign-in'
 import { seeOther } from '@/lib/members/responses'
 import { handleSettings } from '@/lib/members/settings'
 import { GLIA_NOTES_CONSENT_VERSION } from '@/lib/newsletter/consent'
-import { listmonkFromEnv } from '@/lib/newsletter/listmonk'
-import { syncMember } from '@/lib/newsletter/members'
+import { syncSoon } from '@/lib/newsletter/sync-soon'
 import {
   findSession,
   memberDb,
@@ -43,16 +39,7 @@ export async function POST(request: Request) {
       return session && { member: session.member, token }
     },
     setDigest: (memberId, choice) => setDigest(db, memberId, choice, now),
-    syncDigest: (memberId) =>
-      after(async () => {
-        const listmonk = listmonkFromEnv()
-        if (!listmonk) return
-        try {
-          await syncMember(db, listmonk, memberId, new Date())
-        } catch (error) {
-          console.error(`Glia Notes sync after the settings failed: ${errorSummary(error)}`)
-        }
-      }),
+    syncDigest: (memberId) => syncSoon(db, memberId, 'the settings'),
     setSubfields: (memberId, slugs) => setPreferredSubfields(db, memberId, slugs, now),
     setName: (memberId, name) => setDisplayName(db, memberId, name, now),
     unlink: (memberId, method) => unlinkProvider(db, memberId, method, now),
