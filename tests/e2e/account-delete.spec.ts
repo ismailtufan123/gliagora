@@ -59,6 +59,8 @@ test('deletes the account through its confirmation page, by keyboard', async ({ 
   await expect(main.getByRole('heading', { name: 'What is deleted' })).toBeVisible()
   await expect(main.getByRole('heading', { name: 'What stays' })).toBeVisible()
   await expect(main).toContainText('We keep it for 2 years')
+  // An account with an address: the consent records of Glia Notes stay, without the number.
+  await expect(main).toContainText('If you have Glia Notes: the records of your consent')
   await expect(main).toContainText('up to 6 months')
   await expect(main).toContainText(
     `We will send one email to ${address} to confirm that your account was deleted.`,

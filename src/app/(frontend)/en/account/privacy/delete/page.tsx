@@ -101,6 +101,8 @@ export default async function Page({ searchParams }: Props) {
           </h2>
           <ul className="grid list-disc gap-2 ps-6">
             <li>{t('kept.record')}</li>
+            {/* The consent records of a subscription the deletion ends stay, without its number. */}
+            {member.email && <li>{t('kept.consent')}</li>}
             <li>{t('kept.backups')}</li>
             <li>
               {t.rich('kept.other', {

@@ -12,17 +12,17 @@ import {
   SubfieldSettings,
 } from '@/components/account/AccountSettings'
 import { MemberUnavailable } from '@/components/account/MemberUnavailable'
+import { NoEmailNotice } from '@/components/account/NoEmailNotice'
 import { OutcomeMessage } from '@/components/account/OutcomeMessage'
 import { SignInPanel } from '@/components/account/SignInPanel'
 import { SignedInAs } from '@/components/account/SignedInAs'
 import { altchaKey } from '@/lib/forms/altcha'
 import { memberPageIndexed } from '@/lib/indexing'
 import { readOutcome } from '@/lib/members/outcome'
-import { ACCOUNT_SECTIONS, MEMBER_PATHS, providerStartPath } from '@/lib/members/paths'
+import { MEMBER_PATHS, providerStartPath } from '@/lib/members/paths'
 import { type CurrentMember, currentMember, memberRequest } from '@/lib/members/session'
 import { memberDb, preferredSubfields } from '@/lib/members/store'
 import { activeSubfields } from '@/lib/records'
-import { INACTIVITY_GRACE_DAYS, INACTIVITY_MONTHS } from '@/lib/retention/rules'
 
 // The account (M4b, D49; the M4b design §2, §5, §7.4): who is signed in (with a notice for an
 // account without an email address, which gets no warning before its deletion for inactivity: the
@@ -193,20 +193,7 @@ export default async function Page({ searchParams }: Props) {
             </p>
           )}
           {/* Without an address there is no warning before the deletion for inactivity. */}
-          {member.email === null && (
-            <p className="notice">
-              {canAddEmail
-                ? t.rich('noEmailNotice', {
-                    months: INACTIVITY_MONTHS,
-                    days: INACTIVITY_GRACE_DAYS,
-                    link: (chunks) => <a href={`#${ACCOUNT_SECTIONS.email}`}>{chunks}</a>,
-                  })
-                : t('noEmailNoticeLater', {
-                    months: INACTIVITY_MONTHS,
-                    days: INACTIVITY_GRACE_DAYS,
-                  })}
-            </p>
-          )}
+          {member.email === null && <NoEmailNotice canAddEmail={canAddEmail} />}
         </div>
 
         <DigestSettings member={member} canAddEmail={canAddEmail} />

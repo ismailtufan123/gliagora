@@ -1038,7 +1038,7 @@
       "signedOutTitle": "Sign in to manage your data",
       "download": {
         "heading": "Download your data",
-        "text": "A file with everything Gliagora holds about your account: your email address and ways to sign in, your Glia Notes choice with the consent records of your subscription, preferred subfields, saved positions and sessions, and the suggestions, reports and data requests sent with your email address.",
+        "text": "A file with everything Gliagora holds about your account: your email address and ways to sign in, your Glia Notes choice with the consent records of the subscription your account holds (one you switched on here, or one your account's address has through the newsletter page, which your account takes over), preferred subfields, saved positions and sessions, and the suggestions, reports and data requests sent with your email address.",
         "link": "Download my data",
         "format": "The file is in JSON, a text format that programs and text editors can open."
       },
@@ -1071,6 +1071,7 @@
       "kept": {
         "record": "A record of your request: that the account was deleted at your request, when, and its email address, if it has one. We keep it for 2 years, to show that we handled the request.",
         "backups": "Our backups, which may hold your account for up to 6 months. If a backup is ever restored, your account is deleted again.",
+        "consent": "If you have Glia Notes: the records of your consent to it (when you asked for it and confirmed it, and which version of the consent text you agreed to), without your address and without the newsletter software's number and code for your subscription. We keep them for 3 years from their own date, to be able to show your consent.",
         "other": "Suggestions and reports you sent with your email address are not part of your account. To have them deleted too, see <link>data requests</link>."
       },
       "email": "We will send one email to <strong>{email}</strong> to confirm that your account was deleted.",
@@ -1081,7 +1082,7 @@
       "metaTitle": "Account deleted",
       "title": "Your account has been deleted",
       "text": "Your Gliagora account, your saved positions, your settings and your Glia Notes subscription, if you had one, have been deleted, and you have been signed out in every browser.",
-      "kept": "We keep a record of your request for 2 years, to show that we handled it. Our backups may hold your account for up to 6 months; if a backup is ever restored, your account is deleted again.",
+      "kept": "We keep a record of your request for 2 years, to show that we handled it. If you had Glia Notes, we keep the records of your consent to it, without your address or the subscription's number and code, for 3 years from their own date. Our backups may hold your account for up to 6 months; if a backup is ever restored, your account is deleted again.",
       "email": "If your account had an email address, you may also receive one email there confirming the deletion.",
       "jobs": "Browse positions",
       "home": "Go to the home page"
@@ -1233,7 +1234,7 @@
         "text": "As you confirmed, we have deleted the data that Gliagora | Neuroscience held under this email address:",
         "suggestions": "{count, plural, one {# suggestion you sent, with its link and note} other {# suggestions you sent, with their links and notes}}",
         "account": "your Gliagora account, with your saved positions and settings",
-        "newsletter": "your Glia Notes subscription",
+        "newsletter": "your Glia Notes subscription (we keep the records of your consent to it, without the address or the subscription's number and code, for 3 years from their own date)",
         "reports": "{count, plural, one {your address on # problem report or correction you sent} other {your address on # problem reports and corrections you sent}}",
         "nothing": "As you confirmed, we looked for data that Gliagora | Neuroscience held under this email address. We found no suggestion, account, newsletter subscription or problem report with it, so there was nothing to delete.",
         "kept": "{count, plural, one {We keep this address on # request about your personal rights that you sent us: we handle such requests under Law No. 5651 and keep them, with the address, for 2 years after they are closed, to be able to show how we handled them.} other {We keep this address on # requests about your personal rights that you sent us: we handle such requests under Law No. 5651 and keep them, with the address, for 2 years after they are closed, to be able to show how we handled them.}}",
@@ -1259,7 +1260,7 @@
       "deleted": {
         "subject": "Your Gliagora account has been deleted",
         "text": "As you asked, we have deleted your Gliagora | Neuroscience account, with your saved positions and your settings.",
-        "newsletter": "Your Glia Notes subscription has ended too: we have deleted its address from our mailing list.",
+        "newsletter": "Your Glia Notes subscription has ended too: we have deleted its address from our mailing list. We keep the records of your consent to it, without the address or the subscription's number and code, for 3 years from their own date, to be able to show your consent.",
         "kept": "We keep a record of your request, with this email address, for 2 years, to show that we handled it. Our backups may hold your account for up to 6 months; if a backup is ever restored, your account is deleted again. How we handle your data: {privacyUrl}"
       },
       "inactiveWarning": {

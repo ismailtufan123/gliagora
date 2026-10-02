@@ -1038,7 +1038,7 @@
       "signedOutTitle": "Verilerinizi yönetmek için oturum açın",
       "download": {
         "heading": "Verilerinizi indirin",
-        "text": "Gliagora'nın hesabınızla ilgili tuttuğu her şeyi içeren bir dosya: e-posta adresiniz ve oturum açma yollarınız, Glia Notes tercihiniz ve aboneliğinizin açık rıza kayıtları, tercih ettiğiniz alt alanlar, kaydettiğiniz pozisyonlar ve oturumlarınız; ayrıca e-posta adresinizle gönderilen öneriler, bildirimler ve veri talepleri.",
+        "text": "Gliagora'nın hesabınızla ilgili tuttuğu her şeyi içeren bir dosya: e-posta adresiniz ve oturum açma yollarınız, Glia Notes tercihiniz ve hesabınızın tuttuğu aboneliğin açık rıza kayıtları (burada açtığınız abonelik veya hesabınızın adresinin bülten sayfasından yapılmış, hesabınızın üstlendiği aboneliği), tercih ettiğiniz alt alanlar, kaydettiğiniz pozisyonlar ve oturumlarınız; ayrıca e-posta adresinizle gönderilen öneriler, bildirimler ve veri talepleri.",
         "link": "Verilerimi indir",
         "format": "Dosya, programların ve metin düzenleyicilerin açabildiği bir metin biçimi olan JSON biçimindedir."
       },
@@ -1071,6 +1071,7 @@
       "kept": {
         "record": "Talebinizin kaydı: hesabın talebiniz üzerine silindiği, ne zaman silindiği ve varsa e-posta adresi. Talebi yerine getirdiğimizi gösterebilmek için bu kaydı 2 yıl saklarız.",
         "backups": "Hesabınızı en fazla 6 ay tutabilecek yedeklerimiz. Bir yedek geri yüklenirse hesabınız yeniden silinir.",
+        "consent": "Glia Notes aboneliğiniz varsa ona verdiğiniz açık rızanın kayıtları (aboneliği ne zaman istediğiniz ve onayladığınız, onayladığınız açık rıza metninin sürümü), adresiniz ve bülten yazılımının aboneliğinize verdiği numara ve kod olmadan. Açık rızanızı gösterebilmek için bunları kendi tarihlerinden itibaren 3 yıl saklarız.",
         "other": "E-posta adresinizle gönderdiğiniz öneriler ve bildirimler hesabınızın parçası değildir. Bunların da silinmesi için <link>veri talepleri</link> sayfasına bakın."
       },
       "email": "Hesabınızın silindiğini doğrulamak için <strong>{email}</strong> adresine bir e-posta göndereceğiz.",
@@ -1081,7 +1082,7 @@
       "metaTitle": "Hesap silindi",
       "title": "Hesabınız silindi",
       "text": "Gliagora hesabınız, kaydettiğiniz pozisyonlar, ayarlarınız ve varsa Glia Notes aboneliğiniz silindi; tüm tarayıcılarda oturumunuz kapatıldı.",
-      "kept": "Talebinizi yerine getirdiğimizi gösterebilmek için talebinizin kaydını 2 yıl saklarız. Yedeklerimiz hesabınızı en fazla 6 ay tutabilir; bir yedek geri yüklenirse hesabınız yeniden silinir.",
+      "kept": "Talebinizi yerine getirdiğimizi gösterebilmek için talebinizin kaydını 2 yıl saklarız. Glia Notes aboneliğiniz varsa ona verdiğiniz açık rızanın kayıtlarını, adresiniz ve aboneliğin numarası ve kodu olmadan, kendi tarihlerinden itibaren 3 yıl saklarız. Yedeklerimiz hesabınızı en fazla 6 ay tutabilir; bir yedek geri yüklenirse hesabınız yeniden silinir.",
       "email": "Hesabınızın bir e-posta adresi varsa silme işlemini doğrulayan bir e-postayı da o adrese alabilirsiniz.",
       "jobs": "Pozisyonlara göz atın",
       "home": "Ana sayfaya gidin"
@@ -1233,7 +1234,7 @@
         "text": "Onayladığınız üzere, Gliagora | Neuroscience'ın bu e-posta adresiyle tuttuğu verileri sildik:",
         "suggestions": "{count, plural, one {gönderdiğiniz # ilan önerisi, bağlantısı ve notuyla birlikte} other {gönderdiğiniz # ilan önerisi, bağlantıları ve notlarıyla birlikte}}",
         "account": "Gliagora hesabınız, kaydettiğiniz ilanlar ve ayarlarınızla birlikte",
-        "newsletter": "Glia Notes aboneliğiniz",
+        "newsletter": "Glia Notes aboneliğiniz (bu aboneliğe verdiğiniz açık rızanın kayıtlarını, adres ve aboneliğin numarası ve kodu olmadan, kendi tarihlerinden itibaren 3 yıl saklarız)",
         "reports": "{count, plural, one {gönderdiğiniz # sorun bildirimindeki veya düzeltme talebindeki adresiniz} other {gönderdiğiniz # sorun bildirimindeki ve düzeltme talebindeki adresiniz}}",
         "nothing": "Onayladığınız üzere, Gliagora | Neuroscience'ın bu e-posta adresiyle tuttuğu verileri aradık. Bu adresle bir ilan önerisi, hesap, bülten aboneliği veya sorun bildirimi bulamadık; bu nedenle silinecek bir şey yoktu.",
         "kept": "{count, plural, one {Kişilik haklarınızla ilgili bize gönderdiğiniz # talepteki bu adresi saklıyoruz: bu talepleri 5651 sayılı Kanun kapsamında ele alır ve nasıl ele aldığımızı gösterebilmek için adresle birlikte, kapandıktan sonra 2 yıl saklarız.} other {Kişilik haklarınızla ilgili bize gönderdiğiniz # talepteki bu adresi saklıyoruz: bu talepleri 5651 sayılı Kanun kapsamında ele alır ve nasıl ele aldığımızı gösterebilmek için adresle birlikte, kapandıktan sonra 2 yıl saklarız.}}",
@@ -1259,7 +1260,7 @@
       "deleted": {
         "subject": "Gliagora hesabınız silindi",
         "text": "İsteğiniz üzerine Gliagora | Neuroscience hesabınızı, kaydettiğiniz pozisyonlar ve ayarlarınızla birlikte sildik.",
-        "newsletter": "Glia Notes aboneliğiniz de sona erdi: adresini e-posta listemizden sildik.",
+        "newsletter": "Glia Notes aboneliğiniz de sona erdi: adresini e-posta listemizden sildik. Açık rızanızı gösterebilmek için bu aboneliğe verdiğiniz açık rızanın kayıtlarını, adres ve aboneliğin numarası ve kodu olmadan, kendi tarihlerinden itibaren 3 yıl saklarız.",
         "kept": "Talebinizi yerine getirdiğimizi gösterebilmek için talebinizin kaydını bu e-posta adresiyle birlikte 2 yıl saklarız. Yedeklerimiz hesabınızı en fazla 6 ay tutabilir; bir yedek geri yüklenirse hesabınız yeniden silinir. Verilerinizi nasıl işlediğimiz: {privacyUrl}"
       },
       "inactiveWarning": {

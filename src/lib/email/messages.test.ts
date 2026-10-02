@@ -337,7 +337,7 @@ describe('dataDeletedEmail', () => {
       'As you confirmed, we have deleted the data that Gliagora | Neuroscience held under this email address:\n' +
         '- 2 suggestions you sent, with their links and notes\n' +
         '- your Gliagora account, with your saved positions and settings\n' +
-        '- your Glia Notes subscription\n' +
+        "- your Glia Notes subscription (we keep the records of your consent to it, without the address or the subscription's number and code, for 3 years from their own date)\n" +
         '- your address on 1 problem report or correction you sent\n',
     )
     expect(email.text).not.toContain('personal rights')
@@ -368,7 +368,9 @@ describe('dataDeletedEmail', () => {
 
   it('names a newsletter subscription that was all there was (from M2)', () => {
     const { text } = dataDeletedEmail({ locale: 'en', outcome: { ...none, newsletterRemoved: 1 } })
-    expect(text).toContain('held under this email address:\n- your Glia Notes subscription\n')
+    expect(text).toContain(
+      "held under this email address:\n- your Glia Notes subscription (we keep the records of your consent to it, without the address or the subscription's number and code, for 3 years from their own date)\n",
+    )
     expect(text).not.toContain('We found no')
   })
 
