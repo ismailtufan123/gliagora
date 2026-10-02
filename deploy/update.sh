@@ -4,8 +4,10 @@
 #      may migrate the database (skipped only on the very first start, when there is nothing yet);
 #   2. pulls the images;
 #   3. prepares listmonk (listmonk/prepare.sh: its database, its install and schema, its settings),
-#      when compose.prod.yml has it (M2, D50);
-#   4. restarts the stack and waits (at most 5 minutes) until every service reports healthy.
+#      when compose.prod.yml has it (M2, D50). Nothing depends on listmonk: if that fails, listmonk
+#      is left as it is and step 4 starts everything else, then the script exits with 3;
+#   4. restarts the stack and waits (at most 5 minutes) until every service with a health check
+#      reports healthy.
 #
 #   sudo /opt/gliagora/update.sh --no-pull   # use images already on the server (the deploy
 #                                            # workflow pulls the app's first; also for a rollback)
@@ -43,18 +45,31 @@ else
   log "2/4 Skipping pull (--no-pull)"
 fi
 
+# The exit code when everything but listmonk was updated and is healthy, and listmonk could not be
+# prepared: deploy-remote.sh then does not roll the app back.
+LISTMONK_NOT_PREPARED=3
+
 # Read in full first: `grep -q` may stop reading early, which pipefail would count as a failure.
 services=$(compose config --services)
+listmonk_prepared=true
 if grep -qx listmonk <<<"$services"; then
   log "3/4 Preparing listmonk"
-  "$APP_DIR/listmonk/prepare.sh"
+  if ! "$APP_DIR/listmonk/prepare.sh"; then
+    listmonk_prepared=false
+    log "3/4 listmonk could not be prepared (see above): it is left as it is; the rest starts without it"
+  fi
 else
   log "3/4 No listmonk in compose.prod.yml"
 fi
 
-log "4/4 Restarting"
-if ! compose up -d --wait --wait-timeout 300 --remove-orphans; then
+# Without listmonk when it could not be prepared: neither recreated on a new image nor started on
+# settings that were not applied. Nothing depends on it, so the rest starts as usual.
+targets=()
+[[ "$listmonk_prepared" == true ]] || mapfile -t targets < <(grep -vx listmonk <<<"$services")
+log "4/4 Restarting${targets[*]:+ (${targets[*]})}"
+if ! compose up -d --wait --wait-timeout 300 --remove-orphans "${targets[@]}"; then
   compose ps
+  [[ "$listmonk_prepared" == true ]] || echo "listmonk could not be prepared either (see above)." >&2
   cat >&2 <<'MSG'
 
 The update did not become healthy (the list above shows which service). Check its logs with
@@ -69,4 +84,10 @@ MSG
   exit 1
 fi
 compose ps
+if [[ "$listmonk_prepared" != true ]]; then
+  log "ERROR: updated and healthy without listmonk, which could not be prepared (see above) and is \
+left as it was. Fix the cause, then run: sudo ./listmonk/prepare.sh, and \
+docker compose -f compose.prod.yml up -d listmonk (README.md, section 11)." >&2
+  exit "$LISTMONK_NOT_PREPARED"
+fi
 log "Update finished"

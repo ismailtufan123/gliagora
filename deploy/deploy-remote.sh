@@ -21,8 +21,9 @@
 #   6. if the new image started but did not become healthy, switches back to the previous image
 #      (still on the server) and waits for it (automatic rollback, D42). Database migrations are
 #      not undone; the pre-update backup has the state before them. If the new image is healthy and
-#      another service is not (listmonk, say), it does not roll back: the app is fine, and going
-#      back would not help the other service; it fails with the names of the services to look at.
+#      another service is not (or listmonk could not be prepared: update.sh's exit code 3), it
+#      does not roll back: the app is fine, and going back would not help the other service; it
+#      fails with the names of the services to look at.
 # Going back sets only the APP_IMAGE line of .env, never the whole file: a setting added to .env
 # since the last deploy (a new secret) must stay.
 set -euo pipefail
@@ -59,6 +60,30 @@ app_health() {
   id=$(compose ps -q app 2>/dev/null) || true
   [[ -n "$id" ]] || return 0
   docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$id" 2>/dev/null || true
+}
+
+# update.sh's exit code when everything but listmonk was updated and is healthy, and listmonk
+# could not be prepared.
+LISTMONK_NOT_PREPARED=3
+
+# What happened after update.sh failed with exit code $1, the new image being $2, as a word and
+# then the services concerned:
+#   not-restarted       the app still runs another image (the update stopped before restarting it);
+#   rollback            the new image runs but is not healthy;
+#   listmonk            the new image is healthy, and listmonk could not be prepared;
+#   others SERVICES...  the new image is healthy, and these services are not (none, by now).
+failed_update() {
+  local status=$1 image=$2 running
+  running=$(docker inspect -f '{{.Config.Image}}' "$(compose ps -aq app 2>/dev/null)" 2>/dev/null || true)
+  if [[ "$running" != "$image" ]]; then
+    echo not-restarted
+  elif [[ "$(app_health)" != healthy ]]; then
+    echo rollback
+  elif [[ $status -eq $LISTMONK_NOT_PREPARED ]]; then
+    echo listmonk
+  else
+    echo "others $(compose ps --all --format '{{.Service}} {{.State}} {{.Health}}' | unhealthy_services)"
+  fi
 }
 
 # Sourced, as src/lib/deploy-scripts.test.ts does: the functions above only.
@@ -103,23 +128,28 @@ cp -p "$ENV_FILE" "$ENV_FILE.previous"
 sed -i "s|^APP_IMAGE=.*|APP_IMAGE=$image|" "$ENV_FILE"
 
 # 5. Backup, restart and health checks.
-if "$APP_DIR/update.sh" --no-pull; then
+status=0
+"$APP_DIR/update.sh" --no-pull || status=$?
+if [[ $status -eq 0 ]]; then
   log "Deployed $image"
   exit 0
 fi
 
-running=$(docker inspect -f '{{.Config.Image}}' "$(compose ps -aq app 2>/dev/null)" 2>/dev/null || true)
-if [[ "$running" != "$image" ]]; then
-  set_app_image "$ENV_FILE" "$current"
-  fail "The update stopped before the app was restarted (see above). Nothing changed; APP_IMAGE in .env is back to $current."
-fi
-
-# The new image runs. Healthy: another service failed (the list above names it); going back to the
-# previous image would not help it.
-if [[ "$(app_health)" == healthy ]]; then
-  others=$(compose ps --all --format '{{.Service}} {{.State}} {{.Health}}' | unhealthy_services)
-  fail "$image is deployed and healthy, but ${others:-another service} is not (see above): not rolled back. See: docker compose -f compose.prod.yml logs ${others:-<service>}"
-fi
+read -r verdict others <<<"$(failed_update "$status" "$image")"
+case $verdict in
+  not-restarted)
+    set_app_image "$ENV_FILE" "$current"
+    fail "The update stopped before the app was restarted (see above): the app still runs $current, and APP_IMAGE in .env is back to it."
+    ;;
+  # The new image is healthy: another service failed; going back to the previous image would not
+  # help it.
+  listmonk)
+    fail "$image is deployed and healthy, but listmonk could not be prepared (see above): not rolled back. Fix the cause, then run sudo ./listmonk/prepare.sh and docker compose -f compose.prod.yml up -d listmonk (README.md, section 11)."
+    ;;
+  others)
+    fail "$image is deployed and healthy, but ${others:-another service} is not (see above): not rolled back. See: docker compose -f compose.prod.yml logs ${others:-<service>}"
+    ;;
+esac
 
 # 6. Automatic rollback: the new image started but did not become healthy.
 image_id() { docker image inspect -f '{{.Id}}' "$1" 2>/dev/null || true; }

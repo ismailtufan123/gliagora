@@ -10,6 +10,8 @@
 # (the running container's; both default listmonk/listmonk:v1), FAKE_CHANGED (what settings.sql
 # answers; its input is kept in $FAKE_LOG/psql.stdin), FAKE_PSQL_EXIT; `compose run … listmonk
 # CMD` runs CMD in ../listmonk, whose ./listmonk is a stand-in, with this call's stdin.
+# deploy-remote.sh: the app's container answers FAKE_APP_IMAGE and FAKE_APP_HEALTH, and
+# `compose ps --all --format` the lines of FAKE_PS (separated by ;).
 set -euo pipefail
 # One line per call: a line break in an argument is written as \n.
 all="$*"
@@ -27,6 +29,8 @@ if [[ "${1:-}" == compose ]]; then
   if [[ " $* " == *" config --services "* ]]; then printf '%s\n' ${FAKE_SERVICES:-}; exit 0; fi
   if [[ " $* " == *" up -d --wait --wait-timeout "* ]]; then exit "${FAKE_UP_EXIT:-0}"; fi
   if [[ " $* " == *" pg_dump "* ]]; then echo "dump of ${*: -1}"; exit 0; fi
+  if [[ " $* " == *" ps -aq app "* || " $* " == *" ps -q app "* ]]; then echo app-container; exit 0; fi
+  if [[ " $* " == *" ps --all --format "* ]]; then printf '%s\n' "${FAKE_PS:-}" | tr ';' '\n'; exit 0; fi
   if [[ " $* " == *" ps -q --status running listmonk "* ]]; then
     [[ -z "${FAKE_LISTMONK_RUNNING:-}" ]] || echo listmonk-container
     exit 0
@@ -55,7 +59,15 @@ case "${1:-}" in
   volume) [[ -z "${FAKE_NO_VOLUME:-}" ]] ;;
   run) echo 'container-id' ;;
   rm) ;;
-  inspect) echo "${FAKE_LISTMONK_RUNNING_IMAGE:-listmonk/listmonk:v1}" ;;
+  inspect)
+    if [[ " $* " != *" app-container "* ]]; then
+      echo "${FAKE_LISTMONK_RUNNING_IMAGE:-listmonk/listmonk:v1}"
+    elif [[ "$*" == *.State.Health* ]]; then
+      echo "${FAKE_APP_HEALTH:-}"
+    else
+      echo "${FAKE_APP_IMAGE:-}"
+    fi
+    ;;
   exec)
     case "$query" in
       *information_schema.tables*) echo 12 ;;

@@ -370,7 +370,8 @@ describe('update.sh', () => {
       execFileSync('mkdir', ['-p', join(dir, script, '..')])
       writeFileSync(
         join(dir, script),
-        `#!/usr/bin/env bash\necho "ran ${script} $*" >>"$FAKE_LOG/docker.log"\n`,
+        // Each exits with its own setting: BACKUP_EXIT, PREPARE_EXIT (default 0).
+        `#!/usr/bin/env bash\necho "ran ${script} $*" >>"$FAKE_LOG/docker.log"\nexit "\${${script.startsWith('backup') ? 'BACKUP' : 'PREPARE'}_EXIT:-0}"\n`,
       )
       chmodSync(join(dir, script), 0o755)
     }
@@ -404,10 +405,41 @@ describe('update.sh', () => {
     expect(calls).toContain('docker compose up -d --wait db')
   })
 
+  it('stops before anything else when the backup fails', () => {
+    const { status, calls } = update({ FAKE_SERVICES: 'caddy app db listmonk', BACKUP_EXIT: '1' })
+    expect(status).toBe(1)
+    expect(calls.at(-1)).toBe('ran backup/backup.sh pre-update')
+  })
+
   it('fails when the stack does not become healthy, saying how to go back', () => {
     const { status, output } = update({ FAKE_SERVICES: 'app db', FAKE_UP_EXIT: '1' })
     expect(status).toBe(1)
     expect(output).toContain('by setting only APP_IMAGE in .env (README.md, step 6)')
+  })
+
+  it('starts everything but listmonk when listmonk cannot be prepared, then fails naming it', () => {
+    // Nothing depends on listmonk: the app's deploy goes on, and listmonk is neither recreated
+    // nor started on settings that were not applied.
+    const { status, output, calls } = update({
+      FAKE_SERVICES: 'caddy app db listmonk',
+      PREPARE_EXIT: '1',
+    })
+    expect(status).toBe(3)
+    expect(calls.slice(-3)).toEqual([
+      'ran listmonk/prepare.sh ',
+      'docker compose up -d --wait --wait-timeout 300 --remove-orphans caddy app db',
+      'docker compose ps',
+    ])
+    expect(output).toContain('listmonk could not be prepared (see above): it is left as it is')
+    expect(output).toContain('updated and healthy without listmonk')
+    // And if the rest does not become healthy either: the usual failure, which names listmonk too.
+    const both = update({
+      FAKE_SERVICES: 'caddy app db listmonk',
+      PREPARE_EXIT: '1',
+      FAKE_UP_EXIT: '1',
+    })
+    expect(both.status).toBe(1)
+    expect(both.output).toContain('listmonk could not be prepared either')
   })
 })
 
@@ -448,10 +480,39 @@ describe('deploy-remote.sh', () => {
     const script = read('deploy/deploy-remote.sh')
     expect(script).toContain('APP_IMAGE="$image" compose pull app\n')
     expect(script).not.toMatch(/cp -p "\$ENV_FILE\.previous" "\$ENV_FILE"/)
-    // A healthy app is not rolled back because another service failed.
-    expect(script.indexOf('if [[ "$(app_health)" == healthy ]]')).toBeLessThan(
-      script.indexOf('# 6. Automatic rollback'),
+    // update.sh's exit code for listmonk is the one deploy-remote.sh knows.
+    expect(read('deploy/update.sh')).toContain('LISTMONK_NOT_PREPARED=3\n')
+    expect(script).toContain('LISTMONK_NOT_PREPARED=3\n')
+  })
+
+  it('rolls back only an unhealthy new image, never a healthy app for another service’s sake', () => {
+    const NEW = 'ghcr.io/owner/gliagora:sha-bbbbbbb'
+    const verdict = (status: number, env: Record<string, string>) => {
+      const dir = folder()
+      return sourced('deploy/deploy-remote.sh', `failed_update ${status} ${NEW}`, {
+        PATH: `${FAKE_BIN}:${process.env.PATH}`,
+        FAKE_LOG: dir,
+        ...env,
+      }).trim()
+    }
+    // The update stopped before the app was restarted: the old image still runs.
+    expect(verdict(1, { FAKE_APP_IMAGE: 'ghcr.io/owner/gliagora:sha-aaaaaaa' })).toBe(
+      'not-restarted',
     )
+    // The new image runs but is not healthy: roll back.
+    for (const health of ['unhealthy', 'starting', '']) {
+      expect(verdict(1, { FAKE_APP_IMAGE: NEW, FAKE_APP_HEALTH: health })).toBe('rollback')
+    }
+    // Healthy: listmonk could not be prepared (update.sh's 3), even while listmonk itself still
+    // runs healthy on the old settings, or another service is not healthy.
+    const healthy = { FAKE_APP_IMAGE: NEW, FAKE_APP_HEALTH: 'healthy' }
+    expect(
+      verdict(3, { ...healthy, FAKE_PS: 'app running healthy;listmonk running healthy' }),
+    ).toBe('listmonk')
+    expect(
+      verdict(1, { ...healthy, FAKE_PS: 'app running healthy;listmonk running unhealthy' }),
+    ).toBe('others listmonk')
+    expect(verdict(1, { ...healthy, FAKE_PS: 'app running healthy' })).toBe('others')
   })
 })
 
