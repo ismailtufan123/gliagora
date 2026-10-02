@@ -28,6 +28,7 @@
     "e2e:editor": "payload run src/scripts/e2e-editor.ts",
     "e2e:member": "payload run src/scripts/e2e-member.ts",
     "fake:oidc": "node --env-file-if-exists=.env tests/fake-oidc/server.ts",
+    "listmonk:setup": "payload run src/scripts/listmonk-setup.ts",
     "jobs:run": "payload run src/scripts/jobs-run.ts",
     "tr:review": "payload run src/scripts/tr-strings-review.ts",
     "test:e2e": "playwright test"

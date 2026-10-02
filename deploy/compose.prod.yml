@@ -4,8 +4,18 @@
 #   docker compose -f compose.prod.yml up -d --wait
 #
 # Only Caddy is reachable from the internet. The app and PostgreSQL are never published: ports
-# published by Docker bypass the ufw firewall.
+# published by Docker bypass the ufw firewall. listmonk's admin is published on the server's own
+# loopback only (127.0.0.1), reached through an SSH tunnel (README.md, "listmonk").
 name: gliagora
+
+# Every container logs to the systemd journal, which keeps 14 days (D34; logs/90-gliagora.conf,
+# installed by logs/install-journald.sh). Docker's default would rotate by size only, so on a quiet
+# site its lines would outlive the 14 days the privacy texts give. `docker compose logs` reads the
+# journal as before; `journalctl -t gliagora-app-1` does too.
+x-logging: &logging
+  driver: journald
+  options:
+    tag: '{{.Name}}'
 
 services:
   caddy:
@@ -28,6 +38,7 @@ services:
     depends_on:
       app:
         condition: service_healthy
+    logging: *logging
     security_opt:
       - no-new-privileges:true
 
@@ -55,6 +66,11 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       EMAIL_FROM: ${EMAIL_FROM:-Gliagora <hello@gliagora.com>}
+      # The cap on the emails the public forms send in all (D49): empty, 50 an hour and 200 a day.
+      # Set from the mailbox's sending limit at M2, leaving room for the scheduled emails and the
+      # issues of Glia Notes (.env.example).
+      EMAIL_CAP_HOUR: ${EMAIL_CAP_HOUR:-}
+      EMAIL_CAP_DAY: ${EMAIL_CAP_DAY:-}
       # Member sign-in with Google and ORCID (M4b, D49): each is off until both of its keys are
       # set. ORCID_ISSUER stays ORCID's own; the app refuses ORCID's sandbox here. Email links
       # switch on with SMTP_HOST. Nothing else about sign-in reaches the app.
@@ -66,6 +82,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    logging: *logging
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -80,6 +97,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       # Read once by postgres/init/10-app-database.sh when the data volume is created.
       APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}
+      # Read by postgres/init/20-listmonk-database.sh, on a new volume and on every update
+      # (listmonk/prepare.sh), which sets listmonk's database password from it.
+      LISTMONK_DB_PASSWORD: ${LISTMONK_DB_PASSWORD:?Set LISTMONK_DB_PASSWORD in .env}
     volumes:
       - db-data:/var/lib/postgresql
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
@@ -90,8 +110,51 @@ services:
       timeout: 5s
       retries: 6
       start_period: 30s
+    logging: *logging
     security_opt:
       - no-new-privileges:true
+
+  # Glia Notes' newsletter service (M2, D50; README.md, "listmonk"): the latest stable release,
+  # unmodified, with its own role and database in the PostgreSQL above. Only the app talks to it
+  # (http://listmonk:9000 on this stack's network); nothing depends on it, so the app and its
+  # deploys keep working while it is down. listmonk/prepare.sh (run by update.sh) installs it, never
+  # this service, so no admin account is ever left for "the first visitor", and applies its
+  # settings from the repository (listmonk/settings.sql). The start only applies a newer image's
+  # database migrations, as upstream's compose file does (the update's backup comes first).
+  listmonk:
+    image: listmonk/listmonk:v6.2.0@sha256:f535d59e14991337a9f2d570273685378ae86b0d7698c3e00da444e3bc205286
+    restart: unless-stopped
+    command: [sh, -c, "./listmonk --upgrade --yes --config '' && exec ./listmonk --config ''"]
+    environment:
+      TZ: Etc/UTC
+      LISTMONK_app__address: 0.0.0.0:9000
+      LISTMONK_db__host: db
+      LISTMONK_db__port: '5432'
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__password: ${LISTMONK_DB_PASSWORD:?Set LISTMONK_DB_PASSWORD in .env}
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__ssl_mode: disable
+      # A small pool: the server is shared, and listmonk sends one issue a month.
+      LISTMONK_db__max_open: '5'
+      LISTMONK_db__max_idle: '5'
+      LISTMONK_db__max_lifetime: 300s
+    ports:
+      # Its admin, on the server's loopback only: reached through an SSH tunnel (README.md).
+      - '127.0.0.1:9000:9000'
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:9000/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    logging: *logging
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
 # IPv6 on the stack's network: Docker then forwards IPv6 visitors to Caddy with ip6tables NAT,
 # which keeps their address. Without it, docker-proxy forwards them from the bridge gateway (for
