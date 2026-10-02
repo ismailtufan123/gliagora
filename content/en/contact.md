@@ -41,7 +41,7 @@ For now, this page gives email addresses only. Before Gliagora earns any income,
 Tell us if something we published is wrong or out of date, or if it affects your personal rights (for example, your privacy or your reputation). You can:
 
 - use the **Report a problem** link on the listing or page;
-- fill in our [report form](/en/report/), also linked from our [notice and takedown page](/en/legal/takedown/), our page for correction and removal requests;
+- [report it to us](/en/report/), also from our [notice and takedown page](/en/legal/takedown/), the page for correction and removal requests;
 - email [hello@gliagora.com](mailto:hello@gliagora.com).
 
 The **Report a problem** link and the report form open step by step, as we build Gliagora. Until they are open, email [hello@gliagora.com](mailto:hello@gliagora.com).

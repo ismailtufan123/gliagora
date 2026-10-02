@@ -103,6 +103,14 @@ describe('FINAL_EMAILS', () => {
     )
     expect(FINAL_EMAILS.account?.(row('account', 'tr')).locale).toBe('tr')
     expect(FINAL_EMAILS.account?.(row('account', 'xx')).locale).toBe('en')
+    // A Glia Notes subscription that ended with the account is named (M2), only then.
+    expect(FINAL_EMAILS.account?.(row('account')).text).not.toContain('Glia Notes')
+    expect(
+      FINAL_EMAILS.account?.({
+        ...row('account'),
+        outcome: { accountDeleted: 1, newsletterRemoved: 1 },
+      }).text,
+    ).toContain('Your Glia Notes subscription has ended too')
   })
 
   it('sends nothing for requests editors record and answer themselves', () => {

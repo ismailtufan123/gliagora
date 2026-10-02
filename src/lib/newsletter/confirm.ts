@@ -9,7 +9,12 @@ import { newReference } from '@/lib/forms/public-form'
 import { sameOrigin } from '@/lib/members/origin'
 import { outcomePath } from '@/lib/members/outcome'
 import { forbidden, formValue, readForm, seeOther } from '@/lib/members/responses'
-import { type EmailTokenRecord, consumeEmailToken, deletePendingLinks } from '@/lib/members/store'
+import {
+  type EmailTokenRecord,
+  consumeEmailToken,
+  deletePendingLinks,
+  joinDigestBySignup,
+} from '@/lib/members/store'
 import { isToken } from '@/lib/members/tokens'
 
 import { type PendingSignup, pendingSignupSchema } from './consent'
@@ -29,7 +34,9 @@ import { recordConsent } from './store'
 // 3. the consent records are written with the subscriber's UUID and ID: `requested` at the time the
 //    form was sent (kept in the link, also for a link from "Send it again"), `confirmed` now, both
 //    with the consent text's version the form showed and the source `newsletter-form`;
-// 4. the address's other pending signup links stop working.
+// 4. the address's other pending signup links stop working;
+// 5. a member with that address has Glia Notes on from now, with the form's consent version and the
+//    subscriber, synced (`joinDigestBySignup`; the form's records stand for the member's).
 // A failure in 1–2 changes nothing in the app and the link still works ("try again"). A failure in
 // 3–4 rolls the app's side back; if step 2 made a new subscriber, it is deleted again in listmonk
 // before the transaction ends (best effort, logged by class), so listmonk keeps no subscriber
@@ -39,8 +46,7 @@ import { recordConsent } from './store'
 // may then hold the address without consent records until the person uses the link again (it
 // still works). After the commit the welcome email goes out, best effort: its failure is logged by
 // class and the subscription stands. The same address may confirm again (a second signup):
-// listmonk keeps one subscriber, and the new consent records sit beside the old ones. (Members
-// with that address get Glia Notes on in PR D.)
+// listmonk keeps one subscriber, and the new consent records sit beside the old ones.
 
 /** What a newsletter link asks for, or null if the link is not one (or cannot be read). */
 export function pendingSignup(link: EmailTokenRecord | null): PendingSignup | null {
@@ -115,6 +121,13 @@ export async function confirmInTransaction(
       now,
     )
     await deletePendingLinks(db, 'newsletter', link.email)
+    await joinDigestBySignup(
+      db,
+      link.email,
+      { id: subscriber.id, uuid: subscriber.uuid },
+      pending.version,
+      now,
+    )
   } catch (error) {
     // The transaction is rolled back: a subscriber this made goes too (an existing one stays).
     if (subscriber.created) {

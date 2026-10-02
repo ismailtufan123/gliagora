@@ -4,6 +4,7 @@ import { jobPath } from '@/lib/detail-routes'
 import { errorCode, errorSummary } from '@/lib/errors'
 import { newReference } from '@/lib/forms/public-form'
 import { type ListingState, listingState } from '@/lib/jobs/deadline'
+import { type ExportedConsent, consentRecordsOf } from '@/lib/newsletter/store'
 import { SITE_ORIGIN } from '@/lib/site'
 
 import { outcomePath } from './outcome'
@@ -21,7 +22,8 @@ import {
 
 // "Download my data" (M4b, D49; the M4b design §7.5): GET /en/account/privacy/export/ answers a
 // JSON file with everything Gliagora holds about the signed-in member: the account, the Glia Notes
-// choice, the preferred subfields, the saved positions, the sessions (how many, and when each ends;
+// choice with the consent records of the member's subscription (M2: what was agreed to, when and
+// where; never listmonk's UUID, the credential of the unsubscribe links), the preferred subfields, the saved positions, the sessions (how many, and when each ends;
 // never their tokens) and, when the account has an email address (always one the member proved),
 // the suggestions, reports and data requests sent with that address, matched without case (the
 // forms keep an address as it was typed). A download (`Content-Disposition: attachment`), never
@@ -59,6 +61,8 @@ export type ExportedDataRequest = {
 /** What the export reads: the member, their own rows, and the records under their address. */
 export type ExportData = {
   member: MemberRecord
+  /** The consent records of the member's Glia Notes subscriber, oldest first (none without one). */
+  consent: ExportedConsent[]
   subfields: { slug: string; label: string | null; active: boolean }[]
   saved: SavedJobExportRow[]
   sessions: Date[]
@@ -101,6 +105,12 @@ export function exportDocument(data: ExportData, now: Date) {
       on: member.digestOptIn,
       changedAt: date(member.digestChangedAt),
       consentVersion: member.digestConsentVersion,
+      consentRecords: data.consent.map((record) => ({
+        event: record.event,
+        consentVersion: record.consentVersion,
+        source: record.source,
+        at: record.at.toISOString(),
+      })),
     },
     preferredSubfields: data.subfields.map((subfield) => ({
       slug: subfield.slug,
@@ -224,13 +234,16 @@ export async function readExport(
   member: MemberRecord,
   now: Date,
 ): Promise<ExportData> {
-  const [subfields, saved, sessions, underAddress] = await Promise.all([
+  const [subfields, saved, sessions, underAddress, consent] = await Promise.all([
     storedSubfieldPrefs(db, member.id),
     savedJobsForExport(db, member.id),
     sessionExpiries(db, member.id, now),
     member.email ? recordsUnderAddress(db, member.email) : Promise.resolve(null),
+    member.digestSubscriber
+      ? consentRecordsOf(db, member.digestSubscriber.uuid)
+      : Promise.resolve([]),
   ])
-  return { member, subfields, saved, sessions, underAddress }
+  return { member, consent, subfields, saved, sessions, underAddress }
 }
 
 /** What the export route reads (the route gives the real ones). */

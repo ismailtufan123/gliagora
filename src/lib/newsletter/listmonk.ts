@@ -98,7 +98,7 @@ export type ListmonkClient = {
    * address already, that one added to the list as confirmed. `created` says which.
    */
   subscribe(email: string): Promise<Subscriber & { created: boolean }>
-  /** Changes a subscriber's address (members' address changes, PR D). */
+  /** Changes a subscriber's address (members' address changes, src/lib/newsletter/members.ts). */
   changeEmail(id: number, email: string): Promise<void>
   /** Deletes a subscriber with its subscriptions (also when it is gone already). */
   remove(id: number): Promise<void>

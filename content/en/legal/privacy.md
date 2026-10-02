@@ -61,39 +61,43 @@ We do not ask for sensitive data, such as information about your health, religio
 
 ### Glia Notes newsletter
 
-Glia Notes is the monthly Gliagora newsletter.
+Glia Notes is the monthly Gliagora newsletter. The first issue comes with our public launch; until then, a subscriber receives only the confirmation email and a welcome email.
 
-- **What:** your email address and the status of your subscription (pending or confirmed). No name.
-- **Where it comes from:** you. You sign up with one of the signup forms on the site, for example on the home page or on the [newsletter page](/en/newsletter/). Members can switch the newsletter on in their account settings.
+- **What:** your email address and that you are subscribed. No name.
+- **Where it comes from:** you. You sign up on the [newsletter page](/en/newsletter/). Members can also switch Glia Notes on in their account settings.
 - **Why:** to send you Glia Notes once a month.
 - **Legal basis:** your explicit consent (KVKK Art. 5(1); GDPR Art. 6(1)(a)).
-- **How long:** until you unsubscribe. When you unsubscribe, we delete your address from the newsletter list at once. If you never confirm your signup, we delete the address after 7 days.
+- **How long:** until you unsubscribe. When you unsubscribe, we delete your address from the newsletter list at once. A signup you never confirm is deleted after 7 days.
 
 How signup works:
 
 1. You enter your email address and tick the box "I agree to receive Glia Notes by email." The box is never ticked in advance.
-2. We send you a confirmation email. The link in it is valid for 7 days. You can ask for a new one after 60 seconds.
-3. Your subscription starts only when you click the link.
+2. We send you a confirmation email. The link in it is valid for 7 days. You can ask for a new one after 60 seconds; an earlier link keeps working until one of them is used.
+3. Your subscription starts only when you open the link and press the button on the page it opens. We then send you a welcome email, which says how to unsubscribe.
 
-If you are a member, the email address you verified at sign-in counts as the confirmation. If you signed in with ORCID only, you first verify an email address.
+Until you confirm, your signup is only its confirmation link, kept in our main database: your address, the language of the page, the version of the consent text you agreed to and the time you sent the form. It is not in the newsletter software and not in our backups, and it is deleted after 7 days. So that the "Check your inbox" page can show your address (partly hidden) and send a new link, your browser keeps a cookie for one hour (see "Cookies and browser storage").
 
-The address is stored in our newsletter software (listmonk) on our server in Türkiye. For the newsletter, our main database keeps only a random subscriber ID, not your address. If you are a member, your account email is stored there as part of your account. Glia Notes is sent from digest@gliagora.com through our mail provider in Türkiye.
+Only confirmed subscribers are stored in our newsletter software (listmonk) on our server in Türkiye: the address, with no name and without your IP address. Our main database does not keep your address for the newsletter, only listmonk's number and random code (UUID) for your subscription, in the consent records (see below) and, if you are a member, on your account. Glia Notes is sent from digest@gliagora.com through our mail provider in Türkiye.
+
+If you are a member, the email address you verified at sign-in counts as the confirmation: when you switch Glia Notes on in your settings, your account's address is subscribed within minutes, and when you change your account's address, the subscription moves to the new one. [TO DECIDE: B19 – whether a member's subscription may move to a newly verified address without new consent] If your account has no email address (you signed in with ORCID only, or with Google for an address Google does not manage), you first add one with a confirmation link; your account page reminds you of this. Confirming a signup on the newsletter page with your account's address switches Glia Notes on in your settings too, and unsubscribing switches it off.
+
+Glia Notes is not part of your account. If we delete your account because it was not used for 24 months, Glia Notes continues, with its own consent records and unsubscribe link. If you delete your account yourself, or confirm a deletion request for your address, it ends (see "Member accounts" and "Your rights").
 
 We do not track whether you open an email or click a link, and we use no tracking pixels. Links to employers carry no tracking parameters. Links to our own pages carry campaign tags (UTM tags), so we can count how many visits in total come from the newsletter. The tags are the same for everyone and do not identify you.
 
 If an email cannot be delivered and the failure is permanent, we remove the address at once. After 3 temporary failures, we remove it too. We learn about these failures automatically from the receiving mail server. Legal basis: our legitimate interest in keeping the list accurate and our emails deliverable (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)). Records of these failures are deleted together with the address.
 
-To unsubscribe, use the one-click link in every email or the switch in your account settings. It takes effect immediately.
+To unsubscribe, use the link in every email, which opens a page with one button, your mail program's own unsubscribe button (one click, without opening a page), or the switch in your account settings. It takes effect at once: we delete your address from the newsletter software then. The unsubscribe link carries listmonk's number and random code for your subscription, which only your emails contain, so nobody can unsubscribe you by guessing it.
 
 ### Consent records
 
-- **What:** the random subscriber ID, the event (signup requested, confirmed or unsubscribed), the version of the consent text you saw, the time and the form you used. This record does not contain your email address.
-- **Where it comes from:** our system creates it when you sign up, confirm or unsubscribe.
+- **What:** listmonk's number and random code (UUID) for your subscription, the event (signup requested, confirmed, or the subscription ended), the version of the consent text you agreed to (the text's date), the time, and where it happened: the newsletter page, your account settings, the unsubscribe page, your mail program's one-click unsubscribe, or our note that the subscription ended in the newsletter software itself (for example when a backup of it that is restored no longer holds it). This record does not contain your email address.
+- **Where it comes from:** our system creates it. For a signup on the newsletter page, the request and the confirmation are recorded when you confirm, the request with the time you sent the form. When you switch Glia Notes on in your settings, both are recorded with the time you did so.
 - **Why:** to show that you consented, and when.
 - **Legal basis:**
   - Under KVKK: to protect our rights if your consent is ever disputed (Art. 5(2)(e)).
   - Under the GDPR: our legal duty to be able to show your consent (Art. 6(1)(c) with Art. 7(1)).
-- **How long:** while you are subscribed and for 3 years after that. The record identifies you only by the random subscriber ID. When your address is deleted from the newsletter list (when you unsubscribe or ask for deletion), our live systems can no longer connect the record to you. Backup copies age out within 6 months (see "Backups"). [TO DECIDE: B11 – 3-year period and proof of consent]
+- **How long:** while you are subscribed and for 3 years after the subscription ends. The record identifies you only by listmonk's number and random code. When your address is deleted from the newsletter list after you unsubscribe, our live systems can no longer connect the record to you. When you delete your account or confirm a deletion request, we also unlink your records: we remove the number and the code from them, so that they no longer lead to you, and keep them for 3 years from their own date; we note each unlinking by the record's number, so that it is repeated if a backup is ever restored. If we restore our main database from a backup, we carry the consent records over from the live database, as evidence. Backup copies age out within 6 months (see "Backups"). [TO DECIDE: B11 – 3-year period and proof of consent, also for unlinked records]
 
 ### Member accounts
 
@@ -125,13 +129,13 @@ Signing in with Google with an address Google manages, or with an email link, fi
 - **How long:**
   - Your account, saved items and settings: until you delete your account.
   - Sessions: 30 days from when you signed in. Sign-in links: 15 minutes, single use. Links to add an address: 24 hours, single use.
-  - Inactive accounts: activity means signing in, or using the site while signed in. If there is no activity for 24 months, we email you a warning and delete the account 30 days later. If you sign in during those 30 days, your account stays. If the warning cannot be delivered because the address no longer exists, the 30 days start without it. An account without an email address cannot be warned: we delete it 24 months and 30 days after its last activity. We send no email after deleting an account for inactivity. Legal basis: our legitimate interest in not keeping data longer than needed (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
+  - Inactive accounts: activity means signing in, or using the site while signed in. If there is no activity for 24 months, we email you a warning and delete the account 30 days later. If you sign in during those 30 days, your account stays. If the warning cannot be delivered because the address no longer exists, the 30 days start without it. An account without an email address cannot be warned: we delete it 24 months and 30 days after its last activity, and the account page says so while it has no address. We send no email after deleting an account for inactivity. Deleting an account for inactivity does not end a Glia Notes subscription (see "Glia Notes newsletter"). Legal basis: our legitimate interest in not keeping data longer than needed (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
 
-When you delete your account in your settings, we delete your account, saved items, settings and newsletter subscription at once, and record the deletion as a data request (see "Data requests"). If your account has an email address, we then send you one final email to confirm the deletion. Legal basis for that email: our legal duty to tell you what we did with your request (KVKK Art. 5(2)(ç); GDPR Art. 6(1)(c)).
+When you delete your account in your settings, we delete your account, saved items and settings at once, end the Glia Notes subscription of its address (also one made on the newsletter page) and unlink its consent records, and record the deletion as a data request (see "Data requests"). If your account has an email address, we then send you one final email to confirm the deletion, which says whether a subscription ended. Legal basis for that email: our legal duty to tell you what we did with your request (KVKK Art. 5(2)(ç); GDPR Art. 6(1)(c)).
 
 ### "Suggest a listing" form
 
-On the [Suggest a listing](/en/suggest/) page, you can point us to a position or another item.
+You can [suggest a listing](/en/suggest/) to us: point us to a position or another item.
 
 - **What:** the link (http or https only), the type of item, a note of up to 500 characters, the language of the page you used and, if you want, your email address.
 - **Where it comes from:** you, through the form.
@@ -192,7 +196,7 @@ Our web server writes a line for each request it receives.
 - **What:** each line holds:
   - the date and time;
   - your IP address (the number that identifies your internet connection), shortened before it is written so that it no longer points to your connection alone;
-  - the web address requested, including any words you typed into the site search. For sign-in, account and data-request addresses, the part after the "?" is removed before the line is written, also in the server's error log, so the single-use codes in our links never reach the logs; our links never carry email addresses. [TO DECIDE: M2 – the same for the newsletter's confirmation and unsubscribe links];
+  - the web address requested, including any words you typed into the site search. For sign-in, account, data-request and newsletter addresses, the part after the "?" is removed before the line is written, also in the server's error log, so the single-use codes in our links, and the subscription numbers and codes in the newsletter's unsubscribe links, never reach the logs; our links never carry email addresses;
   - whether the request worked, and how much data was sent;
   - other information your browser sends with each request, such as the name and version of your browser (user agent), your preferred language and the page you came from;
   - for the editing area only, the editor's user name.
@@ -213,7 +217,7 @@ The website and the other programs on our server write technical logs while they
 - **Where it comes from:** automatically, by electronic means, from our system.
 - **Why:** to find and fix errors.
 - **Legal basis:** our legitimate interest in running a secure and working website (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
-- **How long:** deleted after 14 days, like the server logs.
+- **How long:** kept in the server's system journal, which deletes them after 14 days, like the server logs.
 
 ### Visitor statistics
 
@@ -254,21 +258,21 @@ If you are named and want something corrected or removed, use the [notice and ta
 
 ### Backups
 
-- **What:** encrypted copies of the databases described above.
+- **What:** encrypted copies of the databases described above: the website's and the newsletter software's. Links that are waiting to be used (sign-in, confirmation and newsletter signup links) and the codes of the rate limits are left out.
 - **Where it comes from:** copied automatically from our databases.
 - **Where:** encrypted copies are kept on our server and, every night, copied to a second server at another company in Türkiye, not our main hosting company.
 - **Why:** to restore the service after a failure.
 - **Legal basis:** the same basis as the original data, and our legitimate interest in keeping data safe (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
 - **How long:** we keep one copy for each of the last 7 days, the last 4 weeks and the last 6 months, plus every copy from the last 2 days. So anything you delete, including a deleted account and the address of a former subscriber, disappears from the backups within 6 months.
-- **Deletions survive a restore:** when we delete data because someone asked us to (a data request, a deleted account) or because an account was inactive, we note the number of each deleted record, with no personal data, for 7 months. If we ever restore a backup, we delete those records again within minutes. A restore after a total loss can only use the latest backup, so it cannot know the deletions made after that backup was taken (at most a day).
+- **Deletions survive a restore:** when we delete data because someone asked us to (a data request, a deleted account) or because an account was inactive, we note the number of each deleted record, with no personal data, for 7 months. So we do for each address deleted from the newsletter software (by listmonk's number for it) and each consent record we unlink. If we ever restore a backup, we delete or unlink those again within minutes. A restore after a total loss can only use the latest backup, so it cannot know the deletions made after that backup was taken (at most a day). We restore both databases from the same night; if a restored newsletter database no longer holds a member's subscription, the site subscribes the member's address again the next night, with the member's consent on record.
 
 ### Emails we send you
 
 We send you only emails you asked for, or emails your account or request needs:
 
-- the newsletter confirmation email and Glia Notes itself;
+- the newsletter confirmation email, a welcome email once you confirm, and Glia Notes itself;
 - sign-in links, and a link to confirm an email address you add to your account;
-- an inactivity warning, and one final email after you delete your account yourself;
+- an inactivity warning, and one final email after you delete your account yourself (it says whether a Glia Notes subscription ended with it);
 - for data requests: a link to confirm the request, which is also our acknowledgement, and one email that says what we deleted after you confirm a deletion;
 - for "Report a problem": an automatic acknowledgement, if you gave your address;
 - the outcome of your suggestion, only if you asked for it.
@@ -277,8 +281,8 @@ We send you only emails you asked for, or emails your account or request needs:
 
 | Data | Purpose | KVKK Art. 5 | GDPR Art. 6(1) | How long |
 |---|---|---|---|---|
-| Newsletter email address and status | Send Glia Notes | Consent (5(1)) | Consent (a) | Until you unsubscribe; unconfirmed: 7 days |
-| Newsletter consent records | Show your consent | Protecting a right (5(2)(e)) | Legal obligation (c) | While subscribed, plus 3 years; no longer linked to you in our live systems once your address is deleted (backups: within 6 months) |
+| Newsletter email address and status | Send Glia Notes | Consent (5(1)) | Consent (a) | Until you unsubscribe (deleted at once); a signup not confirmed: 7 days, in our main database only |
+| Newsletter consent records | Show your consent | Protecting a right (5(2)(e)) | Legal obligation (c) | While subscribed, plus 3 years; unlinked from you when you delete your account or confirm a deletion request, then 3 years from their own date (backups: within 6 months) |
 | Bounce records | Keep the list accurate | Legitimate interest (5(2)(f)) | Legitimate interests (f) | Deleted with the address |
 | Member account | Sign-in, saved items, settings | Contract (5(2)(c)) | Contract (b) | Until you delete it; after 24 months without activity: warning, deletion 30 days later (without an email address: deletion after 24 months and 30 days) |
 | Saved items and settings | Member features | Contract (5(2)(c)) | Contract (b) | Deleted with the account |
@@ -362,6 +366,7 @@ We use only what is strictly necessary for the site to work, so there is no cook
 
 - **Member session cookie (`__Host-gliagora-session`):** keeps you signed in, for 30 days from when you signed in.
 - **Sign-in cookie (`__Host-gliagora-signin`):** set when you start signing in with Google, ORCID or an email link, for 15 minutes. It protects signing in against misuse and, for an email link, lets us warn you when the link is opened in another browser than the one where you asked for it.
+- **Newsletter cookie (`__Host-gliagora-newsletter`):** set when you send the newsletter form, for one hour from then (never extended). It holds, sealed so that it can be neither read nor changed in your browser, the address the confirmation link went to and when, with the time you sent the form and the version of the consent text, so that "Check your inbox" can show the address (partly hidden) and "Send it again" can send a new link. [TO DECIDE: B14 – the newsletter cookie among the strictly necessary ones]
 - **Editor session cookie:** only for editors of Gliagora. It cannot be read by scripts, is sent only over encrypted connections and is not sent when you arrive from another site (HttpOnly, Secure, SameSite=Strict). Its lifetime is listed on the cookies and storage page.
 
 The spam protection on forms (ALTCHA) sets no cookie and stores nothing in your browser.
@@ -427,9 +432,9 @@ If you are in the European Union, you have the right to:
 
 You can do many things yourself, straight away:
 
-- **Unsubscribe:** one click in any Glia Notes email, or one switch in your settings.
+- **Unsubscribe:** the link in any Glia Notes email, your mail program's unsubscribe button, or one switch in your settings.
 - **Download your data:** members get a JSON file (a common file format) from their settings.
-- **Delete your account:** a button in your settings. Your account, saved items, settings and newsletter subscription are deleted at once and, if your account has an email address, you receive one confirmation email. Consent records are unlinked from you, and copies in backups disappear later (see "Backups").
+- **Delete your account:** a button in your settings. Your account, saved items, settings and the Glia Notes subscription of its address are deleted at once and, if your account has an email address, you receive one confirmation email. Consent records are unlinked from you, and copies in backups disappear later (see "Backups").
 
 Anyone, member or not, can ask for deletion with the form on the [data-request page](/en/legal/data-requests/). We send a link to your email address, which works for 24 hours. When you open it and confirm, we delete at once the suggestions you sent with that address, a Gliagora account with that address, the newsletter subscription of that address and your address on problem reports (requests about your personal rights keep it), unlink your consent records and send you one email that says what we deleted. We keep a record of the request itself, as described under "Data requests".
 

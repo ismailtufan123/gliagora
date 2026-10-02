@@ -178,10 +178,18 @@ export function verifyEmailEmail({ locale, link }: { locale: Locale; link: strin
 
 /**
  * The one email after a member deleted their account in its settings (M4b, D49; the M4b design
- * §7.6), sent by `sendRequestEmails` from the request's record within minutes: what was deleted and
- * what stays (the record of the request, the backups). Nothing about the account itself.
+ * §7.6), sent by `sendRequestEmails` from the request's record within minutes: what was deleted
+ * (with the Glia Notes subscription, when one ended with it, M2) and what stays (the record of the
+ * request, the backups). Nothing about the account itself.
  */
-export function accountDeletedEmail({ locale }: { locale: Locale }): EmailText {
+export function accountDeletedEmail({
+  locale,
+  newsletterRemoved = false,
+}: {
+  locale: Locale
+  /** Whether a Glia Notes subscription ended with the account (the request's stored outcome). */
+  newsletterRemoved?: boolean
+}): EmailText {
   const t = translator(locale)
   return {
     locale,
@@ -189,6 +197,7 @@ export function accountDeletedEmail({ locale }: { locale: Locale }): EmailText {
     text: paragraphs(
       t('greeting'),
       t('account.deleted.text'),
+      newsletterRemoved ? t('account.deleted.newsletter') : null,
       t('account.deleted.kept', { privacyUrl: privacyUrl(locale) }),
       ...closing(t),
     ),

@@ -42,7 +42,11 @@ export type RequestRow = {
 
 /** The final email of each kind of deletion the site does itself, by where its request came from. */
 export const FINAL_EMAILS: Partial<Record<DataRequestSource, (row: RequestRow) => EmailText>> = {
-  account: (row) => accountDeletedEmail({ locale: emailLocale(row.locale) }),
+  account: (row) =>
+    accountDeletedEmail({
+      locale: emailLocale(row.locale),
+      newsletterRemoved: deletionOutcome(row.outcome).newsletterRemoved > 0,
+    }),
   // What was deleted, from the counts the confirmation stored, and which reports keep the address.
   form: (row) =>
     dataDeletedEmail({ locale: emailLocale(row.locale), outcome: deletionOutcome(row.outcome) }),

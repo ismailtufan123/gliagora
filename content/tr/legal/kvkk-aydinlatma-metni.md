@@ -46,29 +46,31 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 
 ### Glia Notes bülten aboneliği
 
-- **Veriler:** E-posta adresiniz ve abonelik durumunuz. Başka bilgi istemiyoruz.
+- **Veriler:** E-posta adresiniz ve abone olduğunuz bilgisi. Başka bilgi istemiyoruz.
 - **Nereden ve nasıl:**
-  - Sitedeki bülten formlarından (ana sayfa, sayfa sonları ve [bülten sayfası](/en/newsletter/)) veya üyeyseniz hesap ayarlarındaki ayrı bir onay kutusundan. Onay kutusu önceden işaretlenmemiştir; kutuyu yalnızca siz işaretleyebilirsiniz.
-  - Formu gönderdikten sonra size bir onay bağlantısı göndeririz. Aboneliğiniz ancak bu bağlantıya tıkladığınızda başlar. Bağlantı 7 gün geçerlidir.
-  - Üyeyseniz, girişte doğruladığınız e-posta adresi bu onay adımının yerine geçer. Hesabınıza yalnızca ORCID ile giriş yapıyorsanız, önce bir e-posta adresini doğrulamanız gerekir.
+  - Sitedeki [bülten sayfasından](/en/newsletter/) (İngilizce) veya üyeyseniz hesap ayarlarındaki ayrı bir onay kutusundan. Onay kutusu önceden işaretlenmemiştir; kutuyu yalnızca siz işaretleyebilirsiniz.
+  - Formu gönderdikten sonra size bir onay bağlantısı göndeririz. Bağlantı 7 gün geçerlidir; 60 saniye sonra yenisini isteyebilirsiniz. Aboneliğiniz ancak bağlantıyı açıp açılan sayfadaki düğmeye bastığınızda başlar. Ardından, abonelikten nasıl çıkacağınızı da bildiren bir hoş geldin e-postası göndeririz. İlk sayı, sitenin herkese açılışıyla birlikte gelir.
+  - Onaylayana kadar başvurunuz yalnızca bu onay bağlantısından ibarettir: sitenin veritabanında e-posta adresiniz, sayfanın dili, onayladığınız açık rıza metninin sürümü ve formu gönderdiğiniz zaman tutulur. Bu bilgiler bülten yazılımına ve yedeklere girmez ve 7 gün sonra silinir. "{en: Check your inbox}" (Gelen kutunuza bakın) sayfasının adresinizi kısmen gizli olarak gösterebilmesi ve yeni bir bağlantı gönderebilmesi için tarayıcınızda bir saatlik bir çerez tutulur (bkz. "Tarayıcınızda saklanan bilgiler").
+  - Üyeyseniz, girişte doğruladığınız e-posta adresi bu onay adımının yerine geçer: hesap ayarlarınızda bülteni açtığınızda hesabınızın adresi birkaç dakika içinde aboneliğe eklenir; hesabınızın adresini değiştirdiğinizde abonelik yeni adrese taşınır. [KARAR VERİLECEK: B19 – üyenin aboneliğinin yeni bir açık rıza alınmadan, yeni doğrulanan adrese taşınıp taşınamayacağı] Hesabınızın e-posta adresi yoksa (yalnızca ORCID ile veya Google'ın yönetmediği bir adresle Google ile giriş yapıyorsanız) önce bir onay bağlantısıyla adres eklemeniz gerekir; hesap sayfanız bunu hatırlatır. Bülten sayfasından hesabınızın adresiyle onayladığınız bir abonelik, hesap ayarlarınızda da bülteni açar; abonelikten çıkmanız bülteni orada da kapatır.
 - **Amaç:** Glia Notes'u (aylık Gliagora bülteni) size e-postayla göndermek. Bültenlerde açılma veya tıklama takibi ve takip pikseli yoktur.
 - **Hukuki sebep:**
   - Açık rızanız (KVKK m.5/1). Açık rızanızı ayrı bir metinle isteriz: [Açık rıza metni](/tr/legal/acik-riza-metni/).
   - Teslim edilemeyen adresleri listeden çıkarırken meşru menfaatimize (m.5/2 (f)) dayanırız. Bu menfaat, listeyi doğru ve güncel tutmaktır.
-- **Nerede:** Türkiye'deki kendi sunucumuzda çalışan bülten yazılımının (listmonk) veritabanında. Sitenin veritabanında bülten için e-posta adresiniz tutulmaz, yalnızca bir abone numarası tutulur. Üyeyseniz e-posta adresiniz ayrıca üye hesabınızda kayıtlıdır.
+- **Nerede:** Yalnızca onaylanmış aboneler, Türkiye'deki kendi sunucumuzda çalışan bülten yazılımının (listmonk) veritabanında tutulur: adres, ad ve IP adresi olmadan. Sitenin veritabanında bülten için e-posta adresiniz tutulmaz; yalnızca bülten yazılımının aboneliğinize verdiği numara ve rastgele kod (UUID), açık rıza kayıtlarında ve üyeyseniz hesabınızda tutulur. Üyeyseniz e-posta adresiniz ayrıca üye hesabınızda kayıtlıdır.
 - **Saklama:**
-  - abonelikten çıkana kadar; abonelikten çıktığınızda adresiniz hemen silinir;
-  - onaylanmayan adresler 7 gün sonra silinir;
+  - abonelikten çıkana kadar; abonelikten çıktığınızda adresiniz bülten yazılımından hemen silinir. Her e-postadaki abonelikten çıkma bağlantısı tek düğmeli bir sayfa açar; e-posta programınızın kendi abonelikten çıkma düğmesi de (tek tıkla, sayfa açmadan) kullanılabilir. Bağlantı, aboneliğinizin numarasını ve yalnızca e-postalarınızda bulunan rastgele kodunu taşır; böylece başkası tahminle sizi abonelikten çıkaramaz;
+  - onaylanmayan başvurular 7 gün sonra silinir;
   - kalıcı olarak teslim edilemeyen adresler hemen, geçici olarak teslim edilemeyen adresler ise üç başarısız gönderimden sonra listeden çıkarılır. Teslim hatası kayıtları, adresle birlikte silinir.
+- **Üyelikle ilişkisi:** Bülten, üye hesabınızın parçası değildir. Hesabınız 24 ay kullanılmadığı için silinirse bülten, kendi açık rıza kaydı ve abonelikten çıkma bağlantısıyla devam eder. Hesabınızı kendiniz silerseniz veya adresiniz için bir silme talebini onaylarsanız abonelik sona erer.
 - **Yaş:** Bülten için en az 16 yaşında olmanız gerekir. [KARAR VERİLECEK: B7 – 16 yaş sınırı ve 16–17 yaşındakilerin veli izni olmadan açık rızası (TMK m.16)]
 
 ### Bülten açık rıza kayıtları
 
-- **Veriler:** Abone numarası, işlemin türü (abonelik isteği, onay, abonelikten çıkma), açık rıza metninin sürümü, işlemin tarihi ve saati ile kullanılan form. E-posta adresiniz bu kayıtta yer almaz.
-- **Nereden ve nasıl:** Abonelik isteği, onay ve abonelikten çıkma sırasında sistem tarafından otomatik olarak oluşturulur.
+- **Veriler:** Bülten yazılımının aboneliğinize verdiği numara ve rastgele kod (UUID), işlemin türü (abonelik isteği, onay, aboneliğin sona ermesi), onayladığınız açık rıza metninin sürümü (metnin tarihi), işlemin tarihi ve saati ile işlemin yapıldığı yer: bülten sayfası, hesap ayarlarınız, abonelikten çıkma sayfası, e-posta programınızın tek tıkla abonelikten çıkma özelliği veya aboneliğin bülten yazılımında sona erdiğine ilişkin notumuz (örneğin geri yüklenen bir yedek aboneliği artık içermiyorsa). E-posta adresiniz bu kayıtta yer almaz.
+- **Nereden ve nasıl:** Sistem tarafından otomatik olarak oluşturulur. Bülten sayfasından yapılan bir abonelikte istek ve onay, siz onayladığınızda kaydedilir; istek, formu gönderdiğiniz zamanla. Hesap ayarlarınızda bülteni açtığınızda ikisi de açtığınız zamanla kaydedilir.
 - **Amaç:** Bülten için açık rıza verdiğinizi gerektiğinde ispat edebilmek.
 - **Hukuki sebep:** Bir hakkın tesisi, kullanılması veya korunması için zorunlu olması (KVKK m.5/2 (e)).
-- **Saklama:** Abonelik süresince ve abonelik sona erdikten sonra 3 yıl. Kayıt sizi yalnızca abone numarasıyla tanımlar. E-posta adresiniz silindiğinde (abonelikten çıktığınızda veya silinmesini istediğinizde) bu kayıt artık sizinle ilişkilendirilemez. [KARAR VERİLECEK: B11 – 3 yıllık süre ve rızanın ispatı]
+- **Saklama:** Abonelik süresince ve abonelik sona erdikten sonra 3 yıl. Kayıt sizi yalnızca bu numara ve kodla tanımlar. Abonelikten çıktığınızda e-posta adresiniz silinir ve kayıt artık sizinle ilişkilendirilemez. Hesabınızı sildiğinizde veya bir silme talebini onayladığınızda kayıtlarınızdaki numara ve kod da silinir; kayıtlar ispat için kendi tarihlerinden itibaren 3 yıl saklanır. Bu işlemi kaydın numarasıyla not ederiz; böylece bir yedek geri yüklenirse işlem yinelenir. Sitenin veritabanını bir yedekten geri yüklersek açık rıza kayıtlarını, ispat oldukları için, canlı veritabanından aktarırız. [KARAR VERİLECEK: B11 – 3 yıllık süre ve rızanın ispatı, numarası ve kodu silinmiş kayıtlar dâhil]
 
 ### Üye hesabı
 
@@ -97,9 +99,9 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Hukuki sebep:** Kullanım koşullarını kabul ettiğinizde aramızda kurulan sözleşmenin kurulması ve ifası için gerekli olması (KVKK m.5/2 (c)). [KARAR VERİLECEK: B9 – koşulların girişte nasıl kabul edileceği ve sözleşme hukuki sebebi]
 - **Saklama:**
   - hesabınız, siz silene kadar tutulur;
-  - hesabın kullanılması, giriş yapmanız veya oturumunuz açıkken siteyi kullanmanız demektir. 24 ay boyunca hiç kullanılmayan hesaplara bir uyarı e-postası göndeririz. Uyarıdan sonraki 30 gün içinde giriş yapmazsanız hesap silinir. Uyarı, adres artık var olmadığı için teslim edilemezse 30 günlük süre uyarı olmadan başlar. E-posta adresi olmayan bir hesaba uyarı gönderilemez; böyle bir hesap son kullanımından 24 ay 30 gün sonra silinir. Kullanılmadığı için silinen bir hesaba son bir e-posta göndermeyiz;
+  - hesabın kullanılması, giriş yapmanız veya oturumunuz açıkken siteyi kullanmanız demektir. 24 ay boyunca hiç kullanılmayan hesaplara bir uyarı e-postası göndeririz. Uyarıdan sonraki 30 gün içinde giriş yapmazsanız hesap silinir. Uyarı, adres artık var olmadığı için teslim edilemezse 30 günlük süre uyarı olmadan başlar. E-posta adresi olmayan bir hesaba uyarı gönderilemez; böyle bir hesap son kullanımından 24 ay 30 gün sonra silinir ve hesap sayfası, hesabın adresi olmadığı sürece bunu belirtir. Kullanılmadığı için silinen bir hesaba son bir e-posta göndermeyiz. Kullanılmadığı için hesabın silinmesi Glia Notes aboneliğini sona erdirmez (bkz. "Glia Notes bülten aboneliği");
   - oturumlar girişten itibaren en fazla 30 gün sürer; e-posta giriş bağlantıları 15 dakika, hesaba adres ekleme bağlantıları 24 saat geçerlidir ve her biri bir kez kullanılabilir;
-  - hesabınızı sildiğinizde hesap bilgileriniz, kaydettiğiniz öğeler, tercihleriniz ve bülten aboneliğiniz hemen silinir ve silme bir veri talebi olarak kaydedilir (bkz. "KVKK başvurularınız ve veri talepleriniz"). Hesabınızda e-posta adresi varsa size silme işlemini bildiren son bir e-posta göndeririz. Silinen veriler en geç 6 ay içinde yedeklerden de silinir; bkz. "Yedekler".
+  - hesabınızı sildiğinizde hesap bilgileriniz, kaydettiğiniz öğeler ve tercihleriniz hemen silinir; hesabınızın adresine ait Glia Notes aboneliği (bülten sayfasından yapılmış olsa da) sona erer ve açık rıza kayıtlarındaki numara ve kod silinir; silme bir veri talebi olarak kaydedilir (bkz. "KVKK başvurularınız ve veri talepleriniz"). Hesabınızda e-posta adresi varsa size silme işlemini bildiren son bir e-posta göndeririz; bu e-posta, bir aboneliğin de sona erip ermediğini belirtir. Silinen veriler en geç 6 ay içinde yedeklerden de silinir; bkz. "Yedekler".
 - **Kullanılmayan hesap uyarısı ve silme bildirimi:**
   - Uyarı e-postası meşru menfaatimize (m.5/2 (f)) dayanır: verileri gereğinden uzun saklamamak.
   - Silme bildirimi e-postası, silme talebinizi yerine getirdiğimizi bildirir. Hukuki yükümlülüğümüze (m.5/2 (ç)) dayanır.
@@ -113,7 +115,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - en fazla 500 karakterlik notunuz;
   - formu gönderdiğiniz sitenin dil sürümü;
   - isteğe bağlı olarak e-posta adresiniz.
-- **Nereden ve nasıl:** Sizden, ["{en: Suggest a listing}"](/en/suggest/) (İlan önerin) sayfasındaki formla. E-posta alanı isteğe bağlıdır; yanındaki onay kutusu önceden işaretlenmemiştir.
+- **Nereden ve nasıl:** Sizden, [bize bir ilan önerdiğinizde](/en/suggest/) (İngilizce "{en: Suggest a listing}" formu). E-posta alanı isteğe bağlıdır; yanındaki onay kutusu önceden işaretlenmemiştir.
 - **Amaç:**
   - Önerinizi değerlendirmek. Hiçbir öneri otomatik olarak yayımlanmaz; her öneriyi editör inceler.
   - E-posta adresinizi verdiyseniz, adresinizi yalnızca size sonucu bildirmek için kullanırız.
@@ -187,7 +189,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Veriler:**
   - maskelenmiş IP adresiniz: IPv4 adresinin son bölümü ve IPv6 adresinin ilk 48 bitinden sonraki kısmı, kayda geçmeden önce maskelenir;
   - istek zamanı ve türü;
-  - istenen sayfa adresi (arama sözcükleri gibi adreste yer alan bilgiler dâhil). Giriş, hesap ve veri talebi sayfalarının adreslerinde "?" işaretinden sonraki kısım, sunucunun hata kayıtlarında da, kayda geçmeden önce silinir; böylece bağlantılarımızdaki tek kullanımlık kodlar kayıtlara geçmez. Bağlantılarımız hiçbir zaman e-posta adresi içermez. [KARAR VERİLECEK: M2 – bültenin onay ve abonelikten çıkma bağlantıları için de aynısı];
+  - istenen sayfa adresi (arama sözcükleri gibi adreste yer alan bilgiler dâhil). Giriş, hesap, veri talebi ve bülten sayfalarının adreslerinde "?" işaretinden sonraki kısım, sunucunun hata kayıtlarında da, kayda geçmeden önce silinir; böylece bağlantılarımızdaki tek kullanımlık kodlar ve bültenin abonelikten çıkma bağlantılarındaki abonelik numarası ve kodu kayıtlara geçmez. Bağlantılarımız hiçbir zaman e-posta adresi içermez;
   - yanıt kodu ve boyutu;
   - tarayıcınızın gönderdiği diğer istek başlıkları, örneğin tarayıcı bilgisi (User-Agent), dil tercihi ve geldiğiniz sayfa (Referer).
   - Çerez ve yetkilendirme (Authorization) bilgilerini taşıyan istek başlıkları kayda geçmez.
@@ -203,7 +205,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 - **Nereden ve nasıl:** Sistem tarafından otomatik olarak.
 - **Amaç:** Hataları bulmak ve gidermek.
 - **Hukuki sebep:** Meşru menfaatimiz (m.5/2 (f)).
-- **Saklama:** Sunucu erişim kayıtlarında olduğu gibi 14 gün sonra silinir.
+- **Saklama:** Sunucunun sistem günlüğünde (journal) tutulur ve sunucu erişim kayıtlarında olduğu gibi 14 gün sonra silinir.
 
 ### Ziyaret istatistikleri
 
@@ -216,7 +218,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
 
 ### Yedekler
 
-- **Veriler:** Yukarıda anlatılan veritabanlarının kopyaları.
+- **Veriler:** Yukarıda anlatılan veritabanlarının, yani sitenin ve bülten yazılımının veritabanlarının kopyaları. Kullanılmayı bekleyen bağlantılar (giriş, onay ve bülten başvurusu bağlantıları) ve form sınırlarının karma değerleri yedeklere girmez.
 - **Nereden ve nasıl:** Yukarıdaki veritabanlarından, her gece otomatik olarak.
 - **Nerede:** Yedekler şifrelidir ve iki yerde tutulur: ana sunucumuzda ve farklı bir Türk şirketinin Türkiye'deki ikinci bir sunucusunda.
 - **Amaç:** Veri kaybında hizmeti geri yükleyebilmek.
@@ -227,7 +229,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - son 6 ayın aylık yedekleri;
   - son 2 günün tüm yedekleri.
   - Silinen tüm veriler (bülten abonelikleri, üye hesapları ve diğerleri) en geç 6 ay içinde yedeklerden de silinir.
-- **Silmeler geri yüklemeden sonra da geçerlidir:** Bir kişinin isteğiyle (veri talebi, hesap silme) veya hesap kullanılmadığı için sildiğimiz her kaydın numarasını, kişisel veri olmadan, 7 ay tutarız. Bir yedeği geri yüklememiz gerekirse bu kayıtları birkaç dakika içinde yeniden sileriz. Tam bir kayıptan sonra yapılan geri yükleme yalnızca en son yedeği kullanabileceği için, o yedekten sonra yapılan silmeleri (en fazla bir günlük) bilemez.
+- **Silmeler geri yüklemeden sonra da geçerlidir:** Bir kişinin isteğiyle (veri talebi, hesap silme) veya hesap kullanılmadığı için sildiğimiz her kaydın numarasını, kişisel veri olmadan, 7 ay tutarız. Bülten yazılımından silinen her adresi (bülten yazılımının o aboneliğe verdiği numarayla) ve numarası ve kodu silinen her açık rıza kaydını da aynı şekilde not ederiz. Bir yedeği geri yüklememiz gerekirse bu işlemleri birkaç dakika içinde yineleriz. Tam bir kayıptan sonra yapılan geri yükleme yalnızca en son yedeği kullanabileceği için, o yedekten sonra yapılan silmeleri (en fazla bir günlük) bilemez. İki veritabanını aynı gecenin yedeklerinden geri yükleriz; geri yüklenen bülten veritabanı bir üyenin aboneliğini artık içermiyorsa site, üyenin adresini, üyenin açık rızası kayıtlı olarak, ertesi gece yeniden aboneliğe ekler.
 
 ### İlanlarda ve kaynak metinlerde adı geçen kişiler
 
@@ -322,6 +324,7 @@ Tarayıcınızda yalnızca hizmetin çalışması için zorunlu bilgileri saklar
 
 - **Üye oturum çerezi (`__Host-gliagora-session`):** Giriş yaptığınızda oluşturulur ve girişten itibaren 30 gün geçerlidir.
 - **Giriş çerezi (`__Host-gliagora-signin`):** Google, ORCID veya e-posta bağlantısıyla girişe başladığınızda 15 dakika için oluşturulur. Girişi kötüye kullanıma karşı korur; e-posta bağlantısı istendiği tarayıcıdan başka bir tarayıcıda açılırsa sizi uyarmamızı sağlar.
+- **Bülten çerezi (`__Host-gliagora-newsletter`):** Bülten formunu gönderdiğinizde oluşturulur ve o andan itibaren bir saat geçerlidir; süresi uzatılmaz. Tarayıcınızda okunamayacak ve değiştirilemeyecek biçimde mühürlenmiş olarak, onay bağlantısının gönderildiği adresi ve zamanı, formu gönderdiğiniz zamanı ve açık rıza metninin sürümünü taşır. "{en: Check your inbox}" sayfasının adresi kısmen gizli olarak göstermesini ve "{en: Send it again}" (Yeniden gönder) düğmesinin yeni bir bağlantı göndermesini sağlar. [KARAR VERİLECEK: B14 – bülten çerezinin zorunlu çerezler arasında sayılması]
 - **Yönetim paneli oturum çerezi:** Yalnızca editörler için.
 
 Formlardaki spam koruması (ALTCHA) çerez kullanmaz ve tarayıcınızda hiçbir şey saklamaz.
@@ -331,7 +334,7 @@ Formlardaki spam koruması (ALTCHA) çerez kullanmaz ve tarayıcınızda hiçbir
 **Hukuki sebep:**
 
 - üye oturum çerezi: sözleşmenin ifası (m.5/2 (c));
-- giriş çerezi ve yönetim paneli oturum çerezi: meşru menfaatimiz (m.5/2 (f)).
+- giriş çerezi, bülten çerezi ve yönetim paneli oturum çerezi: meşru menfaatimiz (m.5/2 (f)).
 
 Analiz veya reklam çerezi kullanmayız. Üçüncü taraf çerezi yoktur. İstatistik yazılımımız çerez kullanmaz. Ayrıntılar, İngilizce [çerezler ve depolama sayfasında](/en/legal/cookies/) yer alır.
 
@@ -368,9 +371,9 @@ Bülten için verdiğiniz açık rızayı istediğiniz zaman geri alabilirsiniz.
 
 Bazı işlemleri bize başvurmadan, kendiniz hemen yapabilirsiniz:
 
-- **Abonelikten çıkma:** Her bültendeki tek tıkla abonelikten çıkma bağlantısını kullanın veya hesap ayarlarınızda bülten seçeneğini kapatın. Hemen geçerli olur.
+- **Abonelikten çıkma:** Her bültendeki abonelikten çıkma bağlantısını veya e-posta programınızın abonelikten çıkma düğmesini kullanın ya da hesap ayarlarınızda bülten seçeneğini kapatın. Hemen geçerli olur ve adresiniz bülten yazılımından hemen silinir.
 - **Verilerinizi indirme:** Hesap ayarlarınızdaki "{en: Download my data}" (Verilerimi indir) düğmesiyle verilerinizi bir JSON dosyası olarak indirebilirsiniz.
-- **Hesabınızı silme:** Hesap ayarlarınızdaki "{en: Delete my account}" (Hesabımı sil) düğmesini kullanın. Onayınızdan sonra hesabınız hemen silinir.
+- **Hesabınızı silme:** Hesap ayarlarınızdaki "{en: Delete my account}" (Hesabımı sil) düğmesini kullanın. Onayınızdan sonra hesabınız ve hesabınızın adresine ait Glia Notes aboneliği hemen silinir.
 - **Verilerinizin silinmesi (üye olsanız da olmasanız da):**
   - [Veri talebi sayfasındaki](/en/legal/data-requests/) formla (İngilizce) verilerinizin silinmesini isteyebilirsiniz.
   - E-posta adresinize 24 saat geçerli bir onay bağlantısı gelir. Bağlantıyı açıp onayladığınızda, e-posta adresinize bağlı kayıtlar hemen silinir: bu adresle gönderdiğiniz ilan önerileri, bu adrese sahip bir Gliagora hesabı, bu adresin bülten aboneliği ve sorun bildirimlerindeki adresiniz. Kişilik haklarınıza ilişkin talepler adresinizi saklama süreleri boyunca korur. Açık rıza kayıtlarınız anonim hâle getirilir. Ardından neyin silindiğini bildiren bir e-posta alırsınız.

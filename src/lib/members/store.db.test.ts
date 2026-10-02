@@ -12,6 +12,8 @@ import * as memberTasks from '@/migrations/20261001_201739_member_tasks'
 import * as requestGuards from '@/migrations/20261002_090000_data_request_guards'
 import * as newsletter from '@/migrations/20261002_161547_newsletter'
 import * as newsletterConstraints from '@/migrations/20261002_190000_newsletter_constraints'
+import * as membersSync from '@/migrations/20261002_200000_members_sync'
+import * as membersSyncConstraints from '@/migrations/20261002_210000_members_sync_constraints'
 
 import { orcidCheckCharacter } from './orcid-id'
 import { redeemSignInLink } from './sign-in-link'
@@ -31,6 +33,7 @@ import {
   deleteMember,
   deletePendingLinks,
   deleteSignInTokens,
+  digestHolders,
   endAllSessions,
   endOtherSessions,
   endSession,
@@ -38,14 +41,20 @@ import {
   findMember,
   findSession,
   isUniqueViolation,
+  joinDigestBySignup,
+  leaveDigestByUnsubscribe,
   listSavedJobs,
+  lockPendingDigest,
+  markDigestPending,
   markEmailVerified,
+  pendingDigestMembers,
   preferredSubfields,
   saveJob,
   savedJobIds,
   setDigest,
   setDisplayName,
   setPreferredSubfields,
+  storeDigestSync,
   touchMember,
   unsaveJob,
 } from './store'
@@ -78,6 +87,8 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
   let admin: Database
   let db: Database
   let store: MemberDb
+  /** The scratch database, as its owner (a second connection, for a test of row locks). */
+  let scratchUrl = ''
   let emails = 0
   const jobs: number[] = []
   const subfields: number[] = []
@@ -118,7 +129,8 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
     url.username = name
     url.password = password
     url.pathname = `/${name}`
-    db = drizzle(url.toString())
+    scratchUrl = url.toString()
+    db = drizzle(scratchUrl)
     store = db as unknown as MemberDb
     for (const migration of migrations) {
       await migration.up({ db } as unknown as MigrateUpArgs)
@@ -288,10 +300,12 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
           select conname from pg_constraint where contype = 'c' and right(conname, 6) = '_check'
             and conrelid::regclass::text in ('members', 'member_sessions', 'email_tokens', 'data_requests')
           order by conname`)
-      // Ten for members and data requests (M4b), one for Glia Notes' links (M2).
-      expect(await names()).toHaveLength(11)
-      // The later migrations first (one widens a check, one adds another), as migrations run
+      // Ten for members and data requests (M4b), one for Glia Notes' links and four for members'
+      // Glia Notes (M2).
+      expect(await names()).toHaveLength(15)
+      // The later migrations first (one widens a check, others add more), as migrations run
       // backwards.
+      await membersSyncConstraints.down({ db } as never)
       await newsletterConstraints.down({ db } as never)
       await requestGuards.down({ db } as never)
       await constraints.down({ db } as never)
@@ -299,7 +313,29 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       await constraints.up({ db } as never)
       await requestGuards.up({ db } as never)
       await newsletterConstraints.up({ db } as never)
-      expect(await names()).toHaveLength(11)
+      await membersSyncConstraints.up({ db } as never)
+      expect(await names()).toHaveLength(15)
+    })
+
+    it("refuse a member's Glia Notes subscriber named by half, or malformed, and a free-text version (M2)", async () => {
+      const member = await newMember()
+      const set = (values: SQL) =>
+        failure(sql`update members set ${values} where id = ${member.id}`)
+      const uuid = '0b2c6f8e-3f0a-4c1e-9d55-000000000001'
+      for (const [values, name] of [
+        [sql`digest_subscriber_id = 1`, 'id without uuid'],
+        [sql`digest_subscriber_uuid = ${uuid}`, 'uuid without id'],
+        [sql`digest_subscriber_id = 0, digest_subscriber_uuid = ${uuid}`, 'id 0'],
+        [sql`digest_subscriber_id = 1.5, digest_subscriber_uuid = ${uuid}`, 'id 1.5'],
+        [sql`digest_subscriber_id = 2147483648, digest_subscriber_uuid = ${uuid}`, 'id too large'],
+        [sql`digest_subscriber_id = 1, digest_subscriber_uuid = ${uuid.toUpperCase()}`, 'uuid'],
+        [sql`digest_consent_version = 'someone@example.org'`, 'version'],
+      ] as const) {
+        expect(await set(values), name).toBe('23514')
+      }
+      expect(await set(sql`digest_subscriber_id = 1, digest_subscriber_uuid = ${uuid}`)).toBe(
+        'no error',
+      )
     })
   })
 
@@ -1141,6 +1177,169 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       )
     })
 
+    it('leave every change of the choice, and of the address while on, waiting for the sync (M2)', async () => {
+      const member = await newMember()
+      const waiting = async () =>
+        (await pendingDigestMembers(store, { after: 0, limit: 1000 })).includes(member.id)
+      expect(await waiting()).toBe(false)
+      expect(await setDigest(store, member.id, { optIn: true, version: '2026-09-27' }, NOW)).toBe(
+        true,
+      )
+      expect(await waiting()).toBe(true)
+      // The sync holds the row: another transaction skips it rather than waiting.
+      await db.transaction(async (tx) => {
+        const locked = await lockPendingDigest(tx as unknown as MemberDb, member.id)
+        expect(locked).toMatchObject({ id: member.id, digestOptIn: true, digestSyncedAt: null })
+        const other = drizzle(scratchUrl)
+        try {
+          expect(await lockPendingDigest(other as unknown as MemberDb, member.id)).toBeNull()
+        } finally {
+          await other.$client.end()
+        }
+        await storeDigestSync(
+          tx as unknown as MemberDb,
+          member.id,
+          { id: 7, uuid: '0b2c6f8e-3f0a-4c1e-9d55-000000000007' },
+          at(1),
+        )
+      })
+      expect(await waiting()).toBe(false)
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestSyncedAt: at(1),
+        digestSubscriber: { id: 7, uuid: '0b2c6f8e-3f0a-4c1e-9d55-000000000007' },
+      })
+      expect(await lockPendingDigest(store, member.id)).toBeNull()
+      // A new address waits (the choice and its time stay); the same address does not.
+      const address = email()
+      expect(
+        await applyChanges(store, member.id, { email: address, emailVerifiedBy: 'link' }, at(2)),
+      ).toBe(true)
+      expect(await waiting()).toBe(true)
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestChangedAt: NOW,
+        digestSyncedAt: null,
+      })
+      await storeDigestSync(
+        store,
+        member.id,
+        { id: 7, uuid: '0b2c6f8e-3f0a-4c1e-9d55-000000000007' },
+        at(3),
+      )
+      await applyChanges(store, member.id, { email: address, emailVerifiedBy: 'link' }, at(4))
+      expect(await waiting()).toBe(false)
+      // A change made while the sync held the row, with an earlier clock, still waits.
+      expect(await setDigest(store, member.id, { optIn: false }, at(2))).toBe(true)
+      expect(await waiting()).toBe(true)
+      // Off, a new address does not wait.
+      await storeDigestSync(store, member.id, null, at(5))
+      await applyChanges(store, member.id, { email: email(), emailVerifiedBy: 'link' }, at(6))
+      expect(await waiting()).toBe(false)
+      // A version that is not one is refused before the database is asked.
+      await expect(
+        setDigest(store, member.id, { optIn: true, version: 'agreed on Monday' }, at(7)),
+      ).rejects.toMatchObject({ code: 'invalid' })
+    })
+
+    it('follow a signup through the form and an unsubscribe of the address (M2)', async () => {
+      const uuid = (n: number) => `0b2c6f8e-3f0a-4c1e-9d55-${String(n).padStart(12, '0')}`
+      const member = await newMember()
+      // A confirmed signup of the member's address: on, synced, with the form's version.
+      expect(
+        await joinDigestBySignup(
+          store,
+          member.email!,
+          { id: 11, uuid: uuid(11) },
+          '2026-09-27',
+          at(1),
+        ),
+      ).toBe(1)
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestOptIn: true,
+        digestChangedAt: at(1),
+        digestSyncedAt: at(1),
+        digestConsentVersion: '2026-09-27',
+        digestSubscriber: { id: 11, uuid: uuid(11) },
+      })
+      // Unsubscribed: off, synced, without a subscriber.
+      expect(
+        await leaveDigestByUnsubscribe(store, member.email, { id: 11, uuid: uuid(11) }, at(2)),
+      ).toBe(1)
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestOptIn: false,
+        digestChangedAt: at(2),
+        digestSyncedAt: at(2),
+        digestSubscriber: null,
+      })
+      // A member already off without a subscriber is left as it was.
+      expect(
+        await leaveDigestByUnsubscribe(store, member.email, { id: 11, uuid: uuid(11) }, at(3)),
+      ).toBe(0)
+
+      // A member whose row still names another subscriber (an address change not synced yet)
+      // keeps it, waiting for the sync, which deletes it.
+      await storeDigestSync(store, member.id, { id: 12, uuid: uuid(12) }, at(4))
+      expect(
+        await joinDigestBySignup(
+          store,
+          member.email!,
+          { id: 13, uuid: uuid(13) },
+          '2026-09-27',
+          at(5),
+        ),
+      ).toBe(1)
+      expect(await findMember(store, { id: member.id })).toMatchObject({
+        digestOptIn: true,
+        digestSyncedAt: null,
+        digestSubscriber: { id: 12, uuid: uuid(12) },
+      })
+      // Unsubscribing that other subscriber by its link reaches the member by the subscriber.
+      const other = await newMember()
+      await storeDigestSync(store, other.id, { id: 14, uuid: uuid(14) }, at(4))
+      await setDigest(store, other.id, { optIn: true, version: '2026-09-27' }, at(3))
+      await storeDigestSync(store, other.id, { id: 14, uuid: uuid(14) }, at(4))
+      expect(
+        await leaveDigestByUnsubscribe(
+          store,
+          'old-address@example.org',
+          { id: 14, uuid: uuid(14) },
+          at(6),
+        ),
+      ).toBe(1)
+      expect(await findMember(store, { id: other.id })).toMatchObject({
+        digestOptIn: false,
+        digestSubscriber: null,
+      })
+    })
+
+    it('mark a member whose subscriber is gone as waiting, only while the row names it (M2)', async () => {
+      const uuid = '0b2c6f8e-3f0a-4c1e-9d55-000000000021'
+      const member = await newMember()
+      await setDigest(store, member.id, { optIn: true, version: '2026-09-27' }, NOW)
+      await storeDigestSync(store, member.id, { id: 21, uuid }, at(1))
+      const held = (await digestHolders(store, { after: 0, limit: 1000 })).find(
+        (holder) => holder.memberId === member.id,
+      )
+      expect(held).toEqual({ memberId: member.id, subscriber: { id: 21, uuid } })
+      expect(
+        await markDigestPending(
+          store,
+          {
+            memberId: member.id,
+            subscriber: { id: 21, uuid: '0b2c6f8e-3f0a-4c1e-9d55-000000000022' },
+          },
+          at(2),
+        ),
+      ).toBe(false)
+      expect(await markDigestPending(store, held!, at(2))).toBe(true)
+      expect(await findMember(store, { id: member.id })).toMatchObject({ digestSyncedAt: null })
+      // Waiting, it is no holder for the check.
+      expect(
+        (await digestHolders(store, { after: 0, limit: 1000 })).some(
+          (holder) => holder.memberId === member.id,
+        ),
+      ).toBe(false)
+    })
+
     it('store the preferred subfields that are active subfields, at most 12, and replace them', async () => {
       const member = await newMember()
       const slugs = await rows<{ slug: string }>(sql`
@@ -1410,6 +1609,9 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
         insert into deletion_log (target_collection, target_id, action, at)
         values ('newsletter', 42, 'delete', now()), ('members', 43, 'delete', now())`)
 
+      // The later migration of members' Glia Notes first: it extends the deletion log's types.
+      await membersSyncConstraints.down({ db } as never)
+      await membersSync.down({ db } as never)
       await newsletterConstraints.down({ db } as never)
       await newsletter.down({ db } as never)
       expect(await checks()).toEqual([])
@@ -1433,9 +1635,45 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
 
       await newsletter.up({ db } as never)
       await newsletterConstraints.up({ db } as never)
+      await membersSync.up({ db } as never)
+      await membersSyncConstraints.up({ db } as never)
       expect(await checks()).toHaveLength(7)
       expect(await enumLabels('enum_email_tokens_purpose')).toContain('newsletter')
       expect(await enumLabels('enum_deletion_log_target_collection')).toContain('newsletter')
+    })
+
+    it("of members' Glia Notes can be undone and redone, the constraints first (M2)", async () => {
+      const columns = () =>
+        count(sql`
+          select count(*)::int as n from information_schema.columns
+          where table_name = 'members' and column_name in ('digest_synced_at',
+            'digest_subscriber_id', 'digest_subscriber_uuid')`)
+      const enumLabels = (type: string) =>
+        rows<{ label: string }>(sql`
+          select e.enumlabel as label from pg_enum e join pg_type t on t.oid = e.enumtypid
+          where t.typname = ${type} order by e.enumsortorder`).then((r) => r.map((x) => x.label))
+      expect(await columns()).toBe(3)
+      // Rows of the new values, which the old types cannot hold, go with the down; others stay.
+      await db.execute(sql`
+        insert into deletion_log (target_collection, target_id, action, at)
+        values ('consent-log', 51, 'unlink', now()), ('newsletter', 52, 'delete', now())`)
+      await membersSyncConstraints.down({ db } as never)
+      await membersSync.down({ db } as never)
+      expect(await columns()).toBe(0)
+      expect(await enumLabels('enum_deletion_log_target_collection')).not.toContain('consent-log')
+      expect(await enumLabels('enum_deletion_log_action')).toEqual(['delete', 'clear-email'])
+      expect(await enumLabels('enum_payload_jobs_task_slug')).not.toContain('syncGliaNotes')
+      expect(
+        await count(sql`select count(*)::int as n from deletion_log where target_id in (51, 52)`),
+      ).toBe(1)
+      await membersSync.up({ db } as never)
+      await membersSyncConstraints.up({ db } as never)
+      expect(await columns()).toBe(3)
+      expect(await enumLabels('enum_deletion_log_action')).toContain('unlink')
+      expect(await enumLabels('enum_payload_jobs_task_slug')).toEqual(
+        expect.arrayContaining(['syncGliaNotes', 'checkGliaNotesMembers']),
+      )
+      expect(await newMember()).toMatchObject({ digestSubscriber: null, digestSyncedAt: null })
     })
 
     it('can be undone and redone, the constraints first', async () => {
@@ -1450,12 +1688,17 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
           select count(*)::int as n from information_schema.columns
           where table_name = 'payload_locked_documents_rels' and column_name = 'data_requests_id'`)
       expect(await tables()).toHaveLength(7)
+      // The later migration that adds members' columns first, and last on the way up (M2).
+      await membersSyncConstraints.down({ db } as never)
+      await membersSync.down({ db } as never)
       await constraints.down({ db } as never)
       await members.down({ db } as never)
       expect(await tables()).toEqual([])
       expect(await lockColumn()).toBe(0)
       await members.up({ db } as never)
       await constraints.up({ db } as never)
+      await membersSync.up({ db } as never)
+      await membersSyncConstraints.up({ db } as never)
       expect(await tables()).toHaveLength(7)
       expect(await lockColumn()).toBe(1)
       expect(await newMember()).toMatchObject({ id: expect.any(Number) })

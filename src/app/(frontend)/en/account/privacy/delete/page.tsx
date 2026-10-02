@@ -88,6 +88,8 @@ export default async function Page({ searchParams }: Props) {
           <ul className="grid list-disc gap-2 ps-6">
             <li>{t('gone.account')}</li>
             <li>{t('gone.saved')}</li>
+            {/* Glia Notes needs an address (M2): deleting the account ends a subscription. */}
+            {member.email && <li>{t('gone.newsletter')}</li>}
             <li>{t('gone.settings')}</li>
             <li>{t('gone.sessions')}</li>
           </ul>

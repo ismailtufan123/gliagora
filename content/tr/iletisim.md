@@ -47,7 +47,7 @@ Bir içerik nedeniyle kişilik haklarınızın ihlal edildiğini düşünüyorsa
 
 Hatalı bir bilgiyi ya da kapanmış veya geri çekilmiş bir ilanı bildirmek için de bize yazabilirsiniz. İşverenler kendi ilanlarının güncellenmesini ya da kaldırılmasını isteyebilir.
 
-Talebinizi İngilizce [{en: Report a problem}](/en/report/) (Sorun bildirin) formuyla ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine gönderebilirsiniz. Bu forma [{en: Notice and takedown}](/en/legal/takedown/) sayfasından da ulaşılır. Talebinizde şunları belirtin:
+Talebinizi [bize bildirebilir](/en/report/) ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine yazabilirsiniz. Sitedeki İngilizce bildirim formuna ("{en: Report a problem}", Sorun bildirin) [{en: Notice and takedown}](/en/legal/takedown/) sayfasından da ulaşılır. Talebinizde şunları belirtin:
 
 - ilgili sayfanın bağlantısı;
 - sorunun ne olduğu;

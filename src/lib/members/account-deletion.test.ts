@@ -23,6 +23,8 @@ const member: MemberRecord = {
   digestOptIn: false,
   digestChangedAt: null,
   digestConsentVersion: null,
+  digestSyncedAt: null,
+  digestSubscriber: null,
   lastSeenAt: NOW,
   deletionWarnedAt: null,
   warningRefusedAt: null,

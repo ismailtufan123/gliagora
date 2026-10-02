@@ -16,8 +16,8 @@ No link changes.
 ## `/en/contact/`
 
 - “suggest a listing” (`/en/suggest/`): **email** to hello@gliagora.com. In: “Anyone can [suggest a listing], and our editor decides whether to publish it.”
-- “report form” (`/en/report/`): **email** to hello@gliagora.com. In: “fill in our [report form], also linked from our [notice and takedown page], our page for correction and removal requests;”
-- “notice and takedown page” (`/en/legal/takedown/`): **words only** (the page is not public). In: “fill in our [report form], also linked from our [notice and takedown page], our page for correction and removal requests;”
+- “report it to us” (`/en/report/`): **email** to hello@gliagora.com. In: “[report it to us], also from our [notice and takedown page], the page for correction and removal requests;”
+- “notice and takedown page” (`/en/legal/takedown/`): **words only** (the page is not public). In: “[report it to us], also from our [notice and takedown page], the page for correction and removal requests;”
 - “data-request page” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “**For any other request, or if you have no account:** use the [data-request page] or email [privacy@gliagora.com].”
 - “Terms of use” (`/en/legal/terms/`): **words only** (the page is not public). In: “[Terms of use]”
 - “Cookies and storage” (`/en/legal/cookies/`): **words only** (the page is not public). In: “[Cookies and storage]”
@@ -26,15 +26,15 @@ No link changes.
 
 ## `/tr/iletisim/`
 
-- “{en: Report a problem}” (`/en/report/`): **email** to hello@gliagora.com. In: “Talebinizi İngilizce [{en: Report a problem}] (Sorun bildirin) formuyla ya da [hello@gliagora.com] adresine gönderebilirsiniz.”
-- “{en: Notice and takedown}” (`/en/legal/takedown/`): **words only** (the page is not public). In: “Bu forma [{en: Notice and takedown}] sayfasından da ulaşılır.”
+- “bize bildirebilir” (`/en/report/`): **email** to hello@gliagora.com. In: “Talebinizi [bize bildirebilir] ya da [hello@gliagora.com] adresine yazabilirsiniz.”
+- “{en: Notice and takedown}” (`/en/legal/takedown/`): **words only** (the page is not public). In: “Sitedeki İngilizce bildirim formuna ("{en: Report a problem}", Sorun bildirin) [{en: Notice and takedown}] sayfasından da ulaşılır.”
 - “{en: Data requests}” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “Diğer başvurular için İngilizce [{en: Data requests}] sayfasını kullanabilir ya da [privacy@gliagora.com] adresine Türkçe ya da İngilizce yazabilirsiniz.”
 
 ## `/en/legal/privacy/`
 
 - “data-request page” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “**Web form:** the [data-request page].”
 - “terms of use” (`/en/legal/terms/`): **words only** (the page is not public). In: “**Legal basis:** our agreement with you: the [terms of use] you accept when you create an account (KVKK Art. 5(2)(c); GDPR Art. 6(1)(b)).”
-- “Suggest a listing” (`/en/suggest/`): **email** to hello@gliagora.com. In: “On the [Suggest a listing] page, you can point us to a position or another item.”
+- “suggest a listing” (`/en/suggest/`): **email** to hello@gliagora.com. In: “You can [suggest a listing] to us: point us to a position or another item.”
 - “data-request page” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “**Where it comes from:** you, through the form on the [data-request page], by email or through your account settings.”
 - “notice and takedown page” (`/en/legal/takedown/`): **words only** (the page is not public). In: “You can also ask us to correct or remove content on the [notice and takedown page].”
 - “data-request page” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “If you confirm a deletion request on the [data-request page], we clear your email address from your problem reports and corrections at once.”
@@ -46,7 +46,7 @@ No link changes.
 
 ## `/tr/legal/kvkk-aydinlatma-metni/`
 
-- “"{en: Suggest a listing}"” (`/en/suggest/`): **email** to hello@gliagora.com. In: “**Nereden ve nasıl:** Sizden, ["{en: Suggest a listing}"] (İlan önerin) sayfasındaki formla.”
+- “bize bir ilan önerdiğinizde” (`/en/suggest/`): **email** to hello@gliagora.com. In: “**Nereden ve nasıl:** Sizden, [bize bir ilan önerdiğinizde] (İngilizce "{en: Suggest a listing}" formu).”
 - “{en: Notice and takedown}” (`/en/legal/takedown/`): **words only** (the page is not public). In: “İngilizce [{en: Notice and takedown}] (kaldırma ve düzeltme) sayfası;”
 - “Veri talebi sayfasından” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “[Veri talebi sayfasından] bir silme talebini onaylarsanız, sorun bildirimlerinizdeki ve düzeltme taleplerinizdeki e-posta adresinizi hemen sileriz.”
 - “veri talebi sayfasındaki” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “**Nereden ve nasıl:** Sizden: [veri talebi sayfasındaki] formdan (İngilizce), e-postayla veya üyeyseniz hesap ayarlarındaki araçlarla.”
@@ -73,8 +73,8 @@ No link changes.
 
 ## `/en/legal/takedown/`
 
-- “The report form” (`/en/report/`): **email** to hello@gliagora.com. In: “**[The report form]:** the same form, also without an item, for corrections, removals and requests about your personal rights.”
-- “the report form” (`/en/report/`): **email** to hello@gliagora.com. In: “For a request about your personal rights, use [the report form] or email, so that we can reply.”
+- “report it to us” (`/en/report/`): **email** to hello@gliagora.com. In: “**Without an item:** [report it to us], also for corrections, removals and requests about your personal rights.”
+- “report it to us” (`/en/report/`): **email** to hello@gliagora.com. In: “For a request about your personal rights, [report it to us] with your email address, so that we can reply.”
 - “data-request page” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “To see, correct or delete the personal data we hold about you, such as your newsletter address, use the [data-request page] or write to [privacy@gliagora.com].”
 
 ## `/en/legal/data-requests/`

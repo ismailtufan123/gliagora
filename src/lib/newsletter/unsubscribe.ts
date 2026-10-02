@@ -9,7 +9,7 @@ import { newReference } from '@/lib/forms/public-form'
 import { normaliseEmail } from '@/lib/members/email-address'
 import { type ErrorCode, outcomePath } from '@/lib/members/outcome'
 import { formValue, readForm, seeOther } from '@/lib/members/responses'
-import { deletePendingLinks } from '@/lib/members/store'
+import { deletePendingLinks, leaveDigestByUnsubscribe } from '@/lib/members/store'
 
 import { PREVIEW_UUID, unsubscribeLink } from './consent'
 import type { ListmonkClient, Subscriber } from './listmonk'
@@ -26,22 +26,23 @@ import { logSubscriberDeletion, recordConsent } from './store'
 //    constant time: the UUID, in the emails only, is what proves the link is the subscriber's;
 // 2. in one transaction, the consent record of the unsubscribe, a deletion-log row for the
 //    subscriber (so `applyDeletionLog` deletes it again if step 3 fails, or after a restore of
-//    listmonk's database brought it back), and the end of the address's pending signup links (a
-//    link asked for earlier no longer subscribes it again);
+//    listmonk's database brought it back), the end of the address's pending signup links (a link
+//    asked for earlier no longer subscribes it again), and Glia Notes off for a member with that
+//    address or that subscriber (`leaveDigestByUnsubscribe`: synced, so the members' sync never
+//    subscribes the address again);
 // 3. the subscriber is deleted in listmonk: the address is gone then (§18.1). A failure here is
 //    logged by class; the deletion log repeats it within 10 minutes, and the answer is the same.
 // An unknown ID, a UUID that is not the subscriber's, or listmonk's preview UUID get the same
 // answer as an unsubscribe, and nothing is done; that answer says the address is deleted only "if
 // it was on the list". A link that is incomplete (either value missing or malformed, which anyone
-// can see from the address itself) leads back to the page, which says so. (Members with that
-// address get Glia Notes off in the same transaction in PR D.)
+// can see from the address itself) leads back to the page, which says so.
 
 /** Where an unsubscribe came from. */
 export type UnsubscribeSource = Extract<ConsentSource, 'unsubscribe-link' | 'one-click'>
 
 /**
- * Writes the unsubscribe's consent record, its deletion-log row and the end of the address's
- * pending signup links, in one transaction.
+ * Writes the unsubscribe's consent record, its deletion-log row, the end of the address's pending
+ * signup links and Glia Notes off for its member, in one transaction.
  */
 export function recordUnsubscribe(
   payload: Payload,
@@ -69,6 +70,7 @@ export function recordUnsubscribe(
     // (only an admin could make it) has none, and never blocks the unsubscribe.
     const email = normaliseEmail(subscriber.email)
     if (email) await deletePendingLinks(db, 'newsletter', email)
+    await leaveDigestByUnsubscribe(db, email, { id: subscriber.id, uuid: subscriber.uuid }, now)
   })
 }
 

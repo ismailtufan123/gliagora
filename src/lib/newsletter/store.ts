@@ -197,16 +197,20 @@ export function openSubscriptions(db: MemberDb): Promise<OpenSubscription[]> {
 }
 
 /**
- * Records the end of subscriptions listmonk no longer has (event `unsubscribed`, source
- * `listmonk`), so their consent records are deleted 3 years later (CONSENT_LOG_YEARS); only where
- * the newest record is still not an unsubscribe. Returns how many it recorded.
+ * Records the end of subscriptions (event `unsubscribed`), so their consent records are deleted 3
+ * years later (CONSENT_LOG_YEARS); only where the newest record is still not an unsubscribe. The
+ * source says why: `listmonk`, listmonk no longer has the subscriber (src/lib/newsletter/
+ * reconcile.ts); `account`, a member's sync deleted it (Glia Notes off, or another subscriber holds
+ * it now, src/lib/newsletter/members.ts). Returns how many it recorded.
  */
 export function recordEndedSubscriptions(
   db: MemberDb,
   ended: readonly OpenSubscription[],
   now: Date,
+  source: Extract<ConsentSource, 'listmonk' | 'account'> = 'listmonk',
 ): Promise<number> {
   return guarded(async () => {
+    const why = checked(z.enum(['listmonk', 'account']), source, 'source')
     let recorded = 0
     for (const subscription of ended) {
       const uuid = checked(z.string().regex(SUBSCRIBER_UUID_PATTERN), subscription.uuid, 'uuid')
@@ -214,8 +218,8 @@ export function recordEndedSubscriptions(
       const { rows } = await db.execute<{ id: number }>(sql`
         INSERT INTO consent_log (subscriber_uuid, subscriber_id, event, consent_version, source, at,
           created_at, updated_at)
-        SELECT ${uuid}, ${id}, 'unsubscribed', NULL, 'listmonk', ${iso(now)}, ${iso(now)},
-          ${iso(now)}
+        SELECT ${uuid}, ${id}, 'unsubscribed', NULL, ${why}::enum_consent_log_source, ${iso(now)},
+          ${iso(now)}, ${iso(now)}
         WHERE (SELECT event::text FROM consent_log WHERE subscriber_uuid = ${uuid}
           ORDER BY at DESC, id DESC LIMIT 1) IS DISTINCT FROM 'unsubscribed'
         RETURNING id`)
@@ -246,6 +250,107 @@ export function purgeConsentLog(db: MemberDb, now: Date, limit: number): Promise
         WHERE (subscriber_uuid IS NULL AND at <= ${cutoff})
           OR subscriber_uuid IN (SELECT subscriber_uuid FROM ended)
         ORDER BY id
+        LIMIT ${n})
+      RETURNING id`)
+    return rows.length
+  })
+}
+
+const uuidSchema = z.string().regex(SUBSCRIBER_UUID_PATTERN)
+
+/**
+ * Whether the subscription of this subscriber has its consent on record since `since`: a
+ * `confirmed` record at that time or later, and no unsubscribe as its newest record. A member's sync
+ * writes the member's consent where it is not (src/lib/newsletter/members.ts).
+ */
+export function consentOnRecord(db: MemberDb, subscriber: string, since: Date): Promise<boolean> {
+  return guarded(async () => {
+    const wanted = checked(uuidSchema, subscriber, 'uuid')
+    const { rows } = await db.execute<{ found: boolean }>(sql`
+      SELECT EXISTS (
+          SELECT 1 FROM consent_log
+          WHERE subscriber_uuid = ${wanted} AND event = 'confirmed' AND at >= ${iso(since)})
+        AND (SELECT event::text FROM consent_log WHERE subscriber_uuid = ${wanted}
+          ORDER BY at DESC, id DESC LIMIT 1) IS DISTINCT FROM 'unsubscribed' AS found`)
+    return rows[0]?.found === true
+  })
+}
+
+/** A consent record as the person's own data export shows it (no subscriber, no row ID). */
+export type ExportedConsent = {
+  event: ConsentEvent
+  consentVersion: string | null
+  source: ConsentSource
+  at: Date
+}
+
+/** The consent records of a subscriber, oldest first (a member's data export). */
+export function consentRecordsOf(db: MemberDb, subscriber: string): Promise<ExportedConsent[]> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{
+      event: ConsentEvent
+      consent_version: string | null
+      source: ConsentSource
+      at: unknown
+    }>(sql`
+      SELECT event, consent_version, source, at FROM consent_log
+      WHERE subscriber_uuid = ${checked(uuidSchema, subscriber, 'uuid')}
+      ORDER BY at, id`)
+    return rows.map((row) => ({
+      event: row.event,
+      consentVersion: row.consent_version,
+      source: row.source,
+      at: toDate(row.at),
+    }))
+  })
+}
+
+/**
+ * An erasure (src/lib/newsletter/erase.ts): the consent records of these subscribers no longer
+ * name them (UUID and ID cleared together), so they can no longer be tied to the person; each is
+ * logged (`consent-log`, `unlink`, the record's ID) in the same transaction, so `applyDeletionLog`
+ * unlinks it again if a restore brings the link back. The records stay, as evidence of the consent,
+ * until their 3 years from their own time are up. Returns how many it unlinked.
+ */
+export function unlinkConsent(
+  db: MemberDb,
+  subscribers: readonly string[],
+  now: Date,
+): Promise<number> {
+  return guarded(async () => {
+    const wanted = checked(subscriberUuids, [...new Set(subscribers)], 'uuids')
+    if (wanted.length === 0) return 0
+    const { rows } = await db.execute<{ target_id: number }>(sql`
+      WITH unlinked AS (
+        UPDATE consent_log SET subscriber_uuid = NULL, subscriber_id = NULL, updated_at = ${iso(now)}
+        WHERE subscriber_uuid IN (${sql.join(
+          wanted.map((value) => sql`${value}`),
+          sql`, `,
+        )})
+        RETURNING id)
+      INSERT INTO deletion_log (target_collection, target_id, action, at)
+      SELECT 'consent-log', id, 'unlink', ${iso(now)}::timestamptz FROM unlinked
+      RETURNING target_id`)
+    return rows.length
+  })
+}
+
+/**
+ * `applyDeletionLog`: unlinks again, at most `limit`, the consent records the log names as
+ * unlinked that name a subscriber again (a restore brought the link back), if they were created no
+ * later than the logged unlink (a restore also sets the IDs back). Returns how many.
+ */
+export function unlinkLoggedConsent(db: MemberDb, now: Date, limit: number): Promise<number> {
+  return guarded(async () => {
+    const n = checked(z.number().int().min(1).max(10_000), limit, 'limit')
+    const { rows } = await db.execute<{ id: number }>(sql`
+      UPDATE consent_log SET subscriber_uuid = NULL, subscriber_id = NULL, updated_at = ${iso(now)}
+      WHERE id IN (
+        SELECT c.id FROM deletion_log l
+          JOIN consent_log c ON c.id = l.target_id AND c.created_at <= l.at
+        WHERE l.target_collection = 'consent-log' AND l.action = 'unlink'
+          AND c.subscriber_uuid IS NOT NULL
+        ORDER BY c.id
         LIMIT ${n})
       RETURNING id`)
     return rows.length

@@ -8,9 +8,9 @@ You can ask us whether we hold data about you and ask for a copy of it. You can 
 
 ## Do it yourself, at once
 
-- **Unsubscribe from Glia Notes:** use the one-click link in any Glia Notes email, or the newsletter switch in your account settings. It takes effect immediately.
+- **Unsubscribe from Glia Notes:** use the link in any Glia Notes email, your mail program's unsubscribe button, or the newsletter switch in your account settings. It takes effect immediately, and your address is deleted from the newsletter list then.
 - **Download your data (members):** "Download my data" in your account settings gives you a JSON file, a common file format.
-- **Delete your account (members):** use "Delete my account" in your account settings. When you confirm, we delete your account, saved items, settings and newsletter subscription at once. Your consent records are unlinked from you. If your account has an email address, we then send you one final email to confirm the deletion. We record the deletion as a request (see "Records of your request").
+- **Delete your account (members):** use "Delete my account" in your account settings. When you confirm, we delete your account, saved items and settings at once, and end the Glia Notes subscription of its address (also one made on the newsletter page). Your consent records are unlinked from you. If your account has an email address, we then send you one final email to confirm the deletion. We record the deletion as a request (see "Records of your request").
 
 ## Delete your data with the form
 
@@ -44,7 +44,7 @@ Before we act, we check that the request comes from you, so that no one else can
 
 ## Data we cannot find
 
-- **Consent records** identify you only by a random subscriber ID, never by your email address. Once your address has been deleted from the newsletter list, our live systems can no longer connect them to you.
+- **Consent records** identify you only by the newsletter software's number and random code for your subscription, never by your email address. Once your address has been deleted from the newsletter list, our live systems can no longer connect them to you. If you are a member, your account names your subscription: "Download my data" includes its consent records.
 - **Visitor statistics** are counted without cookies. We cannot tell which records, if any, come from your visits. [TO DECIDE: B14 – fields of a raw Umami event, and whether they are personal data]
 
 If you can give us details that would let us find such a record, we will check.

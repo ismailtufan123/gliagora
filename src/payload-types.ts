@@ -147,6 +147,8 @@ export interface Config {
       purgeMemberAuth: TaskPurgeMemberAuth;
       cleanInactiveMembers: TaskCleanInactiveMembers;
       sendRequestEmails: TaskSendRequestEmails;
+      syncGliaNotes: TaskSyncGliaNotes;
+      checkGliaNotesMembers: TaskCheckGliaNotesMembers;
       inline: {
         input: unknown;
         output: unknown;
@@ -1722,6 +1724,9 @@ export interface Member {
   digestOptIn?: boolean | null;
   digestChangedAt?: string | null;
   digestConsentVersion?: string | null;
+  digestSyncedAt?: string | null;
+  digestSubscriberId?: number | null;
+  digestSubscriberUuid?: string | null;
   subfieldPrefs?: (number | Term)[] | null;
   lastSeenAt: string;
   deletionWarnedAt?: string | null;
@@ -1787,9 +1792,9 @@ export interface SavedItem {
  */
 export interface DeletionLog {
   id: number;
-  targetCollection: 'members' | 'submissions' | 'reports' | 'newsletter';
+  targetCollection: 'members' | 'submissions' | 'reports' | 'newsletter' | 'consent-log';
   targetId: number;
-  action: 'delete' | 'clear-email';
+  action: 'delete' | 'clear-email' | 'unlink';
   at: string;
 }
 /**
@@ -1888,7 +1893,9 @@ export interface PayloadJob {
           | 'applyDeletionLog'
           | 'purgeMemberAuth'
           | 'cleanInactiveMembers'
-          | 'sendRequestEmails';
+          | 'sendRequestEmails'
+          | 'syncGliaNotes'
+          | 'checkGliaNotesMembers';
         taskID: string;
         input?:
           | {
@@ -1935,6 +1942,8 @@ export interface PayloadJob {
         | 'purgeMemberAuth'
         | 'cleanInactiveMembers'
         | 'sendRequestEmails'
+        | 'syncGliaNotes'
+        | 'checkGliaNotesMembers'
       )
     | null;
   queue?: string | null;
@@ -2330,6 +2339,9 @@ export interface MembersSelect<T extends boolean = true> {
   digestOptIn?: T;
   digestChangedAt?: T;
   digestConsentVersion?: T;
+  digestSyncedAt?: T;
+  digestSubscriberId?: T;
+  digestSubscriberUuid?: T;
   subfieldPrefs?: T;
   lastSeenAt?: T;
   deletionWarnedAt?: T;
@@ -2672,6 +2684,7 @@ export interface TaskApplyDeletionLog {
     reportAddresses?: number | null;
     subscribers?: number | null;
     subscriptionsEnded?: number | null;
+    consentUnlinked?: number | null;
     failed?: number | null;
     skipped?: boolean | null;
   };
@@ -2714,6 +2727,32 @@ export interface TaskSendRequestEmails {
   input?: unknown;
   output: {
     sent?: number | null;
+    failed?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSyncGliaNotes".
+ */
+export interface TaskSyncGliaNotes {
+  input?: unknown;
+  output: {
+    subscribed?: number | null;
+    unsubscribed?: number | null;
+    failed?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskCheckGliaNotesMembers".
+ */
+export interface TaskCheckGliaNotesMembers {
+  input?: unknown;
+  output: {
+    checked?: number | null;
+    pending?: number | null;
     failed?: number | null;
     skipped?: boolean | null;
   };

@@ -41,7 +41,7 @@ export const CONTENT_PAGES = {
     messages: 'contact',
     path: '/en/contact/',
     file: 'en/contact.md',
-    updated: '2026-09-28',
+    updated: '2026-10-02',
     draft: true,
   },
   iletisim: {
@@ -49,7 +49,7 @@ export const CONTENT_PAGES = {
     messages: 'contact',
     path: '/tr/iletisim/',
     file: 'tr/iletisim.md',
-    updated: '2026-09-28',
+    updated: '2026-10-02',
     draft: true,
   },
   privacy: {
@@ -73,7 +73,7 @@ export const CONTENT_PAGES = {
     messages: 'acikRiza',
     path: '/tr/legal/acik-riza-metni/',
     file: 'tr/legal/acik-riza-metni.md',
-    updated: '2026-09-27',
+    updated: '2026-10-02',
     draft: true,
   },
   cookies: {
@@ -81,7 +81,7 @@ export const CONTENT_PAGES = {
     messages: 'cookies',
     path: '/en/legal/cookies/',
     file: 'en/legal/cookies.md',
-    updated: '2026-10-01',
+    updated: '2026-10-02',
     draft: true,
   },
   terms: {
@@ -97,7 +97,7 @@ export const CONTENT_PAGES = {
     messages: 'takedown',
     path: '/en/legal/takedown/',
     file: 'en/legal/takedown.md',
-    updated: '2026-09-28',
+    updated: '2026-10-02',
     draft: true,
   },
   dataRequests: {

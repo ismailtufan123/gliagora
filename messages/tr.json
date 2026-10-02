@@ -950,6 +950,8 @@
       "google": "Google hesabınızla oturum açtınız."
     },
     "displayName": "Görünen adınız: <strong>{name}</strong>",
+    "noEmailNotice": "Hesabınızın e-posta adresi olmadığı için, {months} ay {days} gün boyunca kullanılmadığında silinmeden önce sizi uyaramayız. <link>Bir e-posta adresi eklerseniz</link> uyarabiliriz (ve Glia Notes'a katılabilirsiniz).",
+    "noEmailNoticeLater": "Hesabınızın e-posta adresi olmadığı için, {months} ay {days} gün boyunca kullanılmadığında silinmeden önce sizi uyaramayız. Bir e-posta adresi eklediğinizde uyarabiliriz (ve Glia Notes'a katılabilirsiniz); adres eklemek daha sonra burada mümkün olacak.",
     "digest": {
       "heading": "Glia Notes",
       "text": "Glia Notes aylık bültendir: yeni pozisyonlar ve yaklaşan son başvuru tarihleri, ayda bir e-posta kutunuzda.",
@@ -1036,7 +1038,7 @@
       "signedOutTitle": "Verilerinizi yönetmek için oturum açın",
       "download": {
         "heading": "Verilerinizi indirin",
-        "text": "Gliagora'nın hesabınızla ilgili tuttuğu her şeyi içeren bir dosya: e-posta adresiniz ve oturum açma yollarınız, Glia Notes tercihiniz, tercih ettiğiniz alt alanlar, kaydettiğiniz pozisyonlar ve oturumlarınız; ayrıca e-posta adresinizle gönderilen öneriler, bildirimler ve veri talepleri.",
+        "text": "Gliagora'nın hesabınızla ilgili tuttuğu her şeyi içeren bir dosya: e-posta adresiniz ve oturum açma yollarınız, Glia Notes tercihiniz ve aboneliğinizin açık rıza kayıtları, tercih ettiğiniz alt alanlar, kaydettiğiniz pozisyonlar ve oturumlarınız; ayrıca e-posta adresinizle gönderilen öneriler, bildirimler ve veri talepleri.",
         "link": "Verilerimi indir",
         "format": "Dosya, programların ve metin düzenleyicilerin açabildiği bir metin biçimi olan JSON biçimindedir."
       },
@@ -1061,7 +1063,8 @@
       "gone": {
         "account": "Hesabınız ve hesabınızda oturum açma yollarınız",
         "saved": "Kaydettiğiniz pozisyonlar",
-        "settings": "Glia Notes tercihiniz, tercih ettiğiniz alt alanlar ve görünen adınız",
+        "newsletter": "Varsa Glia Notes aboneliğiniz: adresi e-posta listemizden silinir",
+        "settings": "Tercih ettiğiniz alt alanlar ve görünen adınız",
         "sessions": "Oturumlarınız: tüm tarayıcılarda oturumunuz kapatılır"
       },
       "keptHeading": "Kalanlar",
@@ -1077,7 +1080,7 @@
     "deleted": {
       "metaTitle": "Hesap silindi",
       "title": "Hesabınız silindi",
-      "text": "Gliagora hesabınız, kaydettiğiniz pozisyonlar ve ayarlarınız silindi; tüm tarayıcılarda oturumunuz kapatıldı.",
+      "text": "Gliagora hesabınız, kaydettiğiniz pozisyonlar, ayarlarınız ve varsa Glia Notes aboneliğiniz silindi; tüm tarayıcılarda oturumunuz kapatıldı.",
       "kept": "Talebinizi yerine getirdiğimizi gösterebilmek için talebinizin kaydını 2 yıl saklarız. Yedeklerimiz hesabınızı en fazla 6 ay tutabilir; bir yedek geri yüklenirse hesabınız yeniden silinir.",
       "email": "Hesabınızın bir e-posta adresi varsa silme işlemini doğrulayan bir e-postayı da o adrese alabilirsiniz.",
       "jobs": "Pozisyonlara göz atın",
@@ -1256,12 +1259,13 @@
       "deleted": {
         "subject": "Gliagora hesabınız silindi",
         "text": "İsteğiniz üzerine Gliagora | Neuroscience hesabınızı, kaydettiğiniz pozisyonlar ve ayarlarınızla birlikte sildik.",
+        "newsletter": "Glia Notes aboneliğiniz de sona erdi: adresini e-posta listemizden sildik.",
         "kept": "Talebinizi yerine getirdiğimizi gösterebilmek için talebinizin kaydını bu e-posta adresiyle birlikte 2 yıl saklarız. Yedeklerimiz hesabınızı en fazla 6 ay tutabilir; bir yedek geri yüklenirse hesabınız yeniden silinir. Verilerinizi nasıl işlediğimiz: {privacyUrl}"
       },
       "inactiveWarning": {
         "subject": "Gliagora hesabınız silinecek",
         "text": "Gliagora | Neuroscience hesabınızı 2 yıldır kullanmadınız. Hesabınızı korumak için {date} tarihinden önce oturum açın:",
-        "after": "O tarihten önce oturum açmazsanız hesabınızı, kaydettiğiniz pozisyonlar ve ayarlarınızla birlikte o gün ya da kısa süre sonra sileriz. Hesaba artık ihtiyacınız yoksa hiçbir şey yapmanız gerekmez.",
+        "after": "O tarihten önce oturum açmazsanız hesabınızı, kaydettiğiniz pozisyonlar ve ayarlarınızla birlikte o gün ya da kısa süre sonra sileriz. Glia Notes bunun parçası değildir: alıyorsanız gelmeye devam eder ve her sayısında abonelikten çıkma bağlantısı bulunur. Hesaba artık ihtiyacınız yoksa hiçbir şey yapmanız gerekmez.",
         "why": "Artık ihtiyaç duymadığımız verileri saklamamak için 2 yıldır kullanılmayan hesapları sileriz. Verilerinizi nasıl işlediğimiz: {privacyUrl}"
       }
     }

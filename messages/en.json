@@ -950,6 +950,8 @@
       "google": "You are signed in with your Google account."
     },
     "displayName": "Your display name: <strong>{name}</strong>",
+    "noEmailNotice": "Your account has no email address, so we cannot warn you before it is deleted after {months} months and {days} days without activity. If you <link>add an email address</link>, we can (and you can join Glia Notes).",
+    "noEmailNoticeLater": "Your account has no email address, so we cannot warn you before it is deleted after {months} months and {days} days without activity. Once you add an email address, we can (and you can join Glia Notes); adding one will be possible here later.",
     "digest": {
       "heading": "Glia Notes",
       "text": "Glia Notes is the monthly digest: new positions and the deadlines ahead, once a month in your inbox.",
@@ -1036,7 +1038,7 @@
       "signedOutTitle": "Sign in to manage your data",
       "download": {
         "heading": "Download your data",
-        "text": "A file with everything Gliagora holds about your account: your email address and ways to sign in, your Glia Notes choice, preferred subfields, saved positions and sessions, and the suggestions, reports and data requests sent with your email address.",
+        "text": "A file with everything Gliagora holds about your account: your email address and ways to sign in, your Glia Notes choice with the consent records of your subscription, preferred subfields, saved positions and sessions, and the suggestions, reports and data requests sent with your email address.",
         "link": "Download my data",
         "format": "The file is in JSON, a text format that programs and text editors can open."
       },
@@ -1061,7 +1063,8 @@
       "gone": {
         "account": "Your account and the ways you sign in to it",
         "saved": "Your saved positions",
-        "settings": "Your Glia Notes choice, preferred subfields and display name",
+        "newsletter": "Your Glia Notes subscription, if you have one: its address is deleted from our mailing list",
+        "settings": "Your preferred subfields and display name",
         "sessions": "Your sessions: you are signed out in every browser"
       },
       "keptHeading": "What stays",
@@ -1077,7 +1080,7 @@
     "deleted": {
       "metaTitle": "Account deleted",
       "title": "Your account has been deleted",
-      "text": "Your Gliagora account, your saved positions and your settings have been deleted, and you have been signed out in every browser.",
+      "text": "Your Gliagora account, your saved positions, your settings and your Glia Notes subscription, if you had one, have been deleted, and you have been signed out in every browser.",
       "kept": "We keep a record of your request for 2 years, to show that we handled it. Our backups may hold your account for up to 6 months; if a backup is ever restored, your account is deleted again.",
       "email": "If your account had an email address, you may also receive one email there confirming the deletion.",
       "jobs": "Browse positions",
@@ -1256,12 +1259,13 @@
       "deleted": {
         "subject": "Your Gliagora account has been deleted",
         "text": "As you asked, we have deleted your Gliagora | Neuroscience account, with your saved positions and your settings.",
+        "newsletter": "Your Glia Notes subscription has ended too: we have deleted its address from our mailing list.",
         "kept": "We keep a record of your request, with this email address, for 2 years, to show that we handled it. Our backups may hold your account for up to 6 months; if a backup is ever restored, your account is deleted again. How we handle your data: {privacyUrl}"
       },
       "inactiveWarning": {
         "subject": "Your Gliagora account will be deleted",
         "text": "You have not used your Gliagora | Neuroscience account for 2 years. To keep it, sign in before {date}:",
-        "after": "If you do not sign in before then, we will delete the account on that day or soon after, with your saved positions and your settings. If you no longer need it, you need not do anything.",
+        "after": "If you do not sign in before then, we will delete the account on that day or soon after, with your saved positions and your settings. Glia Notes is not part of this: if you receive it, it continues, and every issue has a link to unsubscribe. If you no longer need the account, you need not do anything.",
         "why": "We delete accounts that have not been used for 2 years, so that we keep no data we no longer need. How we handle your data: {privacyUrl}"
       }
     }

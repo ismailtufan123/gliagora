@@ -18,18 +18,21 @@ import { SignedInAs } from '@/components/account/SignedInAs'
 import { altchaKey } from '@/lib/forms/altcha'
 import { memberPageIndexed } from '@/lib/indexing'
 import { readOutcome } from '@/lib/members/outcome'
-import { MEMBER_PATHS, providerStartPath } from '@/lib/members/paths'
+import { ACCOUNT_SECTIONS, MEMBER_PATHS, providerStartPath } from '@/lib/members/paths'
 import { type CurrentMember, currentMember, memberRequest } from '@/lib/members/session'
 import { memberDb, preferredSubfields } from '@/lib/members/store'
 import { activeSubfields } from '@/lib/records'
+import { INACTIVITY_GRACE_DAYS, INACTIVITY_MONTHS } from '@/lib/retention/rules'
 
-// The account (M4b, D49; the M4b design §2, §5, §7.4): who is signed in; Glia Notes; the preferred
-// subfields, the jobs list's default filter (D35); the email address, added or changed through an
-// emailed link; the ways to sign in (Google and ORCID can be linked, through their start routes
-// with `link=1`, and removed, unless one is the last way in); and the display name. Downloading
-// the data, signing out everywhere and deleting the account are on the privacy page
-// (/en/account/privacy/). For a visitor who is signed out, the same address shows the sign-in panel (200, not
-// a redirect: the header links here, and every header link must lead to a page). `?done=` and
+// The account (M4b, D49; the M4b design §2, §5, §7.4): who is signed in (with a notice for an
+// account without an email address, which gets no warning before its deletion for inactivity: the
+// operator's addition to D49); Glia Notes; the preferred subfields, the jobs list's default filter
+// (D35); the email address, added or changed through an emailed link; the ways to sign in (Google
+// and ORCID can be linked, through their start routes with `link=1`, and removed, unless one is the
+// last way in); and the display name. Downloading the data, signing out everywhere and deleting the
+// account are on the privacy page (/en/account/privacy/). For a visitor who is signed out, the same
+// address shows the sign-in panel (200, not a redirect: the header links here, and every header
+// link must lead to a page). `?done=` and
 // `?error=` are the outcomes of the routes and links that lead here (OutcomeMessage). Rendered for
 // each request, never indexed.
 export const dynamic = 'force-dynamic'
@@ -187,6 +190,21 @@ export default async function Page({ searchParams }: Props) {
                 name: member.displayName,
                 strong: (chunks) => <strong className="wrap-anywhere">{chunks}</strong>,
               })}
+            </p>
+          )}
+          {/* Without an address there is no warning before the deletion for inactivity. */}
+          {member.email === null && (
+            <p className="notice">
+              {canAddEmail
+                ? t.rich('noEmailNotice', {
+                    months: INACTIVITY_MONTHS,
+                    days: INACTIVITY_GRACE_DAYS,
+                    link: (chunks) => <a href={`#${ACCOUNT_SECTIONS.email}`}>{chunks}</a>,
+                  })
+                : t('noEmailNoticeLater', {
+                    months: INACTIVITY_MONTHS,
+                    days: INACTIVITY_GRACE_DAYS,
+                  })}
             </p>
           )}
         </div>

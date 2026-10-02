@@ -504,7 +504,10 @@ describe.skipIf(!canStartMailpit || !canStartListmonk)(
       expect(
         await rows(
           payload,
-          sql`select action from deletion_log where target_collection = 'newsletter' and target_id = ${id}`,
+          // At this moment: listmonk's IDs start at 1 in every test file's listmonk, and the
+          // members' tests log the same IDs (glia-notes-members.db.test.ts).
+          sql`select action from deletion_log where target_collection = 'newsletter'
+            and target_id = ${id} and at = ${now.toISOString()}`,
         ),
       ).toEqual([{ action: 'delete' }])
       expect(

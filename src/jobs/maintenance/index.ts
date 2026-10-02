@@ -7,14 +7,15 @@ import { PurgeFormLimitsTask } from './purgeFormLimits'
 import { PurgeMemberAuthTask } from './purgeMemberAuth'
 import { PurgeRetentionTask } from './purgeRetention'
 import { SendRequestEmailsTask } from './sendRequestEmails'
+import { CheckGliaNotesMembersTask, SyncGliaNotesTask } from './syncGliaNotes'
 import { SyncJobPlacesTask } from './syncJobPlaces'
 
 export { MAINTENANCE_QUEUE, MANUAL_QUEUE } from './task'
 
 /**
- * The scheduled maintenance tasks (M4.7; the member tasks M4b), in the order `pnpm jobs:run` runs
- * them. Their times are in UTC; they run only where PAYLOAD_JOBS_AUTORUN is "true"
- * (payload.config.ts).
+ * The scheduled maintenance tasks (M4.7; the member tasks M4b; members' Glia Notes M2), in the
+ * order `pnpm jobs:run` runs them. Their times are in UTC; they run only where
+ * PAYLOAD_JOBS_AUTORUN is "true" (payload.config.ts).
  */
 export const MAINTENANCE_TASKS = [
   ExpireListingsTask, // hourly at :05
@@ -27,4 +28,6 @@ export const MAINTENANCE_TASKS = [
   PurgeMemberAuthTask, // hourly at :10
   CleanInactiveMembersTask, // 05:30
   SendRequestEmailsTask, // every 5 minutes
+  SyncGliaNotesTask, // every 5 minutes, at :02, :07, …
+  CheckGliaNotesMembersTask, // 06:00
 ]

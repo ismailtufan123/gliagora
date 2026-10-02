@@ -6,6 +6,7 @@ import { errorSummary } from '@/lib/errors'
 import { deleteMember, memberDb, revivedMembers } from '@/lib/members/store'
 import { listmonkFromEnv } from '@/lib/newsletter/listmonk'
 import { reconcileSubscribers } from '@/lib/newsletter/reconcile'
+import { unlinkLoggedConsent } from '@/lib/newsletter/store'
 import { REAPPLY } from '@/lib/retention/context'
 
 import { logCounts, maintenanceTask } from './task'
@@ -26,7 +27,11 @@ import { logCounts, maintenanceTask } from './task'
 //   src/lib/newsletter/reconcile.ts reads listmonk's list of Glia Notes' subscribers whole and
 //   checks every one against the log on every run, and also records the end of subscriptions
 //   listmonk no longer has (their consent records then keep their 3 years). listmonk unreachable
-//   stops this part for the run (counted as failed); the next run tries again.
+//   stops this part for the run (counted as failed); the next run tries again. The subscribers a
+//   member's "off" or an erasure deleted are logged the same way;
+// - a consent record unlinked from its subscriber by an erasure (`consent-log`, `unlink`; M2),
+//   unlinked again if it names a subscriber again (a restore that did not carry the consent log
+//   over). Also while listmonk is off.
 // Only a record created no later than the logged deletion: a restore also sets the ID sequences
 // back, so a record made since can have a logged ID, and it stays. Normally there is nothing to do;
 // the selections join the log with the records, so a run without a restore reads no record. The
@@ -105,6 +110,7 @@ export async function applyDeletionLog(payload: Payload, now: Date) {
     reportAddresses: 0,
     subscribers: 0,
     subscriptionsEnded: 0,
+    consentUnlinked: 0,
     failed: 0,
   }
 
@@ -153,6 +159,11 @@ export async function applyDeletionLog(payload: Payload, now: Date) {
   counts.reports = reports.done
   counts.reportAddresses = addresses.done
   counts.failed += suggestions.failed + reports.failed + addresses.failed
+  for (let batch = 0; batch < MAX_BATCHES; batch++) {
+    const unlinked = await unlinkLoggedConsent(db, now, BATCH)
+    counts.consentUnlinked += unlinked
+    if (unlinked < BATCH) break
+  }
   const listmonk = listmonkFromEnv()
   if (listmonk) {
     const subscribers = await reconcileSubscribers(db, listmonk, now, (line) =>
@@ -177,6 +188,7 @@ export const ApplyDeletionLogTask = maintenanceTask({
     'reportAddresses',
     'subscribers',
     'subscriptionsEnded',
+    'consentUnlinked',
     'failed',
   ],
   run: applyDeletionLog,
