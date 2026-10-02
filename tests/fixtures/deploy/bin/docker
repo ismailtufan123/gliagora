@@ -29,6 +29,7 @@ if [[ "${1:-}" == compose ]]; then
   if [[ " $* " == *" config --services "* ]]; then printf '%s\n' ${FAKE_SERVICES:-}; exit 0; fi
   if [[ " $* " == *" up -d --wait --wait-timeout "* ]]; then exit "${FAKE_UP_EXIT:-0}"; fi
   if [[ " $* " == *" pg_dump "* ]]; then echo "dump of ${*: -1}"; exit 0; fi
+  if [[ " $* " == *" pg_restore "* ]]; then cat >/dev/null; exit 0; fi
   if [[ " $* " == *" ps -aq app "* || " $* " == *" ps -q app "* ]]; then echo app-container; exit 0; fi
   if [[ " $* " == *" ps --all --format "* ]]; then printf '%s\n' "${FAKE_PS:-}" | tr ';' '\n'; exit 0; fi
   if [[ " $* " == *" ps -q --status running listmonk "* ]]; then

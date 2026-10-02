@@ -8,10 +8,12 @@
 #   sudo ./restore.sh config [SNAPSHOT] TARGET_DIR  # copy the backed-up settings into TARGET_DIR
 #   sudo ./restore.sh carry DIR [DB]                # load rows a failed `database` kept in DIR
 #
-# SNAPSHOT is a snapshot ID from `list`, or `latest` (the default). Each database has snapshots
-# of its own (the app's gliagora, listmonk's listmonk); DB is one of them. `test latest` without DB
-# tests every database in DATABASES (backup.env), each in a fresh container of its own; otherwise,
-# and for `database`, DB defaults to the one a snapshot ID holds, or to gliagora with `latest`.
+# SNAPSHOT is a snapshot ID from `list`, or `latest` (the default): the newest one, and for
+# `database` the newest that is not the safety backup of a restore (tag pre-restore). Each database
+# has snapshots of its own (the app's gliagora, listmonk's listmonk); DB is one of them. `test
+# latest` without DB tests every database in DATABASES (backup.env), each in a fresh container of
+# its own; otherwise, and for `database`, DB defaults to the one a snapshot ID holds, or to
+# gliagora with `latest`.
 # `database` asks for confirmation (or pass --yes as the last argument), takes a safety backup of
 # the current databases first, stops the service that uses the database (the app, or listmonk)
 # while restoring and starts it again afterwards. For the app's database it keeps the live
@@ -27,15 +29,38 @@ compose() { docker compose --project-directory "$COMPOSE_DIR" -f "$COMPOSE_DIR/c
 # The comment block at the top of this file, without its "# ".
 usage() { awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; exit 1; }
 
+# The ID of the newest snapshot with tag $1, passing over those also tagged $2 (if given); empty
+# when there is none. Newest by each snapshot's own time, whatever order restic lists them in.
+newest_snapshot() {
+  local tag=$1 skip=${2:-} json line time='' tags='' at newest='' newest_at=-1
+  json=$(restic snapshots --host "$HOST_TAG" --tag "$tag" --json) || return 1
+  while IFS= read -r line; do
+    case $line in
+      '"time":'*) time=${line:8:-1} ;;
+      '"tags":'*) tags=$line ;;
+      '"id":'*)
+        if [[ -n "$time" && ( -z "$skip" || "$tags" != *"\"$skip\""* ) ]]; then
+          at=$(date -u -d "$time" +%s%N) || return 1
+          if ((at > newest_at)); then newest_at=$at newest=${line:6:64}; fi
+        fi
+        time='' tags=''
+        ;;
+    esac
+  done < <(grep -oE '"time":"[^"]+"|"tags":\[[^]]*\]|"id":"[0-9a-f]{64}"' <<<"$json" || true)
+  echo "$newest"
+}
+
 # Turns "latest" into the ID of the newest snapshot with the given tag, so that later backups
-# (such as the safety backup before a restore) cannot change which snapshot is used.
+# (such as the safety backup before a restore) cannot change which snapshot is used. `database`
+# passes over the safety backups of earlier restores (tag pre-restore, its second argument):
+# otherwise, after restoring one database, `database latest` of the other would pick the state
+# that restore's safety backup just stored (on a new server: its empty database). It keeps
+# pre-update snapshots: the newest one can be the one to restore.
 resolve_snapshot() {
-  local tag=$1 id
+  local tag=$1 skip=${2:-} id
   if [[ "$snapshot" == latest ]]; then
-    # `|| true`: without a snapshot grep finds nothing, which must reach the message below.
-    id=$(restic snapshots --host "$HOST_TAG" --tag "$tag" --latest 1 --json \
-      | grep -o '"id":"[0-9a-f]\{64\}"' | tail -n 1 | cut -d'"' -f4) || true
-    [[ -n "$id" ]] || fail "No snapshot with tag $tag."
+    id=$(newest_snapshot "$tag" "$skip") || fail "Could not list the snapshots with tag $tag."
+    [[ -n "$id" ]] || fail "No snapshot with tag $tag${skip:+ (other than $skip)}."
     snapshot=$id
   fi
 }
@@ -382,7 +407,7 @@ finish it (deploy/README.md, section 7)."
       if [[ "$snapshot" == latest ]]; then db=gliagora; else db=$(snapshot_database) || fail "Snapshot $snapshot holds no database dump."; fi
     fi
     service=$(service_of "$db") || fail "No service is known to use the database $db."
-    resolve_snapshot "db:$db"
+    resolve_snapshot "db:$db" pre-restore
     require_dump "$db"
     describe_snapshot
     echo
@@ -409,6 +434,14 @@ finish it (deploy/README.md, section 7)."
     log "Recreating database $db"
     compose exec -T db dropdb -U postgres --if-exists --force "$db"
     compose exec -T db createdb -U postgres --owner "$db" "$db"
+    # A new database lets every role connect (PUBLIC), and pg_restore without --create does not
+    # bring back the dump's own rule: take it away, as the init scripts do (postgres/init/), so
+    # another app's role (listmonk's, say) cannot reach this database.
+    compose exec -T db psql -U postgres -d postgres -X -q -v ON_ERROR_STOP=1 \
+      -c "REVOKE ALL ON DATABASE \"$db\" FROM PUBLIC" \
+      || fail "Could not take PUBLIC's access to the new, still empty database $db away. $service \
+is stopped. Run '$0 database $snapshot $db' again, or go back to the newest 'pre-restore' snapshot.\
+${carry:+ The rows to carry over are in $carry.}"
     log "Restoring $db from snapshot ${snapshot:0:8}"
     if ! dump_database "$db" \
       | compose exec -T db pg_restore -U postgres -d "$db" --no-owner --role "$db" --exit-on-error; then

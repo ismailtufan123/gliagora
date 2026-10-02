@@ -1,14 +1,40 @@
 #!/usr/bin/env bash
-# A stand-in for restic. Every call is added to $FAKE_LOG/restic.log. FAKE_SNAPSHOTS names the
-# databases that have a snapshot (separated by spaces); each one's ID is a hex digit repeated 64
-# times: a for gliagora, b for listmonk, c for any other. `backup --stdin` reads the dump and
-# answers with a snapshot ID.
+# A stand-in for restic. Every call is added to $FAKE_LOG/restic.log.
+#
+# With FAKE_RESTIC_STATE, a file of snapshots, one per line: "ID TIME TAG,TAG…" (TIME in seconds
+# since 1970; the newest is not necessarily last), it keeps them as restic does: `backup` adds one
+# (a new ID, a minute after the newest, with its --tag values), `snapshots` lists those with a tag
+# or an ID as restic's JSON (oldest first, or newest first with FAKE_RESTIC_NEWEST_FIRST, since
+# restore.sh must not rely on the order), `forget ID` removes one.
+#
+# Without it, FAKE_SNAPSHOTS names the databases that have one nightly snapshot (separated by
+# spaces); each one's ID is a hex digit repeated 64 times: a for gliagora, b for listmonk, c for
+# any other. `backup --stdin` reads the dump and answers with a snapshot ID.
 set -euo pipefail
 printf 'restic %s\n' "$*" >>"$FAKE_LOG/restic.log"
 id_of() {
   local c=c
   case $1 in gliagora) c=a ;; listmonk) c=b ;; esac
   printf "%0.s$c" $(seq 1 64)
+}
+state=${FAKE_RESTIC_STATE:-}
+if [[ -z "$state" ]]; then
+  state=$(mktemp)
+  trap 'rm -f "$state"' EXIT
+  for db in ${FAKE_SNAPSHOTS:-}; do echo "$(id_of "$db") 1790901000 nightly,db:$db" >>"$state"; done
+fi
+# The snapshots of the state as restic's JSON, in the state's order or reversed.
+json() {
+  local id at tags first=true
+  printf '['
+  while read -r id at tags; do
+    $first || printf ','
+    first=false
+    printf '{"time":"%s","tree":"%s","paths":["/x.dump"],"hostname":"gliagora","username":"root","tags":["%s"],"program_version":"restic 0.17.3","summary":{"backup_start":"%s","files_new":1},"id":"%s","short_id":"%s"}' \
+      "$(date -u -d "@$at" +%Y-%m-%dT%H:%M:%S.123456789+00:00)" "$id" "${tags//,/\",\"}" \
+      "$(date -u -d "@$at" +%FT%TZ)" "$id" "${id:0:8}"
+  done < <(if [[ -n "${FAKE_RESTIC_NEWEST_FIRST:-}" ]]; then sort -k2,2nr; else sort -k2,2n; fi)
+  printf ']\n'
 }
 case "${1:-}" in
   cat) exit 0 ;;
@@ -24,27 +50,41 @@ case "${1:-}" in
         *) target=$1; shift ;;
       esac
     done
-    if [[ -n "$tag" ]]; then
-      db=${tag#db:}
-      if [[ " ${FAKE_SNAPSHOTS:-} " == *" $db "* ]]; then
-        printf '[{"id":"%s","tags":["nightly","db:%s"]}]\n' "$(id_of "$db")" "$db"
-      else
-        echo '[]'
-      fi
-    elif [[ "$json" == true ]]; then
-      for db in ${FAKE_SNAPSHOTS:-}; do
-        [[ "$(id_of "$db")" == "$target"* ]] && printf '[{"id":"%s","tags":["nightly","db:%s"]}]\n' "$(id_of "$db")" "$db"
-      done
+    if [[ "$json" == true ]]; then
+      grep -E "^${target:-[0-9a-f]}[0-9a-f]* [0-9]+ (.*,)?${tag:-[^ ]*}(,.*)?$" "$state" | json || true
     else
       echo "ID ${target:0:8}  2026-10-04 00:30  gliagora  nightly"
     fi
     ;;
   ls) exit 0 ;;
   dump) echo "dump of $3" ;;
+  forget)
+    if [[ -n "${FAKE_RESTIC_STATE:-}" && "${2:-}" =~ ^[0-9a-f]{64}$ ]]; then
+      grep -v "^$2 " "$state" >"$state.new" || true
+      mv "$state.new" "$state"
+    fi
+    ;;
   backup)
-    if [[ " $* " == *" --stdin "* ]]; then
+    tags=() stdin=false
+    shift
+    while [[ $# -gt 0 ]]; do
+      case $1 in
+        --tag) tags+=("$2"); shift 2 ;;
+        --stdin) stdin=true; shift ;;
+        *) shift ;;
+      esac
+    done
+    if [[ "$stdin" == true ]]; then
       cat >>"$FAKE_LOG/restic.stdin"
-      echo '{"message_type":"summary","snapshot_id":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}'
+    fi
+    count=$(wc -l <"$state")
+    id=$(printf '%064x' $((count + 4096)))
+    newest=$(sort -k2,2n "$state" | tail -n 1 | cut -d' ' -f2)
+    tagged=$(IFS=,; echo "${tags[*]}")
+    [[ -z "${FAKE_RESTIC_STATE:-}" ]] || echo "$id $(( ${newest:-1790901000} + 60 )) $tagged" >>"$state"
+    if [[ "$stdin" == true ]]; then
+      if [[ -n "${FAKE_RESTIC_STATE:-}" ]]; then snapshot=$id; else snapshot=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef; fi
+      echo "{\"message_type\":\"summary\",\"snapshot_id\":\"$snapshot\"}"
     fi
     ;;
   *) exit 0 ;;

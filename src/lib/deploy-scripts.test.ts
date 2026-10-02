@@ -287,7 +287,7 @@ describe('backup/backup.sh', () => {
 describe('backup/restore.sh', () => {
   const SCRIPT = join(DEPLOY, 'backup/restore.sh')
 
-  function restore(args: string[], snapshots: string) {
+  function restore(args: string[], snapshots: string, env: Record<string, string> = {}) {
     const dir = folder()
     writeFileSync(join(dir, 'compose.prod.yml'), 'name: gliagora\n')
     writeFileSync(
@@ -298,15 +298,98 @@ describe('backup/restore.sh', () => {
       BACKUP_CONFIG: join(dir, 'backup.env'),
       FAKE_LOG: dir,
       FAKE_SNAPSHOTS: snapshots,
+      ...env,
     })
-    let docker = ''
-    try {
-      docker = readFileSync(join(dir, 'docker.log'), 'utf8')
-    } catch {
-      // Not called.
+    const log = (name: string) => {
+      try {
+        return readFileSync(join(dir, name), 'utf8')
+      } catch {
+        return '' // Not called.
+      }
     }
-    return { ...result, docker }
+    return { ...result, docker: log('docker.log'), restic: log('restic.log') }
   }
+
+  /** A snapshot ID of the order-keeping restic stand-in's state. */
+  const id = (n: number) => n.toString(16).padStart(64, '0')
+
+  /** The stand-in's state: the old server's last night, then later backups. */
+  function snapshots(...later: string[]) {
+    const file = join(folder(), 'snapshots')
+    writeFileSync(
+      file,
+      [
+        `${id(1)} 1790900000 nightly,db:gliagora`,
+        `${id(2)} 1790900000 nightly,db:listmonk`,
+        `${id(3)} 1790900000 nightly,config`,
+        ...later,
+      ].join('\n') + '\n',
+    )
+    return file
+  }
+
+  it('restores `database latest` from the newest backup, never from an earlier restore’s safety backup', () => {
+    // On a new server: restoring gliagora first took a safety backup of every database, the new
+    // server's empty listmonk included (README, step 7). listmonk's `latest` must still be the
+    // old server's, whatever order restic lists the snapshots in, and stays so after this restore
+    // takes its own safety backup.
+    const state = snapshots(
+      `${id(4)} 1790990000 pre-restore,db:gliagora`,
+      `${id(5)} 1790990000 pre-restore,db:listmonk`,
+    )
+    for (const newestFirst of ['', '1', '']) {
+      const run = restore(['database', 'latest', 'listmonk', '--yes'], '', {
+        FAKE_RESTIC_STATE: state,
+        FAKE_RESTIC_NEWEST_FIRST: newestFirst,
+        FAKE_DATABASES: 'gliagora listmonk',
+      })
+      expect(run.status, run.output).toBe(0)
+      expect(run.restic).toContain(`restic dump ${id(2)} /listmonk.dump\n`)
+      expect(run.output).toContain('Restore finished.')
+    }
+    expect(readFileSync(state, 'utf8').match(/ pre-restore,db:listmonk$/gm)).toHaveLength(4)
+    // A pre-update snapshot newer than the night is the newest backup: it counts.
+    const updated = snapshots(`${id(6)} 1790950000 pre-update,db:listmonk`)
+    const run = restore(['database', 'latest', 'listmonk', '--yes'], '', {
+      FAKE_RESTIC_STATE: updated,
+      FAKE_DATABASES: 'gliagora listmonk',
+    })
+    expect(run.restic).toContain(`restic dump ${id(6)} /listmonk.dump\n`)
+    // `test latest` checks the newest of all, safety backups included.
+    const tested = restore(['test', 'latest', 'listmonk'], '', { FAKE_RESTIC_STATE: state })
+    expect(tested.status, tested.output).toBe(0)
+    expect(tested.restic).toMatch(/restic dump (\S+) \/listmonk\.dump\n/)
+    expect(tested.restic).not.toContain(`restic dump ${id(2)} `)
+    // Without a snapshot other than safety backups, it says so and changes nothing.
+    const only = join(folder(), 'snapshots')
+    writeFileSync(only, `${id(8)} 1790990000 pre-restore,db:listmonk\n`)
+    const none = restore(['database', 'latest', 'listmonk', '--yes'], '', {
+      FAKE_RESTIC_STATE: only,
+    })
+    expect(none.status).toBe(1)
+    expect(none.output).toContain('No snapshot with tag db:listmonk (other than pre-restore).')
+    expect(none.docker).toBe('')
+  })
+
+  it('takes PUBLIC’s access to a recreated database away before restoring into it', () => {
+    const run = restore(['database', 'latest', 'listmonk', '--yes'], 'gliagora listmonk', {
+      FAKE_DATABASES: 'gliagora listmonk',
+    })
+    expect(run.status, run.output).toBe(0)
+    const calls = run.docker.split('\n')
+    const created = calls.findIndex((call) =>
+      call.includes(' createdb -U postgres --owner listmonk listmonk'),
+    )
+    const revoked = calls.findIndex((call) =>
+      call.endsWith('-X -q -v ON_ERROR_STOP=1 -c REVOKE ALL ON DATABASE "listmonk" FROM PUBLIC'),
+    )
+    const restored = calls.findIndex((call) =>
+      call.includes(' pg_restore -U postgres -d listmonk '),
+    )
+    expect(created).toBeGreaterThan(-1)
+    expect(revoked).toBe(created + 1)
+    expect(restored).toBeGreaterThan(revoked)
+  })
 
   it('without a database, tests every database of DATABASES, each in its own container', () => {
     const { status, output, docker } = restore(['test', 'latest'], 'gliagora listmonk')
