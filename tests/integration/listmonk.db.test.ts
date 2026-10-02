@@ -95,7 +95,8 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
         type: 'user',
         name: 'gliagora-app',
         top: true,
-        permissions: ['subscribers:get', 'subscribers:manage', 'subscribers:sql_query'],
+        // Never subscribers:sql_query: see the next tests and settings.sql, step 3.
+        permissions: ['subscribers:get', 'subscribers:manage'],
       },
       { type: 'list', name: 'gliagora-app-lists', top: true, permissions: [] },
       { type: 'list', name: null, top: false, permissions: ['list:get', 'list:manage'] },
@@ -178,19 +179,17 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
       (await api('/api/subscribers', { method: 'POST', body: JSON.stringify(subscriber) })).status,
     ).toBe(409)
 
-    // Found by an anchored, escaped regular expression of the address, and by its UUID.
+    // Found by an anchored, escaped regular expression of the address (`search`, which needs no
+    // SQL), and by its ID, whose answer carries the UUID to compare (the unsubscribe link's).
     const search = await api(
       `/api/subscribers?search=${encodeURIComponent('^reader\\.one@example\\.org$')}&per_page=2`,
     )
     expect((search.data as { results: { id: number }[] }).results.map((row) => row.id)).toEqual([
       id,
     ])
-    const byUuid = await api(
-      `/api/subscribers?query=${encodeURIComponent(`subscribers.uuid = '${uuid}'::UUID`)}`,
-    )
-    expect((byUuid.data as { results: { id: number }[] }).results.map((row) => row.id)).toEqual([
-      id,
-    ])
+    const byId = await api(`/api/subscribers/${id}`)
+    expect(byId.status).toBe(200)
+    expect(byId.data).toMatchObject({ id, uuid, email: 'reader.one@example.org' })
 
     const changed = await api(`/api/subscribers/${id}`, {
       method: 'PATCH',
@@ -201,6 +200,54 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
 
     expect((await api(`/api/subscribers/${id}`, { method: 'DELETE' })).status).toBe(200)
     expect(await query(`select id from subscribers where id = ${id}`)).toEqual([])
+  })
+
+  it('refuses the app’s API user every SQL expression, also one that would read other tables', async () => {
+    // listmonk checks a `query` only by the tables in its plan; these functions run SQL given as
+    // text, which the plan does not show, so with subscribers:sql_query they would read listmonk's
+    // admin sessions and settings (the SMTP password): the first through the error it causes, the
+    // second as a yes-or-no answer. Without that permission, listmonk refuses them unread.
+    const created = await api('/api/subscribers', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: 'reader.three@example.org',
+        name: 'Subscriber',
+        status: 'enabled',
+        lists: [
+          (await query<{ id: number }>(`select id from lists where name = 'Glia Notes'`))[0]!.id,
+        ],
+        preconfirm_subscriptions: true,
+      }),
+    })
+    expect(created.status).toBe(200)
+    const { id } = created.data as { id: number }
+    try {
+      const probes = [
+        `subscribers.id = ${id}`,
+        `(query_to_xml('select id from sessions', true, false, ''))::text::int = 1`,
+        `exists(select 1 from ts_stat('select to_tsvector(''simple'', value::text) from settings') w where w.word = 'smtp')`,
+      ]
+      for (const expression of probes) {
+        const text = encodeURIComponent(expression)
+        expect((await api(`/api/subscribers?query=${text}`)).status, expression).toBe(403)
+        expect((await api(`/api/subscribers/export?query=${text}`)).status, expression).toBe(403)
+        for (const [path, method, extra] of [
+          ['/api/subscribers/query/delete', 'POST', {}],
+          ['/api/subscribers/query/blocklist', 'PUT', {}],
+          ['/api/subscribers/query/lists', 'PUT', { action: 'remove', target_list_ids: [1] }],
+        ] as const) {
+          const body = JSON.stringify({ query: expression, ...extra })
+          expect((await api(path, { method, body })).status, `${method} ${path}`).toBe(403)
+        }
+      }
+      // None of them ran: the subscriber is still there, on its list, not blocklisted.
+      expect(
+        await query(`select s.status, sl.status as subscription from subscribers s
+          join subscriber_lists sl on sl.subscriber_id = s.id where s.id = ${id}`),
+      ).toEqual([{ status: 'enabled', subscription: 'confirmed' }])
+    } finally {
+      await query(`delete from subscribers where id = ${id}`)
+    }
   })
 
   it('gives the app’s API user nothing else: no settings, other lists, campaigns or users', async () => {

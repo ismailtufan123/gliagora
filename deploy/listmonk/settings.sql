@@ -24,8 +24,9 @@
 --   - the install's samples are removed (two subscribers, two lists, a campaign; the templates stay);
 --   - the private, single opt-in list "Glia Notes": the app adds only confirmed subscribers, after
 --     its own double opt-in, so listmonk never holds an unconfirmed address (PLAN §13);
---   - the app's API user `gliagora-app`, which may only find, add, change and delete subscribers
---     of Glia Notes (no settings, no other list, no campaigns);
+--   - the app's API user `gliagora-app`, which may only find (by ID, or by address with `search`),
+--     add, change and delete subscribers of Glia Notes (no settings, no other list, no campaigns,
+--     and no SQL queries: see step 3);
 --   - the settings below: no update check, no public pages of its own (subscription, archive,
 --     opt-in), no tracking, no IP addresses, none of its own unsubscribe headers (the app sends its
 --     own, RFC 8058), no captcha services, no bounce processing yet (M2, with the mailbox).
@@ -125,11 +126,15 @@ with kept as (
 insert into gliagora_changes select 'list Glia Notes' from kept;
 
 -- 3. The app's API user, with a user role (what it may do) and a list role (where): subscribers
--- only, and only on Glia Notes. `subscribers:sql_query` lets it find a subscriber by its UUID
--- (the unsubscribe link); listmonk runs such queries read-only, on its subscriber tables only.
+-- only, and only on Glia Notes. Never `subscribers:sql_query` (the `query` of /api/subscribers):
+-- listmonk 6.2 checks such an expression only by the tables its plan names, and a function that
+-- runs SQL from a text (query_to_xml, ts_stat) names none, so the expression could read every
+-- table of listmonk's database, its admin sessions and the SMTP password included. The app finds
+-- a subscriber by its ID (GET /api/subscribers/:id, then compares the UUID) or by its address
+-- (`search`); tests/integration/listmonk.db.test.ts checks that `query` is refused.
 with r as (
   insert into roles (type, name, permissions)
-  values ('user', 'gliagora-app', '{subscribers:get,subscribers:manage,subscribers:sql_query}')
+  values ('user', 'gliagora-app', '{subscribers:get,subscribers:manage}')
   on conflict (type, name) where name is not null do update
     set permissions = excluded.permissions, updated_at = now()
     where roles.permissions is distinct from excluded.permissions

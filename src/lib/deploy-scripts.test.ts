@@ -150,6 +150,23 @@ describe('the production stack (deploy/compose.prod.yml)', () => {
     expect(service(compose, 'db')).toContain(
       'LISTMONK_DB_PASSWORD: ${LISTMONK_DB_PASSWORD:?Set LISTMONK_DB_PASSWORD in .env}',
     )
+    // Locally too, listmonk connects as its own role, made by the server's script, never as the
+    // superuser (which its SQL expressions could otherwise use).
+    expect(service(local, 'listmonk')).toContain('LISTMONK_db__user: listmonk\n')
+    expect(service(local, 'listmonk-database')).toContain(
+      './deploy/postgres/init/20-listmonk-database.sh:/20-listmonk-database.sh:ro',
+    )
+    expect(service(local, 'listmonk-database')).toContain(
+      'command: [bash, /20-listmonk-database.sh]',
+    )
+  })
+
+  it('gives the app’s API user in listmonk no SQL expressions', () => {
+    // settings.sql, step 3; tests/integration/listmonk.db.test.ts checks the refusal for real.
+    const role = /values \('user', 'gliagora-app', '(\{[^}]*\})'\)/.exec(
+      read('deploy/listmonk/settings.sql'),
+    )?.[1]
+    expect(role).toBe('{subscribers:get,subscribers:manage}')
   })
 
   it('logs every service to the journal, which keeps 14 days (D34)', () => {
