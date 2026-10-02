@@ -5,6 +5,10 @@ import type { Payload } from 'payload'
 import { keyedHash } from '@/lib/keys'
 import { limitAddress } from '@/lib/members/email-address'
 
+import { type EmailCap, emailCap } from './email-cap'
+
+export { EMAILS_SITE_WIDE } from './email-cap'
+
 // Limits on the public forms (PLAN §3.2, D34, D49), kept in the form-limits table
 // (src/collections/FormLimits.ts): one row for each form accepted under each of its keys (a hashed
 // IP address in the form's own bucket, from M4b also a hashed email address and the site-wide
@@ -138,34 +142,20 @@ export function hashLimitAddress(email: string, secret: string): string {
 
 /** Emails to one address, from every form that sends one (sign-in, add an address, data request). */
 export const EMAILS_PER_ADDRESS = { hour: 3, day: 5 }
-/**
- * Emails the forms send in all, a cap that protects the mailbox's reputation and its sending limit;
- * to revisit at M2, when that limit is known (D49).
- */
-export const EMAILS_SITE_WIDE = { hour: 50, day: 200 }
 
 /**
  * The limits every form that sends an email shares, besides its own per-IP limit (D49, the M4b
  * design §8): one budget per address, so nobody can fill someone's inbox through several forms or
- * from many IP addresses, and the site-wide cap, which shows "temporarily unavailable".
+ * from many IP addresses, and the site-wide cap (email-cap.ts: the server's setting, read for each
+ * request), which shows "temporarily unavailable".
  */
-export function emailLimits(addressHash: string): Limit[] {
+export function emailLimits(addressHash: string, cap: EmailCap = emailCap()): Limit[] {
   const address = `mail:addr:${addressHash}`
   return [
     { key: address, perWindow: EMAILS_PER_ADDRESS.hour, windowMs: HOUR_MS },
     { key: address, perWindow: EMAILS_PER_ADDRESS.day, windowMs: DAY_WINDOW_MS },
-    {
-      key: 'mail:all',
-      perWindow: EMAILS_SITE_WIDE.hour,
-      windowMs: HOUR_MS,
-      problem: 'unavailable',
-    },
-    {
-      key: 'mail:all',
-      perWindow: EMAILS_SITE_WIDE.day,
-      windowMs: DAY_WINDOW_MS,
-      problem: 'unavailable',
-    },
+    { key: 'mail:all', perWindow: cap.hour, windowMs: HOUR_MS, problem: 'unavailable' },
+    { key: 'mail:all', perWindow: cap.day, windowMs: DAY_WINDOW_MS, problem: 'unavailable' },
   ]
 }
 

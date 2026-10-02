@@ -225,6 +225,30 @@ describe('several limits (M4b)', () => {
     expect(store.rows.filter((row) => row.key === 'mail:all')).toHaveLength(EMAILS_SITE_WIDE.hour)
   })
 
+  it('follows the cap the server sets (EMAIL_CAP_HOUR, EMAIL_CAP_DAY), read for each send', async () => {
+    vi.stubEnv('EMAIL_CAP_HOUR', '2')
+    vi.stubEnv('EMAIL_CAP_DAY', '3')
+    try {
+      const store = memoryLimitStore()
+      expect(await mail(store, 'a@example.org', 'ip-a', 0)).toBe('accepted')
+      expect(await mail(store, 'b@example.org', 'ip-b', MINUTE)).toBe('accepted')
+      expect(await mail(store, 'c@example.org', 'ip-c', 2 * MINUTE)).toBe('unavailable')
+      // The next hour: one more, then the day's 3 are used up.
+      expect(await mail(store, 'c@example.org', 'ip-c', HOUR + MINUTE)).toBe('accepted')
+      expect(await mail(store, 'd@example.org', 'ip-d', HOUR + 2 * MINUTE)).toBe('unavailable')
+      // An unusable setting keeps the default (email-cap.test.ts).
+      vi.stubEnv('EMAIL_CAP_HOUR', 'many')
+      vi.stubEnv('EMAIL_CAP_DAY', '')
+      const limits = emailLimits('hash').filter((limit) => limit.key === 'mail:all')
+      expect(limits.map((limit) => limit.perWindow)).toEqual([
+        EMAILS_SITE_WIDE.hour,
+        EMAILS_SITE_WIDE.day,
+      ])
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+
   it('checks the limits in their order: the first one reached decides', async () => {
     const store = memoryLimitStore()
     const cap: Limit = { key: 'cap', perWindow: 1, windowMs: HOUR, problem: 'unavailable' }
