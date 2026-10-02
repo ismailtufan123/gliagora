@@ -128,6 +128,24 @@ describe('the production stack (deploy/compose.prod.yml)', () => {
     expect(/^\s*POSTGRES_IMAGE: (\S+)$/m.exec(read('.github/workflows/ci.yml'))?.[1]).toBe(image)
   })
 
+  it('keeps addresses out of PostgreSQL’s log, the same way locally and in CI', () => {
+    // An error's DETAIL can quote a value (a duplicate address); the failed statement too.
+    const flags = ['log_error_verbosity=terse', 'log_min_error_statement=panic']
+    const command = `command: [postgres, -c, ${flags.join(', -c, ')}]\n`
+    expect(service(compose, 'db')).toContain(command)
+    expect(service(local, 'db')).toContain(command)
+    expect(read('.github/workflows/ci.yml')).toContain(
+      `"$POSTGRES_IMAGE" postgres -c ${flags.join(' -c ')}\n`,
+    )
+  })
+
+  it('checks the database over TCP, never the socket of a new volume’s set-up', () => {
+    expect(service(compose, 'db')).toContain(
+      "test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U postgres -d gliagora']",
+    )
+    expect(service(local, 'db')).toContain('pg_isready -h 127.0.0.1 ')
+  })
+
   it('publishes listmonk on the server’s loopback only, and nothing depends on it', () => {
     for (const text of [compose, local]) {
       const ports =

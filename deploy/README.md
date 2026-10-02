@@ -398,7 +398,7 @@ On a new server, steps 1–5 already do all of this. On the server running since
    ```
 
 4. **Install the journal's limit and the units' alert lines**, on the server: `sudo /opt/gliagora/logs/install-journald.sh`, then `sudo cp /opt/gliagora/backup/systemd/gliagora-*.service /opt/gliagora/backup/systemd/gliagora-*.timer /etc/systemd/system/ && sudo systemctl daemon-reload`.
-5. **Apply it:** `cd /opt/gliagora && sudo ./update.sh --no-pull`. It recreates the database container (its new setting and log driver), backs up, prepares listmonk (creates its database, installs it and generates `/root/listmonk-admin-password`, applies its settings) and starts it, then recreates every container with its logs going to the journal.
+5. **Apply it:** `cd /opt/gliagora && sudo ./update.sh --no-pull`. It recreates the database container (its new setting, log driver, terse error log and health check over TCP), backs up, prepares listmonk (creates its database, installs it and generates `/root/listmonk-admin-password`, applies its settings) and starts it, then recreates every container with its logs going to the journal.
 6. **Check:**
    - `docker compose -f compose.prod.yml ps`: four services, each `healthy`;
    - `curl -s http://127.0.0.1:9000/health` on the server prints `{"data":true}`, and the same from your computer to `<server-ip>:9000` gets no answer; `docker version --format '{{.Server.Version}}'` is 28 or later (older Docker let machines on the same network segment reach ports published on 127.0.0.1);

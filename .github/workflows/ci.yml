@@ -165,10 +165,11 @@ jobs:
         run: |
           set -euo pipefail
           docker network create smoke
+          # Started as the server starts it (deploy/compose.prod.yml), and waited for over TCP.
           docker run -d --name db --network smoke -p 127.0.0.1:5432:5432 \
             -e POSTGRES_USER=gliagora -e POSTGRES_PASSWORD=smoke-test-only -e POSTGRES_DB=gliagora \
-            "$POSTGRES_IMAGE"
-          for i in $(seq 1 30); do docker exec db pg_isready -U gliagora -d gliagora && break; sleep 2; done
+            "$POSTGRES_IMAGE" postgres -c log_error_verbosity=terse -c log_min_error_statement=panic
+          for i in $(seq 1 30); do docker exec db pg_isready -h 127.0.0.1 -U gliagora -d gliagora && break; sleep 2; done
           docker run -d --name app --network smoke -p 3000:3000 \
             -e DATABASE_URL=postgres://gliagora:smoke-test-only@db:5432/gliagora \
             -e PAYLOAD_SECRET="$APP_PAYLOAD_SECRET" \
