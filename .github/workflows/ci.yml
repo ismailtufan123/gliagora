@@ -241,12 +241,13 @@ jobs:
       # the app afresh, which the home page's figures need: it keeps them for up to 10 minutes
       # (src/lib/home.ts), and the smoke test read them from the empty database.
       #
-      # listmonk (M2, D50) is set up as deploy/listmonk/prepare.sh sets it up on the server, so the
-      # server's way is tested here with the image compose.yaml pins (the server's): its role and
+      # listmonk (M2, D50) is set up with the steps of deploy/listmonk/prepare.sh, repeated here
+      # with Docker (not the script itself, which src/lib/deploy-scripts.test.ts runs whole against
+      # a stand-in for docker), with the image compose.yaml pins (the server's): its role and
       # database made by the server's own script in the running database, the install as a one-off
-      # with its admin's password on stdin, the settings as prepare.sh's psql input (the API user
-      # with the run's token, the mail server Mailpit), then the service with the server's
-      # hardening, on this machine's loopback. The app gets its address and token (for the
+      # with its admin's password on stdin (the same command as prepare.sh's), the settings as
+      # prepare.sh's own psql input (the API user with the run's token, the mail server Mailpit),
+      # then the service with the server's hardening, on this machine's loopback. The app gets its address and token (for the
       # newsletter signup), and a higher cap on the forms' emails than the default 50 an hour, which
       # a whole run of the end-to-end tests would come close to.
       - name: Re-create the app with the test settings

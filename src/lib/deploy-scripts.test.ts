@@ -17,10 +17,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { listmonkParams } from '@/scripts/listmonk-settings'
 
 // The server's scripts in deploy/ (M2, D50), run by bash against stand-ins for curl, docker, restic
-// and journalctl (tests/fixtures/deploy/bin) or sourced for their functions, as
-// src/lib/restore-carry.test.ts does for the carry-over. None of them runs anything for real: the
-// server, Docker and listmonk itself are checked in CI (.github/workflows/ci.yml) and on the server
-// (deploy/README.md).
+// and journalctl (tests/fixtures/deploy/bin; listmonk's program in tests/fixtures/deploy/listmonk)
+// or sourced for their functions, as src/lib/restore-carry.test.ts does for the carry-over. None
+// of them runs anything for real. listmonk/prepare.sh runs whole here, against the docker
+// stand-in; CI (.github/workflows/ci.yml) repeats its steps with Docker and a real listmonk (the
+// same init script, the same install command and the same psql input), not the script itself,
+// and the server is checked by hand (deploy/README.md).
 
 const ROOT = process.cwd()
 const DEPLOY = join(ROOT, 'deploy')
@@ -622,6 +624,175 @@ describe('listmonk/prepare.sh', () => {
       }
     } finally {
       quiet.mockRestore()
+    }
+  })
+})
+
+describe('listmonk/prepare.sh, run as on the server', () => {
+  const PREPARE_FILE = 'deploy/listmonk/prepare.sh'
+  const PREPARE = join(ROOT, PREPARE_FILE)
+
+  /** Runs prepare.sh against the docker stand-in, with its own .env and admin password file. */
+  function prepare(env: Record<string, string> = {}, dotenv = "LISTMONK_API_TOKEN='the-token'\n") {
+    const dir = folder()
+    writeFileSync(join(dir, 'compose.prod.yml'), 'name: gliagora\n')
+    writeFileSync(join(dir, '.env'), dotenv)
+    const passwordFile = join(dir, 'admin-password')
+    const run = runScript(PREPARE, [], {
+      COMPOSE_DIR: dir,
+      LISTMONK_ADMIN_PASSWORD_FILE: passwordFile,
+      FAKE_LOG: dir,
+      ...env,
+    })
+    const file = (name: string) => {
+      try {
+        return readFileSync(join(dir, name), 'utf8')
+      } catch {
+        return ''
+      }
+    }
+    const calls = file('docker.log')
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => line.replace(/--project-directory \S+ -f \S+ /, ''))
+    return { ...run, calls, file, passwordFile }
+  }
+
+  const INIT = 'docker compose exec -T db bash /docker-entrypoint-initdb.d/20-listmonk-database.sh'
+  const RUNNING = 'docker compose ps -q --status running listmonk'
+  const INSTALLED = `docker compose exec -T db psql -U postgres -d listmonk -X -tAc select to_regclass('public.settings') is not null`
+  const UPGRADE =
+    'docker compose run --rm -T --no-deps listmonk ./listmonk --upgrade --yes --config '
+  const SETTINGS =
+    'docker compose exec -T db psql -U postgres -d listmonk -X -q -tA -v ON_ERROR_STOP=1'
+  const RECREATE = 'docker compose up -d --no-deps --force-recreate listmonk'
+
+  it('installs listmonk once, its admin password on stdin only, then applies the settings', () => {
+    const { status, output, calls, file, passwordFile } = prepare()
+    expect(status, output).toBe(0)
+    expect(calls[0]).toBe(INIT)
+    expect(calls[1]).toBe(RUNNING)
+    expect(calls[2]).toBe(INSTALLED)
+    expect(calls[3]).toMatch(/^docker compose run --rm -T --no-deps listmonk sh -c /)
+    expect(calls.slice(4)).toEqual([UPGRADE, SETTINGS])
+    // The password was made for it (only its owner can read it) and reached listmonk on stdin,
+    // through the shell's `read` in the container, never in a command line.
+    const password = readFileSync(passwordFile, 'utf8').trim()
+    expect(password).toMatch(/^[0-9a-f]{40}$/)
+    expect(statSync(passwordFile).mode & 0o777).toBe(0o600)
+    expect(file('listmonk.admin')).toBe(`gliagora-admin\n${password}\n`)
+    expect(file('listmonk.log')).toBe(
+      '--install --idempotent --yes --config \n--upgrade --yes --config \n',
+    )
+    expect(file('docker.log')).not.toContain(password)
+    expect(output).not.toContain(password)
+    // settings.sql in one transaction, with the token's hash, never the token.
+    expect(file('psql.stdin')).toMatch(/^set log_min_error_statement = panic;\nbegin;\n/)
+    expect(file('psql.stdin')).toContain(createHash('sha256').update('the-token').digest('hex'))
+    expect(file('psql.stdin')).not.toContain('the-token')
+    // Not running before: nothing to start again (update.sh starts it).
+    expect(calls).not.toContain(RECREATE)
+    expect(output).toContain('No restart needed.')
+  })
+
+  it('is repeated in CI with the same install command', () => {
+    // CI cannot run the script (it has no compose project of the server); it runs its steps.
+    const words = (text = '') =>
+      text.replace(`'"$ADMIN_USER"'`, 'gliagora-admin').trim().split(/\s+/).join(' ')
+    const server = /listmonk sh -c '([^']*'"\$ADMIN_USER"'[^']*)'/.exec(read(PREPARE_FILE))?.[1]
+    const ci = /sh -c '(\s*IFS= read[^']*)'/.exec(read('.github/workflows/ci.yml'))?.[1]
+    expect(words(server)).toContain('./listmonk --install --idempotent')
+    expect(words(ci)).toBe(words(server))
+  })
+
+  it('keeps an admin password that exists, and installs nothing where listmonk is installed', () => {
+    const first = prepare({ FAKE_INSTALLED: 't', FAKE_LISTMONK_RUNNING: '1' })
+    expect(first.status, first.output).toBe(0)
+    expect(first.calls).toEqual([
+      INIT,
+      RUNNING,
+      'docker compose config --images',
+      'docker inspect -f {{.Config.Image}} listmonk-container',
+      INSTALLED,
+      UPGRADE,
+      SETTINGS,
+    ])
+    expect(first.file('listmonk.admin')).toBe('')
+    expect(first.output).toContain('Nothing to change.')
+
+    const dir = folder()
+    const passwordFile = join(dir, 'kept')
+    writeFileSync(passwordFile, 'kept-password\n')
+    const kept = prepare({ LISTMONK_ADMIN_PASSWORD_FILE: passwordFile })
+    expect(kept.status, kept.output).toBe(0)
+    expect(readFileSync(passwordFile, 'utf8')).toBe('kept-password\n')
+    expect(kept.file('listmonk.admin')).toBe('gliagora-admin\nkept-password\n')
+  })
+
+  it('starts a running listmonk again, recreated, when its settings changed or it was installed', () => {
+    const cases = [
+      { env: { FAKE_INSTALLED: 't', FAKE_CHANGED: 'setting smtp' }, running: true, again: true },
+      { env: { FAKE_INSTALLED: 't' }, running: true, again: false },
+      { env: {}, running: true, again: true },
+      { env: { FAKE_INSTALLED: 't', FAKE_CHANGED: 'setting smtp' }, running: false, again: false },
+      { env: {}, running: false, again: false },
+    ]
+    for (const { env, running, again } of cases) {
+      const run = prepare({ ...env, ...(running ? { FAKE_LISTMONK_RUNNING: '1' } : {}) })
+      expect(run.status, run.output).toBe(0)
+      expect(run.calls.includes(RECREATE), JSON.stringify({ env, running })).toBe(again)
+      // Never a plain restart, which would keep the container's image.
+      expect(run.calls.some((call) => call.includes(' restart '))).toBe(false)
+      if (again) expect(run.calls.at(-1)).toBe(RECREATE)
+    }
+  })
+
+  it('stops a listmonk on another image before the new one migrates its database', () => {
+    const run = prepare({
+      FAKE_INSTALLED: 't',
+      FAKE_LISTMONK_RUNNING: '1',
+      FAKE_LISTMONK_RUNNING_IMAGE: 'listmonk/listmonk:v0',
+      FAKE_LISTMONK_IMAGE: 'listmonk/listmonk:v1@sha256:' + '1'.repeat(64),
+    })
+    expect(run.status, run.output).toBe(0)
+    const stop = run.calls.indexOf('docker compose stop listmonk')
+    expect(stop).toBeGreaterThan(-1)
+    expect(stop).toBeLessThan(run.calls.indexOf(UPGRADE))
+    expect(run.calls.at(-1)).toBe(RECREATE)
+    // The same image: left running.
+    const same = prepare({
+      FAKE_INSTALLED: 't',
+      FAKE_LISTMONK_RUNNING: '1',
+      FAKE_LISTMONK_RUNNING_IMAGE: 'listmonk/listmonk:v1@sha256:' + '1'.repeat(64),
+      FAKE_LISTMONK_IMAGE: 'listmonk/listmonk:v1@sha256:' + '1'.repeat(64),
+    })
+    expect(same.calls).not.toContain('docker compose stop listmonk')
+    expect(same.calls).not.toContain(RECREATE)
+  })
+
+  it('fails, changing nothing, without its token, with an unreadable .env line or on a failure', () => {
+    const noToken = prepare({}, 'SMTP_HOST=\n')
+    expect(noToken.status).toBe(1)
+    expect(noToken.output).toContain('Set LISTMONK_API_TOKEN')
+    expect(noToken.calls).toEqual([])
+    const unreadable = prepare({}, "LISTMONK_API_TOKEN='t'\nSMTP_PASS=Ab$$9\n")
+    expect(unreadable.status).toBe(1)
+    expect(unreadable.output).toContain('Nothing was changed: correct SMTP_PASS')
+    expect(unreadable.output).not.toContain('Ab$')
+    expect(unreadable.calls).toEqual([])
+    const upgrade = prepare({ FAKE_INSTALLED: 't', FAKE_LISTMONK_EXIT: '1' })
+    expect(upgrade.status).toBe(1)
+    expect(upgrade.calls.at(-1)).toBe(UPGRADE)
+    const settings = prepare({ FAKE_INSTALLED: 't', FAKE_PSQL_EXIT: '3' })
+    expect(settings.status).toBe(1)
+    expect(settings.output).toContain("listmonk's settings were not applied")
+    // Without a password file of its own (the tests'), only root may run it.
+    const dir = folder()
+    writeFileSync(join(dir, '.env'), "LISTMONK_API_TOKEN='t'\n")
+    const notRoot = runScript(PREPARE, [], { COMPOSE_DIR: dir, FAKE_LOG: dir })
+    if (process.getuid?.() !== 0) {
+      expect(notRoot.status).toBe(1)
+      expect(notRoot.output).toContain('Run as root (sudo)')
     }
   })
 })

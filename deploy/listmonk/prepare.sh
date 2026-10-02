@@ -11,18 +11,23 @@
 #      reaches the one-off install on stdin only, never in a command line or a container's
 #      settings; listmonk itself never creates an admin for "the first visitor". Then it brings
 #      listmonk's schema up to date (--upgrade), which a new listmonk image needs before its
-#      settings can be written;
+#      settings can be written. When the running listmonk is not on the image compose.prod.yml
+#      names (an upgrade), it is stopped first: the old program must not keep working on a
+#      database the new one migrates;
 #   3. applies settings.sql: the list Glia Notes, the app's API user (from LISTMONK_API_TOKEN in
 #      .env; only its SHA-256 reaches the database) and the settings, with the app's SMTP_*
 #      settings (empty until M2: listmonk can then send nothing);
-#   4. restarts listmonk if it is running and anything changed: it reads its settings and API
-#      users only when it starts.
+#   4. if listmonk was running and anything changed (or it was just installed, or stopped for a
+#      new image), starts it again, recreated on the image compose.prod.yml names: it reads its
+#      settings and API users only when it starts (a plain restart would keep the old image).
+# src/lib/deploy-scripts.test.ts runs it against a stand-in for docker, with a password file of
+# its own (LISTMONK_ADMIN_PASSWORD_FILE, for the tests only).
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 COMPOSE_DIR="${COMPOSE_DIR:-$(dirname "$SCRIPT_DIR")}"
 ENV_FILE="${ENV_FILE:-$COMPOSE_DIR/.env}"
-ADMIN_PASSWORD_FILE=/root/listmonk-admin-password
+ADMIN_PASSWORD_FILE="${LISTMONK_ADMIN_PASSWORD_FILE:-/root/listmonk-admin-password}"
 ADMIN_USER=gliagora-admin
 # listmonk's own address, for the links in its admin: the SSH tunnel's (deploy/README.md).
 TUNNEL_URL=http://localhost:9001
@@ -120,7 +125,8 @@ settings_input() {
 # Sourced, as src/lib/deploy-scripts.test.ts and CI do: the functions above only.
 [[ "${BASH_SOURCE[0]}" == "$0" ]] || return 0
 
-[[ $EUID -eq 0 ]] || fail "Run as root (sudo): the admin password file is root's."
+[[ $EUID -eq 0 || -n "${LISTMONK_ADMIN_PASSWORD_FILE:-}" ]] \
+  || fail "Run as root (sudo): the admin password file is root's."
 [[ -r "$ENV_FILE" ]] || fail "$ENV_FILE not found."
 # Each value into the variable of its name (never shown); a line Compose would read differently
 # stops here, before anything changes, so listmonk never gets another password than the app.
@@ -137,6 +143,19 @@ log "listmonk 1/4: its database and role"
 compose exec -T db bash /docker-entrypoint-initdb.d/20-listmonk-database.sh
 
 log "listmonk 2/4: install (once) and schema"
+# A listmonk that runs another image than compose.prod.yml names (an upgrade) is stopped while the
+# new image migrates its database, as upstream's upgrade says; step 4 starts the new one.
+running=$(compose ps -q --status running listmonk)
+new_image=false
+if [[ -n "$running" ]]; then
+  images=$(compose config --images)
+  wanted=$(awk '/^listmonk\/listmonk[:@]/ { print; exit }' <<<"$images")
+  if [[ "$(docker inspect -f '{{.Config.Image}}' "$running")" != "$wanted" ]]; then
+    log "listmonk runs another image than compose.prod.yml names: stopping it for the upgrade"
+    compose stop listmonk
+    new_image=true
+  fi
+fi
 installed=$(compose exec -T db psql -U postgres -d listmonk -X -tAc \
   "select to_regclass('public.settings') is not null")
 fresh=false
@@ -163,9 +182,10 @@ changed=$(trim "$changed")
 if [[ -n "$changed" ]]; then log "Changed: $changed"; else log "Nothing to change."; fi
 
 log "listmonk 4/4: restart if needed"
-if [[ -n "$changed" || "$fresh" == true ]] && [[ -n "$(compose ps -q --status running listmonk)" ]]; then
-  compose restart listmonk
-  log "Restarted listmonk, which reads its settings only when it starts."
+if [[ -n "$running" ]] && [[ -n "$changed" || "$fresh" == true || "$new_image" == true ]]; then
+  # Recreated, so it runs the image compose.prod.yml names (`restart` would keep the old one).
+  compose up -d --no-deps --force-recreate listmonk
+  log "Started listmonk again (it reads its settings only when it starts)."
 else
   log "No restart needed."
 fi

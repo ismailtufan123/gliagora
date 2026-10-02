@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# A stand-in for the listmonk program in its container: the docker stand-in runs the command of
+# `compose run … listmonk …` in this folder, so `./listmonk` is this file. It records its arguments
+# in $FAKE_LOG/listmonk.log and, for an install, the admin user and the password it was given in
+# $FAKE_LOG/listmonk.admin (a test's throwaway password, compared with the file it came from), and
+# exits with FAKE_LISTMONK_EXIT (default 0).
+printf '%s\n' "$*" >>"$FAKE_LOG/listmonk.log"
+if [[ " $* " == *" --install "* ]]; then
+  printf '%s\n%s\n' "${LISTMONK_ADMIN_USER:-}" "${LISTMONK_ADMIN_PASSWORD:-}" >"$FAKE_LOG/listmonk.admin"
+fi
+exit "${FAKE_LISTMONK_EXIT:-0}"

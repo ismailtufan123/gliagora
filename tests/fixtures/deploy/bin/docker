@@ -1,24 +1,52 @@
 #!/usr/bin/env bash
-# A stand-in for docker, for backup.sh, restore.sh and update.sh. Every call is added to
-# $FAKE_LOG/docker.log. FAKE_DATABASES: the databases the server has (separated by spaces). A
-# restored copy has 12 tables, 40 Payload migrations and listmonk's migration record; the live
-# database has no carried tables (as before M4b), so the restore test has nothing to carry.
-# FAKE_SERVICES: the services of compose.prod.yml; FAKE_NO_VOLUME: there is no database volume yet;
-# FAKE_UP_EXIT: what `compose up` of the whole stack answers.
+# A stand-in for docker, for backup.sh, restore.sh, update.sh and listmonk/prepare.sh. Every call
+# is added to $FAKE_LOG/docker.log. FAKE_DATABASES: the databases the server has (separated by
+# spaces). A restored copy has 12 tables, 40 Payload migrations and listmonk's migration record;
+# the live database has no carried tables (as before M4b), so the restore test has nothing to
+# carry. FAKE_SERVICES: the services of compose.prod.yml; FAKE_NO_VOLUME: there is no database
+# volume yet; FAKE_UP_EXIT: what `compose up` of the stack (all or some services) answers.
+# listmonk/prepare.sh: FAKE_INSTALLED (t: listmonk is installed), FAKE_LISTMONK_RUNNING (set: it
+# runs), FAKE_LISTMONK_IMAGE (the image compose.prod.yml names) and FAKE_LISTMONK_RUNNING_IMAGE
+# (the running container's; both default listmonk/listmonk:v1), FAKE_CHANGED (what settings.sql
+# answers; its input is kept in $FAKE_LOG/psql.stdin), FAKE_PSQL_EXIT; `compose run … listmonk
+# CMD` runs CMD in ../listmonk, whose ./listmonk is a stand-in, with this call's stdin.
 set -euo pipefail
-printf 'docker %s\n' "$*" >>"$FAKE_LOG/docker.log"
+# One line per call: a line break in an argument is written as \n.
+all="$*"
+printf 'docker %s\n' "${all//$'\n'/\\n}" >>"$FAKE_LOG/docker.log"
 query=''
 args=("$@")
 for ((i = 0; i < ${#args[@]}; i++)); do
   [[ "${args[$i]}" == -tAc ]] && query=${args[$((i + 1))]}
 done
 if [[ "${1:-}" == compose ]]; then
-  if [[ " $* " == *" config --images "* ]]; then echo 'postgres:18.6'; exit 0; fi
+  if [[ " $* " == *" config --images "* ]]; then
+    printf '%s\n' 'postgres:18.6' "${FAKE_LISTMONK_IMAGE:-listmonk/listmonk:v1}"
+    exit 0
+  fi
   if [[ " $* " == *" config --services "* ]]; then printf '%s\n' ${FAKE_SERVICES:-}; exit 0; fi
   if [[ " $* " == *" up -d --wait --wait-timeout "* ]]; then exit "${FAKE_UP_EXIT:-0}"; fi
   if [[ " $* " == *" pg_dump "* ]]; then echo "dump of ${*: -1}"; exit 0; fi
+  if [[ " $* " == *" ps -q --status running listmonk "* ]]; then
+    [[ -z "${FAKE_LISTMONK_RUNNING:-}" ]] || echo listmonk-container
+    exit 0
+  fi
+  if [[ " $* " == *" run --rm -T --no-deps listmonk "* ]]; then
+    for ((i = 0; i < ${#args[@]}; i++)); do
+      [[ "${args[$i]}" == listmonk ]] && break
+    done
+    cd "$(dirname "$0")/../listmonk"
+    "${args[@]:$((i + 1))}"
+    exit
+  fi
+  if [[ " $* " == *" psql -U postgres -d listmonk -X -q -tA -v ON_ERROR_STOP=1 "* ]]; then
+    cat >"$FAKE_LOG/psql.stdin"
+    printf '%s\n' "${FAKE_CHANGED:-}"
+    exit "${FAKE_PSQL_EXIT:-0}"
+  fi
   case "$query" in
     *pg_database*) printf '%s\n' ${FAKE_DATABASES:-} ;;
+    *public.settings*) echo "${FAKE_INSTALLED:-f}" ;;
     *to_regclass*) echo f ;;
   esac
   exit 0
@@ -27,6 +55,7 @@ case "${1:-}" in
   volume) [[ -z "${FAKE_NO_VOLUME:-}" ]] ;;
   run) echo 'container-id' ;;
   rm) ;;
+  inspect) echo "${FAKE_LISTMONK_RUNNING_IMAGE:-listmonk/listmonk:v1}" ;;
   exec)
     case "$query" in
       *information_schema.tables*) echo 12 ;;
