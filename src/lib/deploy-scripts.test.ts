@@ -981,7 +981,7 @@ describe('listmonk/prepare.sh, run as on the server', () => {
   })
 
   it('starts a running listmonk again, recreated, when its settings changed or it was installed', () => {
-    const cases = [
+    const cases: { env: Record<string, string>; running: boolean; again: boolean }[] = [
       { env: { FAKE_INSTALLED: 't', FAKE_CHANGED: 'setting smtp' }, running: true, again: true },
       { env: { FAKE_INSTALLED: 't' }, running: true, again: false },
       { env: {}, running: true, again: true },
