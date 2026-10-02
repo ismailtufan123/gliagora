@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# A stand-in for restic. Every call is added to $FAKE_LOG/restic.log. FAKE_SNAPSHOTS names the
+# databases that have a snapshot (separated by spaces); each one's ID is a hex digit repeated 64
+# times: a for gliagora, b for listmonk, c for any other. `backup --stdin` reads the dump and
+# answers with a snapshot ID.
+set -euo pipefail
+printf 'restic %s\n' "$*" >>"$FAKE_LOG/restic.log"
+id_of() {
+  local c=c
+  case $1 in gliagora) c=a ;; listmonk) c=b ;; esac
+  printf "%0.s$c" $(seq 1 64)
+}
+case "${1:-}" in
+  cat) exit 0 ;;
+  snapshots)
+    shift
+    tag='' json=false target=''
+    while [[ $# -gt 0 ]]; do
+      case $1 in
+        --tag) tag=$2; shift 2 ;;
+        --host | --latest) shift 2 ;;
+        --json) json=true; shift ;;
+        --compact) shift ;;
+        *) target=$1; shift ;;
+      esac
+    done
+    if [[ -n "$tag" ]]; then
+      db=${tag#db:}
+      if [[ " ${FAKE_SNAPSHOTS:-} " == *" $db "* ]]; then
+        printf '[{"id":"%s","tags":["nightly","db:%s"]}]\n' "$(id_of "$db")" "$db"
+      else
+        echo '[]'
+      fi
+    elif [[ "$json" == true ]]; then
+      for db in ${FAKE_SNAPSHOTS:-}; do
+        [[ "$(id_of "$db")" == "$target"* ]] && printf '[{"id":"%s","tags":["nightly","db:%s"]}]\n' "$(id_of "$db")" "$db"
+      done
+    else
+      echo "ID ${target:0:8}  2026-10-04 00:30  gliagora  nightly"
+    fi
+    ;;
+  ls) exit 0 ;;
+  dump) echo "dump of $3" ;;
+  backup)
+    if [[ " $* " == *" --stdin "* ]]; then
+      cat >>"$FAKE_LOG/restic.stdin"
+      echo '{"message_type":"summary","snapshot_id":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}'
+    fi
+    ;;
+  *) exit 0 ;;
+esac

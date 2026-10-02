@@ -148,10 +148,11 @@ jobs:
           cache-to: type=gha,mode=max
 
       # Throwaway secrets for the app, generated once and used by both runs of it below (the smoke
-      # test and the end-to-end tests), so the session and the spam-check keys stay the same.
+      # test and the end-to-end tests), so the session and the spam-check keys stay the same; and
+      # the token of the app's API user in the end-to-end tests' listmonk (M2).
       - name: Generate the app's test secrets
         run: |
-          for name in PAYLOAD_SECRET ALTCHA_HMAC_KEY; do
+          for name in PAYLOAD_SECRET ALTCHA_HMAC_KEY LISTMONK_API_TOKEN; do
             value=$(openssl rand -hex 32)
             echo "::add-mask::$value"
             echo "APP_$name=$value" >> "$GITHUB_ENV"
@@ -193,6 +194,7 @@ jobs:
           jobs="$(curl -fsS http://localhost:3000/en/jobs/)"
           if grep -qF 'save-button' <<<"$jobs"; then echo 'Save buttons without sign-in'; exit 1; fi
           logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email off, google off, orcid off' <<<"$logs"
+          grep -qF 'Email cap of the forms: 50 an hour, 200 a day (default)' <<<"$logs"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/)" = 308
           test "$(docker exec app id -u)" != 0
           docker exec db psql -U gliagora -d gliagora -tAc 'select name from payload_migrations'
@@ -238,14 +240,43 @@ jobs:
       # the browser's http://localhost:3000. The same secrets as the smoke test. This also starts
       # the app afresh, which the home page's figures need: it keeps them for up to 10 minutes
       # (src/lib/home.ts), and the smoke test read them from the empty database.
+      #
+      # listmonk (M2, D50) is set up as deploy/listmonk/prepare.sh sets it up on the server, so the
+      # server's way is tested here with the image compose.yaml pins (the server's): its role and
+      # database made by the server's own script in the running database, the install as a one-off
+      # with its admin's password on stdin, the settings as prepare.sh's psql input (the API user
+      # with the run's token, the mail server Mailpit), then the service with the server's
+      # hardening, on this machine's loopback. The app gets its address and token (for the
+      # newsletter signup), and a higher cap on the forms' emails than the default 50 an hour, which
+      # a whole run of the end-to-end tests would come close to.
       - name: Re-create the app with the test settings
         if: needs.tested.outputs.run == ''
         run: |
           set -euo pipefail
+          export LISTMONK_API_TOKEN="$APP_LISTMONK_API_TOKEN"
           mailpit_image=$(grep -oE 'axllent/mailpit[^[:space:]]+' compose.yaml | head -n 1)
           test -n "$mailpit_image"
           docker run -d --name mailpit -p 127.0.0.1:1025:1025 -p 127.0.0.1:8025:8025 \
             -e MP_DISABLE_VERSION_CHECK=true "$mailpit_image"
+          listmonk_image=$(grep -oE 'listmonk/listmonk[^[:space:]]+' compose.yaml | head -n 1)
+          test -n "$listmonk_image"
+          docker cp deploy/postgres/init/20-listmonk-database.sh db:/tmp/20-listmonk-database.sh
+          docker exec -e LISTMONK_DB_PASSWORD=listmonk-ci-only db bash /tmp/20-listmonk-database.sh
+          listmonk=(--network host --security-opt no-new-privileges:true --cap-drop ALL
+            -e TZ=Etc/UTC -e LISTMONK_app__address=127.0.0.1:9000 -e LISTMONK_db__host=127.0.0.1
+            -e LISTMONK_db__port=5432 -e LISTMONK_db__user=listmonk
+            -e LISTMONK_db__password=listmonk-ci-only -e LISTMONK_db__database=listmonk
+            -e LISTMONK_db__ssl_mode=disable)
+          # shellcheck disable=SC2016
+          openssl rand -hex 16 | docker run --rm -i "${listmonk[@]}" "$listmonk_image" sh -c '
+            IFS= read -r LISTMONK_ADMIN_PASSWORD &&
+            export LISTMONK_ADMIN_PASSWORD LISTMONK_ADMIN_USER=gliagora-admin &&
+            exec ./listmonk --install --idempotent --yes --config ""'
+          LISTMONK_ROOT_URL=http://127.0.0.1:9000 SMTP_HOST=127.0.0.1 SMTP_PORT=1025 \
+            bash -c 'source deploy/listmonk/prepare.sh && settings_input' \
+            | docker exec -i db psql -U gliagora -d listmonk -X -q -tA -v ON_ERROR_STOP=1
+          docker run -d --name listmonk "${listmonk[@]}" "$listmonk_image" \
+            sh -c "./listmonk --upgrade --yes --config '' && exec ./listmonk --config ''"
           docker rm -f app
           docker run -d --name app --network host \
             -e DATABASE_URL=postgres://gliagora:smoke-test-only@127.0.0.1:5432/gliagora \
@@ -253,15 +284,28 @@ jobs:
             -e ALTCHA_HMAC_KEY="$APP_ALTCHA_HMAC_KEY" \
             -e SMTP_HOST=127.0.0.1 -e SMTP_PORT=1025 \
             -e AUTH_TEST_ISSUER=http://127.0.0.1:9400 \
+            -e LISTMONK_URL=http://127.0.0.1:9000 -e LISTMONK_API_TOKEN \
+            -e EMAIL_CAP_HOUR=1000 -e EMAIL_CAP_DAY=5000 \
             gliagora:ci
           for i in $(seq 1 60); do curl -fsS http://localhost:3000/health/ && break; sleep 2; done
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8025/readyz && break; sleep 1; done
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:9000/health && break; sleep 1; done
           echo
+          # The server's health check works under its hardening, and the app's API user sees
+          # Glia Notes and nothing of listmonk's settings.
+          docker exec listmonk wget -q -O /dev/null http://127.0.0.1:9000/health
+          auth() { printf 'Authorization: token gliagora-app:%s\n' "$LISTMONK_API_TOKEN"; }
+          lists="$(curl -fsS -H @<(auth) http://127.0.0.1:9000/api/lists)"
+          grep -qF '"name":"Glia Notes"' <<<"$lists"
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H @<(auth) http://127.0.0.1:9000/api/settings)" = 403
           logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email on, google on, orcid on' <<<"$logs"
+          grep -qF 'Email cap of the forms: 1000 an hour, 5000 a day' <<<"$logs"
       # Tests against a real PostgreSQL (pnpm test:db), on scratch databases dropped afterwards:
       # search (src/lib/search/search.db.test.ts, owned by a throwaway role that is not a superuser,
       # as on the server) and the scheduled tasks (tests/integration/, M4.7, on a migrated scratch
-      # database, with a throwaway Mailpit container for the emails).
+      # database, with a throwaway Mailpit container for the emails), and listmonk with the
+      # server's settings (tests/integration/listmonk.db.test.ts, a throwaway container of the
+      # image above on a scratch database of its own, M2).
       - name: Database tests
         if: needs.tested.outputs.run == ''
         run: pnpm test:db
@@ -307,6 +351,7 @@ jobs:
         run: |
           docker logs app || true
           docker logs mailpit || true
+          docker logs listmonk || true
 
       - name: Image tags
         id: meta

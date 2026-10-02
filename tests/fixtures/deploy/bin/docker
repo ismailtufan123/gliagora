@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# A stand-in for docker, for backup.sh, restore.sh and update.sh. Every call is added to
+# $FAKE_LOG/docker.log. FAKE_DATABASES: the databases the server has (separated by spaces). A
+# restored copy has 12 tables, 40 Payload migrations and listmonk's migration record; the live
+# database has no carried tables (as before M4b), so the restore test has nothing to carry.
+# FAKE_SERVICES: the services of compose.prod.yml; FAKE_NO_VOLUME: there is no database volume yet;
+# FAKE_UP_EXIT: what `compose up` of the whole stack answers.
+set -euo pipefail
+printf 'docker %s\n' "$*" >>"$FAKE_LOG/docker.log"
+query=''
+args=("$@")
+for ((i = 0; i < ${#args[@]}; i++)); do
+  [[ "${args[$i]}" == -tAc ]] && query=${args[$((i + 1))]}
+done
+if [[ "${1:-}" == compose ]]; then
+  if [[ " $* " == *" config --images "* ]]; then echo 'postgres:18.6'; exit 0; fi
+  if [[ " $* " == *" config --services "* ]]; then printf '%s\n' ${FAKE_SERVICES:-}; exit 0; fi
+  if [[ " $* " == *" up -d --wait --wait-timeout "* ]]; then exit "${FAKE_UP_EXIT:-0}"; fi
+  if [[ " $* " == *" pg_dump "* ]]; then echo "dump of ${*: -1}"; exit 0; fi
+  case "$query" in
+    *pg_database*) printf '%s\n' ${FAKE_DATABASES:-} ;;
+    *to_regclass*) echo f ;;
+  esac
+  exit 0
+fi
+case "${1:-}" in
+  volume) [[ -z "${FAKE_NO_VOLUME:-}" ]] ;;
+  run) echo 'container-id' ;;
+  rm) ;;
+  exec)
+    case "$query" in
+      *information_schema.tables*) echo 12 ;;
+      *payload_migrations*) echo 40 ;;
+      *"key = 'migrations'"*) echo 1 ;;
+    esac
+    [[ " $* " == *" pg_restore "* ]] && cat >/dev/null
+    ;;
+esac
+exit 0

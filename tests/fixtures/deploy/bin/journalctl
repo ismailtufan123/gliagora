@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# A stand-in for journalctl: prints a run's lines as backup.sh would have written them, with one
+# line from another program that names an address, and alert.sh's own line.
+printf '%s\n' "$*" >>"$FAKE_LOG/journalctl.args"
+cat <<'LINES'
+[2026-10-04T00:30:01Z] Dumping database gliagora
+pg_dump: error: query failed: ERROR: duplicate key (email)=(reader@example.org)
+[2026-10-04T00:30:02Z] ERROR: pg_dump failed for gliagora; no backup was kept for it.
+[2026-10-04T00:30:02Z] Note for someone@example.org
+[2026-10-04T00:30:03Z] alert: an earlier line of alert.sh itself
+LINES

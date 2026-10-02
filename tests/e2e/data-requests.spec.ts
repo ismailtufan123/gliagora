@@ -16,8 +16,8 @@ import { expectLayoutHolds } from './pseudo-locale'
 // while it samples them. Each test sends from its own client address, with addresses of its own,
 // and reads what was stored through the editors' API (E2E_EDITOR_PASSWORD). The confirmation
 // links arrive in Mailpit; the final email after a deletion is sent by a task the app under test
-// never runs (tests/integration/data-requests.db.test.ts covers it). Three emails in all, of the
-// site-wide 50 an hour.
+// never runs (tests/integration/data-requests.db.test.ts covers it). Three emails in all, against
+// the site-wide cap (50 an hour by default; CI's app has a higher one, EMAIL_CAP_HOUR).
 //
 // The link's page with a valid link (a deletion, another request) and after a failure cannot be a
 // fixed address in pages.ts, as each needs a link of its own: the flows below check them for
