@@ -115,6 +115,10 @@ export default defineConfig({
         ...(caddies ? { baseURL: caddies.m2.url } : {}),
       },
       testMatch: M2,
+      // After the desktop and phone projects, like `destructive`: its three Caddies, the M2 app
+      // and its checks at three widths would otherwise compete with the admin's form-state
+      // requests on CI's two processors.
+      dependencies: ['desktop', 'mobile'],
     },
   ],
 })

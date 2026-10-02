@@ -126,6 +126,8 @@ test.describe('admin API', () => {
   // D40: the job form fills in the deadline's time zone from the institution the editor chooses,
   // and keeps a zone the editor chose. The form is left without saving, so nothing is stored.
   test("the job form takes the deadline's time zone from the institution", async ({ page }) => {
+    // Many form-state requests in a row, each slower while other tests run: three times the time.
+    test.slow()
     await page.context().setExtraHTTPHeaders(editorHeaders())
     await page.goto('/admin/collections/jobs/create/')
     const zone = page.locator('#field-deadlineTz')
@@ -167,15 +169,15 @@ test.describe('admin API', () => {
       await expect(shown).toHaveCount(0)
       await choose(page, 'deadlineKind', 'Rolling')
       // Payload decides on the server whether a field is shown (a form-state request after each
-      // change), which takes longer while other tests run.
-      await expect(zone).toBeHidden({ timeout: 15_000 })
+      // change), which takes longer while other tests run (CI's runners have two processors).
+      await expect(zone).toBeHidden({ timeout: 30_000 })
       // Shown again, the field reads the institution's zone again: wait for it before looking.
       const read = page.waitForResponse(
         (response) => /\/api\/institutions\/\d+\/?\?.*select/.test(response.url()) && response.ok(),
       )
       await choose(page, 'deadlineKind', 'Fixed date')
       await (await read).finished()
-      await expect(zone).toBeVisible({ timeout: 15_000 })
+      await expect(zone).toBeVisible({ timeout: 30_000 })
       await page.evaluate(
         () => new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve))),
       )
