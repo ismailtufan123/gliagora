@@ -10,7 +10,7 @@ Every item in this table is set by gliagora.com itself (first-party cookies) and
 |---|---|---|---|
 | `__Host-gliagora-session` (member session cookie) | Members | Keeps you signed in | 30 days from when you signed in; signing in again starts a new one |
 | `__Host-gliagora-signin` (sign-in cookie) | Anyone who starts signing in | Protects signing in with Google, ORCID or an email link against misuse; for an email link, it lets us warn you when the link is opened in another browser than the one where you asked for it | 15 minutes; deleted once you are signed in |
-| `__Host-gliagora-newsletter` (newsletter cookie) | Anyone who sends the Glia Notes form | Lets "Check your inbox" show the address the confirmation link went to (partly hidden) and "Send it again" send a new link: it holds that address and when the link went, with the time you sent the form and the version of the consent text | 1 hour from when you sent the form, never extended |
+| `__Host-gliagora-newsletter` (newsletter cookie) | Anyone who sends the Glia Notes form | Lets "Check your inbox" show the address the confirmation link went to (partly hidden) and "Send it again" send a new link: it holds that address, the language of the page and when the link went, with the time you sent the form and the version of the consent text | 1 hour from when you sent the form, never extended |
 | payload-token (editor session cookie) | Editors of Gliagora | Keeps an editor signed in to the editing area | 2 hours after it was set or last renewed |
 | payload-theme | Editors of Gliagora | Remembers an editor's choice of a light or dark editing area | 1 year |
 

@@ -118,9 +118,9 @@ When you sign in with Google or ORCID, their own terms also apply to your accoun
 
 Glia Notes is the monthly Gliagora newsletter. It is free, and every subscriber receives the same issue.
 
-- We add you only after you confirm your address with the link we email you. If you have an account, you can subscribe by ticking a separate box in your account settings; the address of your account is then subscribed, and a new address of your account takes the subscription over.
-- The first issue comes with our public launch. Until then, we send only the confirmation email and a welcome email.
-- Every email has an unsubscribe link, and your mail program can unsubscribe you with one click. Unsubscribing takes effect at once, and we delete your address from the newsletter list then. Members can also switch the newsletter off in their settings.
+- We add you only after you confirm your address with the link we email you. If you have an account, you can subscribe by ticking a separate box in your account settings; the address of your account is then subscribed, and a new address of your account takes the subscription over. [TO DECIDE: B19 – whether a member's subscription may move to a newly verified address without new consent]
+- The first issue comes with our public launch. Until then, if you sign up on the newsletter page, we send only the confirmation email and a welcome email; if you switch Glia Notes on in your account settings, we send nothing until the first issue.
+- The welcome email and every issue have an unsubscribe link, and your mail program can unsubscribe you from them with one click. Unsubscribing takes effect at once, and we delete your address from the newsletter list then. Members can also switch the newsletter off in their settings: it stops at once, and the address is deleted from the newsletter list within minutes.
 - We do not track whether you open Glia Notes or which links you personally click. We only count, in total and without cookies, how many visits to Gliagora come from the newsletter.
 
 How we handle your email address is explained in the [privacy policy](/en/legal/privacy/). In Turkish: the [{tr: KVKK aydınlatma metni}](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice under Turkish data protection law) and the [{tr: açık rıza metni}](/tr/legal/acik-riza-metni/) (consent text for the newsletter).

@@ -8,9 +8,9 @@ You can ask us whether we hold data about you and ask for a copy of it. You can 
 
 ## Do it yourself, at once
 
-- **Unsubscribe from Glia Notes:** use the link in any Glia Notes email, your mail program's unsubscribe button, or the newsletter switch in your account settings. It takes effect immediately, and your address is deleted from the newsletter list then.
+- **Unsubscribe from Glia Notes:** use the link in the welcome email or any issue (it opens a page with one button), or your mail program's unsubscribe button. It takes effect at once, and your address is deleted from the newsletter list then. Members can also use the newsletter switch in their account settings: it stops Glia Notes at once, and the address is deleted from the newsletter list within minutes (usually at once).
 - **Download your data (members):** "Download my data" in your account settings gives you a JSON file, a common file format.
-- **Delete your account (members):** use "Delete my account" in your account settings. When you confirm, we delete your account, saved items and settings at once, and end the Glia Notes subscription of its address (also one made on the newsletter page). Your consent records are unlinked from you. If your account has an email address, we then send you one final email to confirm the deletion. We record the deletion as a request (see "Records of your request").
+- **Delete your account (members):** use "Delete my account" in your account settings. When you confirm, we delete your account, saved items and settings at once, and end the Glia Notes subscription of its address (also one made on the newsletter page). The consent records of that subscription lose the newsletter software's number and code for it and are kept for their 3 years (see "Data we cannot find"). If your account has an email address, we then send you one final email to confirm the deletion. We record the deletion as a request (see "Records of your request").
 
 ## Delete your data with the form
 
@@ -24,7 +24,7 @@ You do not need an account to have your data deleted. Members can use the form t
    - the newsletter subscription of that address, if there is one;
    - your address on the problem reports and corrections you sent with it.
 
-   We also unlink your consent records from you. Then we send you one email that says what we deleted.
+   We also remove the newsletter software's number and code from the consent records of that subscription; the records themselves stay for their 3 years (see "Data we cannot find"). Then we send you one email that says what we deleted.
 
 Requests about your personal rights that you sent through "Report a problem" keep your address: we handle them under Turkish Law No. 5651 and keep them for 2 years after they are closed, to be able to show how we handled them. [TO DECIDE: B11 – whether a confirmed deletion request should also clear the address on requests about personal rights]
 
@@ -44,7 +44,7 @@ Before we act, we check that the request comes from you, so that no one else can
 
 ## Data we cannot find
 
-- **Consent records** identify you only by the newsletter software's number and random code for your subscription, never by your email address. Once your address has been deleted from the newsletter list, our live systems can no longer connect them to you. If you are a member, your account names your subscription: "Download my data" includes its consent records.
+- **Consent records** name a subscription only by the newsletter software's number and random code for it, never by your email address. While you are subscribed, we find them through your address in the newsletter software. If you are a member, your account names the subscription it holds, and "Download my data" includes that subscription's consent records: the one you switched on in your account, or the one your account's address has through the newsletter page, which your account takes over within minutes after you create the account or add that address. Records of a subscription that has ended (you unsubscribed, or switched it off) no longer lead to your address in our live systems, unless you are a member: your account keeps when you last changed Glia Notes, which is also the time of a record. After a deletion, the records of the subscription it ended lose the number and the code; the record of your request, kept for 2 years with your address (see "Records of your request"), shows when that happened. [TO DECIDE: B11 – how far consent records without the number and the code can still be related to a person, and whether a request for access must include them]
 - **Visitor statistics** are counted without cookies. We cannot tell which records, if any, come from your visits. [TO DECIDE: B14 – fields of a raw Umami event, and whether they are personal data]
 
 If you can give us details that would let us find such a record, we will check.
