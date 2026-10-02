@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# A stand-in for curl (sending email): records its arguments, one per line, in $FAKE_LOG/curl.args,
+# the content of a -K file in curl.config and the message it would send (stdin) in curl.mail, then
+# exits with FAKE_CURL_EXIT (default 0).
+set -euo pipefail
+: >"$FAKE_LOG/curl.args"
+while [[ $# -gt 0 ]]; do
+  printf '%s\n' "$1" >>"$FAKE_LOG/curl.args"
+  if [[ "$1" == -K ]]; then
+    printf '%s\n' "$2" >>"$FAKE_LOG/curl.args"
+    cat "$2" >"$FAKE_LOG/curl.config"
+    shift
+  fi
+  shift
+done
+cat >"$FAKE_LOG/curl.mail"
+exit "${FAKE_CURL_EXIT:-0}"

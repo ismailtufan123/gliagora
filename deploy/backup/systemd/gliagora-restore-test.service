@@ -1,5 +1,5 @@
 [Unit]
-Description=Gliagora monthly restore test (latest backup into a temporary container)
+Description=Gliagora monthly restore test (the latest backup of each database into a temporary container)
 After=docker.service
 Requires=docker.service
 
@@ -8,3 +8,6 @@ Type=oneshot
 ExecStart=/opt/gliagora/backup/restore.sh test latest
 Nice=10
 IOSchedulingClass=idle
+# Emails the result: every failure, and the success of the Sunday backup and of the restore test
+# (alert.sh; off until SMTP_HOST and ALERT_EMAIL are set). "-": a failed email never fails the run.
+ExecStopPost=-/opt/gliagora/backup/alert.sh %N

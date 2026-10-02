@@ -4,9 +4,9 @@ import { errorCode } from '@/lib/errors'
 
 import { type SpamChallenge, checkAnswer, newChallenge } from './altcha'
 import { clientIp, hashClientIp } from './client-ip'
+import { emailCap } from './email-cap'
 import { FORM_INPUTS } from './fields'
 import {
-  EMAILS_SITE_WIDE,
   LIMIT_WINDOW_MS,
   type Limit,
   type LimitBucket,
@@ -125,13 +125,14 @@ let capWarnedAt = Number.NEGATIVE_INFINITY
 /**
  * One warning line in the log when the site-wide cap on the emails the forms send is reached (the
  * only limit that answers "temporarily unavailable"), so the operator learns that people are being
- * turned away. Once an hour at most, however many requests the cap refuses.
+ * turned away. Once an hour at most, however many requests the cap refuses. It quotes the cap in
+ * force (EMAIL_CAP_HOUR, EMAIL_CAP_DAY, or the default).
  */
-export function warnSiteWideCap(name: string, now: Date) {
+export function warnSiteWideCap(name: string, now: Date, cap = emailCap()) {
   if (now.getTime() - capWarnedAt < LIMIT_WINDOW_MS) return
   capWarnedAt = now.getTime()
   console.warn(
-    `${name}: the site-wide limit on emails from the forms is reached (${EMAILS_SITE_WIDE.hour} an hour, ${EMAILS_SITE_WIDE.day} a day); the forms that send an email say "temporarily unavailable" until it frees up.`,
+    `${name}: the site-wide limit on emails from the forms is reached (${cap.hour} an hour, ${cap.day} a day); the forms that send an email say "temporarily unavailable" until it frees up.`,
   )
 }
 

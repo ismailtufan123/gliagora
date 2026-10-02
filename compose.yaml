@@ -1,13 +1,16 @@
 # Local development only: PostgreSQL for the app. The project is "gliagora-dev" so it can never
 # clash with the production stack (deploy/compose.prod.yml, project "gliagora") on the same machine.
 # Start with `docker compose up -d db`. Values come from .env (see .env.example). Mailpit, for
-# testing emails, starts only with its profile: `docker compose --profile mail up -d mailpit`.
+# testing emails, starts only with its profile: `docker compose --profile mail up -d mailpit`, and
+# listmonk, the newsletter service, with its own: `docker compose --profile newsletter up -d listmonk`.
 name: gliagora-dev
 
 services:
   db:
     image: postgres:18
     restart: unless-stopped
+    # As on the server (deploy/compose.prod.yml): no error DETAIL or failed statement in its log.
+    command: [postgres, -c, log_error_verbosity=terse, -c, log_min_error_statement=panic]
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
@@ -18,7 +21,8 @@ services:
     volumes:
       - db-data:/var/lib/postgresql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      # Over TCP, as on the server: not the temporary server of a new volume's set-up.
+      test: ['CMD-SHELL', 'pg_isready -h 127.0.0.1 -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -39,6 +43,62 @@ services:
       # Bound to this computer only, not to the local network: SMTP and the web interface.
       - '127.0.0.1:1025:1025'
       - '127.0.0.1:8025:8025'
+
+  # Local newsletter service (M2, D50): the same listmonk as the server (deploy/compose.prod.yml),
+  # in its own database `listmonk` of the PostgreSQL above, at http://127.0.0.1:9000/admin/ (user
+  # gliagora-admin, with LISTMONK_ADMIN_PASSWORD from .env, or without it, the account you create on
+  # the first visit). `docker compose --profile newsletter up -d listmonk` makes its database and
+  # its own login role `listmonk` (not a superuser, as on the server), with LISTMONK_DB_PASSWORD from
+  # .env, by the server's own script (listmonk-database, on every start), installs listmonk in it
+  # (idempotent) and starts it; then `pnpm listmonk:setup` applies the server's settings (the list
+  # Glia Notes and the app's API user, deploy/listmonk/settings.sql) and
+  # `docker compose restart listmonk` makes it read them. Fake addresses only. The tests start a
+  # listmonk of their own (tests/integration/listmonk.ts).
+  listmonk-database:
+    image: postgres:18
+    profiles: ['newsletter']
+    environment:
+      PGHOST: db
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      # Empty: the script stops, naming it (only this profile needs it).
+      LISTMONK_DB_PASSWORD: ${LISTMONK_DB_PASSWORD:-}
+    volumes:
+      - ./deploy/postgres/init/20-listmonk-database.sh:/20-listmonk-database.sh:ro
+    command: [bash, /20-listmonk-database.sh]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  listmonk:
+    image: listmonk/listmonk:v6.2.0@sha256:f535d59e14991337a9f2d570273685378ae86b0d7698c3e00da444e3bc205286
+    profiles: ['newsletter']
+    restart: unless-stopped
+    command:
+      - sh
+      - -c
+      - ./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && exec ./listmonk --config ''
+    environment:
+      TZ: Etc/UTC
+      LISTMONK_app__address: 0.0.0.0:9000
+      LISTMONK_db__host: db
+      LISTMONK_db__port: '5432'
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__password: ${LISTMONK_DB_PASSWORD:-}
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__ssl_mode: disable
+      LISTMONK_ADMIN_USER: gliagora-admin
+      LISTMONK_ADMIN_PASSWORD: ${LISTMONK_ADMIN_PASSWORD:-}
+    ports:
+      # Bound to this computer only, not to the local network.
+      - '127.0.0.1:9000:9000'
+    depends_on:
+      listmonk-database:
+        condition: service_completed_successfully
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
 volumes:
   db-data:

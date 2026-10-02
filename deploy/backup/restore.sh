@@ -8,10 +8,17 @@
 #   sudo ./restore.sh config [SNAPSHOT] TARGET_DIR  # copy the backed-up settings into TARGET_DIR
 #   sudo ./restore.sh carry DIR [DB]                # load rows a failed `database` kept in DIR
 #
-# SNAPSHOT is a snapshot ID from `list`, or `latest` (the default). DB defaults to gliagora.
+# SNAPSHOT is a snapshot ID from `list`, or `latest` (the default): the newest one, and for
+# `database` the newest that is not the safety backup of a restore (tag pre-restore). Each database
+# has snapshots of its own (the app's gliagora, listmonk's listmonk); DB is one of them. `test
+# latest` without DB tests every database in DATABASES (backup.env), each in a fresh container of
+# its own; otherwise, and for `database`, DB defaults to the one a snapshot ID holds, or to
+# gliagora with `latest`.
 # `database` asks for confirmation (or pass --yes as the last argument), takes a safety backup of
-# the current database first, stops the app while restoring and starts it again afterwards. It
-# keeps the live database's deletion log and data requests (see "Carried over" below).
+# the current databases first, stops the service that uses the database (the app, or listmonk)
+# while restoring and starts it again afterwards. For the app's database it keeps the live
+# database's deletion log and data requests (see "Carried over" below). Restore both databases
+# from the same night (deploy/README.md, step 7).
 set -euo pipefail
 
 HOST_TAG=gliagora
@@ -19,16 +26,41 @@ HOST_TAG=gliagora
 log() { echo "[$(date -u +%FT%TZ)] $*"; }
 fail() { log "ERROR: $*" >&2; exit 1; }
 compose() { docker compose --project-directory "$COMPOSE_DIR" -f "$COMPOSE_DIR/compose.prod.yml" "$@"; }
-usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+# The comment block at the top of this file, without its "# ".
+usage() { awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; exit 1; }
+
+# The ID of the newest snapshot with tag $1, passing over those also tagged $2 (if given); empty
+# when there is none. Newest by each snapshot's own time, whatever order restic lists them in.
+newest_snapshot() {
+  local tag=$1 skip=${2:-} json line time='' tags='' at newest='' newest_at=-1
+  json=$(restic snapshots --host "$HOST_TAG" --tag "$tag" --json) || return 1
+  while IFS= read -r line; do
+    case $line in
+      '"time":'*) time=${line:8:-1} ;;
+      '"tags":'*) tags=$line ;;
+      '"id":'*)
+        if [[ -n "$time" && ( -z "$skip" || "$tags" != *"\"$skip\""* ) ]]; then
+          at=$(date -u -d "$time" +%s%N) || return 1
+          if ((at > newest_at)); then newest_at=$at newest=${line:6:64}; fi
+        fi
+        time='' tags=''
+        ;;
+    esac
+  done < <(grep -oE '"time":"[^"]+"|"tags":\[[^]]*\]|"id":"[0-9a-f]{64}"' <<<"$json" || true)
+  echo "$newest"
+}
 
 # Turns "latest" into the ID of the newest snapshot with the given tag, so that later backups
-# (such as the safety backup before a restore) cannot change which snapshot is used.
+# (such as the safety backup before a restore) cannot change which snapshot is used. `database`
+# passes over the safety backups of earlier restores (tag pre-restore, its second argument):
+# otherwise, after restoring one database, `database latest` of the other would pick the state
+# that restore's safety backup just stored (on a new server: its empty database). It keeps
+# pre-update snapshots: the newest one can be the one to restore.
 resolve_snapshot() {
-  local tag=$1 id
+  local tag=$1 skip=${2:-} id
   if [[ "$snapshot" == latest ]]; then
-    id=$(restic snapshots --host "$HOST_TAG" --tag "$tag" --latest 1 --json \
-      | grep -o '"id":"[0-9a-f]\{64\}"' | tail -n 1 | cut -d'"' -f4)
-    [[ -n "$id" ]] || fail "No snapshot with tag $tag."
+    id=$(newest_snapshot "$tag" "$skip") || fail "Could not list the snapshots with tag $tag."
+    [[ -n "$id" ]] || fail "No snapshot with tag $tag${skip:+ (other than $skip)}."
     snapshot=$id
   fi
 }
@@ -48,8 +80,35 @@ describe_snapshot() {
   restic snapshots --compact "$snapshot"
 }
 
-# Carried over (M4b, D49; PLAN §18.2). A restore brings back everything deleted after the
-# snapshot, and sets the ID sequences back. So `database` keeps two tables of the live database:
+# The database whose dump a snapshot holds (its tag db:<name>), for a snapshot ID given alone.
+snapshot_database() {
+  local db
+  db=$(restic snapshots --json "$snapshot" | grep -o '"db:[a-z0-9_]*"' | head -n 1 | tr -d '"')
+  [[ -n "$db" ]] || return 1
+  echo "${db#db:}"
+}
+
+# The service that uses a database: stopped while its database is replaced.
+service_of() {
+  case $1 in
+    gliagora) echo app ;;
+    listmonk) echo listmonk ;;
+    *) return 1 ;;
+  esac
+}
+
+# A query that counts a restored database's record of its schema migrations: more than none shows
+# that it is a database of its kind, ready for its service. Empty for a database without one.
+migration_query() {
+  case $1 in
+    gliagora) echo 'select count(*) from payload_migrations' ;;
+    listmonk) echo "select count(*) from settings where key = 'migrations'" ;;
+  esac
+}
+
+# Carried over (M4b, D49; PLAN §18.2), for the app's database only. A restore brings back
+# everything deleted after the snapshot, and sets the ID sequences back. So `database` keeps two
+# tables of the live database:
 # the deletion log (record IDs only), which lists the deletions to repeat on the restored data, and
 # the data requests, the record of what people asked and what was done. It copies their rows out
 # (binary COPY, into a folder only root can read, since requests hold addresses) before the
@@ -263,10 +322,24 @@ case "$command" in
     ;;
 
   test)
-    db="${3:-gliagora}"
+    db="${3:-}"
+    if [[ -z "$db" && "$snapshot" == latest ]]; then
+      # Every database, each by a run of its own, so that each has a fresh container and its own
+      # clean-up, and a failure of one does not hide the others.
+      : "${DATABASES:?Set DATABASES in $CONFIG}"
+      failed=()
+      for db in $DATABASES; do
+        "${BASH_SOURCE[0]}" test latest "$db" || failed+=("$db")
+      done
+      [[ ${#failed[@]} -eq 0 ]] || fail "The restore test failed for: ${failed[*]} (see above)."
+      log "Restore tests passed: $DATABASES."
+      exit 0
+    fi
+    [[ -n "$db" ]] || db=$(snapshot_database) || fail "Snapshot $snapshot holds no database dump."
     # Same PostgreSQL image as production, without a network, removed afterwards with its data
     # (`-v`: the image declares a volume, which would otherwise stay behind with a full copy).
-    image=$(compose config --images | grep -m1 '^postgres') || fail "No PostgreSQL image in compose.prod.yml."
+    images=$(compose config --images) || fail "Could not read compose.prod.yml."
+    image=$(grep -m1 '^postgres' <<<"$images") || fail "No PostgreSQL image in compose.prod.yml."
     name="gliagora-restore-test-$$"
     trap 'docker rm -f -v "$name" >/dev/null 2>&1 || true' EXIT
     log "Starting a temporary PostgreSQL ($image)"
@@ -289,19 +362,24 @@ case "$command" in
       | docker exec -i "$name" pg_restore -U postgres -d restore_test --no-owner --exit-on-error
     tables=$(docker exec "$name" psql -U postgres -d restore_test -tAc \
       "select count(*) from information_schema.tables where table_schema = 'public'")
-    migrations=$(docker exec "$name" psql -U postgres -d restore_test -tAc \
-      "select count(*) from payload_migrations" 2>/dev/null || echo 0)
     [[ "$tables" -gt 0 ]] || fail "The restored database has no tables."
-    [[ "$db" != gliagora || "$migrations" -gt 0 ]] || fail "The restored database has no migrations."
+    migrations=0
+    query=$(migration_query "$db")
+    if [[ -n "$query" ]]; then
+      migrations=$(docker exec "$name" psql -U postgres -d restore_test -tAc "$query" 2>/dev/null || echo 0)
+      [[ "$migrations" -gt 0 ]] || fail "The restored database has no migrations."
+    fi
     # The carry-over of `database`, from the live database into the restored copy (read-only on
     # the live side): the counts, the sequences, and that new rows can be stored afterwards.
     carried=false
-    for table in "${CARRY_TABLES[@]}"; do
-      found=0
-      has_table live_psql "$db" "$table" || found=$?
-      [[ $found -le 1 ]] || fail "Could not read the live database $db."
-      [[ $found -eq 1 ]] || carried=true
-    done
+    if [[ "$db" == gliagora ]]; then
+      for table in "${CARRY_TABLES[@]}"; do
+        found=0
+        has_table live_psql "$db" "$table" || found=$?
+        [[ $found -le 1 ]] || fail "Could not read the live database $db."
+        [[ $found -eq 1 ]] || carried=true
+      done
+    fi
     if [[ "$carried" == true ]]; then
       carry=$(carry_dir)
       trap 'docker rm -f -v "$name" >/dev/null 2>&1 || true; rm -rf "$carry"' EXIT
@@ -320,17 +398,21 @@ finish it (deploy/README.md, section 7)."
       carry_check_inserts "${restored[@]}" \
         || fail "After the carry-over, a new deletion-log row or data request could not be stored."
     fi
-    log "Restore test passed: $tables tables, $migrations migrations."
+    log "Restore test passed: $db, $tables tables, $migrations migrations."
     ;;
 
   database)
-    db="${3:-gliagora}"
-    resolve_snapshot "db:$db"
+    db="${3:-}"
+    if [[ -z "$db" ]]; then
+      if [[ "$snapshot" == latest ]]; then db=gliagora; else db=$(snapshot_database) || fail "Snapshot $snapshot holds no database dump."; fi
+    fi
+    service=$(service_of "$db") || fail "No service is known to use the database $db."
+    resolve_snapshot "db:$db" pre-restore
     require_dump "$db"
     describe_snapshot
     echo
     echo "This REPLACES the live database '$db' with the snapshot above."
-    echo "A safety backup of the current database is taken first (tag: pre-restore)."
+    echo "A safety backup of the current databases is taken first (tag: pre-restore)."
     if [[ "$YES" != true ]]; then
       read -r -p "Type the database name ($db) to continue: " answer
       [[ "$answer" == "$db" ]] || fail "Cancelled."
@@ -338,41 +420,59 @@ finish it (deploy/README.md, section 7)."
     log "Safety backup of the current state"
     "$SCRIPT_DIR/backup.sh" pre-restore
     require_dump "$db"
-    log "Stopping the app"
-    compose stop app
-    carry=$(carry_dir)
-    log "Copying the live deletion log and data requests out (to $carry)"
-    if ! carry_save "$carry" live_psql "$db"; then
-      rm -rf "$carry"
-      compose up -d --wait app
-      fail "Could not copy the rows to carry over. Nothing was changed; the app is running again."
+    log "Stopping $service"
+    compose stop "$service"
+    if [[ "$db" == gliagora ]]; then
+      carry=$(carry_dir)
+      log "Copying the live deletion log and data requests out (to $carry)"
+      if ! carry_save "$carry" live_psql "$db"; then
+        rm -rf "$carry"
+        compose up -d --wait "$service"
+        fail "Could not copy the rows to carry over. Nothing was changed; the app is running again."
+      fi
     fi
     log "Recreating database $db"
     compose exec -T db dropdb -U postgres --if-exists --force "$db"
     compose exec -T db createdb -U postgres --owner "$db" "$db"
+    # A new database lets every role connect (PUBLIC), and pg_restore without --create does not
+    # bring back the dump's own rule: take it away, as the init scripts do (postgres/init/), so
+    # another app's role (listmonk's, say) cannot reach this database.
+    compose exec -T db psql -U postgres -d postgres -X -q -v ON_ERROR_STOP=1 \
+      -c "REVOKE ALL ON DATABASE \"$db\" FROM PUBLIC" \
+      || fail "Could not take PUBLIC's access to the new, still empty database $db away. $service \
+is stopped. Run '$0 database $snapshot $db' again, or go back to the newest 'pre-restore' snapshot.\
+${carry:+ The rows to carry over are in $carry.}"
     log "Restoring $db from snapshot ${snapshot:0:8}"
     if ! dump_database "$db" \
       | compose exec -T db pg_restore -U postgres -d "$db" --no-owner --role "$db" --exit-on-error; then
-      fail "Restore failed. The app is stopped. The state before this restore is in the newest \
-'pre-restore' snapshot: run '$0 database <its ID> $db' to go back. The rows to carry over are in $carry."
+      fail "Restore failed. $service is stopped. The state before this restore is in the newest \
+'pre-restore' snapshot: run '$0 database <its ID> $db' to go back.${carry:+ The rows to carry over are in $carry.}"
     fi
-    log "Loading the carried rows back and moving the ID sequences"
-    status=0
-    carry_load "$carry" live_psql "$db" || status=$?
-    if [[ $status -eq $CARRY_NEEDS_TABLES ]]; then
-      fail "The snapshot is from before M4b: the live deletion log or data requests have rows, and \
+    if [[ "$db" == gliagora ]]; then
+      log "Loading the carried rows back and moving the ID sequences"
+      status=0
+      carry_load "$carry" live_psql "$db" || status=$?
+      if [[ $status -eq $CARRY_NEEDS_TABLES ]]; then
+        fail "The snapshot is from before M4b: the live deletion log or data requests have rows, and \
 the restored database has no table for them yet. The app is stopped, and the rows are kept in $carry. \
 Run '$0 carry $carry $db' with an app image that includes M4b (the deployed one does, unless you went \
 back to an older image: then deploy M4b again first, and keep $carry until then). It starts the app \
 once, so that its migrations make the tables, stops it, loads the rows and starts the app. $PRE_RESTORE"
-    elif [[ $status -ne 0 ]]; then
-      fail "Carrying the deletion log and data requests over failed. The app is stopped, and the \
+      elif [[ $status -ne 0 ]]; then
+        fail "Carrying the deletion log and data requests over failed. The app is stopped, and the \
 rows are kept in $carry: fix the cause, then run '$0 carry $carry $db', which starts the app. $PRE_RESTORE"
+      fi
+      carry_report live_psql "$db" || log "Could not report the carried rows (the carry-over itself is done)."
+      rm -rf "$carry"
     fi
-    carry_report live_psql "$db" || log "Could not report the carried rows (the carry-over itself is done)."
-    rm -rf "$carry"
-    log "Starting the app"
-    compose up -d --wait app
+    if [[ "$db" == listmonk && -x "$COMPOSE_DIR/listmonk/prepare.sh" ]]; then
+      # The snapshot holds listmonk's settings and API user as they were then: put the current
+      # ones back (and its schema up to date) before it starts.
+      log "Applying listmonk's current settings"
+      "$COMPOSE_DIR/listmonk/prepare.sh" || fail "listmonk's settings could not be applied; listmonk is stopped. Run '$COMPOSE_DIR/listmonk/prepare.sh', then 'docker compose -f compose.prod.yml up -d listmonk'."
+    fi
+    log "Starting $service"
+    compose up -d --wait "$service"
     log "Restore finished."
     ;;
 
@@ -380,6 +480,7 @@ rows are kept in $carry: fix the cause, then run '$0 carry $carry $db', which st
     carry="${2:-}"
     db="${3:-gliagora}"
     [[ -d "$carry" && -f "$carry/sequences" ]] || usage
+    [[ "$db" == gliagora ]] || fail "Only the app's database (gliagora) carries rows over."
     log "Stopping the app"
     compose stop app
     status=0

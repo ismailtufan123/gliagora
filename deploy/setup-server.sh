@@ -7,7 +7,8 @@
 #   2. Creates a non-root admin user who logs in with an SSH key and uses sudo without a password.
 #   3. Turns off SSH login for root and SSH login with passwords.
 #   4. Firewall (ufw): only SSH (22), HTTP (80) and HTTPS (443, TCP and UDP for HTTP/3) are open.
-#   5. fail2ban: blocks addresses that keep failing to log in over SSH.
+#   5. fail2ban: blocks addresses that keep failing to log in over SSH. The system journal, which
+#      fail2ban reads and the containers log to, keeps 14 days (logs/install-journald.sh, D34).
 #   6. Installs Docker Engine and the Compose plugin from Docker's own apt repository, with the
 #      network's MTU where the server's network is smaller than Docker's default.
 #   7. Adds a 2 GB swap file (if the server has no swap) and creates /opt/gliagora for the stack.
@@ -16,7 +17,8 @@
 #      the sudo or docker group). Its only key is the deploy key (DEPLOY_PUBLIC_KEY), which can run
 #      nothing but deploy-remote.sh, and one sudo rule lets it run that script as root (D42).
 #
-# Usage, logged in as root on the new server:
+# Usage, logged in as root on the new server, with the folder logs/ next to this script (README.md,
+# step 1 copies both):
 #   ADMIN_USER=gliagora SSH_PUBLIC_KEY="ssh-ed25519 AAAA... name@laptop" bash setup-server.sh
 # Without SSH_PUBLIC_KEY, the keys already in /root/.ssh/authorized_keys are copied.
 # Optionally add DEPLOY_PUBLIC_KEY="ssh-ed25519 AAAA... gliagora-deploy" (the GitHub Actions key).
@@ -27,6 +29,7 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ADMIN_USER="${ADMIN_USER:-gliagora}"
 DEPLOY_USER=deploy
 SSH_PUBLIC_KEY="${SSH_PUBLIC_KEY:-}"
@@ -52,6 +55,8 @@ fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 [[ "${ID:-}" == ubuntu && "${VERSION_ID:-}" == 24.04 ]] || fail "This script is for Ubuntu 24.04 only."
 [[ "$ADMIN_USER" =~ ^[a-z][a-z0-9-]{0,31}$ ]] || fail "ADMIN_USER must be lowercase letters, digits or '-'."
 [[ "$ADMIN_USER" != "$DEPLOY_USER" ]] || fail "ADMIN_USER cannot be '$DEPLOY_USER' (the deploy user)."
+[[ -r "$SCRIPT_DIR/logs/install-journald.sh" ]] \
+  || fail "Copy the folder deploy/logs next to this script first (README.md, step 1)."
 
 # --- 1. Updates -----------------------------------------------------------------------------------
 
@@ -148,7 +153,8 @@ ufw allow 443/tcp comment 'HTTPS'
 ufw allow 443/udp comment 'HTTPS (HTTP/3)'
 ufw --force enable
 # Note: ports published by Docker containers bypass ufw. compose.prod.yml therefore publishes
-# only Caddy's 80 and 443; PostgreSQL and the app are never published.
+# only Caddy's 80 and 443 to the internet; PostgreSQL and the app are never published, and
+# listmonk's admin only on the server's own loopback (127.0.0.1:9000, reached through SSH).
 
 # --- 5. fail2ban ----------------------------------------------------------------------------------
 
@@ -167,6 +173,9 @@ backend = systemd
 EOF
 systemctl enable fail2ban
 systemctl restart fail2ban
+
+log "Keeping the system journal 14 days"
+bash "$SCRIPT_DIR/logs/install-journald.sh"
 
 # --- 6. Docker ------------------------------------------------------------------------------------
 

@@ -49,7 +49,8 @@ export async function mailpitAvailable(): Promise<boolean> {
   return (await dockerAvailable()) || mailpitBinary() !== null
 }
 
-function freePort(): Promise<number> {
+/** A free TCP port on this computer's loopback (also for tests/integration/listmonk.ts). */
+export function freePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = createServer()
     server.once('error', reject)
