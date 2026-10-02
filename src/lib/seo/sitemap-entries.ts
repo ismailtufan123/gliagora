@@ -12,6 +12,7 @@ import {
 } from '@/lib/indexing'
 import { type ListingDates, isOpen, listingState } from '@/lib/jobs/deadline'
 import { alternatesFor } from '@/lib/metadata'
+import { type PublicPage, indexedPublicPages } from '@/lib/public-pages'
 import { paths } from '@/lib/site'
 
 import type { SitemapEntry } from './sitemap'
@@ -77,6 +78,18 @@ export function pageEntries(subfields: readonly SitemapSubfield[]): SitemapEntry
       .filter(contentPageIndexed)
       .map((page) => entry(page.path, page.updated)),
   ]
+}
+
+/**
+ * The pages sitemap of the M2 state (D41, D50): its public pages that are indexed
+ * (src/lib/public-pages.ts), in that list's order; a text from content/ with the date of its last
+ * change, as above.
+ */
+export function m2PageEntries(pages: readonly PublicPage[] = indexedPublicPages()): SitemapEntry[] {
+  const updated = new Map<string, string>(
+    Object.values(CONTENT_PAGES).map((page) => [page.path, page.updated]),
+  )
+  return pages.map((page) => entry(page.path, updated.get(page.path)))
 }
 
 /** Open jobs, at their canonical addresses, last changed when the job was last saved. */

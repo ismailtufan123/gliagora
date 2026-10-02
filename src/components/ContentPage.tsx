@@ -4,12 +4,16 @@ import type { ReactNode } from 'react'
 
 import { CONTENT_PAGES, type ContentKey, formatDate } from '@/lib/content'
 import { contentPageIndexed } from '@/lib/indexing'
+import { m2Links } from '@/lib/m2-links'
 import { renderContentFile } from '@/lib/markdown'
 import { alternatesFor } from '@/lib/metadata'
+import type { SiteStage } from '@/lib/site-stage'
 
 // A long-form page from content/ (About, legal texts): title, optional draft notice, the text
 // and the date it was last updated. `after` comes below the text, outside it: the data-request
-// form, on the data-requests page.
+// form, on the data-requests page. In its M2 version (`stage="m2"`, src/app/(frontend)/m2/, D50)
+// the text links only to public pages, and email in place of the suggest and report forms
+// (src/lib/m2-links.ts, D41).
 
 export async function contentMetadata(key: ContentKey): Promise<Metadata> {
   const page = CONTENT_PAGES[key]
@@ -27,15 +31,17 @@ export async function ContentPage({
   pageKey,
   intro,
   after,
+  stage = 'private',
 }: {
   pageKey: ContentKey
   intro?: ReactNode
   after?: ReactNode
+  stage?: SiteStage
 }) {
   const page = CONTENT_PAGES[pageKey]
   setRequestLocale(page.locale)
   const t = await getTranslations({ locale: page.locale })
-  const html = renderContentFile(page.file)
+  const html = renderContentFile(page.file, stage === 'm2' ? { link: m2Links() } : undefined)
   return (
     <main id="main" className="page-frame flex-1 py-12">
       <article className="prose">

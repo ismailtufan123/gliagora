@@ -48,6 +48,34 @@ describe('renderMarkdown', () => {
     ).toContain('<a href="/en/">a</a>')
   })
 
+  it('refuses links to this site by its full address in content/: its pages go by their paths', () => {
+    const render = (markdown: string, link?: (href: string) => string | null) =>
+      renderMarkdown(markdown, { sitePathsOnly: true, link })
+    for (const markdown of [
+      '[positions](https://gliagora.com/en/jobs/)',
+      '[x](HTTPS://GLIAGORA.COM/en/about/)',
+      '[x](http://gliagora.com/)',
+      '[x](https://www.gliagora.com/en/suggest/)',
+      'See https://gliagora.com/en/suggest/ now.',
+      'See www.gliagora.com/en/report/ now.',
+      '[x][ref]\n\n[ref]: https://gliagora.com/en/account/',
+    ]) {
+      expect(() => render(markdown), markdown).toThrow(/full address/)
+      // The editor guide in the admin names the admin's address on purpose (src/admin/help.ts).
+      expect(() => renderMarkdown(markdown), markdown).not.toThrow()
+    }
+    // Other sites, also those with a similar name, and email addresses at the site's domain.
+    expect(
+      render(
+        '[a](https://gliagora.com.example/) [b](https://notgliagora.com/) [c](mailto:hello@gliagora.com) privacy@gliagora.com',
+      ),
+    ).toContain('href="mailto:privacy@gliagora.com"')
+    // A mapper's answer is checked too.
+    expect(() => render('[x](/en/about/)', () => 'https://gliagora.com/en/jobs/')).toThrow(
+      /full address/,
+    )
+  })
+
   it('shows raw HTML as text instead of rendering it', () => {
     const html = renderMarkdown('Hello <script>alert(1)</script>\n\n<div onclick="x()">block</div>')
     expect(html).not.toContain('<script>')

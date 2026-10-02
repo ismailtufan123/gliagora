@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
 import { CONTENT_PAGES } from '@/lib/content'
+import { indexedPublicPages } from '@/lib/public-pages'
+import { TRANSLATIONS } from '@/lib/site'
 
 import { sitemapIndexXml, sitemapXml, splitSitemap } from './sitemap'
 import {
   type SitemapJob,
   institutionEntries,
   jobEntries,
+  m2PageEntries,
   openJobsPer,
   pageEntries,
   subfieldEntries,
@@ -58,8 +61,8 @@ describe('pageEntries', () => {
       '/en/suggest/',
       ...published.map((page) => page.path),
     ])
-    // Today only About is published (D28).
-    expect(published.map((page) => page.path)).toEqual(['/en/about/'])
+    // About is published (D28); the other texts once the operator approves them.
+    expect(published.map((page) => page.path)).toContain('/en/about/')
     expect(entries.find((entry) => entry.path === '/en/about/')?.lastmod).toBe(
       CONTENT_PAGES.about.updated,
     )
@@ -91,7 +94,54 @@ describe('pageEntries', () => {
   })
 
   it('gives no hreflang alternates while the translations are drafts', () => {
-    expect(pageEntries([]).every((entry) => entry.alternates === undefined)).toBe(true)
+    // A page has them only once it and its translation are approved (the contact pages).
+    const drafts = new Set<string>(
+      Object.values(CONTENT_PAGES)
+        .filter((page) => page.draft)
+        .map((page) => page.path),
+    )
+    for (const entry of pageEntries([])) {
+      const pair = TRANSLATIONS.find((one) => Object.values(one).includes(entry.path))
+      const published = !!pair && Object.values(pair).every((path) => !drafts.has(path))
+      expect(entry.alternates !== undefined, entry.path).toBe(published)
+    }
+  })
+})
+
+describe('m2PageEntries (D41, D50)', () => {
+  it('lists the coming-soon page and the approved texts only, a text with its date', () => {
+    expect(m2PageEntries(indexedPublicPages((key) => key !== 'about'))).toEqual([
+      { path: '/en/' },
+      { path: '/en/about/', lastmod: CONTENT_PAGES.about.updated },
+    ])
+    // With the approvals of now (src/lib/content.ts); approved translations also name each other.
+    const approved = Object.values(CONTENT_PAGES).filter((page) => !page.draft)
+    expect(m2PageEntries().map(({ path, lastmod }) => ({ path, lastmod }))).toEqual([
+      { path: '/en/', lastmod: undefined },
+      ...indexedPublicPages()
+        .filter((page) => page.path !== '/en/')
+        .map((page) => ({
+          path: page.path,
+          lastmod: approved.find((text) => text.path === page.path)?.updated,
+        })),
+    ])
+    expect(m2PageEntries().map((entry) => entry.path)).toEqual(
+      expect.arrayContaining(approved.map((page) => page.path)),
+    )
+  })
+
+  it('lists each text once approved, in a file per locale, and never the pages after a form', () => {
+    const entries = m2PageEntries(indexedPublicPages(() => false))
+    const paths = entries.map((entry) => entry.path)
+    for (const page of Object.values(CONTENT_PAGES)) expect(paths).toContain(page.path)
+    expect(paths).not.toContain('/en/jobs/')
+    expect(paths).not.toContain('/en/suggest/')
+    expect(paths).not.toContain('/en/newsletter/')
+    expect(paths.filter((path) => path.startsWith('/en/legal/data-requests/'))).toEqual([
+      '/en/legal/data-requests/',
+    ])
+    // Two files, as the full site would have them: English and Turkish (PLAN §12).
+    expect(splitSitemap('pages', entries).map((file) => file.locale)).toEqual(['en', 'tr'])
   })
 })
 

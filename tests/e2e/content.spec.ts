@@ -1,20 +1,15 @@
 import { expect, test } from '@playwright/test'
 
+import { CONTENT_PAGES } from '../../src/lib/content'
+
 // Long-form pages from content/ (About, legal texts): draft texts are marked as drafts and not
 // indexed, and every link to another page of the site leads somewhere (CLAUDE.md, D28).
 
-const DRAFTS = [
-  '/en/contact/',
-  '/tr/iletisim/',
-  '/en/legal/privacy/',
-  '/tr/legal/kvkk-aydinlatma-metni/',
-  '/tr/legal/acik-riza-metni/',
-  '/en/legal/cookies/',
-  '/en/legal/terms/',
-  '/en/legal/takedown/',
-  '/en/legal/data-requests/',
-]
-const CONTENT = ['/en/about/', ...DRAFTS]
+// From the texts' own draft flags, so that approving a text (draft: false) needs no change here.
+const DRAFTS = Object.values(CONTENT_PAGES)
+  .filter((page) => page.draft)
+  .map((page) => page.path)
+const CONTENT = Object.values(CONTENT_PAGES).map((page) => page.path)
 
 test.describe('content pages', () => {
   test.skip(({ isMobile }) => isMobile, 'these checks do not depend on the device')

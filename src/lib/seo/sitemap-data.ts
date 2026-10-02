@@ -3,12 +3,14 @@ import { getPayload } from 'payload'
 
 import { openJobsWhere } from '@/lib/jobs/query'
 import { subfieldsForIndexing } from '@/lib/records'
+import { type SiteStage, siteStage } from '@/lib/site-stage'
 
 import type { SitemapEntry, SitemapType } from './sitemap'
 import {
   type SitemapJob,
   institutionEntries,
   jobEntries,
+  m2PageEntries,
   openJobsPer,
   pageEntries,
   subfieldEntries,
@@ -22,8 +24,19 @@ const once = <T>(read: () => Promise<T>) => {
   return () => (result ??= read())
 }
 
-/** Reads the entries of each sitemap type at `now`, the moment of the request. */
-export function sitemapSource(now: Date): Record<SitemapType, () => Promise<SitemapEntry[]>> {
+/**
+ * Reads the entries of each sitemap type at `now`, the moment of the request. In the M2 state
+ * (D41, D50) only its public pages that are indexed: the positions, institutions and subfields
+ * stay private, so their files list nothing and do not exist, and nothing is read.
+ */
+export function sitemapSource(
+  now: Date,
+  stage: SiteStage = siteStage(),
+): Record<SitemapType, () => Promise<SitemapEntry[]>> {
+  if (stage === 'm2') {
+    const none = async (): Promise<SitemapEntry[]> => []
+    return { pages: async () => m2PageEntries(), jobs: none, institutions: none, subfields: none }
+  }
   // Every open job, with only what the sitemaps need: its address and state, when it changed and
   // its institution. In ID order, so files split at 50,000 keep their jobs in place.
   const openJobs = once(async (): Promise<SitemapJob[]> => {

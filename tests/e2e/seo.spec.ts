@@ -1,5 +1,6 @@
 import { type APIRequestContext, type Page, expect, test } from '@playwright/test'
 
+import { CONTENT_PAGES } from '../../src/lib/content'
 import { disallowRules, isDisallowed } from '../../src/lib/seo/robots'
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
 
@@ -53,8 +54,11 @@ test.describe('sitemaps', () => {
     const xml = await getXml(request, '/sitemap.xml')
     expect(await parseXml(page, xml)).toEqual({ error: null, root: 'sitemapindex' })
     const files = locs(xml).map(pathOf)
+    // The Turkish pages' file once a Turkish text is approved (draft: false).
+    const turkish = Object.values(CONTENT_PAGES).some((one) => one.locale === 'tr' && !one.draft)
     expect(files).toEqual([
       '/sitemaps/pages.xml',
+      ...(turkish ? ['/sitemaps/pages-tr.xml'] : []),
       '/sitemaps/jobs.xml',
       '/sitemaps/institutions.xml',
     ])
@@ -76,11 +80,16 @@ test.describe('sitemaps', () => {
     expect(await (await request.get('/sitemap.xml')).text()).not.toContain('subfields.xml')
   })
 
-  test('the pages sitemap lists the home page, the jobs list, the map and About, and no draft', async ({
+  test('the pages sitemap lists the home page, the jobs list, the map and the approved texts, and no draft', async ({
     request,
   }) => {
     const paths = locs(await getXml(request, '/sitemaps/pages.xml')).map(pathOf)
-    expect(paths).toEqual(['/en/', '/en/jobs/', '/en/map/', '/en/suggest/', '/en/about/'])
+    // The English texts the operator has approved (draft: false); the Turkish ones are in
+    // pages-tr.xml.
+    const approved = Object.values(CONTENT_PAGES)
+      .filter((page) => !page.draft && page.locale === 'en')
+      .map((page) => page.path)
+    expect(paths).toEqual(['/en/', '/en/jobs/', '/en/map/', '/en/suggest/', ...approved])
   })
 
   test('the jobs sitemap lists the open jobs, and no closed, gone, withdrawn or draft one', async ({
@@ -139,11 +148,9 @@ test.describe('sitemaps', () => {
   test('draft legal texts and placeholders are in no sitemap', async ({ request }) => {
     const listed = [...(await sitemaps(request)).values()].flat().map(pathOf)
     for (const path of [
-      '/en/contact/',
-      '/tr/iletisim/',
-      '/en/legal/privacy/',
-      '/en/legal/terms/',
-      '/tr/legal/kvkk-aydinlatma-metni/',
+      ...Object.values(CONTENT_PAGES)
+        .filter((one) => one.draft)
+        .map((one) => one.path),
       '/en/events/',
       '/en/suggest/sent/',
       '/en/subfields/',

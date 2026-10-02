@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 
+import { CONTENT_PAGES } from '../../src/lib/content'
+
 import { FIXED_JOBS, RETIRED_JOB, jobPath } from '../../src/scripts/fake-jobs-fixed'
 
 // PLAN §2.1 and §2.5: locale prefix, trailing slashes, redirects and status codes.
@@ -87,13 +89,17 @@ test.describe('HTTP behaviour', () => {
     })
   }
 
+  // Turkish pages are indexed once one of the Turkish texts is approved (draft: false).
+  const turkishIndexed = Object.values(CONTENT_PAGES).some(
+    (page) => page.locale === 'tr' && !page.draft,
+  )
   for (const path of [
     // A type without pages: no hub has its introduction yet.
     '/sitemaps/subfields.xml',
     // Only when there are more than 50,000 jobs.
     '/sitemaps/jobs-3.xml',
     // Only once Turkish pages are indexed.
-    '/sitemaps/pages-tr.xml',
+    ...(turkishIndexed ? [] : ['/sitemaps/pages-tr.xml']),
   ]) {
     test(`${path} answers 404, not stored`, async ({ request }) => {
       const response = await request.get(path, { maxRedirects: 0 })

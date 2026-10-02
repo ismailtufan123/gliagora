@@ -1,24 +1,9 @@
-import { getTranslations } from 'next-intl/server'
-
+import { AboutIntro } from '@/components/AboutIntro'
 import { ContentPage, contentMetadata } from '@/components/ContentPage'
-import { OrganizationJsonLd, WebSiteJsonLd } from '@/components/JsonLd'
-import { Lockup } from '@/components/Lockup'
 
 // About Gliagora (PLAN §9.11); the text is in content/en/about.md.
 export const generateMetadata = () => contentMetadata('about')
 
-export default async function Page() {
-  const t = await getTranslations({ locale: 'en' })
-  return (
-    <ContentPage
-      pageKey="about"
-      intro={
-        <>
-          <Lockup size="large" name={t('brand.name')} descriptor={t('brand.descriptor')} />
-          <OrganizationJsonLd />
-          <WebSiteJsonLd />
-        </>
-      }
-    />
-  )
+export default function Page() {
+  return <ContentPage pageKey="about" intro={<AboutIntro />} />
 }

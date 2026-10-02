@@ -22,6 +22,7 @@ Everything the production server runs is described in this folder (PLAN §11.5),
 | `setup-server.sh` | One-time hardening of a fresh Ubuntu 24.04 server: admin user, deploy user, firewall, fail2ban, Docker, swap |
 | `compose.prod.yml` | The stack: Caddy, the app, PostgreSQL 18, listmonk (the newsletter, M2); every container logs to the system journal |
 | `Caddyfile` | HTTPS, security headers, the site-wide password (until M2 the whole site except `/health/`; always `/admin` and `/api`), masked logs (the access log and Caddy's own log) |
+| `caddy/m2-public.caddy` | The addresses the M2 state opens without the password (`SITE_STAGE=m2`, section 13); written by `pnpm caddy:public`, never by hand |
 | `admin-auth.caddy.example` | Template for the site-wide password |
 | `postgres/init/10-app-database.sh` | Creates the app's own database user on first start |
 | `postgres/init/20-listmonk-database.sh` | Creates listmonk's database user and database (on first start, and on every update through `listmonk/prepare.sh`) |
@@ -43,6 +44,7 @@ On the server, everything lives in `/opt/gliagora`:
 | `/opt/gliagora/.env` | Secrets and the deployed image `APP_IMAGE` (mode 600, never committed) |
 | `/opt/gliagora/.env.previous` | `.env` before the last deploy, for the rollback |
 | `/opt/gliagora/admin-auth.caddy` | Hash of the site-wide password (mode 600, never committed) |
+| `/opt/gliagora/caddy/m2-public.caddy` | The M2 state's public addresses (section 13); Caddy does not start without it |
 | `/root/site-password` | The site-wide password itself, readable only by root, until you have saved it in your password manager |
 | `/root/listmonk-admin-password` | The password of listmonk's admin (user `gliagora-admin`), readable only by root (section 11) |
 | Docker volume `gliagora_db-data` | The database |
@@ -123,7 +125,7 @@ The script:
 From your computer:
 
 ```sh
-scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/postgres deploy/.env.example \
+scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/caddy deploy/postgres deploy/.env.example \
   deploy/admin-auth.caddy.example deploy/update.sh deploy/deploy-remote.sh deploy/backup deploy/basemap \
   deploy/listmonk deploy/logs gliagora@<server-ip>:/opt/gliagora/
 ```
@@ -236,7 +238,7 @@ The app's scheduled jobs (`PAYLOAD_JOBS_AUTORUN` in `compose.prod.yml`) run from
 
 CI pushes a new image for every merge to `main`, tagged `main` and `sha-` plus the first 7 characters of the commit (except a merge that changed only documentation, which runs no CI, D46). Until M2 it is deployed by itself once CI passes; from M2 on, push a release tag (see "How deploys work"). By hand, run the Deploy workflow with `main`, or with the `sha-` tag of a specific merge. `.env` then names the exact `sha-` tag that is running.
 
-If the new image does not become healthy, the deploy switches back to the previous one by itself (see "How deploys work"). To go back to an older version on purpose, run the Deploy workflow with its `sha-` tag. On the server, without GitHub, this goes back to the image that ran before the last deploy (it is still on the server), changing only the `APP_IMAGE` line of `.env` (never copy all of `.env.previous` back: a setting added since, such as a new secret, would be lost):
+If the new image does not become healthy, the deploy switches back to the previous one by itself (see "How deploys work"). To go back to an older version on purpose, run the Deploy workflow with its `sha-` tag. In the M2 state (section 13), read "Rolling back in the M2 state" there first: the list of public addresses Caddy reads must come from the commit of the image that runs. On the server, without GitHub, this goes back to the image that ran before the last deploy (it is still on the server), changing only the `APP_IMAGE` line of `.env` (never copy all of `.env.previous` back: a setting added since, such as a new secret, would be lost):
 
 ```sh
 cd /opt/gliagora
@@ -311,11 +313,13 @@ Then switch sign-in on, only with the operator's go-ahead, in this order:
 1. **Copy the deploy files first.** Caddy must remove the query strings of the sign-in, account and data-request addresses from both of its logs (one-time links, Google's and ORCID's answers, where sign-in leads) before any sign-in key or `SMTP_HOST` is set. Backups must leave out sessions and email links, and a restore must keep the deletion log and the data requests (step 7). From your computer, in the repository:
 
    ```sh
-   scp deploy/Caddyfile deploy/compose.prod.yml gliagora@<server-ip>:/opt/gliagora/
+   scp -r deploy/Caddyfile deploy/compose.prod.yml deploy/caddy gliagora@<server-ip>:/opt/gliagora/
    scp deploy/backup/backup.sh deploy/backup/restore.sh gliagora@<server-ip>:/opt/gliagora/backup/
    ```
 
    Since M2's server parts, `compose.prod.yml` also needs listmonk's settings, folder and scripts: if the server does not have them yet, follow section 12 instead. It copies these files too (the `Caddyfile` included), restarts Caddy and makes the check below (its step 6); then continue here with step 2.
+
+   From the commit that added the M2 state (`deploy/caddy/`, D50) on, copy `deploy/caddy` with `compose.prod.yml`, always together, as above: it holds the M2 state's list of public addresses (section 13), and that `compose.prod.yml` refuses to start Caddy without it, whatever the stage. A checkout of an earlier commit has no `deploy/caddy`; leave it out of the first `scp` then.
 
    On the server: `cd /opt/gliagora && sudo ./update.sh --no-pull` (it backs up first and applies `compose.prod.yml`), then restart Caddy so that it reads the new Caddyfile: `docker compose -f compose.prod.yml restart caddy` (`update.sh` does not restart Caddy when only the Caddyfile changed). Then check that Caddy took the new file: `docker compose -f compose.prod.yml logs --tail 20 caddy` shows no error, and a request to `https://gliagora.com/en/sign-in/?next=check` (with the site-wide password) appears in `sudo tail -n 1 /var/lib/docker/volumes/gliagora_caddy-logs/_data/access.log` as `/en/sign-in/?[removed]`.
 2. **Then set the keys** in `/opt/gliagora/.env` (`deploy/.env.example` lists them): `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, `ORCID_CLIENT_ID` and `ORCID_CLIENT_SECRET` (ORCID's own issuer; its sandbox is refused here), and, for sign-in by email link, the M2 `SMTP_*` settings (`SMTP_PASS` and `EMAIL_FROM` in single quotes, step 2; the link form also needs `ALTCHA_HMAC_KEY`, which is set). Each way of signing in switches on by itself once its settings are there; none needs a new secret.
@@ -380,11 +384,11 @@ On a new server, steps 1–5 already do all of this. On the server running since
    sudo grep -c '^LISTMONK_' .env    # 2
    ```
 
-2. **Copy the files**, from your computer, in the repository. The `Caddyfile` too: the server's may still be the one from before M4b, which does not remove the query strings of the sign-in, account and data-request addresses from Caddy's logs (section 9, step 1):
+2. **Copy the files**, from your computer, in the repository (`deploy/caddy` with `compose.prod.yml`, which does not start Caddy without it, section 13). The `Caddyfile` too: the server's may still be the one from before M4b, which does not remove the query strings of the sign-in, account and data-request addresses from Caddy's logs (section 9, step 1):
 
    ```sh
-   scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/update.sh deploy/deploy-remote.sh deploy/postgres \
-     deploy/listmonk deploy/logs gliagora@<server-ip>:/opt/gliagora/
+   scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/caddy deploy/update.sh deploy/deploy-remote.sh \
+     deploy/postgres deploy/listmonk deploy/logs gliagora@<server-ip>:/opt/gliagora/
    scp deploy/backup/backup.sh deploy/backup/restore.sh deploy/backup/alert.sh deploy/backup/backup.env.example \
      gliagora@<server-ip>:/opt/gliagora/backup/
    scp deploy/backup/systemd/* gliagora@<server-ip>:/opt/gliagora/backup/systemd/
@@ -408,6 +412,68 @@ On a new server, steps 1–5 already do all of this. On the server running since
    - `cd backup && sudo ./backup.sh`, then `sudo ./restore.sh test latest`: both databases are stored and restored ("Restore tests passed: gliagora listmonk."), and `docker volume ls -f dangling=true` lists nothing new;
    - the site still asks for the password: `curl -s -o /dev/null -w '%{http_code}\n' https://gliagora.com/en/` answers `401`, and `https://gliagora.com/health/` `200`;
    - the SSH tunnel and the admin (section 11) work; save the admin password in the password manager.
+
+## 13. Switching to the M2 state (D41, D50)
+
+**Not done yet.** The site stays private until the operator decides to go public at M2. Until then `SITE_STAGE` stays `private` on the server, and every page asks for the site-wide password except `/health/`.
+
+The M2 state is one setting, `SITE_STAGE=m2` in `/opt/gliagora/.env`, which Caddy and the app both read (`compose.prod.yml` passes the same value to both, unchanged; `private` when it is missing or empty). Write exactly `m2` or `private`, without quotes, spaces or a comment after it: any other value (also `m2 x`, or `m2` followed by a tab and a comment) stops Caddy from starting, and the app shows the private stage, so a typing mistake opens nothing. With it:
+
+- Caddy opens, without the password, exactly the addresses in `caddy/m2-public.caddy`: the coming-soon page (`/en/`, and `/`, which leads there), About, the Glia Notes page, the legal texts the operator has approved (D41) with the pages that belong to them (the data-request form's), `robots.txt`, the sitemaps, and the files those pages load (Next.js's own under `/_next/static/`, and each logo in `/brand/` by its name). Each only in its exact spelling: `/EN/` or `/en/%61bout/` keep asking for the password. Everything else keeps asking for it too: the windows, search, the map, the suggest and report forms, accounts, `/admin`, `/api` and `/basemap` (D39). An address the app does not know answers a plain "Not Found", never the site's 404 page.
+- The app shows those pages in their M2 versions: the reduced header and footer, which link only to public pages; the coming-soon text on `/en/` in place of the home page; email (`hello@gliagora.com`) where a text links to the suggest or report form, and plain words where it links to a page that is not public; `robots.txt` and the sitemaps with only the public pages. The app's start line says `Site stage: m2`. With the password the private pages are still there; the public ones are their M2 versions for everyone.
+- Caddy and the app check each other (`PUBLIC_MARK` in `src/lib/public-pages.ts`): Caddy marks the requests it lets through without the password, and the app answers a marked request for an address its own image does not hold public with a plain "Not Found", before any page or form runs; the app marks its public answers, and Caddy passes an answer to a page, a sitemap or a form only with that mark. So if `caddy/m2-public.caddy` on the server opens more than the running image (an image deployed from before an approval, or a text taken back), or the image is from before the M2 state, those addresses answer a plain "Not Found" instead of the full site or a draft. Keep the two in step all the same, as below.
+
+`caddy/m2-public.caddy` is written from the app's list of public pages (`src/lib/public-pages.ts`) by `pnpm caddy:public`, and CI checks that the copy in the repository is current. It names only the texts approved in that list, so each approval changes the file, and the copy on the server must always come from the commit of the image that runs. Steps, in this order, each only with the operator's go-ahead:
+
+1. **Approvals.** The operator approves each legal text that goes public, as it stands (D28, D41): at least the contact pages, the privacy policy, the KVKK notice and the açık rıza metni (D32), and the data-request page if its form opens then (it needs the mailbox: section 10). The operator reads the texts on the private site, with all their links; in the M2 state some of those links change. `docs/m2-links-review.md` lists each of them with its sentence (a link to the suggest or report form opens an email, a link to a page that is not public keeps only its words): check that every sentence still reads well, and reword it before approving. The privacy policy, the KVKK notice and the contact pages refer to the cookies and the notice-and-takedown pages: approve those with them, or reword those references first.
+2. **A reviewed pull request** sets `draft: false` for exactly those texts in `src/lib/content.ts`, runs `pnpm caddy:public` and `pnpm m2:links`, and commits the new `deploy/caddy/m2-public.caddy` and `docs/m2-links-review.md` with it. Its CI run tests the M2 state with them (`tests/e2e/m2.spec.ts`). Merge it. Before the switch to tags a merge deploys itself; from M2 on (`DEPLOY_AUTO=tags`, "How deploys work") it deploys nothing by itself: push a release tag on the merge commit (or a later commit of `main`) and wait for its Deploy run. Then, on the server, `grep -m1 '^APP_IMAGE=' /opt/gliagora/.env` names the image that runs: `…:sha-` and the first 7 characters of its commit, which must be the merge commit or a later one.
+3. **Copy the files from the commit of the running image**, never from a newer `main`: Caddy must never open a page the running app does not show in its M2 version, and `compose.prod.yml` refuses to start Caddy without `caddy/m2-public.caddy`, so always copy the three together. From your computer, in the repository, with `sha` set to the 7 characters after `sha-` in the line step 2 printed:
+
+   ```sh
+   sha=1234567
+   git fetch origin
+   tmp=$(mktemp -d)
+   git archive "$sha" deploy/Caddyfile deploy/compose.prod.yml deploy/caddy | tar -x -C "$tmp"
+   scp "$tmp/deploy/Caddyfile" "$tmp/deploy/compose.prod.yml" gliagora@<server-ip>:/opt/gliagora/
+   scp -r "$tmp/deploy/caddy" gliagora@<server-ip>:/opt/gliagora/
+   rm -rf "$tmp"
+   ```
+
+4. **Set the stage** on the server, in `/opt/gliagora`:
+
+   ```sh
+   grep -q '^SITE_STAGE=' .env && sed -i 's/^SITE_STAGE=.*/SITE_STAGE=m2/' .env || echo 'SITE_STAGE=m2' >> .env
+   ```
+
+5. **Apply it:** `sudo ./update.sh --no-pull` (it backs up first and starts the app and Caddy again, since their settings changed), then `docker compose -f compose.prod.yml restart caddy`, so that Caddy reads the new files even if its settings did not change.
+6. **Check from outside, without the password**, from your computer, in the repository, with the same `sha` as in step 3. Every public address of the copied file, and a few private ones:
+
+   ```sh
+   public=$(git show "$sha:deploy/caddy/m2-public.caddy" | awk '/^@m2Public \{/{f=1;next} f&&/^\}/{f=0} f&&$1=="path"{print $NF}')
+   for path in $public /en/jobs/ /en/suggest/ /en/account/ /EN/ /brand/x.svg /admin/ /api/users/me /basemap/current.json; do
+     printf '%s %s\n' "$(curl -s -o /dev/null -w '%{http_code}' "https://gliagora.com$path")" "$path"
+   done
+   ```
+
+   `/` answers `308`; `/en/legal/data-requests/confirm/use/` (once that text is approved; it is the button's POST, and a GET leads to the page) `303`; every other public address `200`, including each approved text, `robots.txt`, `sitemap.xml` and `/sitemaps/pages.xml`; everything else `401`. Then check that each public page is its M2 version (the reduced header, `site-header-m2`) and no draft:
+
+   ```sh
+   for path in $public; do
+     case "$path" in /|*.txt|*.xml|*/use/) continue ;; esac
+     page=$(curl -s "https://gliagora.com$path")
+     if grep -q 'site-header-m2' <<<"$page" && ! grep -q 'draft-notice' <<<"$page"; then echo "ok $path"; else echo "WRONG $path"; fi
+   done
+   ```
+
+   Every line must say `ok`. If one says `WRONG` (or answers `404`), the file and the running image are not from the same commit: copy the files of the running image's commit again (step 3) and restart Caddy, or go back to the private stage (below). `curl -s https://gliagora.com/robots.txt` shows `User-Agent: *`, then an `Allow:` line for each public page that is indexed (ending in `$`), for the sitemaps and for `/_next/static/` and `/brand/`, then `Disallow: /`, and last the `Sitemap:` line; `docker compose -f compose.prod.yml logs app | grep 'Site stage'` shows `Site stage: m2`. Then open https://gliagora.com/en/ in a private browser window: the coming-soon page with the reduced header, and no link on it asks for a password.
+
+**Approving another text later:** steps 1 to 3 (the approval's image must run before its files are copied), then `docker compose -f compose.prod.yml restart caddy` (Caddy reads the file only when it starts) and step 6 again. Between the deploy and the restart, the public pages' footer already links to the new text while Caddy still keeps it behind the password, so do step 3 soon after the deploy.
+
+**Taking a text back to draft:** the other way round. First a pull request sets `draft: true` again and runs `pnpm caddy:public`; copy the narrower `deploy/caddy/m2-public.caddy` of that commit to the server (as in step 3, from that commit) and restart Caddy; only then tag and deploy its image.
+
+**Rolling back in the M2 state** (section 6): an older image may hold a text as a draft that the copied file opens. Its address then answers a plain "Not Found" (the marks above), never the draft; afterwards copy the files of the image you rolled back to (step 3, with its `sha`) and restart Caddy, then run step 6. Never roll back in the M2 state to an image from before the M2 state (before `src/lib/site-stage.ts` existed): it knows neither the stage nor the marks, so every public page would answer "Not Found". Go back to the private stage first.
+
+**Back to the private stage:** set `SITE_STAGE=private` in `.env` (as in step 4) and run `sudo ./update.sh --no-pull`.
 
 ## Checking from outside
 

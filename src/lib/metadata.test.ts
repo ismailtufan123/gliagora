@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
+import { CONTENT_PAGES } from './content'
 import { alternatesFor } from './metadata'
 
 describe('alternatesFor', () => {
   it('gives draft pages a canonical link only', () => {
-    // The contact pages are drafts in M1.
-    expect(alternatesFor('/en/contact/')).toEqual({ canonical: '/en/contact/' })
-    expect(alternatesFor('/tr/iletisim/')).toEqual({ canonical: '/tr/iletisim/' })
-    expect(alternatesFor('/en/legal/privacy/')).toEqual({ canonical: '/en/legal/privacy/' })
+    const drafts = () => true
+    expect(alternatesFor('/en/contact/', drafts)).toEqual({ canonical: '/en/contact/' })
+    expect(alternatesFor('/tr/iletisim/', drafts)).toEqual({ canonical: '/tr/iletisim/' })
+    expect(alternatesFor('/en/legal/privacy/', drafts)).toEqual({ canonical: '/en/legal/privacy/' })
+    // With the texts' own flags: the contact pages link to each other once both are approved.
+    const bothApproved = !CONTENT_PAGES.contact.draft && !CONTENT_PAGES.iletisim.draft
+    expect('languages' in (alternatesFor('/en/contact/') ?? {})).toBe(bothApproved)
   })
 
   it('links published translations to each other, with x-default in English', () => {

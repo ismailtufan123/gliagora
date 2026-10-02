@@ -35,6 +35,8 @@
     }
   },
   "home": {
+    "comingSoon": "Yakında: sinirbilim alanındaki pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları özenle seçip bir araya getiren, İngilizce öncelikli bir merkez.",
+    "writeToUs": "Bize <email>hello@gliagora.com</email> adresinden ulaşabilirsiniz.",
     "subline": "Sinirbilimin her alt alanından özenle seçilmiş pozisyonlar; her biri işverenin kendi ilanında kontrol edilir.",
     "findPositions": "Pozisyon bulun",
     "exploreMap": "Haritayı keşfedin",

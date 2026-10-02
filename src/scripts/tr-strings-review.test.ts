@@ -93,8 +93,12 @@ describe('Turkish strings review (docs/tr-strings-review.md, D40)', () => {
     expect(unusedPublicAtM2(keys), 'entries that match no key').toEqual([])
     const atM2 = keys.filter((key) => publicAtM2(key))
     expect(atM2.length).toBeGreaterThan(0)
-    // Public in Turkish at M2 means on a Turkish page, so on the Turkish site already.
-    expect(atM2.filter((key) => !placeOf(key)?.shown)).toEqual([])
+    // Public in Turkish at M2 means on a Turkish page, so on the Turkish site already, but what
+    // only the M2 state's reduced header and footer show there.
+    expect(atM2.filter((key) => !placeOf(key)?.shown && !publicAtM2(key)?.onlyAtM2)).toEqual([])
+    // The footer's last line while the Turkish contact page is a draft (SiteFooter.tsx).
+    expect(publicAtM2('home.writeToUs')).toMatchObject({ onlyAtM2: true })
+    expect(placeOf('home.writeToUs')?.shown).toBe(false)
     // Drafts stay private (D41): the draft notice is not public at M2.
     expect(publicAtM2('pages.draftNotice')).toBeUndefined()
     expect(Object.keys(PUBLIC_AT_M2)).toContain('pages.updated')

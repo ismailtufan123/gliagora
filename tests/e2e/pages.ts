@@ -2,6 +2,9 @@ import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
 
 // Public templates covered by the end-to-end tests. Add every new page template here (PLAN §17.2).
 // `member` signs the page in as a test member first (tests/e2e/member.ts, `pnpm e2e:member`).
+// The M2 versions of the public pages (D50), with the reduced header and footer and its phone menu,
+// are checked by tests/e2e/m2.spec.ts (reflow, longer texts, axe), which takes them from
+// src/lib/public-pages.ts: only its project sees them.
 export const PAGES = [
   { path: '/en/', name: 'home' },
   { path: '/en/contact/', name: 'contact (en)' },

@@ -22,7 +22,9 @@ import { useEffect } from 'react'
 // It also opens the search dialog (PLAN §2.3, §7.5; SearchDialog.tsx) from Ctrl+K (⌘K on Apple
 // devices, <html data-apple>) and from the header's Search link, which leads to the search page
 // without JavaScript. Only the opening is here: the rest of the dialog's code loads on first use
-// (search-dialog.ts), so every page carries a few hundred bytes for search (PLAN §17.3).
+// (search-dialog.ts), so every page carries a few hundred bytes for search (PLAN §17.3). Where a
+// page has no search dialog (the M2 state's reduced header, D41), the shortcut stays the
+// browser's.
 // Likewise for Save (src/components/account/SaveControl.tsx): a Save form submitted here is taken
 // over, and its code loads on first use (save-toggle.ts), or already when focus reaches a Save
 // form; should it fail to load, the form is sent as it would be without JavaScript.
@@ -36,9 +38,14 @@ function openMenus() {
 
 const summaryOf = (menu: Element) => menu.querySelector<HTMLElement>(':scope > summary')
 
-function openSearch(from: Element | null) {
+function searchDialog() {
   const dialog = document.getElementById('search-dialog')
-  if (!(dialog instanceof HTMLDialogElement) || dialog.open) return
+  return dialog instanceof HTMLDialogElement ? dialog : null
+}
+
+function openSearch(from: Element | null) {
+  const dialog = searchDialog()
+  if (!dialog || dialog.open) return
   // Focuses the search field, its first control; Esc closes it and the browser returns focus.
   dialog.showModal()
   void import('./search-dialog').then((module) => module.enhance(dialog, from))
@@ -145,7 +152,8 @@ export function DisclosureEnhancer({ desktopQuery }: { desktopQuery: string }) {
         (event.key === 'k' || event.key === 'K') &&
         (apple ? event.metaKey : event.ctrlKey) &&
         !event.altKey &&
-        !event.shiftKey
+        !event.shiftKey &&
+        searchDialog()
       ) {
         event.preventDefault()
         openSearch(document.activeElement)
@@ -236,9 +244,11 @@ export function DisclosureEnhancer({ desktopQuery }: { desktopQuery: string }) {
       for (const menu of hidden) close(menu, false)
       if (!focused) return
       const modal = focused.closest(MODAL)
+      // The reduced header (M2) has no navigation: its first link, the lockup, then.
       const target = desktop.matches
         ? modal?.closest('header')
-          ? document.querySelector<HTMLElement>('.site-header nav a')
+          ? (document.querySelector<HTMLElement>('.site-header nav a') ??
+            document.querySelector<HTMLElement>('.site-header a'))
           : modal?.querySelector<HTMLElement>(':scope > :not(summary) summary')
         : modal
           ? summaryOf(modal)

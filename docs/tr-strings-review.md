@@ -2,13 +2,13 @@
 
 Every text of the Gliagora interface in Turkish, next to its English original and where it appears, so that a native speaker can review them all in one pass (PLAN §12, D40). Until then the Turkish texts are drafts.
 
-Updated 2026-10-01: 874 strings in 21 areas, 75 of them shown on the Turkish site now.
+Updated 2026-10-02: 876 strings in 21 areas, 75 of them shown on the Turkish site now.
 
 This file is generated from `messages/en.json` and `messages/tr.json` by `pnpm tr:review`; do not edit it by hand. A test fails when it no longer matches the messages.
 
 ## Public at M2: review these first
 
-At M2 (D41, D47) the coming-soon page, the newsletter signup, About and the legal texts the operator has approved go public; everything else stays private until the launch. Of these, only the contact page and the two Turkish legal texts (/tr/iletisim/, /tr/legal/kvkk-aydinlatma-metni/, /tr/legal/acik-riza-metni/) are in Turkish, each once its text is approved, with a reduced header and footer that link to public pages only. These 30 strings appear on them; please review them first. About, the newsletter signup and the coming-soon page are in English only at M2, so in Turkish they appear only as the links in that header and footer. The strings below appear again in the full table.
+At M2 (D41, D47) the coming-soon page, the newsletter signup, About and the legal texts the operator has approved go public; everything else stays private until the launch. Of these, only the contact page and the two Turkish legal texts (/tr/iletisim/, /tr/legal/kvkk-aydinlatma-metni/, /tr/legal/acik-riza-metni/) are in Turkish, each once its text is approved, with a reduced header and footer that link to public pages only. These 31 strings appear on them; please review them first. About, the newsletter signup and the coming-soon page are in English only at M2, so in Turkish they appear only as the links in that header and footer. The strings below appear again in the full table.
 
 | Key | English | Turkish | Where it appears at M2 |
 | --- | --- | --- | --- |
@@ -27,6 +27,7 @@ At M2 (D41, D47) the coming-soon page, the newsletter signup, About and the lega
 | `footer.sitemap` | Site map | Site haritası | Turkish pages - footer - name of the footer navigation, for screen readers |
 | `footer.about` | About | Hakkında | Turkish pages - footer - heading of the About column |
 | `footer.contact` | Contact and legal notice | İletişim ve yasal bilgiler | Turkish pages - footer - link to the contact and legal notice page |
+| `home.writeToUs` | Write to us at `<email>`hello@gliagora.com`</email>`. | Bize `<email>`hello@gliagora.com`</email>` adresinden ulaşabilirsiniz. | Turkish pages - footer - the last line, with the address, in place of the contact link while the Turkish contact page (/tr/iletisim/) is a draft |
 | `footer.legal` | Legal | Yasal | Turkish pages - footer - heading of the Legal column |
 | `pages.privacy.title` | Privacy policy | Gizlilik politikası (İngilizce) | Turkish pages - footer, Legal column - link, once the text is approved |
 | `pages.kvkk.title` | KVKK notice (in Turkish) | KVKK aydınlatma metni | Turkish pages - footer, Legal column - link; heading of the KVKK notice (once approved) |
@@ -67,7 +68,7 @@ The rows of the table are grouped by these areas, in this order.
 - **2. Footer**: 11 strings, shown on the Turkish site now: partly (8 of 11). On every page, so also on the Turkish pages. The social media links stay hidden on every page until the addresses of the profiles are known (D31).
 - **3. Browser tab titles and link previews**: 4 strings, shown on the Turkish site now: partly (2 of 4). The title pattern and the site name are used on the Turkish pages. The home page title and the general description are not: every Turkish page has a title and a description of its own, and the home page exists only in English.
 - **4. Legal and contact pages**: 20 strings, shown on the Turkish site now: partly (13 of 20). The Turkish contact page and the two Turkish legal texts show their own titles and descriptions, and every Turkish page shows the titles of all legal pages in its footer. The descriptions of the English legal pages and of the About page are not yet shown: those pages exist only in English. The texts of the pages themselves are reviewed separately (see the top of this file).
-- **5. Home page**: 35 strings, shown on the Turkish site now: not yet. The home page (M6) is in English only (/en/); there is no Turkish home page yet.
+- **5. Home page**: 37 strings, shown on the Turkish site now: not yet. The home page (M6) is in English only (/en/); there is no Turkish home page yet. At M2 the public /en/ is the coming-soon page instead (D41), in English only too, while the home page stays private until the launch.
 - **6. Pages being built**: 5 strings, shown on the Turkish site now: not yet. These stand-in pages for the sections that are not built yet exist only in English (/en/events/, /en/funding/, /en/papers/, /en/news/, /en/resources/, /en/map/, /en/learn/, /en/learn/bench-to-bedside/, /en/newsletter/).
 - **7. Error pages**: 7 strings, shown on the Turkish site now: not yet. Always in English. The not-found page answers every unknown address, also under /tr/; the removed page and the short answer while the database is unreachable are in English too.
 - **8. Jobs list**: 71 strings, shown on the Turkish site now: not yet. The jobs list exists only in English (/en/jobs/), like the rest of the site until the Turkish locale gate (PLAN §3.4).
@@ -85,7 +86,7 @@ The rows of the table are grouped by these areas, in this order.
 - **20. Save buttons and saved positions**: 17 strings, shown on the Turkish site now: not yet. The Save buttons are on the jobs list and the job pages, and the saved positions on /en/account/saved/, all only in English, like the rest of the site until the Turkish locale gate (PLAN §3.4). They show only once a way of signing in is switched on.
 - **21. Automatic emails**: 62 strings, shown on the Turkish site now: not yet. Each email goes out in the language of the form the person used, and those forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).
 
-Total: 874 strings, 75 of them shown on the Turkish site now.
+Total: 876 strings, 75 of them shown on the Turkish site now.
 
 ## Strings
 
@@ -179,7 +180,9 @@ Total: 874 strings, 75 of them shown on the Turkish site now.
 | 4. Legal and contact pages | `pages.dataRequests.description` | How to see, download, correct or delete the personal data Gliagora holds about you, how we check that a request is yours and how quickly we answer. | Gliagora'nın hakkınızda tuttuğu kişisel verileri nasıl görebileceğiniz ve indirebileceğiniz, bunların düzeltilmesini veya silinmesini nasıl isteyebileceğiniz, talebin size ait olduğunu nasıl doğruladığımız ve ne kadar sürede yanıt verdiğimiz (İngilizce). | Data requests (/en/legal/data-requests/) - description in search results and link previews | not yet |
 | 4. Legal and contact pages | `pages.about.title` | About Gliagora | Gliagora hakkında | About page (/en/about/) - heading and browser tab | not yet |
 | 4. Legal and contact pages | `pages.about.description` | Why Gliagora exists, where its name comes from, how entries are chosen and checked, and who runs it. | Gliagora'nın neden var olduğu, adının nereden geldiği, içeriklerin nasıl seçilip doğrulandığı ve siteyi kimin yürüttüğü. | About page (/en/about/) - description in search results and link previews | not yet |
-| 5. Home page | `brand.tagline` | Where neuroscience meets | Sinirbilimin buluştuğu yer | Home page (/en/) - main heading | not yet |
+| 5. Home page | `brand.tagline` | Where neuroscience meets | Sinirbilimin buluştuğu yer | Home page (/en/) - main heading; also the heading of the coming-soon page | not yet |
+| 5. Home page | `home.comingSoon` | Coming soon: a curated, English-first hub for neuroscience positions, events, funding, papers, news and resources. | Yakında: sinirbilim alanındaki pozisyonları, etkinlikleri, fonları, makaleleri, haberleri ve kaynakları özenle seçip bir araya getiren, İngilizce öncelikli bir merkez. | Coming-soon page (/en/ at M2) - text under the heading | not yet |
+| 5. Home page | `home.writeToUs` | Write to us at `<email>`hello@gliagora.com`</email>`. | Bize `<email>`hello@gliagora.com`</email>` adresinden ulaşabilirsiniz. | Coming-soon page (/en/ at M2) - the last line, with the email address; at M2 also the last line of the footer, in the contact page's place until that page is approved | not yet |
 | 5. Home page | `home.subline` | Curated neuroscience positions from every subfield, each checked against the employer’s own posting. | Sinirbilimin her alt alanından özenle seçilmiş pozisyonlar; her biri işverenin kendi ilanında kontrol edilir. | Home page - text under the heading | not yet |
 | 5. Home page | `home.findPositions` | Find positions | Pozisyon bulun | Home page - main button under the heading | not yet |
 | 5. Home page | `home.exploreMap` | Explore the map | Haritayı keşfedin | Home page - link next to the main button | not yet |
@@ -212,8 +215,8 @@ Total: 874 strings, 75 of them shown on the Turkish site now.
 | 5. Home page | `home.windows.type` | `{label}` (`{count}`) | `{label}` (`{count}`) | Home page - sections overview: a position type with its number | not yet |
 | 5. Home page | `home.digest.title` | Glia Notes, the monthly digest | Glia Notes, aylık bülten | Home page - heading of the newsletter box at the bottom | not yet |
 | 5. Home page | `home.digest.text` | New positions and the deadlines ahead, once a month in your inbox. | Yeni pozisyonlar ve yaklaşan son başvuru tarihleri, ayda bir e-posta kutunuzda. | Home page - text of the newsletter box | not yet |
-| 5. Home page | `home.digest.short` | Glia Notes: new positions and deadlines, once a month. | Glia Notes: yeni pozisyonlar ve son başvuru tarihleri, ayda bir. | Home page - newsletter line under the figures | not yet |
-| 5. Home page | `home.digest.button` | Get the monthly digest | Aylık bülteni alın | Home page - newsletter button and link | not yet |
+| 5. Home page | `home.digest.short` | Glia Notes: new positions and deadlines, once a month. | Glia Notes: yeni pozisyonlar ve son başvuru tarihleri, ayda bir. | Home page - newsletter line under the figures; also on the coming-soon page (/en/ at M2), above its newsletter button | not yet |
+| 5. Home page | `home.digest.button` | Get the monthly digest | Aylık bülteni alın | Home page - newsletter button and link; also the newsletter button of the coming-soon page (/en/ at M2) | not yet |
 | 6. Pages being built | `placeholder.text` | This part of Gliagora is being built and will open here soon. | Gliagora'nın bu bölümü hazırlanıyor ve yakında burada açılacak. | Pages being built - text under the heading | not yet |
 | 6. Pages being built | `placeholder.contact` | Questions or suggestions? Write to us at `<email>`hello@gliagora.com`</email>`. | Soru ve önerileriniz için bize `<email>`hello@gliagora.com`</email>` adresinden ulaşabilirsiniz. | Pages being built - contact line | not yet |
 | 6. Pages being built | `placeholder.home` | Go to the home page | Ana sayfaya git | Pages being built - link to the home page | not yet |

@@ -34,11 +34,15 @@ export const TURKISH_PAGES = [
  * and the two Turkish legal texts are in Turkish, and they show the reduced header and footer,
  * which link to public pages only (no sections, menus or search). About, the newsletter and the
  * coming-soon page are English only at M2: in Turkish they appear only as links in that header and
- * footer. The strings of the newsletter signup and of the coming-soon text are written at M2 and
- * join this list then, if they have Turkish versions. Keys or prefixes of messages/{locale}.json
- * (as in AREAS), each with where it appears at M2; every one must be on the Turkish site now.
+ * footer. The strings of the newsletter signup are written at M2 and join this list then, if they
+ * have Turkish versions; the coming-soon page's are English only (src/app/(frontend)/m2/en/).
+ * Keys or prefixes of messages/{locale}.json (as in AREAS), each with where it appears at M2;
+ * every one must be on the Turkish site now, but those marked `onlyAtM2`, which only the M2
+ * state's reduced header and footer show on a Turkish page.
  */
-export const PUBLIC_AT_M2: Record<string, string> = {
+export type AtM2 = string | { where: string; onlyAtM2: true }
+
+export const PUBLIC_AT_M2: Record<string, AtM2> = {
   'a11y.skipLink': 'Turkish pages - top left, visible only when reached with the Tab key',
   'brand.name': 'Turkish pages - header - the name after the logo',
   'brand.descriptor': 'Turkish pages - header - the word after the name, where there is room',
@@ -55,6 +59,11 @@ export const PUBLIC_AT_M2: Record<string, string> = {
   'footer.sitemap': 'Turkish pages - footer - name of the footer navigation, for screen readers',
   'footer.about': 'Turkish pages - footer - heading of the About column',
   'footer.contact': 'Turkish pages - footer - link to the contact and legal notice page',
+  'home.writeToUs': {
+    where:
+      'Turkish pages - footer - the last line, with the address, in place of the contact link while the Turkish contact page (/tr/iletisim/) is a draft',
+    onlyAtM2: true,
+  },
   'footer.legal': 'Turkish pages - footer - heading of the Legal column',
   'pages.privacy.title': 'Turkish pages - footer, Legal column - link, once the text is approved',
   'pages.kvkk.title':
@@ -257,9 +266,12 @@ export const AREAS: Area[] = [
   {
     title: 'Home page',
     shown: false,
-    note: 'The home page (M6) is in English only (/en/); there is no Turkish home page yet.',
+    note: 'The home page (M6) is in English only (/en/); there is no Turkish home page yet. At M2 the public /en/ is the coming-soon page instead (D41), in English only too, while the home page stays private until the launch.',
     places: {
-      'brand.tagline': 'Home page (/en/) - main heading',
+      'brand.tagline': 'Home page (/en/) - main heading; also the heading of the coming-soon page',
+      'home.comingSoon': 'Coming-soon page (/en/ at M2) - text under the heading',
+      'home.writeToUs':
+        "Coming-soon page (/en/ at M2) - the last line, with the email address; at M2 also the last line of the footer, in the contact page's place until that page is approved",
       'home.subline': 'Home page - text under the heading',
       'home.findPositions': 'Home page - main button under the heading',
       'home.exploreMap': 'Home page - link next to the main button',
@@ -294,8 +306,10 @@ export const AREAS: Area[] = [
       'home.windows.type': 'Home page - sections overview: a position type with its number',
       'home.digest.title': 'Home page - heading of the newsletter box at the bottom',
       'home.digest.text': 'Home page - text of the newsletter box',
-      'home.digest.short': 'Home page - newsletter line under the figures',
-      'home.digest.button': 'Home page - newsletter button and link',
+      'home.digest.short':
+        'Home page - newsletter line under the figures; also on the coming-soon page (/en/ at M2), above its newsletter button',
+      'home.digest.button':
+        'Home page - newsletter button and link; also the newsletter button of the coming-soon page (/en/ at M2)',
     },
   },
   {

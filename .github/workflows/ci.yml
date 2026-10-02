@@ -196,6 +196,8 @@ jobs:
           if grep -qF 'save-button' <<<"$jobs"; then echo 'Save buttons without sign-in'; exit 1; fi
           logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email off, google off, orcid off' <<<"$logs"
           grep -qF 'Email cap of the forms: 50 an hour, 200 a day (default)' <<<"$logs"
+          # The site's stage defaults to private: the full site, behind Caddy's password (D50).
+          grep -qF 'Site stage: private' <<<"$logs"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/)" = 308
           test "$(docker exec app id -u)" != 0
           docker exec db psql -U gliagora -d gliagora -tAc 'select name from payload_migrations'
@@ -302,6 +304,35 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' -H @<(auth) http://127.0.0.1:9000/api/settings)" = 403
           logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email on, google on, orcid on' <<<"$logs"
           grep -qF 'Email cap of the forms: 1000 an hour, 5000 a day' <<<"$logs"
+      # The M2 state (D41, D50), switched on in a second container of the same image beside the app
+      # under test: SITE_STAGE=m2 on port 3001, production-like (no test settings). The end-to-end
+      # step puts Caddy, the production Caddyfile, in front of each (tests/caddy/serve.ts): the M2
+      # state's public pages open without the password and everything else asks for it, and the
+      # private stage asks for it everywhere but /health/ (tests/e2e/m2.spec.ts, project m2); a
+      # third Caddy opens every text in front of the M2 app, which answers a plain 404 for those it
+      # holds as drafts. Caddy is the binary of the image compose.prod.yml pins, copied out of it.
+      # Also checks that the production Compose file is well-formed, with the placeholders of its
+      # .env.example.
+      - name: Start the M2 state beside it
+        if: needs.tested.outputs.run == ''
+        run: |
+          set -euo pipefail
+          docker run -d --name app-m2 --network host --no-healthcheck \
+            -e PORT=3001 -e SITE_STAGE=m2 \
+            -e DATABASE_URL=postgres://gliagora:smoke-test-only@127.0.0.1:5432/gliagora \
+            -e PAYLOAD_SECRET="$APP_PAYLOAD_SECRET" \
+            -e ALTCHA_HMAC_KEY="$APP_ALTCHA_HMAC_KEY" \
+            gliagora:ci
+          caddy_image=$(grep -oE 'caddy:[0-9][^[:space:]]+' deploy/compose.prod.yml | head -n 1)
+          test -n "$caddy_image"
+          id=$(docker create "$caddy_image")
+          docker cp "$id:/usr/bin/caddy" "$RUNNER_TEMP/caddy"
+          docker rm "$id" > /dev/null
+          "$RUNNER_TEMP/caddy" version
+          docker compose --env-file deploy/.env.example -f deploy/compose.prod.yml config --quiet
+          for i in $(seq 1 60); do curl -fsS http://localhost:3001/health/ && break; sleep 2; done
+          echo
+          logs="$(docker logs app-m2 2>&1)"; grep -qF 'Site stage: m2' <<<"$logs"
       # Tests against a real PostgreSQL (pnpm test:db), on scratch databases dropped afterwards:
       # search (src/lib/search/search.db.test.ts, owned by a throwaway role that is not a superuser,
       # as on the server) and the scheduled tasks (tests/integration/, M4.7, on a migrated scratch
@@ -326,6 +357,9 @@ jobs:
           E2E_MEMBER_TOKEN: e2e-test-only
           MAILPIT_URL: http://127.0.0.1:8025
           AUTH_TEST_ISSUER: http://127.0.0.1:9400
+          # The M2 state through Caddy (the step above; Playwright starts the two Caddies).
+          CADDY_BIN: ${{ runner.temp }}/caddy
+          M2_APP_URL: http://127.0.0.1:3001
 
       # Records that this tree passed every check and test, for the push to main that merges it
       # (job `tested`). Only a pull request run that got this far uploads it. A failure here only
@@ -352,6 +386,7 @@ jobs:
         if: failure()
         run: |
           docker logs app || true
+          docker logs app-m2 || true
           docker logs mailpit || true
           docker logs listmonk || true
 

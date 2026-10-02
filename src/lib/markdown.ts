@@ -4,6 +4,7 @@ import path from 'node:path'
 import { Marked, Renderer, type TokenizerAndRendererExtension, type Tokens } from 'marked'
 
 import { locales } from '@/i18n/routing'
+import { SITE_ORIGIN } from '@/lib/site'
 
 // Long-form pages (About, legal texts) are Markdown files in content/, reviewed through pull
 // requests (PLAN §12). They are turned into HTML at build time; the pages are static.
@@ -35,8 +36,21 @@ const plainText = (html: string) =>
 // javascript: or data: URLs, stops the build instead of reaching a page.
 const SAFE_LINK = /^(?:\/(?!\/)|#|https:\/\/|http:\/\/|mailto:)/i
 
-function checkedHref(href: string): string {
+// The pages from content/ link the site's own pages by their paths (`/en/about/`), never by a
+// full address (`https://gliagora.com/en/about/`, or an autolink of `www.gliagora.com/…`): a full
+// address would skip what the site does with its paths (the M2 versions keep only links to public
+// pages, src/lib/m2-links.ts) and lead a local or test build to the live site. (The editor guide in
+// the admin names the admin's full address on purpose.)
+const SITE_HOST = new URL(SITE_ORIGIN).hostname
+const OWN_HOSTS = new Set([SITE_HOST, `www.${SITE_HOST}`])
+
+function checkedHref(href: string, sitePathsOnly: boolean): string {
   if (!SAFE_LINK.test(href)) throw new Error(`Unsafe link in Markdown content: ${href}`)
+  if (sitePathsOnly && /^https?:/i.test(href) && OWN_HOSTS.has(new URL(href).hostname)) {
+    throw new Error(
+      `Link to this site by its full address in Markdown content (write its path): ${href}`,
+    )
+  }
   return href
 }
 
@@ -85,8 +99,27 @@ const languageParts: TokenizerAndRendererExtension = {
   },
 }
 
-/** Markdown to HTML. Headings get ids for deep links; raw HTML in the source is shown as text. */
-export function renderMarkdown(markdown: string): string {
+/**
+ * Where a link leads instead, or null to show its text without a link: the M2 versions of the
+ * pages link only to public pages (src/lib/m2-links.ts, D41).
+ */
+export type LinkMapper = (href: string) => string | null
+
+export type RenderOptions = {
+  link?: LinkMapper
+  /** Refuse links to this site by its full address (the pages from content/ do). */
+  sitePathsOnly?: boolean
+}
+
+/**
+ * Markdown to HTML. Headings get ids for deep links; raw HTML in the source is shown as text.
+ * `link` changes where links lead; what it gives back is checked like the source's links.
+ */
+export function renderMarkdown(
+  markdown: string,
+  { link: mapLink, sitePathsOnly = false }: RenderOptions = {},
+): string {
+  const checked = (href: string) => checkedHref(href, sitePathsOnly)
   const used = new Map<string, number>()
   const marked = new Marked({
     gfm: true,
@@ -104,8 +137,11 @@ export function renderMarkdown(markdown: string): string {
         return escapeHtml(text)
       },
       link(token: Tokens.Link) {
-        checkedHref(token.href)
-        return Renderer.prototype.link.call(this, token)
+        checked(token.href)
+        if (!mapLink) return Renderer.prototype.link.call(this, token)
+        const href = mapLink(token.href)
+        if (href === null) return this.parser.parseInline(token.tokens)
+        return Renderer.prototype.link.call(this, { ...token, href: checked(href) })
       },
       // Images are not used in long-form pages yet; they would need credits (PLAN §7.4).
       image({ href }: Tokens.Image) {
@@ -120,7 +156,10 @@ export function renderMarkdown(markdown: string): string {
   return marked.parse(markdown, { async: false })
 }
 
-/** Reads content/<file> and returns its HTML. */
-export function renderContentFile(file: string): string {
-  return renderMarkdown(readFileSync(path.join(CONTENT_DIR, file), 'utf8'))
+/** Reads content/<file> and returns its HTML; its links to this site are paths. */
+export function renderContentFile(file: string, options?: RenderOptions): string {
+  return renderMarkdown(readFileSync(path.join(CONTENT_DIR, file), 'utf8'), {
+    ...options,
+    sitePathsOnly: true,
+  })
 }

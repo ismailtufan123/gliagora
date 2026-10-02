@@ -1,5 +1,6 @@
 // robots.txt (PLAN §2.2, §16.1): everything public may be crawled, except the admin, the API,
-// search results, sign-in and the account pages, and addresses with a query string.
+// search results, sign-in and the account pages, and addresses with a query string. In the M2
+// state (D41, D50) only its public pages may be crawled (`exactlyAllowed`).
 // src/app/robots.ts writes these rules; the tests check that no page in the sitemaps is among them.
 // No imports, so the end-to-end tests can load this file as it is.
 
@@ -35,13 +36,48 @@ export function robotsRuleMatches(rule: string, path: string): boolean {
   return new RegExp(`^${pattern}${anchored ? '$' : ''}`).test(path)
 }
 
-/** Whether a Disallow rule keeps crawlers away from a path (there are no Allow rules). */
-export const isDisallowed = (path: string, rules: readonly string[] = DISALLOW) =>
-  rules.some((rule) => rule !== '' && robotsRuleMatches(rule, path))
+/** The rules of one group of robots.txt: Allow and Disallow lines. */
+export type RobotsRules = { allow: readonly string[]; disallow: readonly string[] }
 
-/** The Disallow rules for every crawler (`User-agent: *`) in a robots.txt text. */
-export function disallowRules(robotsTxt: string): string[] {
-  const rules: string[] = []
+/**
+ * The rules of the M2 state (D41, D50): every path is disallowed except the ones given, each
+ * exactly (`$`, so not with a query string either), and the files under the prefixes given (the
+ * scripts, styles and fonts crawlers need to render a page).
+ */
+export function exactlyAllowed(
+  paths: readonly string[],
+  prefixes: readonly string[] = [],
+): RobotsRules {
+  return { allow: [...paths.map((path) => `${path}$`), ...prefixes], disallow: ['/'] }
+}
+
+/** The length of the longest rule that matches a path, or -1 (an empty rule matches nothing). */
+const longestMatch = (rules: readonly string[], path: string) =>
+  Math.max(
+    -1,
+    ...rules
+      .filter((rule) => rule !== '' && robotsRuleMatches(rule, path))
+      .map((rule) => rule.length),
+  )
+
+/**
+ * Whether the rules keep crawlers away from a path, as RFC 9309 says and Google and Bing do: the
+ * longest matching rule decides, and an Allow rule wins a tie with a Disallow rule. Without Allow
+ * rules: whether any Disallow rule matches.
+ */
+export function isDisallowed(
+  path: string,
+  rules: readonly string[] | RobotsRules = DISALLOW,
+): boolean {
+  const { allow, disallow } =
+    'disallow' in rules ? rules : { allow: [], disallow: rules as readonly string[] }
+  const disallowed = longestMatch(disallow, path)
+  return disallowed >= 0 && disallowed > longestMatch(allow, path)
+}
+
+/** The Allow and Disallow rules for every crawler (`User-agent: *`) in a robots.txt text. */
+export function robotsRules(robotsTxt: string): { allow: string[]; disallow: string[] } {
+  const rules = { allow: [] as string[], disallow: [] as string[] }
   let forAll = false
   let inAgents = false
   for (const raw of robotsTxt.split(/\r?\n/)) {
@@ -57,7 +93,10 @@ export function disallowRules(robotsTxt: string): string[] {
       continue
     }
     inAgents = false
-    if (forAll && name === 'disallow') rules.push(value)
+    if (forAll && (name === 'allow' || name === 'disallow')) rules[name].push(value)
   }
   return rules
 }
+
+/** The Disallow rules for every crawler (`User-agent: *`) in a robots.txt text. */
+export const disallowRules = (robotsTxt: string): string[] => robotsRules(robotsTxt).disallow

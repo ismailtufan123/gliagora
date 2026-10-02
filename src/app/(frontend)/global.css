@@ -108,14 +108,25 @@
   /*
    * While the mobile menu is open, the page behind it neither scrolls nor takes focus, even
    * without JavaScript (hidden content leaves the tab order and the accessibility tree). Only
-   * below the desktop breakpoint, where the mobile menu is shown (SiteHeader.tsx).
+   * below the desktop breakpoint, where the mobile menu is shown (SiteHeader.tsx); for the M2
+   * state's reduced header, below 48rem, where its menu is shown (ReducedHeader.tsx).
    */
   @media (width < 80rem) {
-    html:has(.site-header details[data-modal][open]) {
+    html:has(.site-header:not(.site-header-m2) details[data-modal][open]) {
       overflow: hidden;
     }
 
-    body:has(> .site-header details[data-modal][open]) > :not(.site-header) {
+    body:has(> .site-header:not(.site-header-m2) details[data-modal][open]) > :not(.site-header) {
+      visibility: hidden;
+    }
+  }
+
+  @media (width < 48rem) {
+    html:has(.site-header-m2 details[data-modal][open]) {
+      overflow: hidden;
+    }
+
+    body:has(> .site-header-m2 details[data-modal][open]) > :not(.site-header) {
       visibility: hidden;
     }
   }

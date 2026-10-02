@@ -5,6 +5,7 @@ import { releaseInterruptedJobs } from '@/jobs/release'
 import { altchaKey } from '@/lib/forms/altcha'
 import { describeEmailCap, emailCap } from '@/lib/forms/email-cap'
 import { describeMemberAuth, memberAuthConfig } from '@/lib/members/config'
+import { describeSiteStage, siteStageSetting } from '@/lib/site-stage'
 
 /**
  * Connects Payload when the production server starts, which applies pending database migrations
@@ -24,6 +25,8 @@ import { describeMemberAuth, memberAuthConfig } from '@/lib/members/config'
  * One line says which ways of member sign-in are on (M4b, D49), by name only, and one line each
  * names a setting that switched a way off; never a value. One line gives the cap on the emails the
  * forms send (EMAIL_CAP_HOUR, EMAIL_CAP_DAY), and one line each names a setting it could not use.
+ * One line names the site's stage (`Site stage: private`, D50), with one more when SITE_STAGE has a
+ * value that is not a stage.
  */
 export async function connectOnStart(): Promise<void> {
   if (process.env.NODE_ENV !== 'production') return
@@ -38,6 +41,9 @@ export async function connectOnStart(): Promise<void> {
   const cap = emailCap()
   console.log(describeEmailCap(cap))
   for (const problem of cap.problems) console.error(problem)
+  const stage = siteStageSetting()
+  console.log(describeSiteStage(stage))
+  if (stage.problem) console.error(stage.problem)
   try {
     const payload = await getPayload({ config })
     await releaseInterruptedJobs(payload)

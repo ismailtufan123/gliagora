@@ -58,9 +58,12 @@ export const TRANSLATIONS: readonly Partial<Record<Locale, string>>[] = [
   { en: '/en/contact/', tr: '/tr/iletisim/' },
 ]
 
-/** The other locales of a page, from TRANSLATIONS. */
-export function translationsOf(path: string): Partial<Record<Locale, string>> {
-  return TRANSLATIONS.find((pair) => Object.values(pair).includes(path)) ?? {}
+/** The other locales of a page, from TRANSLATIONS (or the pairs given). */
+export function translationsOf(
+  path: string,
+  pairs: readonly Partial<Record<Locale, string>>[] = TRANSLATIONS,
+): Partial<Record<Locale, string>> {
+  return pairs.find((pair) => Object.values(pair).includes(path)) ?? {}
 }
 
 type SocialLink = { key: 'instagram' | 'linkedin'; href: string }

@@ -8,7 +8,8 @@ import { MEGA_MENUS, hasMenu } from '@/lib/navigation'
 import { WINDOWS, paths } from '@/lib/site'
 
 import { DisclosureEnhancer } from './DisclosureEnhancer'
-import { type LocaleLabels, LocaleSwitcher } from './LocaleSwitcher'
+import { localeLabels } from './locale-labels'
+import { LocaleSwitcher } from './LocaleSwitcher'
 import { MobileMenu, type MenuWindowLinks } from './MobileMenu'
 import { NavLink } from './NavLink'
 import { SearchDialog } from './SearchDialog'
@@ -20,7 +21,7 @@ const DESKTOP_QUERY = '(min-width: 80rem)'
 
 // PLAN §2.3, §7.5: lockup, the six windows (Jobs, Events and Resources open a mega-menu from a
 // separate button; the label itself is a real link), search, language, the account and the digest
-// button.
+// button. The M2 state's public pages have the reduced header instead (ReducedHeader.tsx, D41).
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale })
 
@@ -37,16 +38,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
       : undefined,
   }))
 
-  const localeLabels: LocaleLabels = {
-    heading: t('locale.heading'),
-    button: t('locale.button', {
-      name: t(`locale.names.${locale}`),
-      code: t(`locale.short.${locale}`),
-    }),
-    moreComing: t('locale.moreComing'),
-    names: { en: t('locale.names.en'), tr: t('locale.names.tr') },
-    short: { en: t('locale.short.en'), tr: t('locale.short.tr') },
-  }
+  const labels = await localeLabels(locale)
 
   return (
     <header className="site-header">
@@ -116,7 +108,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           <LocaleSwitcher
             className="hidden md:block"
             locale={locale}
-            labels={localeLabels}
+            labels={labels}
             icons={{
               globe: <Icon name="globe" size={18} />,
               chevron: <Icon name="chevronDown" size={16} className="chevron" />,
@@ -142,7 +134,7 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           >
             {t('header.digest')}
           </a>
-          <MobileMenu locale={locale} windows={windows} localeLabels={localeLabels} />
+          <MobileMenu locale={locale} windows={windows} localeLabels={labels} />
         </div>
       </div>
       <SearchDialog locale={locale} />

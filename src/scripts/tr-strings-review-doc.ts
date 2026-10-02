@@ -65,10 +65,17 @@ export function unusedPlaces(keys: readonly string[]): string[] {
 }
 
 /** The entry of PUBLIC_AT_M2 for a key (its longest matching key or prefix), if it has one. */
-export function publicAtM2(key: string): { match: string; where: string } | undefined {
-  let best: { match: string; where: string } | undefined
-  for (const [match, where] of Object.entries(PUBLIC_AT_M2)) {
-    if (matches(key, match) && match.length > (best?.match.length ?? -1)) best = { match, where }
+export function publicAtM2(
+  key: string,
+): { match: string; where: string; onlyAtM2: boolean } | undefined {
+  let best: { match: string; where: string; onlyAtM2: boolean } | undefined
+  for (const [match, entry] of Object.entries(PUBLIC_AT_M2)) {
+    if (matches(key, match) && match.length > (best?.match.length ?? -1)) {
+      best =
+        typeof entry === 'string'
+          ? { match, where: entry, onlyAtM2: false }
+          : { match, where: entry.where, onlyAtM2: entry.onlyAtM2 }
+    }
   }
   return best
 }
@@ -195,8 +202,9 @@ export function buildReview({ en, tr, date }: { en: unknown; tr: unknown; date: 
   const entries = Object.keys(PUBLIC_AT_M2)
   const atM2 = flatten(en)
     .map(([key, english], index) => ({ key, english, index, entry: publicAtM2(key) }))
-    .filter((row): row is typeof row & { entry: { match: string; where: string } } =>
-      Boolean(row.entry),
+    .filter(
+      (row): row is typeof row & { entry: { match: string; where: string; onlyAtM2: boolean } } =>
+        Boolean(row.entry),
     )
     .sort(
       (a, b) =>
