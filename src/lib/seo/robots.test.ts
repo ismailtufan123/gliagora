@@ -209,7 +209,8 @@ describe('robots.txt in the M2 state (D41, D50)', () => {
       ...drafts,
       '/en/jobs/',
       '/en/suggest/',
-      '/en/newsletter/',
+      // A page after the Glia Notes signup (the signup itself is indexed once it is public).
+      '/en/newsletter/check-your-inbox/',
       '/en/?utm_source=x',
       '/api/map/institutions/',
       '/sitemaps/jobs.xml',
