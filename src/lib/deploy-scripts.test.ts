@@ -1038,7 +1038,13 @@ describe('backup/alert.sh', () => {
       env = {},
       backup = {},
       extra = '',
-    }: { env?: Record<string, string>; backup?: Record<string, string>; extra?: string } = {},
+      systemd = { INVOCATION_ID: '0123456789abcdef0123456789abcdef' },
+    }: {
+      env?: Record<string, string>
+      backup?: Record<string, string>
+      extra?: string
+      systemd?: Record<string, string>
+    } = {},
   ) {
     const dir = folder()
     const settings = {
@@ -1069,7 +1075,7 @@ describe('backup/alert.sh', () => {
       FAKE_LOG: dir,
       SERVICE_RESULT: result,
       EXIT_STATUS: result === 'success' ? '0' : '1',
-      INVOCATION_ID: '0123456789abcdef0123456789abcdef',
+      ...systemd,
     })
     const file = (name: string) => {
       try {
@@ -1083,6 +1089,7 @@ describe('backup/alert.sh', () => {
       args: file('curl.args')?.trim().split('\n') ?? null,
       config: file('curl.config'),
       mail: file('curl.mail'),
+      journal: file('journalctl.args'),
     }
   }
 
@@ -1141,6 +1148,28 @@ describe('backup/alert.sh', () => {
     }
   })
 
+  it('sends a test by hand with the lines of the unit’s last run, saying it is a test', () => {
+    const last = 'fedcba9876543210fedcba9876543210'
+    const byHand = alert('gliagora-backup', 'exit-code', {
+      systemd: { FAKE_LAST_INVOCATION: last },
+    })
+    expect(byHand.status, byHand.output).toBe(0)
+    expect(byHand.mail).toContain('Subject: [gliagora] backup failed (test, sent by hand)\n')
+    expect(byHand.mail).toContain("(Sent by hand, as a test: the lines of the unit's last run.)")
+    expect(byHand.mail).toContain('[2026-10-04T00:30:02Z] ERROR: pg_dump failed for gliagora')
+    expect(byHand.mail).toContain('[2026-10-04T00:30:02Z] Note for [address]')
+    expect(byHand.journal).toContain(`_SYSTEMD_INVOCATION_ID=${last}`)
+    // A unit that never ran: the mail path is tested, with nothing to show.
+    const never = alert('gliagora-restore-test', 'exit-code', { systemd: {} })
+    expect(never.mail).toContain('Subject: [gliagora] restore test failed (test, sent by hand)\n')
+    expect(never.mail).toContain('(Sent by hand: the unit has no run to show.)')
+    expect(never.journal).toBeNull()
+    // Run by systemd: its own run's lines, and no test mark.
+    const run = alert('gliagora-backup', 'exit-code')
+    expect(run.mail).toContain('Subject: [gliagora] backup failed\n')
+    expect(run.journal).toContain('_SYSTEMD_INVOCATION_ID=0123456789abcdef0123456789abcdef')
+  })
+
   it('sends nothing, and fails, when .env holds a mail setting Compose would read differently', () => {
     for (const line of ['SMTP_PASS=Ab$$9xY', 'SMTP_PASS="Ab\\$9xY"', 'EMAIL_FROM=a # b']) {
       const run = alert('gliagora-backup', 'exit-code', { extra: `${line}\n` })
@@ -1167,6 +1196,7 @@ describe('backup/alert.sh', () => {
       FAKE_LOG: dir,
       FAKE_CURL_EXIT: '67',
       SERVICE_RESULT: 'exit-code',
+      INVOCATION_ID: '0123456789abcdef0123456789abcdef',
     })
     expect(failed.status).toBe(1)
     expect(failed.output).toContain('could not send "[gliagora] backup failed"')

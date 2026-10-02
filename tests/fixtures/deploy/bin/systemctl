@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# A stand-in for systemctl: records its arguments in $FAKE_LOG/systemctl.args and, for
+# `show -p InvocationID --value UNIT`, prints FAKE_LAST_INVOCATION (the unit's last run; empty:
+# none).
+printf '%s\n' "$*" >>"$FAKE_LOG/systemctl.args"
+[[ "$*" == "show -p InvocationID --value "* ]] && printf '%s\n' "${FAKE_LAST_INVOCATION:-}"
+exit 0

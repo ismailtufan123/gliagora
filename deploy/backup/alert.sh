@@ -22,8 +22,9 @@
 # (theirs only, the ones that start with a time: database names, snapshot IDs, counts), with any
 # email address replaced: never what a database holds.
 #
-# To try it by hand (sends a "failed" email for the last run): sudo SERVICE_RESULT=exit-code
-# /opt/gliagora/backup/alert.sh gliagora-backup
+# To try it by hand: sudo SERVICE_RESULT=exit-code /opt/gliagora/backup/alert.sh gliagora-backup
+# sends a "backup failed (test, sent by hand)" email with the lines of the unit's last run (found
+# by its last invocation ID, as systemd keeps it), so it checks the journal lookup too.
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -87,10 +88,16 @@ bare_address() {
 curl_quoted() { local s=${1//\\/\\\\}; printf '"%s"' "${s//\"/\\\"}"; }
 
 # This run's own log lines (backup.sh and restore.sh start theirs with a time in brackets), with
-# any email address replaced. They come from the journal, by the run's invocation ID.
+# any email address replaced. They come from the journal, by the run's invocation ID; sent by hand
+# (no INVOCATION_ID), by the last one of the unit $1, and said so.
 run_lines() {
-  [[ -n "${INVOCATION_ID:-}" ]] || { echo '(No run: sent by hand.)'; return 0; }
-  journalctl --no-pager -o cat "_SYSTEMD_INVOCATION_ID=$INVOCATION_ID" 2>/dev/null \
+  local id=${INVOCATION_ID:-}
+  if [[ -z "$id" ]]; then
+    id=$(systemctl show -p InvocationID --value "$1.service" 2>/dev/null) || id=''
+    [[ "$id" =~ ^[0-9a-f]{32}$ ]] || { echo '(Sent by hand: the unit has no run to show.)'; return 0; }
+    printf "(Sent by hand, as a test: the lines of the unit's last run.)\n\n"
+  fi
+  journalctl --no-pager -o cat "_SYSTEMD_INVOCATION_ID=$id" 2>/dev/null \
     | grep -E '^\[[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z\] ' | grep -v '\] alert: ' \
     | sed -E 's/[^[:space:]<>"]+@[^[:space:]<>"]+/[address]/g' | tail -n 40 || true
 }
@@ -169,6 +176,8 @@ else
   outcome=failed
 fi
 subject="[gliagora] $label $outcome"
+# Sent by hand (systemd sets INVOCATION_ID for the unit's own runs): a test, said so.
+[[ -n "${INVOCATION_ID:-}" ]] || subject+=' (test, sent by hand)'
 message=$(
   printf 'From: %s\nTo: %s\nSubject: %s\nDate: %s\nMessage-ID: <%s.%s@%s>\n' \
     "$from_header" "$to" "$subject" "$(date -R)" "$(date -u +%Y%m%d%H%M%S)" "$RANDOM$RANDOM" "${from#*@}"
@@ -177,7 +186,7 @@ message=$(
   printf 'Unit: %s.service on %s\nResult: %s (%s %s)\nTime: %s\n\n' "$unit" "$(hostname)" "$outcome" \
     "$result" "${EXIT_STATUS:-}" "$(date -u +%FT%TZ)"
   printf "This run's lines:\n\n"
-  run_lines
+  run_lines "$unit"
   printf '\nThe whole log, on the server: journalctl -u %s\n' "$unit"
 )
 if send_mail "$url" "$from" "$to" "$tls" "$user" <<<"$message"; then
