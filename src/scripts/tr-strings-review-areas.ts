@@ -34,11 +34,12 @@ export const TURKISH_PAGES = [
  * and the two Turkish legal texts are in Turkish, and they show the reduced header and footer,
  * which link to public pages only (no sections, menus or search). About, the newsletter and the
  * coming-soon page are English only at M2: in Turkish they appear only as links in that header and
- * footer. The strings of the newsletter signup are written at M2 and join this list then, if they
- * have Turkish versions; the coming-soon page's are English only (src/app/(frontend)/m2/en/).
- * Keys or prefixes of messages/{locale}.json (as in AREAS), each with where it appears at M2;
- * every one must be on the Turkish site now, but those marked `onlyAtM2`, which only the M2
- * state's reduced header and footer show on a Turkish page.
+ * footer. So the strings of the newsletter signup and its pages (D50) are not in this list: their
+ * Turkish drafts appear on no Turkish page at M2 (the area "Glia Notes signup and pages"); the
+ * coming-soon page's are English only (src/app/(frontend)/m2/en/). Keys or prefixes of
+ * messages/{locale}.json (as in AREAS), each with where it appears at M2; every one must be on the
+ * Turkish site now, but those marked `onlyAtM2`, which only the M2 state's reduced header and
+ * footer show on a Turkish page.
  */
 export type AtM2 = string | { where: string; onlyAtM2: true }
 
@@ -53,7 +54,7 @@ export const PUBLIC_AT_M2: Record<string, AtM2> = {
     'Turkish pages - language menu and list - the languages, each in its own language',
   'locale.moreComing': 'Turkish pages - language menu and list - note under the languages',
   'header.digest':
-    'Turkish pages - header (from 768px) and mobile menu - button to the newsletter signup',
+    'Turkish pages - header (from 768px) and mobile menu - button to the newsletter signup, while the signup is public (with the açık rıza metni)',
   'header.menu': 'Turkish pages - header on phones - Menu button (language list, newsletter)',
   'sections.about': 'Turkish pages - footer (About column) and mobile menu - link to About',
   'footer.sitemap': 'Turkish pages - footer - name of the footer navigation, for screen readers',
@@ -142,7 +143,7 @@ export const AREAS: Area[] = [
       'header.menu':
         'Every page - header below 1280px - Menu button (the word shows from 640px; narrower, it is read by screen readers)',
       'sections.map':
-        'Every page - mobile menu - link after the six sections; also the heading of the map page (/en/map/, being built)',
+        'Every page - mobile menu - link after the six sections; also the heading of the map page (/en/map/)',
       'sections.learn':
         'Every page - mobile menu - link after the six sections; also the heading of the Learn page (/en/learn/, being built)',
       'sections.about':
@@ -315,13 +316,13 @@ export const AREAS: Area[] = [
   {
     title: 'Pages being built',
     shown: false,
-    note: 'These stand-in pages for the sections that are not built yet exist only in English (/en/events/, /en/funding/, /en/papers/, /en/news/, /en/resources/, /en/map/, /en/learn/, /en/learn/bench-to-bedside/, /en/newsletter/).',
+    note: 'These stand-in pages for the sections that are not built yet exist only in English (/en/events/, /en/funding/, /en/papers/, /en/news/, /en/resources/, /en/learn/, /en/learn/bench-to-bedside/).',
     places: {
       'placeholder.text': 'Pages being built - text under the heading',
       'placeholder.contact': 'Pages being built - contact line',
       'placeholder.home': 'Pages being built - link to the home page',
       'sections.newsletter':
-        'Newsletter page (/en/newsletter/, being built) - heading and browser tab',
+        'Not used on any page at the moment (the newsletter page has its own title, newsletter.title)',
       'sections.suggest':
         'Not used on any page at the moment (the Suggest a listing page has its own title, suggest.title)',
     },
@@ -944,6 +945,120 @@ export const AREAS: Area[] = [
     },
   },
   {
+    title: 'Glia Notes signup and pages',
+    shown: false,
+    note: `The newsletter signup (/en/newsletter/) and the pages after it exist only in English, ${ENGLISH_ONLY}. At M2 they go public in English, so they are not among the strings that go public at M2 in Turkish. The form shows only once listmonk and a mail server are set up (M2).`,
+    places: {
+      'newsletter.title': 'Newsletter signup (/en/newsletter/) - heading and browser tab',
+      'newsletter.description':
+        'Newsletter signup - description in search results and link previews',
+      'newsletter.intro': 'Newsletter signup - first paragraph, under the heading',
+      'newsletter.firstIssue': 'Newsletter signup - second paragraph',
+      'newsletter.unavailable':
+        'Newsletter signup - text in place of the form while the signup is off (not open yet: no mail server or newsletter system)',
+      'newsletter.noscript': 'Newsletter signup - note above the form when JavaScript is off',
+      'newsletter.email.label': 'Newsletter signup form - label of the email field',
+      'newsletter.email.hint': 'Newsletter signup form - hint under that label',
+      'newsletter.consent.label':
+        'Newsletter signup form - label of the consent box (the same words as on the account page)',
+      'newsletter.consent.hint':
+        'Newsletter signup form - hint under the consent box, with links to the consent text, the privacy policy and the KVKK notice',
+      'newsletter.honeypot':
+        'Newsletter signup form - label of a hidden field for spam programs, read by no one else',
+      'newsletter.spamNote': 'Newsletter signup form - note above the send button',
+      'newsletter.submit': 'Newsletter signup form - send button',
+      'newsletter.sending': 'Newsletter signup form - the send button while the form is sent',
+      'newsletter.errors.title':
+        'Newsletter signup form - heading of the box that lists the problems after sending',
+      'newsletter.errors.prefix':
+        'Newsletter signup form - word before each error at a field, read by screen readers',
+      'newsletter.errors.emailMissing': 'Newsletter signup form - error at the email field',
+      'newsletter.errors.emailInvalid': 'Newsletter signup form - error at the email field',
+      'newsletter.errors.emailTooLong': 'Newsletter signup form - error at the email field',
+      'newsletter.errors.consentMissing':
+        'Newsletter signup form - error at the consent box when it was not ticked',
+      'newsletter.errors.needsJs':
+        'Newsletter signup form - error when the spam check could not run (JavaScript off)',
+      'newsletter.errors.spamCheck': 'Newsletter signup form - error when the spam check failed',
+      'newsletter.errors.rateLimited':
+        'Newsletter signup form - error after too many signups from one connection or emails to one address',
+      'newsletter.errors.wait':
+        'Newsletter signup form - error when the same address was sent a link less than a minute ago',
+      'newsletter.errors.unavailable':
+        'Newsletter signup form - error when the confirmation email could not be sent',
+      'newsletter.errors.failed':
+        'Newsletter signup form - error when the signup could not be stored, with the reference that finds it in our log',
+      'newsletter.inbox.title':
+        'After sending the form (/en/newsletter/check-your-inbox/) - heading and browser tab',
+      'newsletter.inbox.sent':
+        'After sending the form - first paragraph: the address, shortened ({email}, such as r•••@example.org), and the days the link works ({days})',
+      'newsletter.inbox.confirm': 'After sending the form - second paragraph',
+      'newsletter.inbox.missing': 'After sending the form - paragraph above the button',
+      'newsletter.inbox.again': 'After sending the form - button that sends the link again',
+      'newsletter.inbox.wrongAddress':
+        'After sending the form - last paragraph, with a link back to the form',
+      'newsletter.inbox.general':
+        'The same page, opened later or in another browser (without the address) - first paragraph ({days}: the days the link works)',
+      'newsletter.inbox.generalMissing':
+        'The same page, opened later or in another browser - last paragraph, with a link back to the form',
+      'newsletter.confirm.title':
+        'Page the emailed link opens (/en/newsletter/confirm/) - heading and browser tab',
+      'newsletter.confirm.address':
+        'Page the emailed link opens - the address to subscribe ({email})',
+      'newsletter.confirm.what': 'Page the emailed link opens - paragraph under the address',
+      'newsletter.confirm.notYou': 'Page the emailed link opens - paragraph above the button',
+      'newsletter.confirm.button': 'Page the emailed link opens - the button that confirms',
+      'newsletter.confirm.expiredTitle':
+        'Page the emailed link opens, when the link has expired or was used - heading and browser tab',
+      'newsletter.confirm.expired':
+        'Page the emailed link opens, when the link has expired or was used - first paragraph ({days}: the days a link works)',
+      'newsletter.confirm.expiredUsed':
+        'Page the emailed link opens, when the link has expired or was used - second paragraph',
+      'newsletter.confirm.again':
+        'Page the emailed link opens, when the link has expired or was used - button back to the form',
+      'newsletter.confirmed.title':
+        'After confirming (/en/newsletter/confirmed/) - heading and browser tab',
+      'newsletter.confirmed.text': 'After confirming - first paragraph',
+      'newsletter.confirmed.welcome': 'After confirming - second paragraph',
+      'newsletter.confirmed.home': 'After confirming - first button, to the home page',
+      'newsletter.confirmed.about': 'After confirming - second button, to the About page',
+      'newsletter.unsubscribe.title':
+        'Page the unsubscribe link in every newsletter email opens (/en/newsletter/unsubscribe/) - heading and browser tab',
+      'newsletter.unsubscribe.incomplete':
+        'Unsubscribe page, when its link lacks the subscriber or was cut short - shown instead of the text and the button',
+      'newsletter.unsubscribe.text': 'Unsubscribe page - first paragraph',
+      'newsletter.unsubscribe.kept': 'Unsubscribe page - second paragraph',
+      'newsletter.unsubscribe.button': 'Unsubscribe page - the button that unsubscribes',
+      'newsletter.unsubscribed.title':
+        'After unsubscribing (/en/newsletter/unsubscribed/) - heading and browser tab',
+      'newsletter.unsubscribed.text': 'After unsubscribing - first paragraph',
+      'newsletter.unsubscribed.kept': 'After unsubscribing - second paragraph',
+      'newsletter.unsubscribed.again':
+        'After unsubscribing - third paragraph, with a link to the signup form',
+      'newsletter.unsubscribed.home': 'After unsubscribing - link to the home page',
+      'outcome.done.resent':
+        'After sending the form - message at the top after the link was sent again',
+      'outcome.error.wait':
+        'After sending the form - message at the top when the link was asked for again within a minute',
+      'outcome.error.limited':
+        'After sending the form - message at the top after too many links from one connection or to one address',
+      'outcome.error.unavailable':
+        'After sending the form, the page the emailed link opens and the unsubscribe page - message at the top while this is not possible (no mail server or newsletter system)',
+      'outcome.error.resendFailed':
+        'After sending the form - message at the top when sending the link again went wrong',
+      'outcome.error.resendFailedReference':
+        'After sending the form - message at the top when sending the link again went wrong, with the reference that finds it in our log',
+      'outcome.error.subscribeFailed':
+        'Page the emailed link opens - message at the top when confirming went wrong (nothing changed)',
+      'outcome.error.subscribeFailedReference':
+        'Page the emailed link opens - message at the top when confirming went wrong (nothing changed), with the reference that finds it in our log',
+      'outcome.error.unsubscribeFailed':
+        'Unsubscribe page - message at the top when unsubscribing went wrong (nothing changed)',
+      'outcome.error.unsubscribeFailedReference':
+        'Unsubscribe page - message at the top when unsubscribing went wrong (nothing changed), with the reference that finds it in our log',
+    },
+  },
+  {
     title: 'Sign-in and account pages',
     shown: false,
     note: `Sign-in, sign-out and the account pages exist only in English (/en/sign-in/, /en/account/), ${ENGLISH_ONLY}; Turkish pages link to them from the header and the mobile menu.`,
@@ -1408,6 +1523,23 @@ export const AREAS: Area[] = [
         'Email with a link to add an address to an account - how long the link works',
       'emails.verifyEmail.notYou':
         'Email with a link to add an address to an account - what to do if you did not ask for it',
+      'emails.newsletter.confirm.subject':
+        'Email with the link to confirm a newsletter signup (sent when the signup form is sent, or again from "Check your inbox") - subject',
+      'emails.newsletter.confirm.intro':
+        'Email with the link to confirm a newsletter signup - first paragraph, followed by the link',
+      'emails.newsletter.confirm.validity':
+        'Email with the link to confirm a newsletter signup - how long the link works',
+      'emails.newsletter.confirm.notYou':
+        'Email with the link to confirm a newsletter signup - what to do if you did not ask for it, and what we keep',
+      'emails.newsletter.welcome.subject':
+        'Welcome email after a newsletter signup was confirmed - subject',
+      'emails.newsletter.welcome.text': 'Welcome email - first paragraph',
+      'emails.newsletter.welcome.launch':
+        'Welcome email - second paragraph: the first issue comes with the public launch',
+      'emails.newsletter.welcome.unsubscribe':
+        'Welcome email - how to unsubscribe, followed by the link to the unsubscribe page',
+      'emails.newsletter.welcome.kept':
+        'Welcome email - what we keep (the link leads to the privacy policy, and in the Turkish email to the KVKK notice)',
       'emails.dataRequest.confirm.subject':
         'Email with the link to confirm a data request (sent when the data-request form is sent) - subject',
       'emails.dataRequest.confirm.types':

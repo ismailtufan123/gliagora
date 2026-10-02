@@ -146,6 +146,30 @@ describe('deliver', () => {
     })
   })
 
+  it('adds the one-click unsubscribe headers (RFC 8058) only to a message that has one', async () => {
+    vi.stubEnv('SMTP_HOST', '127.0.0.1')
+    const sendEmail = vi.fn(async () => ({ accepted: ['x@example.org'], rejected: [] }))
+    const payload = { sendEmail, logger: { warn: vi.fn() } } as unknown as Payload
+    const unsubscribeUrl =
+      'https://gliagora.com/en/newsletter/unsubscribe/use/?id=7&s=0b2c6f8e-3f0a-4c1e-9d55-6f1d2a7b8c9d'
+    expect(await deliver(payload, 'x@example.org', { ...message, unsubscribeUrl }, 'test')).toBe(
+      'sent',
+    )
+    expect(sendEmail).toHaveBeenCalledWith({
+      to: 'x@example.org',
+      replyTo: 'hello@gliagora.com',
+      subject: 'Konu',
+      text: 'Metin\n',
+      headers: {
+        'Auto-Submitted': 'auto-generated',
+        'X-Auto-Response-Suppress': 'All',
+        'Content-Language': 'tr',
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+    })
+  })
+
   it('tells a refused message from an unreachable server, and never logs the address', async () => {
     vi.stubEnv('SMTP_HOST', '127.0.0.1')
     const warn = vi.fn()

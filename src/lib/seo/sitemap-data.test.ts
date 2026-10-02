@@ -47,6 +47,7 @@ describe('sitemapSource', () => {
       '/en/jobs/',
       '/en/map/',
       '/en/suggest/',
+      '/en/newsletter/',
       ...Object.values(CONTENT_PAGES)
         .filter((page) => !page.draft)
         .map((page) => page.path),

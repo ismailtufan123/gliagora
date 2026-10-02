@@ -4,6 +4,8 @@ import type { Payload } from 'payload'
 
 import { errorSummary } from '@/lib/errors'
 import { deleteMember, memberDb, revivedMembers } from '@/lib/members/store'
+import { listmonkFromEnv } from '@/lib/newsletter/listmonk'
+import { reconcileSubscribers } from '@/lib/newsletter/reconcile'
 import { REAPPLY } from '@/lib/retention/context'
 
 import { logCounts, maintenanceTask } from './task'
@@ -17,7 +19,14 @@ import { logCounts, maintenanceTask } from './task'
 //   hooks skip these, marked REAPPLY);
 // - a report's email address cleared on a data request (`clear-email`), cleared again. In SQL: the
 //   report's fields from the form are fixed for every save (fixedFieldHooks), and reports keep no
-//   versions, so the one statement clears the only copy.
+//   versions, so the one statement clears the only copy;
+// - a subscriber of Glia Notes who unsubscribed (M2, D50; `newsletter`, listmonk's subscriber ID),
+//   deleted again in listmonk: after a restore of listmonk's database, or when the deletion right
+//   after the unsubscribe failed. Only while listmonk is configured:
+//   src/lib/newsletter/reconcile.ts reads listmonk's list of Glia Notes' subscribers whole and
+//   checks every one against the log on every run, and also records the end of subscriptions
+//   listmonk no longer has (their consent records then keep their 3 years). listmonk unreachable
+//   stops this part for the run (counted as failed); the next run tries again.
 // Only a record created no later than the logged deletion: a restore also sets the ID sequences
 // back, so a record made since can have a logged ID, and it stays. Normally there is nothing to do;
 // the selections join the log with the records, so a run without a restore reads no record. The
@@ -94,6 +103,8 @@ export async function applyDeletionLog(payload: Payload, now: Date) {
     suggestions: 0,
     reports: 0,
     reportAddresses: 0,
+    subscribers: 0,
+    subscriptionsEnded: 0,
     failed: 0,
   }
 
@@ -142,6 +153,15 @@ export async function applyDeletionLog(payload: Payload, now: Date) {
   counts.reports = reports.done
   counts.reportAddresses = addresses.done
   counts.failed += suggestions.failed + reports.failed + addresses.failed
+  const listmonk = listmonkFromEnv()
+  if (listmonk) {
+    const subscribers = await reconcileSubscribers(db, listmonk, now, (line) =>
+      payload.logger.warn(`applyDeletionLog: ${line}`),
+    )
+    counts.subscribers = subscribers.deleted
+    counts.subscriptionsEnded = subscribers.ended
+    counts.failed += subscribers.failed
+  }
   logCounts(payload, 'applyDeletionLog', counts)
   return counts
 }
@@ -150,6 +170,14 @@ export const ApplyDeletionLogTask = maintenanceTask({
   slug: 'applyDeletionLog',
   label: 'Repeat logged deletions of personal data after a restore',
   cron: '*/10 * * * *',
-  counts: ['members', 'suggestions', 'reports', 'reportAddresses', 'failed'],
+  counts: [
+    'members',
+    'suggestions',
+    'reports',
+    'reportAddresses',
+    'subscribers',
+    'subscriptionsEnded',
+    'failed',
+  ],
   run: applyDeletionLog,
 })

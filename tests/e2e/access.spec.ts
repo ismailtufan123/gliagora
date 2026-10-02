@@ -65,6 +65,8 @@ const SIGNED_OUT: Record<string, SignedOut> = {
   'email-tokens': { shows: 'nothing', routes: 'none' },
   'saved-items': { shows: 'nothing', routes: 'none' },
   'deletion-log': { shows: 'nothing', routes: 'none' },
+  // The consent log of Glia Notes (M2, D50), hidden like the member collections.
+  'consent-log': { shows: 'nothing', routes: 'none' },
   // Payload's own collections.
   'payload-kv': { shows: 'nothing' },
   'payload-jobs': { shows: 'nothing' },

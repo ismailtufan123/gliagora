@@ -8,9 +8,12 @@ import { createHmac, hkdfSync } from 'node:crypto'
 //   an email (src/lib/forms/rate-limit.ts);
 // - `gliagora/data-requests/address/v1`: the address hash a data request keeps before it is
 //   confirmed (src/lib/data-requests/address.ts);
-// - `gliagora/members/signin-cookie/v1`: the sealed sign-in cookie (src/lib/members/seal.ts).
+// - `gliagora/members/signin-cookie/v1`: the sealed sign-in cookie (src/lib/members/seal.ts);
+// - `gliagora/newsletter/inbox-cookie/v1`: the sealed cookie after the newsletter form
+//   (src/lib/newsletter/cookie.ts).
 // Changing PAYLOAD_SECRET changes every one of them (and signs editors out), which only resets the
-// limits, cancels sign-ins in progress and makes old unconfirmed requests unfindable.
+// limits, cancels sign-ins in progress, makes old unconfirmed requests unfindable and makes "Check
+// your inbox" forget the address (the emailed links still work).
 
 const cache = new Map<string, Buffer>()
 

@@ -8,10 +8,12 @@ import {
   jobIndexed,
   jobsListIndexed,
   mapPageIndexed,
+  newsletterSignupIndexed,
   subfieldIndexIndexed,
 } from '@/lib/indexing'
 import { type ListingDates, isOpen, listingState } from '@/lib/jobs/deadline'
 import { alternatesFor } from '@/lib/metadata'
+import { NEWSLETTER_PATHS } from '@/lib/newsletter/paths'
 import { type PublicPage, indexedPublicPages } from '@/lib/public-pages'
 import { paths } from '@/lib/site'
 
@@ -62,7 +64,8 @@ function entry(path: string, lastmod?: DateValue | null): SitemapEntry {
 
 /**
  * Pages that are not records: the home page, the content pages that are no longer drafts (D28),
- * the unfiltered jobs list and, once one of its hubs is indexed, the subfield index. `lastmod`
+ * the unfiltered jobs list, the map, Suggest a listing, the Glia Notes signup (M2) and, once one of
+ * its hubs is indexed, the subfield index. `lastmod`
  * only where the date of the last change is known: the content pages record it; the home page
  * and the lists change with the listings and have none.
  */
@@ -73,6 +76,8 @@ export function pageEntries(subfields: readonly SitemapSubfield[]): SitemapEntry
     ...(mapPageIndexed() ? [entry(paths.section('map'))] : []),
     // "Suggest a listing" is indexed (PLAN §2.2); its confirmation page is not.
     entry(paths.section('suggest')),
+    // The Glia Notes signup is indexed (M2, D50); the pages after it are not.
+    ...(newsletterSignupIndexed() ? [entry(NEWSLETTER_PATHS.signup)] : []),
     ...(subfieldIndexIndexed(subfields) ? [entry(SUBFIELDS_PATH)] : []),
     ...Object.values(CONTENT_PAGES)
       .filter(contentPageIndexed)

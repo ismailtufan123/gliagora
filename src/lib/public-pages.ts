@@ -1,5 +1,6 @@
 import { CONTENT_PAGES, type ContentKey } from './content'
 import { DATA_REQUEST_PATHS } from './data-requests/paths'
+import { NEWSLETTER_PATHS } from './newsletter/paths'
 import { M2_PREFIX } from './public-path'
 
 // The public pages of the M2 state (D41, D50; SITE_STAGE=m2, src/lib/site-stage.ts), in one
@@ -21,10 +22,10 @@ import { M2_PREFIX } from './public-path'
 //
 // A text from content/ is public only once the operator has approved it (`draft: false` in
 // src/lib/content.ts, D28, D41), together with the pages that belong to it (those after the
-// data-request form). Approving a text therefore changes this list: run `pnpm caddy:public` and
-// copy the file to the server (deploy/README.md, "Switching to the M2 state"); until then Caddy
-// keeps the page behind the password. The twins of every text are written already, so approving one
-// needs no code.
+// data-request form; the Glia Notes signup and its pages, with the açık rıza metni). Approving a
+// text therefore changes this list: run `pnpm caddy:public` and copy the file to the server
+// (deploy/README.md, "Switching to the M2 state"); until then Caddy keeps the page behind the
+// password. The twins of every text are written already, so approving one needs no code.
 //
 // Relative imports only: the end-to-end tests and `pnpm caddy:public` load this file as it is.
 
@@ -62,6 +63,18 @@ const afterDataRequest = (path: string, more: Partial<PublicPage> = {}): PublicP
   ...more,
 })
 
+/**
+ * A page of Glia Notes (M2, D50): public with the açık rıza metni, since the signup records the
+ * subscriber's consent to that text (GLIA_NOTES_CONSENT_VERSION, src/lib/newsletter/consent.ts) and
+ * links to it. Never indexed but the signup itself (`newsletterPageIndexed()`).
+ */
+const gliaNotes = (path: string, more: Partial<PublicPage> = {}): PublicPage => ({
+  path,
+  kind: 'page',
+  approval: 'acikRiza',
+  ...more,
+})
+
 /** Every page that is public in the M2 state, or becomes public there once its text is approved. */
 export const M2_PAGES: readonly PublicPage[] = [
   // Redirects to /en/ (next.config.ts).
@@ -70,8 +83,20 @@ export const M2_PAGES: readonly PublicPage[] = [
   { path: '/en/', kind: 'page', indexed: true },
   // About (D41 (3)): approved, so public from the start.
   text('about'),
-  // Glia Notes. The signup and the pages after it (M2) each add one line here, with a twin.
-  { path: '/en/newsletter/', kind: 'page' },
+  // Glia Notes (src/lib/newsletter/paths.ts), once the açık rıza metni is approved (above): the
+  // signup (its Server Action posts to the page), the pages after it, and the routes behind their
+  // buttons. The unsubscribe route also takes the one-click POST of mail programs (RFC 8058),
+  // which comes without a cookie or an Origin; every route answers a GET with a redirect to its
+  // page.
+  gliaNotes(NEWSLETTER_PATHS.signup, { post: true, indexed: true }),
+  gliaNotes(NEWSLETTER_PATHS.checkInbox),
+  gliaNotes(NEWSLETTER_PATHS.resend, { kind: 'route', post: true }),
+  gliaNotes(NEWSLETTER_PATHS.confirm),
+  gliaNotes(NEWSLETTER_PATHS.confirmUse, { kind: 'route', post: true }),
+  gliaNotes(NEWSLETTER_PATHS.confirmed),
+  gliaNotes(NEWSLETTER_PATHS.unsubscribe),
+  gliaNotes(NEWSLETTER_PATHS.unsubscribeUse, { kind: 'route', post: true }),
+  gliaNotes(NEWSLETTER_PATHS.unsubscribed),
   // The legal texts, each once approved (D41 (2)).
   text('contact'),
   text('iletisim'),

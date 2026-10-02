@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 import { CONTENT_PAGES, type ContentKey } from './content'
-import { contentPageIndexed } from './indexing'
+import { contentPageIndexed, newsletterPageIndexed, newsletterSignupIndexed } from './indexing'
+import { NEWSLETTER_PATHS } from './newsletter/paths'
 import { M2_PREFIX, publicPathname } from './public-path'
 import {
   type IsDraft,
@@ -21,6 +22,7 @@ import {
   publicPostPaths,
 } from './public-pages'
 import { sitemapPath } from './seo/sitemap'
+import { paths } from './site'
 
 // The public pages of the M2 state (D41, D50): one list for Caddy, the proxy, the sitemaps,
 // robots.txt and the links of the M2 versions.
@@ -85,8 +87,18 @@ describe('the M2 pages (src/lib/public-pages.ts)', () => {
     }
   })
 
-  it('take POSTs only on the data-request form and the route behind its button', () => {
+  it('take POSTs only on the forms and the routes behind their buttons', () => {
     expect(publicPostPaths(ALL_APPROVED)).toEqual([
+      // The Glia Notes signup's Server Action, "Send it again", confirming and unsubscribing (also
+      // the one-click POST of mail programs).
+      '/en/newsletter',
+      '/en/newsletter/',
+      '/en/newsletter/resend',
+      '/en/newsletter/resend/',
+      '/en/newsletter/confirm/use',
+      '/en/newsletter/confirm/use/',
+      '/en/newsletter/unsubscribe/use',
+      '/en/newsletter/unsubscribe/use/',
       '/en/legal/data-requests',
       '/en/legal/data-requests/',
       '/en/legal/data-requests/confirm/use',
@@ -96,16 +108,18 @@ describe('the M2 pages (src/lib/public-pages.ts)', () => {
   })
 
   it('make a text public only once it is approved, with the pages that belong to it', () => {
-    expect(publicPages(ONLY_ABOUT).map((page) => page.path)).toEqual([
-      '/',
-      '/en/',
-      '/en/about/',
-      '/en/newsletter/',
-    ])
+    expect(publicPages(ONLY_ABOUT).map((page) => page.path)).toEqual(['/', '/en/', '/en/about/'])
     expect(publicPages(plus('privacy')).map((page) => page.path)).toContain('/en/legal/privacy/')
     const withRequests = publicPages(plus('dataRequests')).map((page) => page.path)
     for (const after of ['sent/', 'confirm/', 'confirm/use/', 'done/', 'received/']) {
       expect(withRequests).toContain(`/en/legal/data-requests/${after}`)
+    }
+    // Glia Notes with the açık rıza metni, whose consent its signup records (D50); not with the
+    // privacy texts alone.
+    const withConsent = publicPages(plus('acikRiza')).map((page) => page.path)
+    for (const path of Object.values(NEWSLETTER_PATHS)) {
+      expect(withConsent, path).toContain(path)
+      expect(publicPages(plus('privacy', 'kvkk')).map((page) => page.path)).not.toContain(path)
     }
     // Every text that may become public is in the list, and no draft is public now.
     for (const [key, page] of Object.entries(CONTENT_PAGES)) {
@@ -120,13 +134,25 @@ describe('the M2 pages (src/lib/public-pages.ts)', () => {
     }
   })
 
-  it('index the coming-soon page and the approved texts, as their pages do', () => {
+  it('index the coming-soon page, the Glia Notes signup and the approved texts, as their pages do', () => {
     expect(indexedPublicPages(ONLY_ABOUT).map((page) => page.path)).toEqual(['/en/', '/en/about/'])
+    expect(indexedPublicPages(plus('acikRiza')).map((page) => page.path)).toEqual([
+      '/en/',
+      '/en/about/',
+      '/en/newsletter/',
+      '/tr/legal/acik-riza-metni/',
+    ])
     for (const page of indexedPublicPages(ALL_APPROVED)) {
       const text = Object.values(CONTENT_PAGES).find((one) => one.path === page.path)
       if (text) expect(contentPageIndexed({ draft: false }), page.path).toBe(true)
+      else if (page.path === NEWSLETTER_PATHS.signup) expect(newsletterSignupIndexed()).toBe(true)
       else expect(page.path).toBe('/en/')
     }
+    // The pages after the signup never are.
+    expect(newsletterPageIndexed()).toBe(false)
+    expect(
+      indexedPublicPages(ALL_APPROVED).filter((page) => page.path.startsWith('/en/newsletter/')),
+    ).toEqual([expect.objectContaining({ path: NEWSLETTER_PATHS.signup })])
     // The pages after the data-request form never are.
     expect(
       indexedPublicPages(ALL_APPROVED).filter((page) => page.path.includes('/data-requests/')),
@@ -152,8 +178,6 @@ describe('the M2 pages (src/lib/public-pages.ts)', () => {
       '/en/',
       '/en/about',
       '/en/about/',
-      '/en/newsletter',
-      '/en/newsletter/',
       '/robots.txt',
       '/sitemap.xml',
       '/sitemaps/pages.xml',
@@ -194,6 +218,24 @@ describe('the M2 pages (src/lib/public-pages.ts)', () => {
     expect(isPublicAddress('/_next/static/chunks/main.js', ONLY_ABOUT)).toBe(true)
     expect(isPublicAddress('/brand/favicon.svg', ONLY_ABOUT)).toBe(true)
     expect(isPublicAddress('/en/legal/privacy/', plus('privacy'))).toBe(true)
+  })
+})
+
+describe('the Glia Notes addresses (src/lib/newsletter/paths.ts)', () => {
+  it('lie under the section’s address, which the list names without importing the site’s paths', () => {
+    expect(NEWSLETTER_PATHS.signup).toBe(paths.section('newsletter'))
+    for (const path of Object.values(NEWSLETTER_PATHS)) {
+      expect(path.startsWith(NEWSLETTER_PATHS.signup), path).toBe(true)
+      expect(path.endsWith('/'), path).toBe(true)
+    }
+  })
+
+  it('show their M2 versions for the pages, and never rewrite the routes', () => {
+    for (const path of Object.values(NEWSLETTER_PATHS)) {
+      const route = path.endsWith('/use/') || path === NEWSLETTER_PATHS.resend
+      expect(m2Twin(path, plus('acikRiza')), path).toBe(route ? null : `${M2_PREFIX}${path}`)
+      expect(m2Twin(path, ONLY_ABOUT), path).toBeNull()
+    }
   })
 })
 

@@ -84,6 +84,7 @@ export interface Config {
     'email-tokens': EmailToken;
     'saved-items': SavedItem;
     'deletion-log': DeletionLog;
+    'consent-log': ConsentLog;
     'payload-kv': PayloadKv;
     'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
@@ -109,6 +110,7 @@ export interface Config {
     'email-tokens': EmailTokensSelect<false> | EmailTokensSelect<true>;
     'saved-items': SavedItemsSelect<false> | SavedItemsSelect<true>;
     'deletion-log': DeletionLogSelect<false> | DeletionLogSelect<true>;
+    'consent-log': ConsentLogSelect<false> | ConsentLogSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -1746,7 +1748,7 @@ export interface MemberSession {
 export interface EmailToken {
   id: number;
   tokenHash: string;
-  purpose: 'sign-in' | 'verify-email' | 'data-request';
+  purpose: 'sign-in' | 'verify-email' | 'data-request' | 'newsletter';
   email: string;
   member?: (number | null) | Member;
   browserHash?: string | null;
@@ -1785,10 +1787,25 @@ export interface SavedItem {
  */
 export interface DeletionLog {
   id: number;
-  targetCollection: 'members' | 'submissions' | 'reports';
+  targetCollection: 'members' | 'submissions' | 'reports' | 'newsletter';
   targetId: number;
   action: 'delete' | 'clear-email';
   at: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consent-log".
+ */
+export interface ConsentLog {
+  id: number;
+  subscriberUuid?: string | null;
+  subscriberId?: number | null;
+  event: 'requested' | 'confirmed' | 'unsubscribed';
+  consentVersion?: string | null;
+  source: 'newsletter-form' | 'account' | 'unsubscribe-link' | 'one-click' | 'listmonk';
+  at: string;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2373,6 +2390,20 @@ export interface DeletionLogSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consent-log_select".
+ */
+export interface ConsentLogSelect<T extends boolean = true> {
+  subscriberUuid?: T;
+  subscriberId?: T;
+  event?: T;
+  consentVersion?: T;
+  source?: T;
+  at?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -2599,6 +2630,7 @@ export interface TaskPurgeRetention {
     dataRequests?: number | null;
     unconfirmedRequests?: number | null;
     deletionLog?: number | null;
+    consentLog?: number | null;
     skipped?: boolean | null;
   };
 }
@@ -2638,6 +2670,8 @@ export interface TaskApplyDeletionLog {
     suggestions?: number | null;
     reports?: number | null;
     reportAddresses?: number | null;
+    subscribers?: number | null;
+    subscriptionsEnded?: number | null;
     failed?: number | null;
     skipped?: boolean | null;
   };

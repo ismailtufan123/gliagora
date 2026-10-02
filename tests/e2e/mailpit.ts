@@ -32,7 +32,7 @@ async function messagesTo(address: string): Promise<Summary[]> {
 export async function latestEmailTo(
   address: string,
   { count = 1 }: { count?: number } = {},
-): Promise<{ subject: string; text: string }> {
+): Promise<{ id: string; subject: string; text: string }> {
   let found: Summary[] = []
   await expect
     .poll(
@@ -46,7 +46,14 @@ export async function latestEmailTo(
   const response = await fetch(`${mailpitUrl}/api/v1/message/${found[0]!.ID}`)
   const message = (await response.json()) as { Subject: string; Text: string }
   const base = (process.env.BASE_URL ?? 'http://localhost:3000').replace(/\/+$/, '')
-  return { subject: message.Subject, text: message.Text.replaceAll(SITE, base) }
+  return { id: found[0]!.ID, subject: message.Subject, text: message.Text.replaceAll(SITE, base) }
+}
+
+/** The headers of a message (`latestEmailTo(…).id`), each with its values. */
+export async function emailHeaders(id: string): Promise<Record<string, string[]>> {
+  const response = await fetch(`${mailpitUrl}/api/v1/message/${id}/headers`)
+  expect(response.ok, 'Mailpit headers').toBe(true)
+  return (await response.json()) as Record<string, string[]>
 }
 
 /** How many emails went to `address`. */

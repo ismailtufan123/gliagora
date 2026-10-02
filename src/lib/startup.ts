@@ -5,6 +5,7 @@ import { releaseInterruptedJobs } from '@/jobs/release'
 import { altchaKey } from '@/lib/forms/altcha'
 import { describeEmailCap, emailCap } from '@/lib/forms/email-cap'
 import { describeMemberAuth, memberAuthConfig } from '@/lib/members/config'
+import { describeNewsletter, newsletterConfig } from '@/lib/newsletter/config'
 import { describeSiteStage, siteStageSetting } from '@/lib/site-stage'
 
 /**
@@ -27,6 +28,9 @@ import { describeSiteStage, siteStageSetting } from '@/lib/site-stage'
  * forms send (EMAIL_CAP_HOUR, EMAIL_CAP_DAY), and one line each names a setting it could not use.
  * One line names the site's stage (`Site stage: private`, D50), with one more when SITE_STAGE has a
  * value that is not a stage.
+ * One line says whether the Glia Notes signup and unsubscribing are on (M2, D50: listmonk's
+ * settings, a mail server and the spam check), and why not, and one line each names a setting it
+ * could not use.
  */
 export async function connectOnStart(): Promise<void> {
   if (process.env.NODE_ENV !== 'production') return
@@ -44,6 +48,9 @@ export async function connectOnStart(): Promise<void> {
   const stage = siteStageSetting()
   console.log(describeSiteStage(stage))
   if (stage.problem) console.error(stage.problem)
+  const newsletter = newsletterConfig()
+  console.log(describeNewsletter(newsletter))
+  for (const problem of newsletter.problems) console.error(problem)
   try {
     const payload = await getPayload({ config })
     await releaseInterruptedJobs(payload)

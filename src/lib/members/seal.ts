@@ -84,6 +84,60 @@ export type SignInContent = SignInState extends infer S
     : never
   : never
 
+/**
+ * A cookie's value sealed with AES-256-GCM: the key from `secret` under `label`, the cookie's name
+ * as additional data. Shared by the sign-in cookie and the newsletter's (src/lib/newsletter/
+ * cookie.ts), each with its own label and name, so neither opens as the other.
+ */
+export function sealValue(
+  value: unknown,
+  { secret, label, cookie }: { secret: string; label: string; cookie: string },
+): string {
+  const iv = randomBytes(IV_BYTES)
+  const cipher = createCipheriv('aes-256-gcm', derivedKey(secret, label), iv)
+  cipher.setAAD(Buffer.from(cookie, 'utf8'))
+  const body = Buffer.concat([cipher.update(JSON.stringify(value), 'utf8'), cipher.final()])
+  const sealed = VERSION + Buffer.concat([iv, body, cipher.getAuthTag()]).toString('base64url')
+  if (sealed.length > MAX_SEALED_LENGTH) throw new Error('The sealed value is too large')
+  return sealed
+}
+
+/**
+ * Opens a value sealed by `sealValue` with the same label and cookie name: its JSON, or undefined
+ * for another version, a changed or truncated value or another key. Never throws.
+ */
+export function openValue(
+  sealed: string | null | undefined,
+  { secret, label, cookie }: { secret: string; label: string; cookie: string },
+): unknown {
+  if (!sealed || !sealed.startsWith(VERSION) || sealed.length > MAX_SEALED_LENGTH) return undefined
+  const raw = Buffer.from(sealed.slice(VERSION.length), 'base64url')
+  if (raw.length <= IV_BYTES + TAG_BYTES) return undefined
+  let text: string
+  try {
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      derivedKey(secret, label),
+      raw.subarray(0, IV_BYTES),
+    )
+    decipher.setAAD(Buffer.from(cookie, 'utf8'))
+    decipher.setAuthTag(raw.subarray(raw.length - TAG_BYTES))
+    text = Buffer.concat([
+      decipher.update(raw.subarray(IV_BYTES, raw.length - TAG_BYTES)),
+      decipher.final(),
+    ]).toString('utf8')
+  } catch {
+    return undefined
+  }
+  try {
+    return JSON.parse(text) as unknown
+  } catch {
+    return undefined
+  }
+}
+
+const SIGN_IN_SEAL = { label: KEY_LABEL, cookie: SIGN_IN_COOKIE }
+
 /** Seals `content` for SIGN_IN_COOKIE_MINUTES from `now`. */
 export function sealSignIn(content: SignInContent, secret: string, now: Date): string {
   const value = signInState.parse({
@@ -91,13 +145,7 @@ export function sealSignIn(content: SignInContent, secret: string, now: Date): s
     v: 1,
     exp: now.getTime() + SIGN_IN_COOKIE_MINUTES * MINUTE_MS,
   })
-  const iv = randomBytes(IV_BYTES)
-  const cipher = createCipheriv('aes-256-gcm', derivedKey(secret, KEY_LABEL), iv)
-  cipher.setAAD(Buffer.from(SIGN_IN_COOKIE, 'utf8'))
-  const body = Buffer.concat([cipher.update(JSON.stringify(value), 'utf8'), cipher.final()])
-  const sealed = VERSION + Buffer.concat([iv, body, cipher.getAuthTag()]).toString('base64url')
-  if (sealed.length > MAX_SEALED_LENGTH) throw new Error('The sign-in state is too large')
-  return sealed
+  return sealValue(value, { secret, ...SIGN_IN_SEAL })
 }
 
 /**
@@ -111,31 +159,8 @@ export function openSignIn<K extends SignInKind>(
   now: Date,
   kind: K,
 ): Extract<SignInState, { kind: K }> | null {
-  if (!sealed || !sealed.startsWith(VERSION) || sealed.length > MAX_SEALED_LENGTH) return null
-  const raw = Buffer.from(sealed.slice(VERSION.length), 'base64url')
-  if (raw.length <= IV_BYTES + TAG_BYTES) return null
-  let text: string
-  try {
-    const decipher = createDecipheriv(
-      'aes-256-gcm',
-      derivedKey(secret, KEY_LABEL),
-      raw.subarray(0, IV_BYTES),
-    )
-    decipher.setAAD(Buffer.from(SIGN_IN_COOKIE, 'utf8'))
-    decipher.setAuthTag(raw.subarray(raw.length - TAG_BYTES))
-    text = Buffer.concat([
-      decipher.update(raw.subarray(IV_BYTES, raw.length - TAG_BYTES)),
-      decipher.final(),
-    ]).toString('utf8')
-  } catch {
-    return null
-  }
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(text)
-  } catch {
-    return null
-  }
+  const parsed = openValue(sealed, { secret, ...SIGN_IN_SEAL })
+  if (parsed === undefined) return null
   const result = signInState.safeParse(parsed)
   if (!result.success || result.data.kind !== kind) return null
   if (result.data.exp <= now.getTime()) return null

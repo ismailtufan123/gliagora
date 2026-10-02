@@ -10,6 +10,8 @@ import * as members from '@/migrations/20261001_142245_members'
 import * as constraints from '@/migrations/20261001_142246_member_constraints'
 import * as memberTasks from '@/migrations/20261001_201739_member_tasks'
 import * as requestGuards from '@/migrations/20261002_090000_data_request_guards'
+import * as newsletter from '@/migrations/20261002_161547_newsletter'
+import * as newsletterConstraints from '@/migrations/20261002_190000_newsletter_constraints'
 
 import { orcidCheckCharacter } from './orcid-id'
 import { redeemSignInLink } from './sign-in-link'
@@ -27,6 +29,7 @@ import {
   createSession,
   deleteEmailToken,
   deleteMember,
+  deletePendingLinks,
   deleteSignInTokens,
   endAllSessions,
   endOtherSessions,
@@ -159,6 +162,13 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
     }
   })
 
+  /** What a Glia Notes signup's link holds besides the address (M2). */
+  const signupData = {
+    version: '2026-09-27',
+    source: 'newsletter-form',
+    requestedAt: NOW.toISOString(),
+  }
+
   const newMember = (fields: Parameters<typeof createMember>[1] = {}): Promise<MemberRecord> =>
     createMember(
       store,
@@ -171,7 +181,8 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       const tables = await rows<{ table_name: string }>(sql`
         select table_name from information_schema.tables
         where table_schema = 'public' and table_name in ('_members_v', '_member_sessions_v',
-          '_email_tokens_v', '_saved_items_v', '_deletion_log_v', '_data_requests_v')`)
+          '_email_tokens_v', '_saved_items_v', '_deletion_log_v', '_data_requests_v',
+          '_consent_log_v')`)
       expect(tables).toEqual([])
     })
 
@@ -277,14 +288,18 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
           select conname from pg_constraint where contype = 'c' and right(conname, 6) = '_check'
             and conrelid::regclass::text in ('members', 'member_sessions', 'email_tokens', 'data_requests')
           order by conname`)
-      expect(await names()).toHaveLength(10)
-      // The later migration that widens one of them first, as the migrations run backwards.
+      // Ten for members and data requests (M4b), one for Glia Notes' links (M2).
+      expect(await names()).toHaveLength(11)
+      // The later migrations first (one widens a check, one adds another), as migrations run
+      // backwards.
+      await newsletterConstraints.down({ db } as never)
       await requestGuards.down({ db } as never)
       await constraints.down({ db } as never)
       expect(await names()).toEqual([])
       await constraints.up({ db } as never)
       await requestGuards.up({ db } as never)
-      expect(await names()).toHaveLength(10)
+      await newsletterConstraints.up({ db } as never)
+      expect(await names()).toHaveLength(11)
     })
   })
 
@@ -468,6 +483,144 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
       expect(await findEmailToken(store, first.token, NOW)).toBeNull()
       expect(await deleteSignInTokens(store, address)).toBe(1)
       expect(await findEmailToken(store, second.token, NOW)).toBeNull()
+    })
+
+    it('keep a Glia Notes signup 7 days, with what its consent record needs (M2)', async () => {
+      const address = email()
+      const signup = signupData
+      const first = await createEmailToken(
+        store,
+        { purpose: 'newsletter', email: address, locale: 'en', requestData: signup },
+        NOW,
+      )
+      const second = await createEmailToken(
+        store,
+        { purpose: 'newsletter', email: address, locale: 'en', requestData: signup },
+        NOW,
+      )
+      expect(first.expiresAt).toEqual(at(7))
+      expect(await findEmailToken(store, first.token, new Date(at(7).getTime() - 1))).toMatchObject(
+        { purpose: 'newsletter', email: address, requestData: signup, createdAt: NOW },
+      )
+      expect(await findEmailToken(store, first.token, at(7))).toBeNull()
+      // It works for its own purpose only, and using one ends the address's others.
+      expect(await consumeEmailToken(store, first.token, 'sign-in', NOW)).toBeNull()
+      expect(await consumeEmailToken(store, first.token, 'newsletter', NOW)).toMatchObject({
+        email: address,
+      })
+      expect(await deletePendingLinks(store, 'sign-in', address)).toBe(0)
+      expect(await deletePendingLinks(store, 'newsletter', address)).toBe(1)
+      expect(await findEmailToken(store, second.token, NOW)).toBeNull()
+    })
+
+    it('refuse a Glia Notes signup without its consent data, or bound to a member or browser', async () => {
+      const member = await newMember()
+      const signup = signupData
+      for (const input of [
+        { purpose: 'newsletter' as const, email: email(), locale: 'en' as const },
+        {
+          purpose: 'newsletter' as const,
+          email: email(),
+          locale: 'en' as const,
+          requestData: { ...signup, version: 'someone@example.org' },
+        },
+        {
+          purpose: 'newsletter' as const,
+          email: email(),
+          locale: 'en' as const,
+          requestData: { version: signup.version, source: signup.source },
+        },
+        {
+          purpose: 'newsletter' as const,
+          email: email(),
+          locale: 'en' as const,
+          requestData: signup,
+          next: '/en/account/',
+        },
+        {
+          purpose: 'newsletter' as const,
+          email: email(),
+          locale: 'en' as const,
+          requestData: { ...signup, extra: 'x' },
+        },
+        {
+          purpose: 'newsletter' as const,
+          email: email(),
+          locale: 'en' as const,
+          requestData: signup,
+          browserHash: hashToken('x'),
+        },
+        {
+          purpose: 'newsletter' as const,
+          email: email(),
+          locale: 'en' as const,
+          requestData: signup,
+          memberId: member.id,
+        },
+      ]) {
+        await expect(createEmailToken(store, input, NOW), JSON.stringify(input)).rejects.toThrow(
+          MemberStoreError,
+        )
+      }
+      // The database refuses the same, whoever writes: exactly the version (in the consent
+      // records' format), the form and the form's time, and no binding, `next` or `save`.
+      expect(
+        await failure(sql`
+          insert into email_tokens (token_hash, purpose, email, locale, expires_at)
+          values (${hashToken(newToken())}, 'newsletter', ${email()}, 'en', now())`),
+      ).toBe('23514')
+      expect(
+        await failure(sql`
+          insert into email_tokens (token_hash, purpose, email, locale, member_id, request_data,
+            expires_at)
+          values (${hashToken(newToken())}, 'newsletter', ${email()}, 'en', ${member.id},
+            ${JSON.stringify(signup)}::jsonb, now())`),
+      ).toBe('23514')
+      const stored = (data: unknown, next: string | null = null) =>
+        failure(sql`
+          insert into email_tokens (token_hash, purpose, email, locale, request_data, next,
+            expires_at)
+          values (${hashToken(newToken())}, 'newsletter', ${email()}, 'en',
+            ${JSON.stringify(data)}::jsonb, ${next}, now())`)
+      for (const [data, name] of [
+        [{ ...signup, version: 'someone@example.org' }, 'an address as the version'],
+        [{ ...signup, name: 'Reader' }, 'another key'],
+        [{ version: signup.version, source: signup.source }, 'no time'],
+        [{ ...signup, requestedAt: 'yesterday' }, 'a time that is not ISO'],
+        [{ ...signup, source: 'account' }, 'another source'],
+        ['a string', 'not an object'],
+        [[signup], 'an array'],
+      ] as const) {
+        expect(await stored(data), name).toBe('23514')
+      }
+      expect(await stored(signup, '/en/'), 'next').toBe('23514')
+      expect(await stored(signup), 'the right shape').toBe('no error')
+    })
+
+    it('let two confirmations of one address end each other’s links without waiting (no deadlock)', async () => {
+      const address = email()
+      const input = { purpose: 'newsletter' as const, email: address, locale: 'en' as const }
+      const a = await createEmailToken(store, { ...input, requestData: signupData }, NOW)
+      const b = await createEmailToken(store, { ...input, requestData: signupData }, NOW)
+      const consumed: Array<() => void> = []
+      const bothConsumed = new Promise<void>((resolve) => {
+        let left = 2
+        consumed.push(() => (--left === 0 ? resolve() : undefined))
+      })
+      // Each holds its own link (consumed), then ends the address's others: without SKIP LOCKED
+      // each would wait for the other's row, and PostgreSQL would refuse one (40P01).
+      const confirm = (token: string) =>
+        db.transaction(async (tx) => {
+          const own = tx as unknown as MemberDb
+          expect(await consumeEmailToken(own, token, 'newsletter', NOW)).not.toBeNull()
+          consumed[0]!()
+          await bothConsumed
+          return deletePendingLinks(own, 'newsletter', address)
+        })
+      expect(await Promise.all([confirm(a.token), confirm(b.token)])).toEqual([0, 0])
+      expect(
+        await count(sql`select count(*)::int as n from email_tokens where email = ${address}`),
+      ).toBe(0)
     })
 
     it('refuse what a link never holds', async () => {
@@ -1214,6 +1367,75 @@ describe.skipIf(!ADMIN_URL)('member store on a scratch database', () => {
           select count(*)::int as n from data_requests
           where status = 'unconfirmed' and action_note is not null`),
       ).toBe(0)
+    })
+
+    it('of Glia Notes can be undone and redone, the constraints first (M2)', async () => {
+      const enumLabels = (type: string) =>
+        rows<{ label: string }>(sql`
+          select e.enumlabel as label from pg_enum e join pg_type t on t.oid = e.enumtypid
+          where t.typname = ${type} order by e.enumsortorder`).then((r) => r.map((x) => x.label))
+      const consentTable = () =>
+        count(sql`
+          select count(*)::int as n from information_schema.tables
+          where table_schema = 'public' and table_name = 'consent_log'`)
+      const checks = () =>
+        rows<{ conname: string }>(sql`
+          select conname from pg_constraint
+          where conname in ('consent_log_uuid_format_check', 'consent_log_version_check',
+            'consent_log_version_format_check', 'consent_log_source_check',
+            'consent_log_subscriber_id_check', 'consent_log_subscriber_check',
+            'email_tokens_newsletter_check')
+          order by conname`).then((r) => r.map((x) => x.conname))
+      expect(await checks()).toHaveLength(7)
+      expect(await consentTable()).toBe(1)
+
+      // Rows of the new values, which the old types cannot hold, go with the down; others stay.
+      const kept = email()
+      await createEmailToken(store, { purpose: 'sign-in', email: kept, locale: 'en' }, NOW)
+      await createEmailToken(
+        store,
+        {
+          purpose: 'newsletter',
+          email: email(),
+          locale: 'en',
+          requestData: {
+            version: '2026-09-27',
+            source: 'newsletter-form',
+            requestedAt: NOW.toISOString(),
+          },
+        },
+        NOW,
+      )
+      await db.execute(sql`
+        insert into deletion_log (target_collection, target_id, action, at)
+        values ('newsletter', 42, 'delete', now()), ('members', 43, 'delete', now())`)
+
+      await newsletterConstraints.down({ db } as never)
+      await newsletter.down({ db } as never)
+      expect(await checks()).toEqual([])
+      expect(await consentTable()).toBe(0)
+      expect(await enumLabels('enum_email_tokens_purpose')).toEqual([
+        'sign-in',
+        'verify-email',
+        'data-request',
+      ])
+      expect(await enumLabels('enum_deletion_log_target_collection')).toEqual([
+        'members',
+        'submissions',
+        'reports',
+      ])
+      expect(
+        await count(sql`select count(*)::int as n from email_tokens where email = ${kept}`),
+      ).toBe(1)
+      expect(
+        await count(sql`select count(*)::int as n from deletion_log where target_id = 43`),
+      ).toBe(1)
+
+      await newsletter.up({ db } as never)
+      await newsletterConstraints.up({ db } as never)
+      expect(await checks()).toHaveLength(7)
+      expect(await enumLabels('enum_email_tokens_purpose')).toContain('newsletter')
+      expect(await enumLabels('enum_deletion_log_target_collection')).toContain('newsletter')
     })
 
     it('can be undone and redone, the constraints first', async () => {

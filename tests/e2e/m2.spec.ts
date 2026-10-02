@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process'
+import { randomBytes } from 'node:crypto'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import type { IncomingHttpHeaders } from 'node:http'
 import { request as httpsRequest } from 'node:https'
@@ -14,6 +15,7 @@ import {
   test,
 } from '@playwright/test'
 
+import { NEWSLETTER_PATHS } from '../../src/lib/newsletter/paths'
 import {
   type IsDraft,
   PUBLIC_MARK,
@@ -28,6 +30,9 @@ import { isDisallowed, robotsRules } from '../../src/lib/seo/robots'
 import { siteStageSetting } from '../../src/lib/site-stage'
 import { NOT_STAGES, TEST_AUTH, adaptedFiles, testCaddies } from '../caddy/serve'
 import { TEXT_200, TEXT_SPACING, sidewaysScroll } from './layout'
+import { needsListmonk, subscribersWith } from './listmonk'
+import { emailHeaders, latestEmailTo } from './mailpit'
+import { needsMailpit } from './member'
 import { expectLayoutHolds, layoutProblems } from './pseudo-locale'
 
 // The M2 state (D41, D50) as visitors meet it: the production Caddyfile (tests/caddy/serve.ts) in
@@ -104,6 +109,12 @@ const PLAIN_NOT_FOUND = 'Not Found'
 const PAGES = publicPages()
   .filter((page) => page.kind === 'page')
   .map((page) => page.path)
+
+/**
+ * The Glia Notes signup, which the reduced header and the coming-soon page offer only while it is
+ * public: with the açık rıza metni, whose consent it records (src/lib/m2-links.ts, D50).
+ */
+const SIGNUP_PUBLIC = isPublicAddress(NEWSLETTER_PATHS.signup)
 
 /** Addresses that stay behind the password in the M2 state, of every kind. */
 const ALL_APPROVED: IsDraft = () => false
@@ -251,14 +262,21 @@ test.describe('the M2 state through Caddy, without the password', () => {
     await expect(
       page.locator('main').getByRole('link', { name: 'hello@gliagora.com' }),
     ).toHaveAttribute('href', 'mailto:hello@gliagora.com')
-    await expect(
-      page.locator('main').getByRole('link', { name: 'Get the monthly digest' }),
-    ).toHaveAttribute('href', '/en/newsletter/')
+    // Glia Notes, only while its signup is public.
+    const digest = page.locator('main').getByRole('link', { name: 'Get the monthly digest' })
+    if (SIGNUP_PUBLIC) {
+      await expect(digest).toHaveAttribute('href', NEWSLETTER_PATHS.signup)
+    } else {
+      await expect(digest).toHaveCount(0)
+      await expect(page.locator('main')).not.toContainText('Glia Notes')
+    }
     // No figures or lists of positions (the home page's), which stay private (D39).
     await expect(page.locator('main a[href^="/en/jobs/"]')).toHaveCount(0)
   })
 
-  test('on a phone, the menu holds About, Glia Notes and nothing private', async ({ page }) => {
+  test('on a phone, the menu holds About, Glia Notes while public, and nothing private', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 375, height: 700 })
     await page.goto('/en/')
     await expect(page.locator('html[data-js]')).toBeAttached()
@@ -267,18 +285,24 @@ test.describe('the M2 state through Caddy, without the password', () => {
     await button.click()
     const panel = page.locator('header .mobile-panel')
     await expect(panel.getByRole('link', { name: 'About' })).toBeFocused()
-    await expect(panel.getByRole('link', { name: 'Get the monthly digest' })).toBeVisible()
-    expect(await panel.locator('a').evaluateAll((links) => links.length)).toBe(2)
+    const digest = panel.getByRole('link', { name: 'Get the monthly digest' })
+    if (SIGNUP_PUBLIC) await expect(digest).toHaveAttribute('href', NEWSLETTER_PATHS.signup)
+    else await expect(digest).toHaveCount(0)
+    expect(await panel.locator('a').evaluateAll((links) => links.length)).toBe(
+      SIGNUP_PUBLIC ? 2 : 1,
+    )
     await expect(page.locator('main')).toHaveJSProperty('inert', true)
     await page.keyboard.press('Escape')
     await expect(panel).toBeHidden()
     await expect(button).toBeFocused()
-    // From 768px the menu gives way to the header's own Glia Notes button.
+    // From 768px the menu gives way to the header's own Glia Notes button (while it is public).
     await page.setViewportSize({ width: 800, height: 700 })
     await expect(button).toBeHidden()
-    await expect(
-      page.locator('header').getByRole('link', { name: 'Get the monthly digest' }),
-    ).toBeVisible()
+    const headerDigest = page
+      .locator('header')
+      .getByRole('link', { name: 'Get the monthly digest' })
+    if (SIGNUP_PUBLIC) await expect(headerDigest).toBeVisible()
+    else await expect(headerDigest).toHaveCount(0)
   })
 
   test('Ctrl+K and ⌘K stay the browser’s, with no search on the page', async ({ page }) => {
@@ -376,12 +400,116 @@ test.describe('robots.txt and the sitemaps in the M2 state', () => {
     for (const path of [
       '/en/jobs/',
       '/en/suggest/',
-      '/en/newsletter/',
+      NEWSLETTER_PATHS.checkInbox,
       '/en/legal/data-requests/sent/',
       '/en/?x=1',
     ]) {
       expect(isDisallowed(path, rules), path).toBe(true)
     }
+  })
+})
+
+test.describe('Glia Notes through Caddy, without the password', () => {
+  test.skip(!SIGNUP_PUBLIC, 'public once the açık rıza metni is approved (src/lib/public-pages.ts)')
+
+  /** What the one-click route answers a mail program (src/lib/newsletter/unsubscribe.ts). */
+  const ONE_CLICK_DONE =
+    'Unsubscribed from Glia Notes. If this address was on the list, it is deleted.'
+
+  /** The path and query of the site's own link in an email (the app names its own origin). */
+  function linkIn(text: string, pattern: RegExp): string {
+    const link = pattern.exec(text)?.[0]
+    expect(link, `${pattern}`).toBeTruthy()
+    const url = new URL(link!)
+    return `${url.pathname}${url.search}`
+  }
+
+  test('signs up, confirms and unsubscribes, also by a mail program’s one-click POST', async ({
+    page,
+    baseURL,
+  }) => {
+    needsMailpit()
+    needsListmonk()
+    const reduced = page.locator('header.site-header')
+    const heading = page.getByRole('heading', { level: 1 })
+    const form = await page.goto(NEWSLETTER_PATHS.signup)
+    expect(form?.status()).toBe(200)
+    await expect(reduced).toHaveClass(/\bsite-header-m2\b/)
+    const email = page.getByLabel('Your email address')
+    test.skip(
+      (await email.count()) === 0 && !process.env.CI,
+      'the M2 app needs listmonk’s and the mail server’s settings (LISTMONK_URL, LISTMONK_API_TOKEN, SMTP_HOST), as the app under test',
+    )
+    const address = `m2-nl-${randomBytes(6).toString('hex')}@example.org`
+    await email.fill(address)
+    await page.getByLabel('I agree to receive Glia Notes by email.').check()
+    await page.getByRole('button', { name: 'Get the monthly digest' }).click()
+    await page.waitForURL(`**${NEWSLETTER_PATHS.checkInbox}`)
+    await expect(heading).toHaveText('Check your inbox')
+    await expect(page.getByRole('main')).toContainText('We sent a confirmation link to m•••@')
+    await expect(reduced).toHaveClass(/\bsite-header-m2\b/)
+
+    // The emailed link, through Caddy: its page only reads, its button confirms.
+    const confirmation = await latestEmailTo(address)
+    await page.goto(
+      linkIn(
+        confirmation.text,
+        /https?:\/\/\S+\/en\/newsletter\/confirm\/\?token=[A-Za-z0-9_-]{43}/,
+      ),
+    )
+    await expect(heading).toHaveText('Confirm your subscription')
+    expect(await subscribersWith(address)).toEqual([])
+    await page.getByRole('button', { name: 'Confirm my subscription' }).click()
+    await page.waitForURL(`**${NEWSLETTER_PATHS.confirmed}`)
+    await expect(heading).toHaveText('You are subscribed')
+    await expect(reduced).toHaveClass(/\bsite-header-m2\b/)
+    const [subscriber] = await subscribersWith(address)
+    expect(subscriber?.lists).toEqual([
+      expect.objectContaining({ name: 'Glia Notes', subscription_status: 'confirmed' }),
+    ])
+
+    // The welcome email's unsubscribe page, and its one-click address, which a mail program posts
+    // from another site: no cookie, no Origin, no password.
+    const welcome = await latestEmailTo(address, { count: 2 })
+    const unsubscribePage = linkIn(
+      welcome.text,
+      /https?:\/\/\S+\/en\/newsletter\/unsubscribe\/\?id=[0-9]+&s=[0-9a-f-]{36}/,
+    )
+    await page.goto(unsubscribePage)
+    await expect(heading).toHaveText('Unsubscribe from Glia Notes')
+    await expect(reduced).toHaveClass(/\bsite-header-m2\b/)
+    const header = (await emailHeaders(welcome.id))['List-Unsubscribe']![0]!.trim()
+    const oneClick = new URL(header.slice(1, -1))
+    expect(oneClick.pathname).toBe(NEWSLETTER_PATHS.unsubscribeUse)
+    const mailProgram = await without(baseURL!)
+    const done = await mailProgram.post(`${oneClick.pathname}${oneClick.search}`, {
+      form: { 'List-Unsubscribe': 'One-Click' },
+      maxRedirects: 0,
+    })
+    // The route's own answer, which Caddy passes with the app's mark (then removed).
+    expect(done.status()).toBe(200)
+    expect(done.headers()['content-type']).toMatch(/^text\/plain/)
+    expect(await done.text()).toBe(ONE_CLICK_DONE)
+    expect(done.headers()[PUBLIC_MARK.name.toLowerCase()]).toBeUndefined()
+    expect(await subscribersWith(address)).toEqual([])
+    // An incomplete link: the route's 400, not Caddy's.
+    const incomplete = await mailProgram.post(
+      `${NEWSLETTER_PATHS.unsubscribeUse}?s=${oneClick.searchParams.get('s')}`,
+      { form: { 'List-Unsubscribe': 'One-Click' }, maxRedirects: 0 },
+    )
+    expect(incomplete.status()).toBe(400)
+    expect(await incomplete.text()).toBe('This unsubscribe link is incomplete.')
+    // A GET of a route leads to its page.
+    const get = await mailProgram.get(`${oneClick.pathname}${oneClick.search}`, { maxRedirects: 0 })
+    expect(get.status()).toBe(303)
+    expect(get.headers()['location']).toBe(unsubscribePage)
+    await mailProgram.dispose()
+
+    // The page's button, pressed afterwards: the same end, in the reduced shell.
+    await page.getByRole('button', { name: 'Unsubscribe' }).click()
+    await page.waitForURL(`**${NEWSLETTER_PATHS.unsubscribed}`)
+    await expect(heading).toHaveText('You are unsubscribed')
+    await expect(reduced).toHaveClass(/\bsite-header-m2\b/)
   })
 })
 
@@ -481,14 +609,17 @@ test.describe('a list of public addresses wider than the app’s (a rollback pas
   test('the app itself refuses a marked request for what it does not hold public', async () => {
     const app = await requests.newContext({ baseURL: process.env.M2_APP_URL })
     const mark = { [PUBLIC_MARK.name]: PUBLIC_MARK.value }
+    const routes = publicPages(ALL_APPROVED)
+      .filter((page) => page.kind === 'route')
+      .map((page) => page.path)
     for (const pathname of ['/en/jobs/', ...NOT_APPROVED.filter((one) => one.endsWith('/'))]) {
       const refused = await app.get(pathname, { headers: mark, maxRedirects: 0 })
       expect(refused.status(), pathname).toBe(404)
       expect(await refused.text(), pathname).toBe(PLAIN_NOT_FOUND)
-      // Without the mark (the password's handle), the full site's page (the route behind the
-      // data-request form's button leads a GET to its page).
+      // Without the mark (the password's handle), the full site's page (the routes behind the
+      // forms' buttons lead a GET to their pages).
       const status = (await app.get(pathname, { maxRedirects: 0 })).status()
-      expect(status, pathname).toBe(pathname.endsWith('/use/') ? 303 : 200)
+      expect(status, pathname).toBe(routes.includes(pathname) ? 303 : 200)
     }
     // A public page: its M2 version, with the mark on the answer for Caddy.
     const about = await app.get('/en/about/', { headers: mark, maxRedirects: 0 })
@@ -530,11 +661,12 @@ test.describe('the query of a public address', () => {
     await expect.poll(async () => (await entries()).length).toBe(PAGES.length * 2)
     for (const entry of await entries()) {
       // The query stays in the logged address only where it names no token (D49: the sign-in,
-      // account and data-request addresses lose theirs), never in the answer's headers.
+      // account and data-request addresses lose theirs, D50: the newsletter's), never in the
+      // answer's headers.
       const logged = JSON.stringify(entry.resp_headers ?? {})
       expect(logged, entry.request.uri).not.toContain('token=')
       expect(logged, entry.request.uri).not.toContain(secret)
-      if (entry.request.uri.startsWith('/en/legal/data-requests/')) {
+      if (/^\/en\/(?:legal\/data-requests|newsletter)\//.test(entry.request.uri)) {
         expect(entry.request.uri, entry.request.uri).toMatch(/\?\[removed\]$/)
       }
     }

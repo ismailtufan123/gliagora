@@ -2,12 +2,12 @@ import config from '@payload-config'
 import { cookies } from 'next/headers'
 import { getPayload } from 'payload'
 
-import { CONTENT_PAGES } from '@/lib/content'
 import { SESSION_COOKIE } from '@/lib/members/cookies'
 import { MEMBER_PATHS } from '@/lib/members/paths'
 import { rotateSession, unlinkProvider } from '@/lib/members/provider-sign-in'
 import { seeOther } from '@/lib/members/responses'
 import { handleSettings } from '@/lib/members/settings'
+import { GLIA_NOTES_CONSENT_VERSION } from '@/lib/newsletter/consent'
 import {
   findSession,
   memberDb,
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   const db = memberDb(payload)
   return handleSettings(request, {
     now,
-    consentVersion: CONTENT_PAGES.acikRiza.updated,
+    consentVersion: GLIA_NOTES_CONSENT_VERSION,
     session: async () => {
       if (!token) return null
       const session = await findSession(db, token, now)

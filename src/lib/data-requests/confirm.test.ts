@@ -136,6 +136,7 @@ describe('pendingRequest', () => {
     locale: 'en',
     requestData: { kind: 'access', name: 'Ada', details: 'A copy, please.' },
     expiresAt: new Date(),
+    createdAt: new Date(),
     ...overrides,
   })
 

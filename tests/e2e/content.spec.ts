@@ -62,7 +62,15 @@ test.describe('content pages', () => {
     expect(xml).toContain('<loc>https://gliagora.com/en/</loc>')
     expect(xml).toContain('<loc>https://gliagora.com/en/about/</loc>')
     expect(xml).toContain('<loc>https://gliagora.com/en/suggest/</loc>')
-    for (const path of [...DRAFTS, '/en/events/', '/en/gone/', '/en/suggest/sent/']) {
+    expect(xml).toContain('<loc>https://gliagora.com/en/newsletter/</loc>')
+    for (const path of [
+      ...DRAFTS,
+      '/en/events/',
+      '/en/gone/',
+      '/en/suggest/sent/',
+      '/en/newsletter/check-your-inbox/',
+      '/en/newsletter/confirmed/',
+    ]) {
       expect(xml).not.toContain(`<loc>https://gliagora.com${path}</loc>`)
     }
   })

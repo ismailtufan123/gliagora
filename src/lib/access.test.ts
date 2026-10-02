@@ -80,7 +80,15 @@ describe('access rules (PLAN §18.2)', () => {
 
 describe('member accounts (M4b, D49)', () => {
   const bySlug = (slug: string) => COLLECTIONS.find((c) => c.slug === slug)!
-  const HIDDEN = ['members', 'member-sessions', 'email-tokens', 'saved-items', 'deletion-log']
+  // The consent log of Glia Notes (M2, D50) too.
+  const HIDDEN = [
+    'members',
+    'member-sessions',
+    'email-tokens',
+    'saved-items',
+    'deletion-log',
+    'consent-log',
+  ]
 
   it('are never Payload accounts: the editors (users) are the only collection with auth', () => {
     expect(COLLECTIONS.filter((c) => c.auth).map((c) => c.slug)).toEqual(['users'])
@@ -214,11 +222,28 @@ describe('deploy/Caddyfile', () => {
           '/en/legal/data-requests/confirm/?token=SECRET',
           '/en/legal/data-requests/confirm/?[removed]',
         ],
+        // Glia Notes (M2, D50): the confirmation link's token, a subscriber's UUID in the
+        // unsubscribe links, and the outcomes.
+        ['/en/newsletter/confirm/?token=SECRET', '/en/newsletter/confirm/?[removed]'],
+        [
+          '/en/newsletter/unsubscribe/?id=7&s=0b2c6f8e-3f0a-4c1e-9d55-6f1d2a7b8c9d',
+          '/en/newsletter/unsubscribe/?[removed]',
+        ],
+        [
+          '/en/newsletter/unsubscribe/use/?id=7&s=0b2c6f8e-3f0a-4c1e-9d55-6f1d2a7b8c9d',
+          '/en/newsletter/unsubscribe/use/?[removed]',
+        ],
+        [
+          '/en/newsletter/check-your-inbox/?error=wait',
+          '/en/newsletter/check-your-inbox/?[removed]',
+        ],
+        ['/en/newsletter?utm_source=x', '/en/newsletter?[removed]'],
         // Other addresses keep their queries: filters, searches.
         ['/en/jobs/?type=phd', '/en/jobs/?type=phd'],
         ['/en/search/?q=glia', '/en/search/?q=glia'],
         ['/en/sign-in-help/?x=1', '/en/sign-in-help/?x=1'],
         ['/en/accounting/?x=1', '/en/accounting/?x=1'],
+        ['/en/newsletters/?x=1', '/en/newsletters/?x=1'],
         ['/en/sign-in/', '/en/sign-in/'],
       ]) {
         expect(filter(uri!), `${name} log: ${uri}`).toBe(logged)
@@ -280,7 +305,14 @@ describe('the production server’s files', () => {
     expect(compose).toContain('ORCID_ISSUER: ${ORCID_ISSUER:-https://orcid.org}')
   })
 
-  it('carry every column of the deletion log and the data requests over a restore', () => {
+  it('give the app listmonk inside the stack and its API token (Glia Notes, M2)', () => {
+    const compose = readFileSync(new URL('../../deploy/compose.prod.yml', import.meta.url), 'utf8')
+    const app = compose.slice(compose.indexOf('\n  app:'), compose.indexOf('\n  db:'))
+    expect(app).toContain('LISTMONK_URL: http://listmonk:9000')
+    expect(app).toContain('LISTMONK_API_TOKEN: ${LISTMONK_API_TOKEN:-}')
+  })
+
+  it('carry every column of the deletion log, the data requests and the consent log over a restore', () => {
     // deploy/backup/restore.sh copies these rows by named columns (D49): a column it does not
     // name would be lost from every carried row. Compared with the newest migration's snapshot of
     // the tables, which `pnpm migrate:create` writes with each migration.
@@ -293,7 +325,7 @@ describe('the production server’s files', () => {
     const snapshot = JSON.parse(readFileSync(new URL(newest, folder), 'utf8')) as {
       tables: Record<string, { columns: Record<string, unknown> }>
     }
-    for (const table of ['deletion_log', 'data_requests']) {
+    for (const table of ['deletion_log', 'data_requests', 'consent_log']) {
       const listed = new RegExp(`^CARRY_COLUMNS_${table}='([^']+)'$`, 'm').exec(restore)?.[1]
       expect(listed, `CARRY_COLUMNS_${table} in restore.sh`).toBeDefined()
       expect(listed!.split(', ').sort(), table).toEqual(
@@ -308,6 +340,7 @@ describe('the production server’s files', () => {
       'reports',
       'data_requests',
       'deletion_log',
+      'consent_log',
     ])
   })
 })

@@ -12,11 +12,13 @@ import { OUTCOME_ID } from '@/lib/members/paths'
 // the page shows a member who is signed in, so an expired link left that sign-in as it was (and
 // there is no form to ask for a new link). `failed`: the page's own words for `error=failed`, which
 // say what did not happen (`deleteFailed`: "Your account was not deleted"; `requestFailed`, on the
-// page a data request's link opens: "Your request was not confirmed"), with or without the
-// reference.
+// page a data request's link opens: "Your request was not confirmed"; on the pages of Glia Notes,
+// M2: "Your subscription is not complete", "You are not unsubscribed yet", "We could not send the
+// link again"), with or without the reference.
 
 /** Messages under `outcome.error` (and their `…Reference` forms) a page can use for `failed`. */
-export type FailedText = 'deleteFailed' | 'requestFailed'
+export type FailedText =
+  'deleteFailed' | 'requestFailed' | 'subscribeFailed' | 'unsubscribeFailed' | 'resendFailed'
 
 export async function OutcomeMessage({
   outcome,

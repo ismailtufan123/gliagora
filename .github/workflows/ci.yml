@@ -194,10 +194,13 @@ jobs:
           # Nor are there Save buttons on the jobs list.
           jobs="$(curl -fsS http://localhost:3000/en/jobs/)"
           if grep -qF 'save-button' <<<"$jobs"; then echo 'Save buttons without sign-in'; exit 1; fi
+          # The Glia Notes signup (M2) stays off without listmonk and a mail server.
+          contains http://localhost:3000/en/newsletter/ 'Signing up for Glia Notes is not open yet.'
           logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email off, google off, orcid off' <<<"$logs"
           grep -qF 'Email cap of the forms: 50 an hour, 200 a day (default)' <<<"$logs"
           # The site's stage defaults to private: the full site, behind Caddy's password (D50).
           grep -qF 'Site stage: private' <<<"$logs"
+          grep -qF 'Glia Notes: signup off (no listmonk settings), unsubscribe off' <<<"$logs"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/)" = 308
           test "$(docker exec app id -u)" != 0
           docker exec db psql -U gliagora -d gliagora -tAc 'select name from payload_migrations'
@@ -250,9 +253,10 @@ jobs:
       # database made by the server's own script in the running database, the install as a one-off
       # with its admin's password on stdin (the same command as prepare.sh's), the settings as
       # prepare.sh's own psql input (the API user with the run's token, the mail server Mailpit),
-      # then the service with the server's hardening, on this machine's loopback. The app gets its address and token (for the
-      # newsletter signup), and a higher cap on the forms' emails than the default 50 an hour, which
-      # a whole run of the end-to-end tests would come close to.
+      # then the service with the server's hardening, on this machine's loopback. The app gets its
+      # address and token (the Glia Notes signup and unsubscribe, whose start line must say they
+      # are on), and a higher cap on the forms' emails than the default 50 an hour, which a whole
+      # run of the end-to-end tests would come close to.
       - name: Re-create the app with the test settings
         if: needs.tested.outputs.run == ''
         run: |
@@ -304,8 +308,11 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' -H @<(auth) http://127.0.0.1:9000/api/settings)" = 403
           logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email on, google on, orcid on' <<<"$logs"
           grep -qF 'Email cap of the forms: 1000 an hour, 5000 a day' <<<"$logs"
+          grep -qF 'Glia Notes: signup on, unsubscribe on' <<<"$logs"
       # The M2 state (D41, D50), switched on in a second container of the same image beside the app
-      # under test: SITE_STAGE=m2 on port 3001, production-like (no test settings). The end-to-end
+      # under test: SITE_STAGE=m2 on port 3001, production-like (no test sign-in providers), with
+      # the app's mail server, listmonk and cap on the forms' emails (they share the database), so
+      # that Glia Notes can be signed up for through Caddy once its text is approved. The end-to-end
       # step puts Caddy, the production Caddyfile, in front of each (tests/caddy/serve.ts): the M2
       # state's public pages open without the password and everything else asks for it, and the
       # private stage asks for it everywhere but /health/ (tests/e2e/m2.spec.ts, project m2); a
@@ -322,6 +329,9 @@ jobs:
             -e DATABASE_URL=postgres://gliagora:smoke-test-only@127.0.0.1:5432/gliagora \
             -e PAYLOAD_SECRET="$APP_PAYLOAD_SECRET" \
             -e ALTCHA_HMAC_KEY="$APP_ALTCHA_HMAC_KEY" \
+            -e SMTP_HOST=127.0.0.1 -e SMTP_PORT=1025 \
+            -e LISTMONK_URL=http://127.0.0.1:9000 -e LISTMONK_API_TOKEN="$APP_LISTMONK_API_TOKEN" \
+            -e EMAIL_CAP_HOUR=1000 -e EMAIL_CAP_DAY=5000 \
             gliagora:ci
           caddy_image=$(grep -oE 'caddy:[0-9][^[:space:]]+' deploy/compose.prod.yml | head -n 1)
           test -n "$caddy_image"
@@ -333,6 +343,7 @@ jobs:
           for i in $(seq 1 60); do curl -fsS http://localhost:3001/health/ && break; sleep 2; done
           echo
           logs="$(docker logs app-m2 2>&1)"; grep -qF 'Site stage: m2' <<<"$logs"
+          grep -qF 'Glia Notes: signup on, unsubscribe on' <<<"$logs"
       # Tests against a real PostgreSQL (pnpm test:db), on scratch databases dropped afterwards:
       # search (src/lib/search/search.db.test.ts, owned by a throwaway role that is not a superuser,
       # as on the server) and the scheduled tasks (tests/integration/, M4.7, on a migrated scratch
@@ -360,6 +371,9 @@ jobs:
           # The M2 state through Caddy (the step above; Playwright starts the two Caddies).
           CADDY_BIN: ${{ runner.temp }}/caddy
           M2_APP_URL: http://127.0.0.1:3001
+          # The tests read what listmonk holds after a signup or an unsubscribe (Glia Notes, M2).
+          LISTMONK_URL: http://127.0.0.1:9000
+          LISTMONK_API_TOKEN: ${{ env.APP_LISTMONK_API_TOKEN }}
 
       # Records that this tree passed every check and test, for the push to main that merges it
       # (job `tested`). Only a pull request run that got this far uploads it. A failure here only

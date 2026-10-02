@@ -509,9 +509,10 @@ describe('backup/restore.sh', () => {
     const removed = docker.match(/^docker rm -f -v (\S+)$/gm) ?? []
     expect(started).toHaveLength(2)
     expect(removed).toHaveLength(2)
-    // listmonk's check reads its own migration record; only the app's database carries rows.
+    // listmonk's check reads its own migration record; only the app's database carries rows (one
+    // question for each carried table: the deletion log, the data requests, the consent log).
     expect(docker).toContain("select count(*) from settings where key = 'migrations'")
-    expect(docker.match(/to_regclass/g)).toHaveLength(2)
+    expect(docker.match(/to_regclass/g)).toHaveLength(3)
   })
 
   it('tests the others when one fails, and fails naming it', () => {

@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { Candidates } from './Candidates'
+import { ConsentLog } from './ConsentLog'
 import { Countries } from './Countries'
 import { CountrySets } from './CountrySets'
 import { DataRequests } from './DataRequests'
@@ -19,7 +20,8 @@ import { Terms } from './Terms'
 import { Users } from './Users'
 
 // Every collection of payload.config.ts, in the order of the admin menu: the daily work first
-// (PLAN §6.5). FormLimits, the member collections and the deletion log are hidden (M4b, D49).
+// (PLAN §6.5). FormLimits, the member collections and the deletion log are hidden (M4b, D49), and
+// so is the consent log of Glia Notes (M2, D50).
 export const COLLECTIONS: CollectionConfig[] = [
   Users,
   Candidates,
@@ -38,4 +40,5 @@ export const COLLECTIONS: CollectionConfig[] = [
   EmailTokens,
   SavedItems,
   DeletionLog,
+  ConsentLog,
 ]

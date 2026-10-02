@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { CONTENT_PAGES, type ContentKey } from './content'
 import { DATA_REQUEST_PATHS } from './data-requests/paths'
 import { DATA_REQUEST_LEGAL_LINKS } from './forms/data-request'
-import { linkInStage, m2Links } from './m2-links'
+import { linkInStage, m2Links, m2SignupLink } from './m2-links'
 import { renderContentFile, renderMarkdown } from './markdown'
+import { NEWSLETTER_LEGAL_LINKS, NEWSLETTER_PATHS } from './newsletter/paths'
 import { type IsDraft, isPublicAddress, publicPages } from './public-pages'
 
 // The links of the M2 versions of the content pages (D41, D50): only to public pages, with email
@@ -48,9 +49,11 @@ describe('m2Links', () => {
   it('keeps links to public pages, and the text alone of links to the others', () => {
     const link = m2Links(ONLY_ABOUT)
     expect(link('/en/about/')).toBe('/en/about/')
-    expect(link('/en/newsletter/')).toBe('/en/newsletter/')
     expect(link('/en/')).toBe('/en/')
+    // Glia Notes opens with the açık rıza metni (src/lib/public-pages.ts).
+    expect(m2Links(approved('acikRiza'))('/en/newsletter/')).toBe('/en/newsletter/')
     for (const href of [
+      '/en/newsletter/',
       '/en/contact/',
       '/en/legal/privacy/#data-requests',
       '/en/jobs/',
@@ -158,6 +161,61 @@ describe('linkInStage: the links of the data-request pages’ own components', (
       ALL_APPROVED,
     ]) {
       expect(publicPages(draft).some((page) => page.path === DATA_REQUEST_PATHS.page)).toBe(true)
+      for (const href of fixed) {
+        const to = linkInStage(href, 'm2', draft)
+        if (to !== null) expect(allowedOnM2(to, draft), href).toBe(true)
+      }
+    }
+  })
+})
+
+describe('the Glia Notes links of the M2 state', () => {
+  it('offer the signup (header, phone menu, coming-soon page) only while it is public', () => {
+    // It records consent to the açık rıza metni, so it opens with that text (D50).
+    expect(m2SignupLink(ONLY_ABOUT)).toBeNull()
+    expect(m2SignupLink(approved('privacy', 'kvkk'))).toBeNull()
+    expect(m2SignupLink(approved('acikRiza'))).toBe(NEWSLETTER_PATHS.signup)
+    expect(m2SignupLink(ALL_APPROVED)).toBe(NEWSLETTER_PATHS.signup)
+    // Today's approvals.
+    expect(m2SignupLink(NOW)).toBe(CONTENT_PAGES.acikRiza.draft ? null : NEWSLETTER_PATHS.signup)
+    expect(m2SignupLink()).toBe(m2SignupLink(NOW))
+  })
+
+  it('keep the words alone of the form’s links to texts that are not public', () => {
+    // The signup can be public before the privacy policy and the KVKK notice are (each on its own).
+    const draft = approved('acikRiza')
+    expect(linkInStage(NEWSLETTER_LEGAL_LINKS.consent, 'm2', draft)).toBe(
+      NEWSLETTER_LEGAL_LINKS.consent,
+    )
+    for (const href of [
+      NEWSLETTER_LEGAL_LINKS.privacy,
+      NEWSLETTER_LEGAL_LINKS.kvkk,
+      NEWSLETTER_LEGAL_LINKS.spamProtection,
+    ]) {
+      expect(linkInStage(href, 'm2', draft), href).toBeNull()
+      expect(linkInStage(href, 'm2', approved('acikRiza', 'privacy', 'kvkk')), href).toBe(href)
+      expect(linkInStage(href, 'private', draft), href).toBe(href)
+    }
+  })
+
+  it('lead only to public pages wherever the page holding them is public', () => {
+    // The signup and the pages after it link to these (NewsletterSignup, the pages under
+    // src/app/(frontend)/en/newsletter/), and to email.
+    const fixed = [
+      ...Object.values(NEWSLETTER_LEGAL_LINKS),
+      ...Object.values(NEWSLETTER_PATHS),
+      '/en/',
+      '/en/about/',
+    ]
+    for (const draft of [
+      approved('acikRiza'),
+      approved('acikRiza', 'privacy'),
+      approved('acikRiza', 'kvkk'),
+      ALL_APPROVED,
+    ]) {
+      for (const path of Object.values(NEWSLETTER_PATHS)) {
+        expect(isPublicAddress(path, draft), path).toBe(true)
+      }
       for (const href of fixed) {
         const to = linkInStage(href, 'm2', draft)
         if (to !== null) expect(allowedOnM2(to, draft), href).toBe(true)

@@ -1,9 +1,11 @@
 // The site-wide cap on the emails the public forms send (D49; M2, D50): the sign-in links, the
-// links to add an address and the data-request confirmations count against it together, and
-// reaching it makes those forms say "temporarily unavailable". It protects the mailbox's sending
-// limit and its reputation, so the server sets it from that limit (EMAIL_CAP_HOUR and
-// EMAIL_CAP_DAY, deploy/.env.example), leaving room for what does not count here: the scheduled
-// emails and the issues of Glia Notes. Read at request time: the image is built without the
+// links to add an address, the data-request confirmations and the Glia Notes confirmation links
+// (the form and "Send it again") count against it together, and reaching it makes those forms say
+// "temporarily unavailable". It protects the mailbox's sending limit and its reputation, so the
+// server sets it from that limit (EMAIL_CAP_HOUR and EMAIL_CAP_DAY, deploy/.env.example), leaving
+// room for what does not count here: the scheduled emails, the issues of Glia Notes, and its
+// welcome emails (one per confirmed signup, sent while the person waits; in a rush of signups
+// about as many as the signups' links). Read at request time: the image is built without the
 // server's settings.
 
 type Env = Record<string, string | undefined>

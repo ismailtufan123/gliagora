@@ -5,6 +5,7 @@ import { purgeAt } from '@/lib/review/status'
 
 import {
   ACK_WINDOW_DAYS,
+  CONSENT_LOG_YEARS,
   DATA_REQUEST_ANSWER_DAYS,
   DATA_REQUEST_LINK_HOURS,
   DATA_REQUEST_RETENTION_YEARS,
@@ -15,6 +16,8 @@ import {
   MAX_PREFERRED_SUBFIELDS,
   MAX_SAVED_ITEMS,
   MAX_SESSIONS,
+  NEWSLETTER_COOKIE_MINUTES,
+  NEWSLETTER_LINK_DAYS,
   OFFLINE_RECORD_MONTHS,
   SESSION_DAYS,
   SIGN_IN_COOKIE_MINUTES,
@@ -27,6 +30,7 @@ import {
   REQUEST_EMAIL_WINDOW_DAYS,
   ackCutoff,
   addMonthsUtc,
+  consentLogCutoff,
   deletionDueAt,
   deletionLogCutoff,
   formLimitCutoff,
@@ -97,6 +101,24 @@ describe('the periods D34 and the privacy texts set', () => {
     })
     // The deletion log must outlive the backups that can hold deleted data (6 months).
     expect(DELETION_LOG_MONTHS).toBeGreaterThan(6)
+  })
+
+  it('are those of D50 for Glia Notes: 7 days to confirm, consent records 3 years', () => {
+    expect({ NEWSLETTER_LINK_DAYS, NEWSLETTER_COOKIE_MINUTES, CONSENT_LOG_YEARS }).toEqual({
+      NEWSLETTER_LINK_DAYS: 7,
+      NEWSLETTER_COOKIE_MINUTES: 60,
+      CONSENT_LOG_YEARS: 3,
+    })
+  })
+})
+
+describe('consentLogCutoff', () => {
+  it('is 3 calendar years back, never shorter', () => {
+    expect(consentLogCutoff(NOW)).toEqual(new Date('2023-10-15T04:15:00.000Z'))
+    // 29 February counts back to the last day of February.
+    expect(consentLogCutoff(new Date('2028-02-29T04:15:00.000Z'))).toEqual(
+      new Date('2025-02-28T04:15:00.000Z'),
+    )
   })
 })
 

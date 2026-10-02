@@ -4,15 +4,18 @@ import type { SQL } from '@payloadcms/db-postgres/drizzle'
 import type { Payload } from 'payload'
 import { z } from 'zod'
 
+import { EMAIL_TOKEN_PURPOSES, type EmailTokenPurpose } from '@/collections/members/EmailTokens'
 import { errorCode } from '@/lib/errors'
 import { DETAILS_MAX, NAME_MAX } from '@/lib/forms/fields'
 import type { DeadlineKind } from '@/lib/jobs/deadline'
 import type { JobStatus } from '@/lib/jobs/status'
+import { pendingSignupSchema } from '@/lib/newsletter/consent'
 import {
   DATA_REQUEST_LINK_HOURS,
   MAX_PREFERRED_SUBFIELDS,
   MAX_SAVED_ITEMS,
   MAX_SESSIONS,
+  NEWSLETTER_LINK_DAYS,
   SESSION_DAYS,
   SIGN_IN_LINK_MINUTES,
   VERIFY_LINK_HOURS,
@@ -68,7 +71,7 @@ export const isUniqueViolation = (error: unknown) =>
   error instanceof MemberStoreError && error.code === '23505'
 
 /** The constraint named by a database error (Drizzle wraps the driver's error as its cause). */
-function constraintOf(error: unknown): string | undefined {
+export function constraintOf(error: unknown): string | undefined {
   let current = error
   for (let depth = 0; depth < 3 && current && typeof current === 'object'; depth++) {
     const constraint = (current as { constraint?: unknown }).constraint
@@ -551,13 +554,14 @@ export function endAllSessions(db: MemberDb, memberId: number): Promise<number> 
 // ---------------------------------------------------------------------------------------------
 // Email links
 
-export type EmailTokenPurpose = 'sign-in' | 'verify-email' | 'data-request'
+export type { EmailTokenPurpose }
 
 /** How long each kind of link works. */
 export const TOKEN_LIFETIME_MS: Record<EmailTokenPurpose, number> = {
   'sign-in': SIGN_IN_LINK_MINUTES * MINUTE_MS,
   'verify-email': VERIFY_LINK_HOURS * HOUR_MS,
   'data-request': DATA_REQUEST_LINK_HOURS * HOUR_MS,
+  newsletter: NEWSLETTER_LINK_DAYS * DAY_MS,
 }
 
 export type NewEmailToken = {
@@ -573,7 +577,11 @@ export type NewEmailToken = {
   next?: string | null
   save?: string | null
   locale: 'en' | 'tr'
-  /** `data-request`: what the form said, kept until the person confirms it. */
+  /**
+   * `data-request`: what the form said, kept until the person confirms it. `newsletter` (required):
+   * the consent text's version, the form and when it was sent (`pendingSignupSchema`,
+   * src/lib/newsletter/consent.ts).
+   */
   requestData?: Record<string, unknown> | null
 }
 
@@ -588,6 +596,8 @@ export type EmailTokenRecord = {
   locale: 'en' | 'tr'
   requestData: Record<string, unknown> | null
   expiresAt: Date
+  /** When the link was made (for a signup, the form's time is in `requestData`). */
+  createdAt: Date
 }
 
 type TokenRow = {
@@ -601,10 +611,11 @@ type TokenRow = {
   locale: 'en' | 'tr'
   request_data: unknown
   expires_at: unknown
+  created_at: unknown
 }
 
 const TOKEN_COLUMNS = sql.raw(
-  'purpose, email, member_id, browser_hash, request_id, next, save, locale, request_data, expires_at',
+  'purpose, email, member_id, browser_hash, request_id, next, save, locale, request_data, expires_at, created_at',
 )
 
 const toTokenRecord = (row: TokenRow): EmailTokenRecord => ({
@@ -621,6 +632,7 @@ const toTokenRecord = (row: TokenRow): EmailTokenRecord => ({
       ? (row.request_data as Record<string, unknown>)
       : null,
   expiresAt: toDate(row.expires_at) as Date,
+  createdAt: toDate(row.created_at) as Date,
 })
 
 /**
@@ -632,7 +644,7 @@ const REQUEST_DATA_MAX = 2 * (DETAILS_MAX + NAME_MAX) + 200
 
 const newTokenInput = z
   .object({
-    purpose: z.enum(['sign-in', 'verify-email', 'data-request']),
+    purpose: z.enum(EMAIL_TOKEN_PURPOSES),
     email: storedEmail,
     memberId: id.optional(),
     browserHash: z.string().regex(TOKEN_HASH_PATTERN).optional(),
@@ -653,6 +665,17 @@ const newTokenInput = z
   // requesting browser's binding; nothing else carries either.
   .refine((value) => (value.purpose === 'verify-email') === (value.memberId !== undefined))
   .refine((value) => value.browserHash === undefined || value.purpose === 'sign-in')
+  // A signup's link holds the address, the locale and what its consent record needs (the version,
+  // the form and the form's time), nothing else (the database checks the same,
+  // 20261002_190000_newsletter_constraints).
+  .refine(
+    (value) =>
+      value.purpose !== 'newsletter' ||
+      (pendingSignupSchema.safeParse(value.requestData).success &&
+        value.requestId === undefined &&
+        !value.next &&
+        !value.save),
+  )
 
 /** Stores a new email link and returns its token, for the email only. */
 export function createEmailToken(
@@ -732,16 +755,34 @@ export function deleteEmailToken(db: MemberDb, token: string): Promise<void> {
   })
 }
 
-/** After a sign-in by link: the address's other pending sign-in links stop working. */
-export function deleteSignInTokens(db: MemberDb, email: string): Promise<number> {
+/**
+ * Deletes the address's pending links of one purpose: after a sign-in by link, its other sign-in
+ * links; after a confirmed Glia Notes signup or an unsubscribe, its signup links. Returns how many.
+ * A link another transaction holds is left alone rather than waited for (`SKIP LOCKED`): that
+ * transaction is using or deleting it, and two confirmations of one address, each holding its own
+ * link, would otherwise wait for each other (a deadlock, one of them refused). If that other
+ * transaction is rolled back, its link stays until it expires or is used.
+ */
+export function deletePendingLinks(
+  db: MemberDb,
+  purpose: EmailTokenPurpose,
+  email: string,
+): Promise<number> {
   return guarded(async () => {
     const { rows } = await db.execute<{ id: number }>(sql`
-      DELETE FROM email_tokens
-      WHERE purpose = 'sign-in' AND email = ${checked(storedEmail, email, 'email')}
+      DELETE FROM email_tokens WHERE id IN (
+        SELECT id FROM email_tokens
+        WHERE purpose = ${checked(z.enum(EMAIL_TOKEN_PURPOSES), purpose, 'purpose')}
+          AND email = ${checked(storedEmail, email, 'email')}
+        FOR UPDATE SKIP LOCKED)
       RETURNING id`)
     return rows.length
   })
 }
+
+/** After a sign-in by link: the address's other pending sign-in links stop working. */
+export const deleteSignInTokens = (db: MemberDb, email: string) =>
+  deletePendingLinks(db, 'sign-in', email)
 
 // ---------------------------------------------------------------------------------------------
 // Saved items

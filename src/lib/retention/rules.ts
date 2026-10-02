@@ -81,6 +81,28 @@ export const MAX_SAVED_ITEMS = 500
 export const MAX_SESSIONS = 20
 export const MAX_PREFERRED_SUBFIELDS = 12
 
+// Glia Notes (M2, D50; PLAN §13, §18.1). The signup's link is in src/lib/newsletter/ and the
+// members' store (`email_tokens`); the consent records are deleted by the retention task.
+
+/**
+ * A link that confirms a Glia Notes signup works this long, once. Until then the signup is only
+ * that link's row (address, locale, consent version), which `purgeMemberAuth` deletes within the
+ * hour after it expired: unconfirmed addresses are gone after 7 days (PLAN §13).
+ */
+export const NEWSLETTER_LINK_DAYS = 7
+/**
+ * The sealed cookie after the newsletter form (the address the link went to, for "Check your
+ * inbox" and "Send it again") lasts this long from the form; "Send it again" never extends it.
+ */
+export const NEWSLETTER_COOKIE_MINUTES = 60
+/**
+ * Consent records are kept this long after the subscription ended (its newest record, an
+ * unsubscribe: through the site, or noted when listmonk no longer had the subscriber), a record
+ * without a subscriber (unlinked by an erasure) this long after its own time (PLAN §18.1, `[U]`
+ * for the lawyer).
+ */
+export const CONSENT_LOG_YEARS = 3
+
 /** Form-limit rows created before this instant are deleted. */
 export function formLimitCutoff(now: Instant): Date {
   return new Date(toMs(now) - FORM_LIMIT_MAX_AGE_HOURS * HOUR_MS)
@@ -246,4 +268,13 @@ export function deletionLogCutoff(now: Instant): Date {
 /** Data requests received before this instant get no final email any more (7 days). */
 export function requestEmailCutoff(now: Instant): Date {
   return new Date(toMs(now) - REQUEST_EMAIL_WINDOW_DAYS * DAY_MS)
+}
+
+/**
+ * Consent records of a subscription that ended (its newest record is an unsubscribe) at or before
+ * this instant are deleted, and records without a subscriber written at or before it (3 calendar
+ * years).
+ */
+export function consentLogCutoff(now: Instant): Date {
+  return monthsBeforeUtc(now, CONSENT_LOG_YEARS * 12)
 }

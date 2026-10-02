@@ -26,6 +26,26 @@ export const PAGES = [
   { path: '/en/legal/data-requests/confirm/?token=expired', name: 'data request link (expired)' },
   { path: '/en/legal/data-requests/done/', name: 'data deleted' },
   { path: '/en/legal/data-requests/received/', name: 'data request confirmed' },
+  // The Glia Notes signup (M2, D50), where the app has listmonk and can send email (as in CI);
+  // without it the page says signing up is not open yet. The pages after it: "Check your inbox"
+  // without its cookie (the general text), an unknown link (expired), the page after confirming,
+  // the unsubscribe page for an ID and UUID (opening it asks listmonk nothing, so any will do) and
+  // for an incomplete link (no button), and the page after unsubscribing. With the cookie or a live
+  // link they need a flow of their own (newsletter.spec.ts checks those states for reflow and in
+  // the pseudo-locale).
+  { path: '/en/newsletter/', name: 'newsletter signup' },
+  { path: '/en/newsletter/check-your-inbox/', name: 'newsletter: check your inbox' },
+  { path: '/en/newsletter/confirm/?token=expired', name: 'newsletter link (expired)' },
+  { path: '/en/newsletter/confirmed/', name: 'newsletter: subscribed' },
+  {
+    path: '/en/newsletter/unsubscribe/?id=7&s=0b2c6f8e-3f0a-4c1e-9d55-6f1d2a7b8c9d',
+    name: 'newsletter: unsubscribe',
+  },
+  {
+    path: '/en/newsletter/unsubscribe/?s=not-a-uuid',
+    name: 'newsletter: unsubscribe (incomplete link)',
+  },
+  { path: '/en/newsletter/unsubscribed/', name: 'newsletter: unsubscribed' },
   { path: '/en/events/', name: 'placeholder (window)' },
   { path: '/en/suggest/', name: 'suggest a listing' },
   { path: '/en/suggest/sent/', name: 'suggestion sent' },
