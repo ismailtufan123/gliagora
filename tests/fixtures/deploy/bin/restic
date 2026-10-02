@@ -10,6 +10,7 @@
 # Without it, FAKE_SNAPSHOTS names the databases that have one nightly snapshot (separated by
 # spaces); each one's ID is a hex digit repeated 64 times: a for gliagora, b for listmonk, c for
 # any other. `backup --stdin` reads the dump and answers with a snapshot ID.
+# FAKE_RESTIC_SNAPSHOTS_EXIT: `snapshots` fails with that exit code.
 set -euo pipefail
 printf 'restic %s\n' "$*" >>"$FAKE_LOG/restic.log"
 id_of() {
@@ -39,6 +40,7 @@ json() {
 case "${1:-}" in
   cat) exit 0 ;;
   snapshots)
+    [[ -z "${FAKE_RESTIC_SNAPSHOTS_EXIT:-}" ]] || exit "$FAKE_RESTIC_SNAPSHOTS_EXIT"
     shift
     tag='' json=false target=''
     while [[ $# -gt 0 ]]; do

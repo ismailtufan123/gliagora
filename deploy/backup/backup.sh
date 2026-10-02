@@ -14,8 +14,11 @@
 #      (members' sessions and email links, D49), in listmonk's its admin sessions; the tables
 #      themselves are dumped, so a restore starts with empty form limits, signs everyone out and
 #      revives no email link. A database the server has but DATABASES does not name fails the run
-#      (after the others are stored), so none is ever left out by mistake; one that DATABASES names
-#      but the server does not have yet (listmonk before its first start) is skipped.
+#      (after the others are stored), so none is ever left out by mistake. One that DATABASES names
+#      but the server does not have is skipped only while it has never been backed up (listmonk
+#      before its first start) or before a restore (tag pre-restore: there is nothing of it to
+#      keep, and the restore is how it comes back); otherwise it fails the run too (after the
+#      others are stored): a lost database must not go unnoticed while its old snapshots age.
 #   2. Adds the files needed to rebuild the server: .env, admin-auth.caddy, Compose files, the
 #      database and listmonk set-up scripts (postgres/, listmonk/). Never the map's basemap
 #      (/opt/gliagora/basemap, about 4 GB): it is downloaded again
@@ -86,9 +89,23 @@ present=$(compose exec -T db psql -U postgres -d postgres -X -tAc "select datnam
   where datallowconn and not datistemplate and datname <> 'postgres' order by datname") \
   || fail "Could not list the server's databases."
 unlisted=$(unlisted_databases "$DATABASES" <<<"$present")
+missing=()
 for db in $DATABASES; do
   if ! grep -qxF "$db" <<<"$present"; then
-    log "Database $db is in DATABASES but not on the server (yet): skipped"
+    if [[ "$TAG" == pre-restore ]]; then
+      log "Database $db is in DATABASES but not on the server: nothing of it to keep before the restore"
+      continue
+    fi
+    # Never read a failed question as "never backed up".
+    if ! earlier=$(restic snapshots --host "$HOST_TAG" --tag "db:$db" --latest 1 --json); then
+      log "ERROR: database $db is not on the server, and the repository could not say whether it was backed up before"
+      missing+=("$db")
+    elif [[ "$earlier" != *'"id":"'* ]]; then
+      log "Database $db is in DATABASES but not on the server yet (never backed up): skipped"
+    else
+      log "ERROR: database $db is in DATABASES and was backed up before, but the server no longer has it"
+      missing+=("$db")
+    fi
     continue
   fi
   log "Dumping database $db"
@@ -142,7 +159,12 @@ if [[ "$TAG" == nightly && -n "${COPY_REPOSITORY:-}" ]]; then
     --host "$HOST_TAG" "${RETENTION[@]}" --prune --quiet
 fi
 
-# The drift guard of step 1, now that everything listed is stored.
+# The guards of step 1, now that everything else is stored.
+[[ ${#missing[@]} -eq 0 || -z "$unlisted" ]] || log "ERROR: The server has databases that \
+DATABASES (in $CONFIG) does not name, so they were not backed up: $unlisted. Add them there."
+[[ ${#missing[@]} -eq 0 ]] || fail "DATABASES (in $CONFIG) names ${missing[*]}, which the server \
+no longer has (or may not have), though backed up before: restore it from its snapshots \
+(deploy/README.md, step 7), or remove it from DATABASES if it is gone for good."
 [[ -z "$unlisted" ]] || fail "The server has databases that DATABASES (in $CONFIG) does not \
 name, so they were not backed up: $unlisted. Add them there."
 

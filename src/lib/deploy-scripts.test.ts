@@ -232,17 +232,36 @@ describe('backup/backup.sh', () => {
     expect(excluded('umami')).toBe('')
   })
 
-  function backup(databases: string, onServer: string) {
+  function backup(
+    databases: string,
+    onServer: string,
+    {
+      tag = 'pre-update',
+      env = {},
+      settings = false,
+    }: { tag?: string; env?: Record<string, string>; settings?: boolean } = {},
+  ) {
     const dir = folder()
     writeFileSync(join(dir, '.env'), 'SITE_DOMAIN=example.org\n')
+    // Every settings file and folder the server has (`settings`), or only .env.
+    if (settings) {
+      for (const file of ['admin-auth.caddy', 'compose.prod.yml', 'Caddyfile']) {
+        writeFileSync(join(dir, file), '# test\n')
+      }
+      for (const folderName of ['postgres', 'listmonk', 'basemap']) {
+        execFileSync('mkdir', ['-p', join(dir, folderName)])
+        writeFileSync(join(dir, folderName, 'file'), '# test\n')
+      }
+    }
     writeFileSync(
       join(dir, 'backup.env'),
       `COMPOSE_DIR=${dir}\nRESTIC_REPOSITORY=${dir}/missing-repository\nRESTIC_PASSWORD_FILE=${dir}/pw\nDATABASES="${databases}"\n`,
     )
-    const result = runScript(SCRIPT, ['pre-update'], {
+    const result = runScript(SCRIPT, [tag], {
       BACKUP_CONFIG: join(dir, 'backup.env'),
       FAKE_LOG: dir,
       FAKE_DATABASES: onServer,
+      ...env,
     })
     const log = (name: string) => {
       try {
@@ -254,8 +273,8 @@ describe('backup/backup.sh', () => {
     return { ...result, docker: log('docker.log'), restic: log('restic.log'), dir }
   }
 
-  it('dumps each listed database with its own exclusions, and the settings with listmonk’s', () => {
-    const { status, output, docker, restic, dir } = backup('gliagora listmonk', 'gliagora listmonk')
+  it('dumps each listed database with its own exclusions', () => {
+    const { status, output, docker, restic } = backup('gliagora listmonk', 'gliagora listmonk')
     expect(status, output).toBe(0)
     expect(docker).toMatch(/pg_dump .*--exclude-table-data=public\.email_tokens gliagora\n/)
     expect(docker).toMatch(
@@ -263,17 +282,66 @@ describe('backup/backup.sh', () => {
     )
     expect(restic).toContain('--stdin-filename listmonk.dump')
     expect(restic).toContain('--tag db:listmonk')
-    // The settings: named one by one; listmonk's folder only if it exists on the server.
-    expect(restic).toMatch(new RegExp(`--tag config --quiet ${dir}/\\.env ${dir}/backup\\.env\\n`))
+  })
+
+  it('backs up the settings one by one, listmonk’s set-up included, never a whole folder', () => {
+    const { status, output, restic, dir } = backup('gliagora', 'gliagora', { settings: true })
+    expect(status, output).toBe(0)
+    // Exactly these, in this order: never /opt/gliagora itself or the basemap.
+    const settings = ['.env', 'admin-auth.caddy', 'compose.prod.yml', 'Caddyfile', 'postgres']
+    const files = [...settings, 'listmonk', 'backup.env'].map((name) => `${dir}/${name}`)
+    expect(restic).toContain(
+      `restic backup --host gliagora --tag pre-update --tag config --quiet ${files.join(' ')}\n`,
+    )
+  })
+
+  it('skips the settings that do not exist on the server', () => {
+    const { status, restic, dir } = backup('gliagora', 'gliagora')
+    expect(status).toBe(0)
+    expect(restic).toContain(`--tag config --quiet ${dir}/.env ${dir}/backup.env\n`)
   })
 
   it('skips a listed database the server does not have yet (listmonk before its install)', () => {
-    const { status, output, docker } = backup('gliagora listmonk', 'gliagora')
-    expect(status, output).toBe(0)
-    expect(output).toContain(
-      'Database listmonk is in DATABASES but not on the server (yet): skipped',
-    )
-    expect(docker).not.toMatch(/pg_dump .* listmonk\n/)
+    // Never backed up: the first update, whose backup runs before listmonk/prepare.sh makes it.
+    for (const tag of ['pre-update', 'nightly']) {
+      const { status, output, docker, restic } = backup('gliagora listmonk', 'gliagora', { tag })
+      expect(status, output).toBe(0)
+      expect(output).toContain(
+        'Database listmonk is in DATABASES but not on the server yet (never backed up): skipped',
+      )
+      expect(docker).not.toMatch(/pg_dump .* listmonk\n/)
+      expect(restic).toContain(
+        'restic snapshots --host gliagora --tag db:listmonk --latest 1 --json',
+      )
+    }
+  })
+
+  it('fails, after storing the others, when a database backed up before is gone', () => {
+    for (const tag of ['nightly', 'pre-update']) {
+      const { status, output, docker } = backup('gliagora listmonk', 'gliagora', {
+        tag,
+        env: { FAKE_SNAPSHOTS: 'listmonk' },
+      })
+      expect(status, tag).toBe(1)
+      expect(docker).toMatch(/pg_dump .* gliagora\n/)
+      expect(output).toContain('was backed up before, but the server no longer has it')
+      expect(output).toContain('names listmonk, which the server no longer has')
+      expect(output).not.toContain('Backup finished')
+    }
+    // A question the repository cannot answer is never taken for "never backed up".
+    const unknown = backup('gliagora listmonk', 'gliagora', {
+      tag: 'nightly',
+      env: { FAKE_RESTIC_SNAPSHOTS_EXIT: '1' },
+    })
+    expect(unknown.status).toBe(1)
+    expect(unknown.output).toContain('could not say whether it was backed up before')
+    // Before a restore, there is nothing of it to keep, and the restore must not be blocked.
+    const restoring = backup('gliagora listmonk', 'gliagora', {
+      tag: 'pre-restore',
+      env: { FAKE_SNAPSHOTS: 'listmonk' },
+    })
+    expect(restoring.status, restoring.output).toBe(0)
+    expect(restoring.output).toContain('nothing of it to keep before the restore')
   })
 
   it('fails, after storing the others, when the server has a database DATABASES does not name', () => {
