@@ -85,7 +85,9 @@ describe('proxy: the M2 state (D41, D50)', () => {
     for (const [path, twin] of [
       ['/en/', '/m2/en/'],
       ['/en/about/', '/m2/en/about/'],
-      ['/en/newsletter/', '/m2/en/newsletter/'],
+      // Glia Notes, once the açık rıza metni is approved (src/proxy-approved.test.ts tests it
+      // with every text approved).
+      ...(CONTENT_PAGES.acikRiza.draft ? [] : [['/en/newsletter/', '/m2/en/newsletter/']]),
     ]) {
       for (const method of ['GET', 'HEAD', 'POST']) {
         const response = await proxy(request(path!, method))
@@ -110,6 +112,7 @@ describe('proxy: the M2 state (D41, D50)', () => {
       '/en/suggest/',
       '/en/account/',
       '/en/legal/data-requests/confirm/use/',
+      '/en/newsletter/unsubscribe/use/',
       ...DRAFTS,
     ]) {
       const response = await proxy(request(path, 'POST'))

@@ -33,3 +33,14 @@ export function m2Links(draft?: IsDraft): LinkMapper {
  */
 export const linkInStage = (href: string, stage: SiteStage = 'private', draft?: IsDraft) =>
   stage === 'm2' ? m2Links(draft)(href) : href
+
+/**
+ * The Glia Notes signup, where the M2 state's own pages offer it (the reduced header's button and
+ * phone menu, the coming-soon page): its address while it is public, which it is only with the açık
+ * rıza metni (src/lib/public-pages.ts), else null, and the button is left out: a public page never
+ * links to one behind the password.
+ */
+export function m2SignupLink(draft?: IsDraft): string | null {
+  const signup = paths.section('newsletter')
+  return isPublicAddress(signup, draft) ? signup : null
+}

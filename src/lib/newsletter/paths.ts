@@ -1,13 +1,14 @@
-import { paths } from '@/lib/site'
-
 // The addresses of Glia Notes (M2, D50; PLAN §9.10, §13). English only, as the windows are. The
 // signup page is indexed (`newsletterSignupIndexed()`); every page after it is about one person and
 // never indexed (`newsletterPageIndexed()`, src/lib/indexing.ts). Caddy removes the query strings of
 // every address under /en/newsletter from its logs (deploy/Caddyfile), so the confirmation link's
 // token and a subscriber's UUID are never written there. Every address ends with a slash: a mail
-// program's one-click unsubscribe may not follow the redirect that adds one.
+// program's one-click unsubscribe may not follow the redirect that adds one. No imports: the M2
+// state's list of public pages (src/lib/public-pages.ts) names these addresses, and the end-to-end
+// tests and `pnpm caddy:public` load that list as it is (a unit test checks that the signup is the
+// section's address in src/lib/site.ts).
 
-const PAGE = paths.section('newsletter')
+const PAGE = '/en/newsletter/'
 
 export const NEWSLETTER_PATHS = {
   /** The signup form. */

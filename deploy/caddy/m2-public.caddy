@@ -25,11 +25,10 @@
 	path /
 	path /en /en/
 	path /en/about /en/about/
-	path /en/newsletter /en/newsletter/
 	path /robots.txt
 	path /sitemap.xml
 	path /sitemaps/pages.xml
-	vars_regexp {http.request.uri} ^(?:/|/en|/en/|/en/about|/en/about/|/en/newsletter|/en/newsletter/|/robots\.txt|/sitemap\.xml|/sitemaps/pages\.xml)(?:\?.*)?$
+	vars_regexp {http.request.uri} ^(?:/|/en|/en/|/en/about|/en/about/|/robots\.txt|/sitemap\.xml|/sitemaps/pages\.xml)(?:\?.*)?$
 }
 handle @m2Public {
 	request_header X-Gliagora-Public m2

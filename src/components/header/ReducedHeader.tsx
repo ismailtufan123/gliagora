@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import { Icon } from '@/components/Icon'
 import { Lockup } from '@/components/Lockup'
 import type { Locale } from '@/i18n/routing'
+import { m2SignupLink } from '@/lib/m2-links'
 import { isPublicAddress } from '@/lib/public-pages'
 import { TRANSLATIONS, paths } from '@/lib/site'
 
@@ -18,10 +19,10 @@ const DESKTOP_QUERY = '(min-width: 48rem)'
 
 // The header of the M2 state (D41 (4), D50; src/lib/site-stage.ts), on its public pages only, so
 // it links to public pages only: the lockup (the coming-soon page), the language button where the
-// page has a translation that is public too, and the Glia Notes button. On phones a menu holds
-// About, the Glia Notes button and the languages. No windows, search or Account: they stay private
-// until the launch (D39, D49). Its Turkish texts are reviewed first (PUBLIC_AT_M2 in
-// src/scripts/tr-strings-review-areas.ts, D47).
+// page has a translation that is public too, and the Glia Notes button while the signup is public
+// (with the açık rıza metni, m2SignupLink). On phones a menu holds About, the Glia Notes button and
+// the languages. No windows, search or Account: they stay private until the launch (D39, D49). Its
+// Turkish texts are reviewed first (PUBLIC_AT_M2 in src/scripts/tr-strings-review-areas.ts, D47).
 export async function ReducedHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale })
   const labels = await localeLabels(locale)
@@ -30,6 +31,7 @@ export async function ReducedHeader({ locale }: { locale: Locale }) {
   const pairs = TRANSLATIONS.filter((pair) =>
     Object.values(pair).every((path) => isPublicAddress(path)),
   )
+  const signup = m2SignupLink()
 
   return (
     <header className="site-header site-header-m2">
@@ -53,12 +55,14 @@ export async function ReducedHeader({ locale }: { locale: Locale }) {
             onlyWithTranslation
           />
           {/* A longer label wraps within 15rem, as in the full header. */}
-          <a
-            className="button button-primary hidden max-w-60 leading-tight md:inline-flex"
-            href={paths.section('newsletter')}
-          >
-            {t('header.digest')}
-          </a>
+          {signup && (
+            <a
+              className="button button-primary hidden max-w-60 leading-tight md:inline-flex"
+              href={signup}
+            >
+              {t('header.digest')}
+            </a>
+          )}
           {/* Like the full header's menu (MobileMenu.tsx), a disclosure that works without
               JavaScript; DisclosureEnhancer makes the page behind it inert while it is open. */}
           <details className="disclosure md:hidden" data-disclosure data-modal>
@@ -70,12 +74,11 @@ export async function ReducedHeader({ locale }: { locale: Locale }) {
               <NavLink href={paths.section('about')} className="mobile-row border-b border-line">
                 {t('sections.about')}
               </NavLink>
-              <a
-                className="button button-primary mt-6 w-full justify-center"
-                href={paths.section('newsletter')}
-              >
-                {t('header.digest')}
-              </a>
+              {signup && (
+                <a className="button button-primary mt-6 w-full justify-center" href={signup}>
+                  {t('header.digest')}
+                </a>
+              )}
               <LocaleSwitcher
                 variant="list"
                 className="mt-8"

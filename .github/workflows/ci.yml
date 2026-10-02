@@ -310,7 +310,9 @@ jobs:
           grep -qF 'Email cap of the forms: 1000 an hour, 5000 a day' <<<"$logs"
           grep -qF 'Glia Notes: signup on, unsubscribe on' <<<"$logs"
       # The M2 state (D41, D50), switched on in a second container of the same image beside the app
-      # under test: SITE_STAGE=m2 on port 3001, production-like (no test settings). The end-to-end
+      # under test: SITE_STAGE=m2 on port 3001, production-like (no test sign-in providers), with
+      # the app's mail server, listmonk and cap on the forms' emails (they share the database), so
+      # that Glia Notes can be signed up for through Caddy once its text is approved. The end-to-end
       # step puts Caddy, the production Caddyfile, in front of each (tests/caddy/serve.ts): the M2
       # state's public pages open without the password and everything else asks for it, and the
       # private stage asks for it everywhere but /health/ (tests/e2e/m2.spec.ts, project m2); a
@@ -327,6 +329,9 @@ jobs:
             -e DATABASE_URL=postgres://gliagora:smoke-test-only@127.0.0.1:5432/gliagora \
             -e PAYLOAD_SECRET="$APP_PAYLOAD_SECRET" \
             -e ALTCHA_HMAC_KEY="$APP_ALTCHA_HMAC_KEY" \
+            -e SMTP_HOST=127.0.0.1 -e SMTP_PORT=1025 \
+            -e LISTMONK_URL=http://127.0.0.1:9000 -e LISTMONK_API_TOKEN="$APP_LISTMONK_API_TOKEN" \
+            -e EMAIL_CAP_HOUR=1000 -e EMAIL_CAP_DAY=5000 \
             gliagora:ci
           caddy_image=$(grep -oE 'caddy:[0-9][^[:space:]]+' deploy/compose.prod.yml | head -n 1)
           test -n "$caddy_image"
@@ -338,6 +343,7 @@ jobs:
           for i in $(seq 1 60); do curl -fsS http://localhost:3001/health/ && break; sleep 2; done
           echo
           logs="$(docker logs app-m2 2>&1)"; grep -qF 'Site stage: m2' <<<"$logs"
+          grep -qF 'Glia Notes: signup on, unsubscribe on' <<<"$logs"
       # Tests against a real PostgreSQL (pnpm test:db), on scratch databases dropped afterwards:
       # search (src/lib/search/search.db.test.ts, owned by a throwaway role that is not a superuser,
       # as on the server) and the scheduled tasks (tests/integration/, M4.7, on a migrated scratch

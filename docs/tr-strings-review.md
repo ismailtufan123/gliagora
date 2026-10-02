@@ -21,7 +21,7 @@ At M2 (D41, D47) the coming-soon page, the newsletter signup, About and the lega
 | `locale.names.en` | English | English | Turkish pages - language menu and list - the languages, each in its own language |
 | `locale.names.tr` | Türkçe | Türkçe | Turkish pages - language menu and list - the languages, each in its own language |
 | `locale.moreComing` | More languages coming | Başka diller yakında | Turkish pages - language menu and list - note under the languages |
-| `header.digest` | Get the monthly digest | Aylık bülteni alın | Turkish pages - header (from 768px) and mobile menu - button to the newsletter signup |
+| `header.digest` | Get the monthly digest | Aylık bülteni alın | Turkish pages - header (from 768px) and mobile menu - button to the newsletter signup, while the signup is public (with the açık rıza metni) |
 | `header.menu` | Menu | Menü | Turkish pages - header on phones - Menu button (language list, newsletter) |
 | `sections.about` | About | Hakkında | Turkish pages - footer (About column) and mobile menu - link to About |
 | `footer.sitemap` | Site map | Site haritası | Turkish pages - footer - name of the footer navigation, for screen readers |

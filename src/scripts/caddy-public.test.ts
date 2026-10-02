@@ -9,6 +9,7 @@ import {
   publicGetPaths,
   publicPostPaths,
 } from '../lib/public-pages'
+import { NEWSLETTER_PATHS } from '../lib/newsletter/paths'
 import { SITE_STAGES } from '../lib/site-stage'
 import {
   CADDY_PUBLIC_FILE,
@@ -224,6 +225,42 @@ describe(CADDY_PUBLIC_PATH, () => {
       expect(handleBody(text, 'm2PublicFiles')).toBe([...PLAIN_MISSING, '\t}', ''].join('\n'))
     })
   }
+})
+
+describe(`${CADDY_PUBLIC_PATH}: Glia Notes (D50)`, () => {
+  // About and the açık rıza metni, whose consent the signup records, approved; the rest drafts.
+  const WITH_CONSENT: IsDraft = (key) => key !== 'about' && key !== 'acikRiza'
+  const UUID = '0b6f0c7e-3d5a-4b8e-9f4e-2a1c5d7e9f01'
+  const { signup, resend, confirmUse, unsubscribeUse, ...pages } = NEWSLETTER_PATHS
+  const routes = [resend, confirmUse, unsubscribeUse]
+
+  it('opens the signup, its pages and the routes behind their buttons with the açık rıza metni', () => {
+    const text = m2PublicCaddy(WITH_CONSENT)
+    const get = rawAddress(text, 'm2Public')
+    const post = rawAddress(text, 'm2PublicPost')
+    // Every page, and the routes for GET too (each redirects to its page), with the links' queries.
+    for (const path of Object.values(NEWSLETTER_PATHS)) expect(get.test(path), path).toBe(true)
+    expect(get.test(`${NEWSLETTER_PATHS.confirm}?token=abc_DEF-123`)).toBe(true)
+    expect(get.test(`${NEWSLETTER_PATHS.unsubscribe}?id=12&s=${UUID}`)).toBe(true)
+    // POST: the form's Server Action and the routes, among them the one-click unsubscribe of mail
+    // programs (RFC 8058) at the address of List-Unsubscribe, with its query.
+    for (const path of [signup, ...routes]) expect(post.test(path), path).toBe(true)
+    expect(post.test(`${unsubscribeUse}?id=12&s=${UUID}`)).toBe(true)
+    for (const path of Object.values(pages)) expect(post.test(path), path).toBe(false)
+    // Marked like every page and form: the routes' 200, 400 and 503 pass with the app's mark, a 303
+    // without it (src/proxy.ts marks them).
+    expect(handleBody(text, 'm2PublicPost')).toContain(`header !${PUBLIC_MARK.name}`)
+    expect(handleBody(text, 'm2PublicPost')).toContain('status 2xx 4xx 5xx')
+  })
+
+  it('opens none of it while the açık rıza metni is a draft, not even with the privacy texts', () => {
+    const draft: IsDraft = (key) => !['about', 'privacy', 'kvkk'].includes(key)
+    const text = m2PublicCaddy(draft)
+    expect(text).not.toContain('/en/newsletter')
+    for (const path of Object.values(NEWSLETTER_PATHS)) {
+      expect(isPublicAddress(path, draft), path).toBe(false)
+    }
+  })
 })
 
 describe('deploy/Caddyfile: the site’s stage', () => {

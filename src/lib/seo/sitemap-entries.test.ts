@@ -138,7 +138,8 @@ describe('m2PageEntries (D41, D50)', () => {
     for (const page of Object.values(CONTENT_PAGES)) expect(paths).toContain(page.path)
     expect(paths).not.toContain('/en/jobs/')
     expect(paths).not.toContain('/en/suggest/')
-    expect(paths).not.toContain('/en/newsletter/')
+    // The Glia Notes signup (with the açık rıza metni), and none of the pages after it.
+    expect(paths.filter((path) => path.startsWith('/en/newsletter/'))).toEqual(['/en/newsletter/'])
     expect(paths.filter((path) => path.startsWith('/en/legal/data-requests/'))).toEqual([
       '/en/legal/data-requests/',
     ])
