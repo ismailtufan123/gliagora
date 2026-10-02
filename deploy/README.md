@@ -481,10 +481,10 @@ The M2 state is one setting, `SITE_STAGE=m2` in `/opt/gliagora/.env`, which Cadd
 
 The signup's code reaches the server with its deploy, behind the site-wide password; its migrations (the consent log) run when the app starts. The app reads listmonk's settings only from the `compose.prod.yml` that has them, and Caddy removes the query strings of the newsletter's addresses (the confirmation link's token, a subscriber's ID and UUID) only with the new `Caddyfile`. So, after section 12 and with the operator's go-ahead, and in any case before `SMTP_HOST` is set:
 
-1. **Copy the files**, from your computer, in the repository:
+1. **Copy the files**, from your computer, in the repository (`deploy/caddy` with `compose.prod.yml`, always together, section 13; in the M2 state, from the commit of the running image, section 13, step 3):
 
    ```sh
-   scp deploy/compose.prod.yml deploy/Caddyfile gliagora@<server-ip>:/opt/gliagora/
+   scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/caddy gliagora@<server-ip>:/opt/gliagora/
    scp deploy/backup/restore.sh gliagora@<server-ip>:/opt/gliagora/backup/
    ```
 
