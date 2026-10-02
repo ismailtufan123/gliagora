@@ -1,12 +1,21 @@
 import { resolveRobots } from 'next/dist/build/webpack/loaders/metadata/resolve-route-data'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import robots from '@/app/robots'
 import { SUBFIELDS_PATH, institutionPath, jobPath, subfieldPath } from '@/lib/detail-routes'
+import { CONTENT_PAGES } from '@/lib/content'
+import { indexedPublicPages, isPublicAddress, publicMachineFiles } from '@/lib/public-pages'
 
 import { FEED_PATH, jobPermalink } from './feed'
-import { DISALLOW, disallowRules, isDisallowed, robotsRuleMatches } from './robots'
-import { pageEntries } from './sitemap-entries'
+import {
+  DISALLOW,
+  disallowRules,
+  exactlyAllowed,
+  isDisallowed,
+  robotsRuleMatches,
+  robotsRules,
+} from './robots'
+import { m2PageEntries, pageEntries } from './sitemap-entries'
 
 describe('robotsRuleMatches', () => {
   it('reads a rule as a prefix of the path', () => {
@@ -111,5 +120,113 @@ describe('disallowRules', () => {
         ].join('\n'),
       ),
     ).toEqual(['/private'])
+  })
+})
+
+describe('isDisallowed with Allow rules (RFC 9309)', () => {
+  const rules = {
+    allow: ['/en/$', '/en/about/$', '/_next/static/'],
+    disallow: ['/', '/en/private/'],
+  }
+
+  it('lets the longest matching rule decide', () => {
+    expect(isDisallowed('/en/', rules)).toBe(false)
+    expect(isDisallowed('/en/about/', rules)).toBe(false)
+    expect(isDisallowed('/_next/static/chunks/a.js', rules)).toBe(false)
+    expect(isDisallowed('/en/jobs/', rules)).toBe(true)
+    expect(isDisallowed('/en/private/', rules)).toBe(true)
+    // `$`: the exact address only, not with a query string or below it.
+    expect(isDisallowed('/en/?utm_source=x', rules)).toBe(true)
+    expect(isDisallowed('/en/about/team/', rules)).toBe(true)
+  })
+
+  it('gives a tie to the Allow rule', () => {
+    expect(isDisallowed('/a', { allow: ['/a'], disallow: ['/a'] })).toBe(false)
+    expect(isDisallowed('/ab', { allow: ['/a'], disallow: ['/ab'] })).toBe(true)
+  })
+
+  it('reads an empty Disallow rule as allowing everything', () => {
+    expect(isDisallowed('/x', { allow: [], disallow: [''] })).toBe(false)
+  })
+
+  it('reads both kinds of rules for every crawler from a robots.txt text', () => {
+    expect(
+      robotsRules(
+        [
+          'User-agent: Googlebot',
+          'Allow: /g',
+          '',
+          'User-agent: *',
+          'Allow: /a$',
+          'Disallow: /',
+        ].join('\n'),
+      ),
+    ).toEqual({ allow: ['/a$'], disallow: ['/'] })
+    expect(exactlyAllowed(['/en/'], ['/brand/'])).toEqual({
+      allow: ['/en/$', '/brand/'],
+      disallow: ['/'],
+    })
+  })
+})
+
+describe('robots.txt in the M2 state (D41, D50)', () => {
+  afterEach(() => vi.unstubAllEnvs())
+
+  it('disallows everything but the public pages that are indexed, the sitemaps and the assets', () => {
+    vi.stubEnv('SITE_STAGE', 'm2')
+    const text = resolveRobots(robots())
+    // With the approvals of now (src/lib/content.ts): with only About, the pages are /en/ and
+    // /en/about/, and the sitemap files /sitemap.xml and /sitemaps/pages.xml.
+    expect(text).toBe(
+      [
+        'User-Agent: *',
+        'Allow: /$',
+        ...indexedPublicPages().map((page) => `Allow: ${page.path}$`),
+        ...publicMachineFiles()
+          .filter((file) => file !== '/robots.txt')
+          .map((file) => `Allow: ${file}$`),
+        'Allow: /_next/static/',
+        'Allow: /brand/',
+        'Disallow: /',
+        '',
+        'Sitemap: https://gliagora.com/sitemap.xml',
+        '',
+      ].join('\n'),
+    )
+    expect(text).toContain('Allow: /en/$\nAllow: /en/about/$\n')
+    const rules = robotsRules(text)
+    // Every page of the M2 sitemaps may be crawled, and only public addresses may. (Crawlers read
+    // robots.txt itself in any case.)
+    const files = publicMachineFiles().filter((file) => file !== '/robots.txt')
+    for (const path of ['/', ...m2PageEntries().map((entry) => entry.path), ...files]) {
+      expect(isDisallowed(path, rules), path).toBe(false)
+    }
+    // Texts not approved yet, the private pages and the public pages that are not indexed.
+    const drafts = Object.values(CONTENT_PAGES)
+      .filter((page) => page.draft)
+      .map((page) => page.path)
+    for (const path of [
+      ...drafts,
+      '/en/jobs/',
+      '/en/suggest/',
+      '/en/newsletter/',
+      '/en/?utm_source=x',
+      '/api/map/institutions/',
+      '/sitemaps/jobs.xml',
+      '/m2/en/',
+    ]) {
+      expect(isDisallowed(path, rules), path).toBe(true)
+    }
+    for (const rule of rules.allow) {
+      const path = rule.replace(/\$$/, '')
+      expect(isPublicAddress(`${path}x.js`) || isPublicAddress(path), rule).toBe(true)
+    }
+  })
+
+  it('is the full site’s in the private stage, and with a value that is not a stage', () => {
+    for (const value of ['', 'private', 'launch']) {
+      vi.stubEnv('SITE_STAGE', value)
+      expect(robotsRules(resolveRobots(robots()))).toEqual({ allow: [], disallow: [...DISALLOW] })
+    }
   })
 })

@@ -64,11 +64,33 @@ describe('connectOnStart', () => {
     vi.stubEnv('EMAIL_CAP_DAY', 'lots')
     await connectOnStart()
     // An unusable day: the stricter of its default and the hour, never more than was set.
-    expect(log).toHaveBeenLastCalledWith('Email cap of the forms: 120 an hour, 120 a day')
+    expect(log).toHaveBeenCalledWith('Email cap of the forms: 120 an hour, 120 a day')
     expect(error).toHaveBeenCalledWith(
       expect.stringMatching(/^EMAIL_CAP_DAY is not a whole number/),
     )
     expect(JSON.stringify(error.mock.calls)).not.toContain('lots')
+  })
+
+  it('names the site’s stage, and a SITE_STAGE that is not one by its name only', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    getPayload.mockResolvedValue({})
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.stubEnv('SITE_STAGE', '')
+    await connectOnStart()
+    expect(log).toHaveBeenCalledWith('Site stage: private')
+    expect(error).not.toHaveBeenCalled()
+
+    log.mockClear()
+    vi.stubEnv('SITE_STAGE', 'm2')
+    await connectOnStart()
+    expect(log).toHaveBeenCalledWith('Site stage: m2')
+
+    vi.stubEnv('SITE_STAGE', 'public-now')
+    await connectOnStart()
+    expect(log).toHaveBeenCalledWith('Site stage: private')
+    expect(error).toHaveBeenCalledWith(expect.stringMatching(/^SITE_STAGE is not one of/))
+    expect(error.mock.calls.flat().join(' ')).not.toContain('public-now')
   })
 
   it('exits so Docker restarts the app when the database is unavailable', async () => {

@@ -27,9 +27,20 @@ services:
       - '443:443/udp'
     environment:
       SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN in .env}
+      # The site's stage (D41, D50): `private`, or `m2` for the M2 state. The app gets the same.
+      SITE_STAGE: ${SITE_STAGE:-private}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./admin-auth.caddy:/etc/caddy/admin-auth.caddy:ro
+      # What the M2 state opens (written by `pnpm caddy:public`). Without the file, Compose stops
+      # with an error instead of making an empty folder of that name (README, "Switching to the M2
+      # state").
+      - type: bind
+        source: ./caddy/m2-public.caddy
+        target: /etc/caddy/m2-public.caddy
+        read_only: true
+        bind:
+          create_host_path: false
       - caddy-data:/data
       - caddy-config:/config
       - caddy-logs:/var/log/caddy
@@ -79,6 +90,9 @@ services:
       ORCID_CLIENT_ID: ${ORCID_CLIENT_ID:-}
       ORCID_CLIENT_SECRET: ${ORCID_CLIENT_SECRET:-}
       ORCID_ISSUER: ${ORCID_ISSUER:-https://orcid.org}
+      # The site's stage (D41, D50), the same value Caddy gets: `private` shows the full site
+      # (behind the password), `m2` the public pages in their M2 versions (src/lib/site-stage.ts).
+      SITE_STAGE: ${SITE_STAGE:-private}
     depends_on:
       db:
         condition: service_healthy

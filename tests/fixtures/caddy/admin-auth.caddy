@@ -1,0 +1,8 @@
+# Test only: the site-wide password of the Caddy tests (tests/caddy/), user `editor`, password
+# `caddy-test-only` (TEST_AUTH in tests/caddy/serve.ts; tests/caddy/serve.test.ts checks this
+# file's shape: the user and a bcrypt hash of cost 4), never used on a server. Made with
+# `caddy hash-password --algorithm bcrypt --bcrypt-cost 4 --plaintext caddy-test-only`: the lowest
+# cost, so that the tests do not wait for it (the server keeps the default).
+basic_auth {
+	editor $2a$04$8y98FpzpYpkqNbjiSxYePu3VchtiWixEllaTIgM6SAzmdfSPGJNwW
+}

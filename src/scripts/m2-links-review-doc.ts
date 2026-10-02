@@ -1,0 +1,163 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { Marked, type Token, type Tokens } from 'marked'
+
+import { CONTENT_PAGES, type ContentKey } from '../lib/content'
+import { m2Links } from '../lib/m2-links'
+import type { IsDraft } from '../lib/public-pages'
+
+// docs/m2-links-review.md (pnpm m2:links): how the links of each text from content/ read in the
+// M2 state (D41, D50), where its M2 version links only to public pages (src/lib/m2-links.ts). The
+// operator approves a text as it stands (D28), and reads it on the private site with all its
+// links; this file shows, with its sentence, every link that changes at M2 (to an email, or to its
+// words alone), so that a text can be reworded before it is approved. A test fails when the file
+// no longer matches the texts.
+
+export const DOC_PATH = 'docs/m2-links-review.md'
+export const DOC_FILE = fileURLToPath(new URL('../../docs/m2-links-review.md', import.meta.url))
+const CONTENT_DIR = fileURLToPath(new URL('../../content/', import.meta.url))
+
+/**
+ * The texts approved before the switch to the M2 state (deploy/README.md section 13, step 1:
+ * About, the contact pages, the privacy policy, the KVKK notice and the açık rıza metni, D32).
+ * Each other text is shown as it would read once approved with them.
+ */
+export const FIRST_APPROVALS: readonly ContentKey[] = [
+  'about',
+  'contact',
+  'iletisim',
+  'privacy',
+  'kvkk',
+  'acikRiza',
+]
+
+export type ChangedLink = {
+  text: string
+  href: string
+  /** `email` (the suggest and report forms) or `words` (a page that is not public). */
+  becomes: 'email' | 'words'
+  sentence: string
+}
+
+type Found = { text: string; href: string; raw: string; block: string }
+
+/** Every link in the tokens, with the raw Markdown of the block (paragraph, item, cell) it is in. */
+function* linksIn(tokens: readonly Token[], block: string): Generator<Found> {
+  for (const token of tokens) {
+    const here = ['paragraph', 'list_item', 'heading', 'text'].includes(token.type)
+      ? block || token.raw
+      : block
+    if (token.type === 'link') {
+      const link = token as Tokens.Link
+      yield { text: link.text, href: link.href, raw: link.raw, block: here }
+    }
+    if (token.type === 'list') {
+      for (const item of (token as Tokens.List).items) yield* linksIn([item], item.raw)
+    } else if (token.type === 'table') {
+      const table = token as Tokens.Table
+      for (const cell of [...table.header, ...table.rows.flat()]) {
+        yield* linksIn(cell.tokens, cell.text)
+      }
+    } else if ('tokens' in token && Array.isArray(token.tokens)) {
+      const own = ['paragraph', 'heading'].includes(token.type) ? token.raw : here
+      yield* linksIn(token.tokens, own)
+    }
+  }
+}
+
+/**
+ * Where sentences end: a full stop, `!` or `?` (or a closing bracket of an open point) before a
+ * space and a capital letter, bold text or a bracket, so not in "Art. 5" or "e.g. a list".
+ */
+const SENTENCE_END = /[.!?\]](?=\s+(?:[A-ZÇĞİÖŞÜ*[(“"]))/g
+
+/** The sentence of a block that holds the link, its links written as [their words]. */
+function sentenceOf(block: string, raw: string): string {
+  const text = block.replace(/\s+/g, ' ').trim()
+  const at = Math.max(0, text.indexOf(raw.replace(/\s+/g, ' ')))
+  let start = 0
+  let end = text.length
+  for (const match of text.matchAll(SENTENCE_END)) {
+    if (match.index < at) start = match.index + 1
+    else if (match.index >= at + raw.length) {
+      end = match.index + 1
+      break
+    }
+  }
+  return text
+    .slice(start, end)
+    .trim()
+    .replace(/^(?:[-*+]|\d+\.) /, '')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '[$1]')
+    .trim()
+}
+
+/** The links of a text that change in its M2 version, with these approvals. */
+export function changedLinks(markdown: string, draft: IsDraft): ChangedLink[] {
+  const map = m2Links(draft)
+  const tokens = new Marked({ gfm: true }).lexer(markdown)
+  const changed: ChangedLink[] = []
+  for (const { text, href, raw, block } of linksIn(tokens, '')) {
+    const to = map(href)
+    if (to === href) continue
+    changed.push({
+      text,
+      href,
+      becomes: to === null ? 'words' : 'email',
+      sentence: sentenceOf(block, raw),
+    })
+  }
+  return changed
+}
+
+/** The approvals a text is shown with: the first ones and the text itself. */
+const approvalsFor =
+  (key: ContentKey): IsDraft =>
+  (other) =>
+    other !== key && !FIRST_APPROVALS.includes(other)
+
+const quote = (text: string) => `“${text.replace(/\s+/g, ' ').trim()}”`
+
+/** The file's text, from the texts in content/. */
+export function linksReview(
+  read = (file: string) => readFileSync(path.join(CONTENT_DIR, file), 'utf8'),
+) {
+  const titles = Object.fromEntries(
+    FIRST_APPROVALS.map((key) => [key, `\`${CONTENT_PAGES[key].path}\``]),
+  )
+  const lines = [
+    '# Links of the texts in the M2 state',
+    '',
+    `Generated by \`pnpm m2:links\` from the texts in \`content/\` and the rules of \`src/lib/m2-links.ts\`: do not edit it by hand. A test fails when it no longer matches the texts.`,
+    '',
+    'In the M2 state (D41, D50; `deploy/README.md`, "Switching to the M2 state") the approved texts are shown in their M2 versions, which link only to public pages, so that no link asks a visitor for the site-wide password. Two kinds of links change there:',
+    '',
+    '- a link to the "Suggest a listing" or "Report a problem" form opens an email to hello@gliagora.com instead (**email**), since those forms stay private until the launch (D39, D41);',
+    '- a link to another page that is not public (a text that is not approved, a section of the site) keeps its words without the link (**words only**).',
+    '',
+    `The texts are approved as they stand (D28), and read on the private site with all their links. Below is every link that changes at M2, with its sentence: check that each sentence still reads well there, and reword it before approving the text if it does not (or approve the page it points to with it). Shown with the texts approved before the switch (${Object.values(titles).join(', ')}); each other text with them and itself.`,
+    '',
+  ]
+  for (const key of Object.keys(CONTENT_PAGES) as ContentKey[]) {
+    const page = CONTENT_PAGES[key]
+    const changed = changedLinks(read(page.file), approvalsFor(key))
+    lines.push(`## \`${page.path}\``, '')
+    if (changed.length === 0) {
+      lines.push('No link changes.', '')
+      continue
+    }
+    for (const link of changed) {
+      const becomes =
+        link.becomes === 'email'
+          ? '**email** to hello@gliagora.com'
+          : '**words only** (the page is not public)'
+      lines.push(
+        `- ${quote(link.text)} (\`${link.href}\`): ${becomes}. In: ${quote(link.sentence)}`,
+      )
+    }
+    lines.push('')
+  }
+  return `${lines.join('\n').trimEnd()}\n`
+}

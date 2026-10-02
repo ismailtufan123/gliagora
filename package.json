@@ -31,6 +31,8 @@
     "listmonk:setup": "payload run src/scripts/listmonk-setup.ts",
     "jobs:run": "payload run src/scripts/jobs-run.ts",
     "tr:review": "payload run src/scripts/tr-strings-review.ts",
+    "caddy:public": "payload run src/scripts/caddy-public.ts",
+    "m2:links": "payload run src/scripts/m2-links-review.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

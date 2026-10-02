@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 import { type Locale, locales } from '@/i18n/routing'
+import { publicPathname } from '@/lib/public-path'
 import { translationsOf } from '@/lib/site'
 
 export type LocaleLabels = {
@@ -23,6 +24,8 @@ export type LocaleIcons = { globe: ReactNode; chevron: ReactNode }
 // where a reviewed translation exists (TRANSLATIONS in src/lib/site.ts), and says that more
 // languages are coming. Language names are written in their own language, with `lang`.
 // `variant="list"` shows the same choices as a plain list, for the mobile menu.
+// The M2 state's reduced header (D41, D50) gives the translations whose pages are all public
+// (`pairs`) and shows the switcher only on a page that has one (`onlyWithTranslation`).
 // A client component because the links follow the address (usePathname). Its icons come from the
 // server as props (src/components/Icon.tsx), so they add nothing to its client code (PLAN §17.3).
 export function LocaleSwitcher({
@@ -31,15 +34,23 @@ export function LocaleSwitcher({
   icons,
   variant = 'menu',
   className = '',
+  pairs,
+  onlyWithTranslation = false,
 }: {
   locale: Locale
   labels: LocaleLabels
   icons?: LocaleIcons
   variant?: 'menu' | 'list'
   className?: string
+  pairs?: readonly Partial<Record<Locale, string>>[]
+  onlyWithTranslation?: boolean
 }) {
-  const pathname = usePathname()
-  const translations = translationsOf(pathname.endsWith('/') ? pathname : `${pathname}/`)
+  // The address the visitor sees, also while the server renders an M2 version under /m2/.
+  const pathname = publicPathname(usePathname())
+  const translations = translationsOf(pathname.endsWith('/') ? pathname : `${pathname}/`, pairs)
+  if (onlyWithTranslation && !locales.some((other) => other !== locale && translations[other])) {
+    return null
+  }
   const choices = (
     <>
       <ul role="list" className="grid gap-1">

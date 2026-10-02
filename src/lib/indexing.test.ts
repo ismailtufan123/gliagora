@@ -23,7 +23,10 @@ describe('indexing rules', () => {
     expect(contentPageIndexed({ draft: true })).toBe(false)
     expect(contentPageIndexed({ draft: false })).toBe(true)
     expect(contentPageIndexed(CONTENT_PAGES.about)).toBe(true)
-    expect(contentPageIndexed(CONTENT_PAGES.privacy)).toBe(false)
+    // Each text by its own flag, so approving one (draft: false) needs no change here.
+    for (const page of Object.values(CONTENT_PAGES)) {
+      expect(contentPageIndexed(page), page.path).toBe(!page.draft)
+    }
   })
 
   it('index the jobs list only unfiltered, on its first page', () => {

@@ -35,6 +35,8 @@
     }
   },
   "home": {
+    "comingSoon": "Coming soon: a curated, English-first hub for neuroscience positions, events, funding, papers, news and resources.",
+    "writeToUs": "Write to us at <email>hello@gliagora.com</email>.",
     "subline": "Curated neuroscience positions from every subfield, each checked against the employer’s own posting.",
     "findPositions": "Find positions",
     "exploreMap": "Explore the map",

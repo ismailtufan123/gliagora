@@ -4,7 +4,10 @@ import { type Resolution, matchDetailRoute, resolveDetailRoute } from '@/lib/det
 import { errorSummary } from '@/lib/errors'
 import { canonicalListPath } from '@/lib/filters/canonical'
 import { GONE_PAGE, isGone } from '@/lib/gone'
+import { PUBLIC_MARK, isPublicRequest, m2Twin } from '@/lib/public-pages'
+import { M2_PREFIX } from '@/lib/public-path'
 import { parseSitemapFileName } from '@/lib/seo/sitemap'
+import { siteStage } from '@/lib/site-stage'
 import { unavailableResponse } from '@/lib/unavailable'
 
 // Answers about records depend on the database and the time, which change (the nightly ROR
@@ -28,8 +31,43 @@ const LIST_REDIRECT_CACHE = 'public, max-age=86400'
 // 30 days ago the removed-page with 410 (src/lib/detail-routes.ts). A list whose filters are
 // written differently from the canonical form (src/lib/filters/canonical.ts), such as the
 // repeated parameters of the filter form without JavaScript, gets a permanent redirect to it.
+// In the M2 state (SITE_STAGE=m2, D41, D50) the public pages are shown in their M2 versions, the
+// twins under src/app/(frontend)/m2/ (src/lib/public-pages.ts): for every method, so that a form's
+// Server Action runs and its page renders again in the same version, and with the query string
+// (the emailed links' tokens). Route handlers have no twin and are never rewritten. The twins'
+// own addresses (/m2/…) are no pages: they get the 404 page, in every stage. Caddy's public
+// handles mark the requests they pass (PUBLIC_MARK in src/lib/public-pages.ts): one this image does
+// not hold public, by its own list (a text it still holds as a draft, after a rollback past an
+// approval), gets a plain 404 before any page or route runs. And every answer to a public address
+// with a method Caddy opens for it (the pages, robots.txt, the sitemaps, the routes behind the
+// forms' buttons) gets the mark too: Caddy passes only marked answers to those addresses, so an
+// image from before the M2 state, which knows no mark, shows nothing either.
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
+  if (pathname === M2_PREFIX || pathname.startsWith(`${M2_PREFIX}/`)) {
+    return NextResponse.rewrite(new URL('/_not-found', request.url), {
+      status: 404,
+      headers: NOT_STORED,
+    })
+  }
+  const m2 = siteStage() === 'm2'
+  const isPublic = m2 && isPublicRequest(request.method, pathname)
+  if (request.headers.has(PUBLIC_MARK.name) && !isPublic) {
+    return new NextResponse('Not Found', {
+      status: 404,
+      headers: { ...NOT_STORED, 'Content-Type': 'text/plain; charset=utf-8' },
+    })
+  }
+  if (m2) {
+    const mark = isPublic ? { headers: { [PUBLIC_MARK.name]: PUBLIC_MARK.value } } : undefined
+    const twin = m2Twin(pathname)
+    if (twin) {
+      const url = request.nextUrl.clone()
+      url.pathname = twin
+      return NextResponse.rewrite(url, mark)
+    }
+    if (mark) return NextResponse.next(mark)
+  }
   if (pathname.startsWith('/sitemaps/')) {
     return parseSitemapFileName(pathname.slice('/sitemaps/'.length))
       ? NextResponse.next()
@@ -89,5 +127,13 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/en/:path*', '/tr/:path*', '/sitemaps/:path*'],
+  // robots.txt and the sitemap index only for the public mark of the M2 state.
+  matcher: [
+    '/en/:path*',
+    '/tr/:path*',
+    '/sitemaps/:path*',
+    '/m2/:path*',
+    '/robots.txt',
+    '/sitemap.xml',
+  ],
 }

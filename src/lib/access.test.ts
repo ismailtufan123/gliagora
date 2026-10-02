@@ -240,6 +240,21 @@ describe('deploy/Caddyfile', () => {
       expect(rules, `resp_headers>${header}`).toContain('regexp \\?.*$ ?[removed]')
     }
   })
+
+  it('keeps the query of a rewritten address out of the logs and the answers (M2, D50)', () => {
+    // The M2 state shows its pages by a rewrite that keeps the query (an emailed link's token), and
+    // Next.js repeats it in X-Middleware-Rewrite (and X-Nextjs-Rewritten-Query, for the browser's
+    // own navigation, which needs it in the answer).
+    const fields = blockAfter(caddyfile, '(log_fields) {')
+    for (const header of ['X-Middleware-Rewrite', 'X-Nextjs-Rewritten-Query']) {
+      expect(fields, header).toMatch(new RegExp(`^\\s*resp_headers>${header} delete$`, 'm'))
+    }
+    const answers = blockAfter(caddyfile, '(security_headers) {')
+    expect(answers).toMatch(/^\s*-X-Middleware-Rewrite$/m)
+    expect(answers).not.toMatch(/-X-Nextjs-Rewritten/)
+    // The app's mark of its public answers (src/lib/public-pages.ts) is for Caddy only.
+    expect(answers).toMatch(/^\s*-X-Gliagora-Public$/m)
+  })
 })
 
 describe('the production server’s files', () => {
