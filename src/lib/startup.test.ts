@@ -53,6 +53,8 @@ describe('connectOnStart', () => {
     vi.stubEnv('NODE_ENV', 'production')
     vi.stubEnv('EMAIL_CAP_HOUR', '')
     vi.stubEnv('EMAIL_CAP_DAY', '')
+    // The other start lines' settings, unset, so that only the cap can log an error here.
+    for (const name of ['SITE_STAGE', 'LISTMONK_URL', 'LISTMONK_API_TOKEN']) vi.stubEnv(name, '')
     getPayload.mockResolvedValue({})
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -76,6 +78,10 @@ describe('connectOnStart', () => {
     getPayload.mockResolvedValue({})
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    // The other start lines' settings, unset, so that only SITE_STAGE can log an error here.
+    for (const name of ['EMAIL_CAP_HOUR', 'EMAIL_CAP_DAY', 'LISTMONK_URL', 'LISTMONK_API_TOKEN']) {
+      vi.stubEnv(name, '')
+    }
     vi.stubEnv('SITE_STAGE', '')
     await connectOnStart()
     expect(log).toHaveBeenCalledWith('Site stage: private')
@@ -91,6 +97,38 @@ describe('connectOnStart', () => {
     expect(log).toHaveBeenCalledWith('Site stage: private')
     expect(error).toHaveBeenCalledWith(expect.stringMatching(/^SITE_STAGE is not one of/))
     expect(error.mock.calls.flat().join(' ')).not.toContain('public-now')
+  })
+
+  it('says whether the Glia Notes signup is on, and names a setting it cannot use', async () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    for (const name of ['LISTMONK_URL', 'LISTMONK_API_TOKEN', 'LISTMONK_API_USER', 'SMTP_HOST']) {
+      vi.stubEnv(name, '')
+    }
+    // The other start lines' settings, unset, so that only listmonk's can log an error here.
+    for (const name of ['EMAIL_CAP_HOUR', 'EMAIL_CAP_DAY', 'SITE_STAGE']) vi.stubEnv(name, '')
+    vi.stubEnv('ALTCHA_HMAC_KEY', 'a'.repeat(64))
+    getPayload.mockResolvedValue({})
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    await connectOnStart()
+    expect(log).toHaveBeenCalledWith(
+      'Glia Notes: signup off (no listmonk settings), unsubscribe off',
+    )
+    expect(error).not.toHaveBeenCalled()
+
+    const token = 'b'.repeat(64)
+    vi.stubEnv('LISTMONK_URL', 'http://listmonk:9000')
+    vi.stubEnv('LISTMONK_API_TOKEN', token)
+    await connectOnStart()
+    expect(log).toHaveBeenCalledWith('Glia Notes: signup off (no mail server), unsubscribe on')
+    vi.stubEnv('SMTP_HOST', '127.0.0.1')
+    await connectOnStart()
+    expect(log).toHaveBeenCalledWith('Glia Notes: signup on, unsubscribe on')
+
+    vi.stubEnv('LISTMONK_URL', 'listmonk:9000')
+    await connectOnStart()
+    expect(error).toHaveBeenCalledWith(expect.stringMatching(/LISTMONK_URL is not an http/))
+    expect(JSON.stringify([log.mock.calls, error.mock.calls])).not.toContain(token)
   })
 
   it('exits so Docker restarts the app when the database is unavailable', async () => {

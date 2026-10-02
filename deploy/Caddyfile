@@ -5,8 +5,8 @@
 # also gets the errors of requests (a 502 while the app restarts or a deploy rolls back), with the
 # whole address and the visitor's IP address. IP addresses masked (IPv4 to /24, IPv6 to /48), no
 # cookies or credentials, no admin or API query strings, reset tokens, or queries in referrers,
-# redirect targets and the app's rewrites, and no queries of the sign-in, account and data-request
-# addresses.
+# redirect targets and the app's rewrites, and no queries of the sign-in, account, data-request and
+# newsletter addresses.
 (log_fields) {
 	request>remote_ip ip_mask 24 48
 	request>client_ip ip_mask 24 48
@@ -14,11 +14,13 @@
 	# Admin list filters and the admin's searches put what an editor types (e.g. an email address
 	# for a data request) in the query of /admin and /api addresses. The queries of the member
 	# addresses carry one-time tokens (emailed links), Google's and ORCID's answers (code, state)
-	# and where sign-in leads (M4b, D49). src/lib/access.test.ts applies these rules to examples.
+	# and where sign-in leads (M4b, D49); those of the newsletter addresses the confirmation link's
+	# one-time token and a subscriber's listmonk ID and UUID, the unsubscribe credential (M2, D50).
+	# src/lib/access.test.ts applies these rules to examples.
 	request>uri multi_regexp {
 		regexp ^/admin/reset/[^/?]+ /admin/reset/[removed]
 		regexp ^(/(?:admin|api)[^?]*)\?.*$ ${1}?[removed]
-		regexp ^(/en/(?:sign-in|account|legal/data-requests)(?:/[^?]*)?)\?.*$ ${1}?[removed]
+		regexp ^(/en/(?:sign-in|account|legal/data-requests|newsletter)(?:/[^?]*)?)\?.*$ ${1}?[removed]
 	}
 	request>headers>Referer multi_regexp {
 		regexp /admin/reset/[^/?]+ /admin/reset/[removed]

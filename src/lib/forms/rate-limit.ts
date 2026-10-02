@@ -57,6 +57,30 @@ export const VERIFY_EMAIL_LIMIT: LimitBucket = { name: 'verify', perWindow: 10 }
  */
 export const DATA_REQUEST_LIMIT: LimitBucket = { name: 'request', perWindow: 5 }
 
+/**
+ * The Glia Notes signup (M2, D50): 20 an hour per IP address (the form and "Send it again" count
+ * together), besides the budget of the address the confirmation link goes to and the site-wide cap
+ * (`emailLimits`), and a minute between two emails to one address (`newsletterWait`). More than the
+ * other forms allow: researchers on one campus network, or at one conference, often share an IPv4
+ * address or an IPv6 /64, and sign up together after an announcement; the spam check, the minute
+ * and the address's budget are what protect inboxes.
+ */
+export const NEWSLETTER_LIMIT: LimitBucket = { name: 'newsletter', perWindow: 20 }
+
+/** The shortest time between two confirmation emails to one address ("Send it again", §9.10). */
+export const NEWSLETTER_WAIT_MS = 60_000
+
+/**
+ * One confirmation email a minute per address (hashed as for `emailLimits`), from the form or
+ * "Send it again": reaching it says "wait a minute" rather than "too many attempts".
+ */
+export const newsletterWait = (addressHash: string): Limit => ({
+  key: `newsletter:wait:${addressHash}`,
+  perWindow: 1,
+  windowMs: NEWSLETTER_WAIT_MS,
+  problem: 'wait',
+})
+
 /** Links to add an address that one member may ask for in an hour. */
 export const MEMBER_VERIFY_PER_HOUR = 3
 
@@ -92,9 +116,10 @@ export const LIMIT_TABLE = 'form_limits'
 
 /**
  * What a form shows when a limit is reached: "too many attempts" by default; "temporarily
- * unavailable" for the site-wide cap on emails, which is not the person's doing.
+ * unavailable" for the site-wide cap on emails, which is not the person's doing; "wait a minute"
+ * for the newsletter's minute between two emails to one address.
  */
-export type LimitProblem = 'rateLimited' | 'unavailable'
+export type LimitProblem = 'rateLimited' | 'unavailable' | 'wait'
 
 /** One limit: at most `perWindow` rows of `key` within the last `windowMs`. */
 export type Limit = { key: string; perWindow: number; windowMs: number; problem?: LimitProblem }
@@ -140,7 +165,11 @@ export function hashLimitAddress(email: string, secret: string): string {
   return keyedHash(secret, 'gliagora/forms/address-hash/v1', limitAddress(email))
 }
 
-/** Emails to one address, from every form that sends one (sign-in, add an address, data request). */
+/**
+ * Emails to one address, from every form that sends one (sign-in, add an address, data request, the
+ * Glia Notes signup and its "Send it again"). The Glia Notes welcome email, sent once per confirmed
+ * signup, is not counted (src/lib/forms/email-cap.ts).
+ */
 export const EMAILS_PER_ADDRESS = { hour: 3, day: 5 }
 
 /**

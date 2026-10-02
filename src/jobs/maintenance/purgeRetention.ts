@@ -6,6 +6,8 @@ import type { Payload } from 'payload'
 import { errorSummary } from '@/lib/errors'
 import { GONE_AFTER_DAYS } from '@/lib/jobs/deadline'
 import type { JobStatus } from '@/lib/jobs/status'
+import { memberDb } from '@/lib/members/store'
+import { purgeConsentLog } from '@/lib/newsletter/store'
 import { RETENTION } from '@/lib/retention/context'
 import {
   deletionLogCutoff,
@@ -39,7 +41,10 @@ import { type SqlRunner, inTransaction, logCounts, maintenanceTask } from './tas
 // - a closed data request, 2 years after it was closed (`purgeAt`), and one nobody confirmed (kind,
 //   date and keyed address hash only), 60 days after it arrived (M4b, D49; no versions);
 // - rows of the deletion log, 7 calendar months after the deletion, once no backup can hold the
-//   deleted record any more (6 months).
+//   deleted record any more (6 months);
+// - consent records of Glia Notes (M2, D50): those of a subscription 3 calendar years after it
+//   ended (its newest record is the unsubscribe), and those without a subscriber 3 years after
+//   their own time.
 // Form-limit rows (hashed IP addresses) go hourly, in purgeFormLimits; expired member sessions and
 // email links hourly, in purgeMemberAuth.
 //
@@ -401,6 +406,17 @@ export async function purgeDeletionLog(payload: Payload, now: Date): Promise<num
   return deleted
 }
 
+/** (h) Consent records whose 3 years are up. Returns how many were deleted. */
+export async function purgeConsentRecords(payload: Payload, now: Date): Promise<number> {
+  let deleted = 0
+  for (let batch = 0; batch < MAX_BATCHES; batch++) {
+    const done = await purgeConsentLog(memberDb(payload), now, BATCH)
+    deleted += done
+    if (done < BATCH) break
+  }
+  return deleted
+}
+
 export async function purgeRetention(payload: Payload, now: Date) {
   const snippets = await purgeSnippets(payload, now)
   const suggestions = await purgeSuggestions(payload, now)
@@ -408,6 +424,7 @@ export async function purgeRetention(payload: Payload, now: Date) {
   const reports = await purgeReports(payload, now)
   const dataRequests = await purgeDataRequests(payload, now)
   const deletionLog = await purgeDeletionLog(payload, now)
+  const consentLog = await purgeConsentRecords(payload, now)
   const counts = {
     snippets,
     suggestions: suggestions.suggestions,
@@ -418,6 +435,7 @@ export async function purgeRetention(payload: Payload, now: Date) {
     dataRequests: dataRequests.closed,
     unconfirmedRequests: dataRequests.unconfirmed,
     deletionLog,
+    consentLog,
   }
   logCounts(payload, 'purgeRetention', counts)
   return counts
@@ -438,6 +456,7 @@ export const PurgeRetentionTask = maintenanceTask({
     'dataRequests',
     'unconfirmedRequests',
     'deletionLog',
+    'consentLog',
   ],
   run: purgeRetention,
 })

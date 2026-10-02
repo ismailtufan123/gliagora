@@ -1,13 +1,19 @@
-import { SESSION_DAYS, SIGN_IN_COOKIE_MINUTES } from '@/lib/retention/rules'
+import {
+  NEWSLETTER_COOKIE_MINUTES,
+  SESSION_DAYS,
+  SIGN_IN_COOKIE_MINUTES,
+} from '@/lib/retention/rules'
 
-// The two cookies of member sign-in (M4b, D49; the M4b design §8, and the cookies page). Both are
-// `__Host-` cookies: Secure, Path=/ and no Domain, so no subdomain (a future `lists.` or `stats.`)
-// can set one for the site. Browsers keep Secure cookies from http://localhost and
-// http://127.0.0.1 too, so local runs and CI behave as production. HttpOnly: no script reads them.
-// SameSite=Lax, not Strict: the provider's redirect back to the callback must carry the sign-in
-// cookie, and a member who follows a link from Glia Notes or a search result should arrive signed
-// in; every POST is also checked for its origin (origin.ts). Nothing else is ever set: no hint
-// cookie for scripts, and no Clear-Site-Data (it would sign editors out too).
+// The two cookies of member sign-in (M4b, D49; the M4b design §8, and the cookies page), and the
+// one of the newsletter signup (M2, D50). All are `__Host-` cookies: Secure, Path=/ and no Domain,
+// so no subdomain (a future `lists.` or `stats.`) can set one for the site. Browsers keep Secure
+// cookies from http://localhost and http://127.0.0.1 too, so local runs and CI behave as
+// production. HttpOnly: no script reads them. SameSite=Lax, not Strict: the provider's redirect
+// back to the callback must carry the sign-in cookie, and a member who follows a link from Glia
+// Notes or a search result should arrive signed in; every POST is also checked for its origin
+// (origin.ts). The newsletter's cookie only lets "Check your inbox" show the address it sent the
+// link to, masked, and send it again, for an hour (src/lib/newsletter/cookie.ts). Nothing else is
+// ever set: no hint cookie for scripts, and no Clear-Site-Data (it would sign editors out too).
 
 /** The session: a random token (tokens.ts), 30 days from sign-in, never extended. */
 export const SESSION_COOKIE = '__Host-gliagora-session'
@@ -18,12 +24,19 @@ export const SESSION_COOKIE = '__Host-gliagora-session'
  */
 export const SIGN_IN_COOKIE = '__Host-gliagora-signin'
 
+/**
+ * After the newsletter form (an hour): the sealed address the confirmation link went to, and when
+ * it was last sent, for "Check your inbox" and "Send it again".
+ */
+export const NEWSLETTER_COOKIE = '__Host-gliagora-newsletter'
+
 export const SESSION_MAX_AGE_SECONDS = SESSION_DAYS * 24 * 60 * 60
 export const SIGN_IN_MAX_AGE_SECONDS = SIGN_IN_COOKIE_MINUTES * 60
+export const NEWSLETTER_MAX_AGE_SECONDS = NEWSLETTER_COOKIE_MINUTES * 60
 
 /** A cookie to set, in the shape Next.js's `cookies().set()` takes. */
 export type MemberCookie = {
-  name: typeof SESSION_COOKIE | typeof SIGN_IN_COOKIE
+  name: typeof SESSION_COOKIE | typeof SIGN_IN_COOKIE | typeof NEWSLETTER_COOKIE
   value: string
   path: '/'
   httpOnly: true
@@ -51,6 +64,21 @@ export function sessionCookie(token: string, expiresAt: Date, now: Date): Member
 /** The sign-in cookie with a sealed value (seal.ts). */
 export function signInCookie(sealed: string): MemberCookie {
   return cookie(SIGN_IN_COOKIE, sealed, SIGN_IN_MAX_AGE_SECONDS)
+}
+
+/**
+ * The newsletter's cookie with a sealed value (src/lib/newsletter/cookie.ts), for an hour or, when
+ * "Send it again" sets it again, for what is left of the hour from the form.
+ */
+export function newsletterCookie(
+  sealed: string,
+  maxAgeSeconds: number = NEWSLETTER_MAX_AGE_SECONDS,
+): MemberCookie {
+  return cookie(
+    NEWSLETTER_COOKIE,
+    sealed,
+    Math.max(0, Math.min(Math.floor(maxAgeSeconds), NEWSLETTER_MAX_AGE_SECONDS)),
+  )
 }
 
 /** Deletes a cookie: an empty value that expires at once, with the same attributes. */

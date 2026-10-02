@@ -757,6 +757,82 @@
       "home": "Ana sayfaya gidin"
     }
   },
+  "newsletter": {
+    "title": "Glia Notes",
+    "description": "Glia Notes, aylık Gliagora bülteni: yeni nörobilim pozisyonları, yaklaşan son başvuru tarihleri, makaleler ve fonlar, ayda bir e-postayla.",
+    "intro": "Aylık Gliagora bülteni. Ayda bir e-posta: yeni pozisyonlar, yaklaşan son başvuru tarihleri, makaleler ve fonlar.",
+    "firstIssue": "İlk sayı, sitenin herkese açılmasıyla birlikte gelir. Önce adresinizi onaylamanız için bir bağlantı, ardından bir hoş geldiniz e-postası göndeririz; site açılana kadar başka bir şey göndermeyiz.",
+    "unavailable": "Glia Notes aboneliği henüz açılmadı. Lütfen daha sonra yeniden gelin.",
+    "noscript": "Bu formdaki spam denetimi JavaScript gerektirir; form yalnızca JavaScript açıkken gönderilebilir.",
+    "email": {
+      "label": "E-posta adresiniz",
+      "hint": "Aboneliğinizi onaylamanız için bu adrese bir bağlantı göndeririz. Bağlantı 7 gün çalışır."
+    },
+    "consent": {
+      "label": "Glia Notes'u e-postayla almayı kabul ediyorum.",
+      "hint": "En az 16 yaşında olmanız gerekir. Her e-postadaki bağlantıyla istediğiniz zaman abonelikten çıkabilirsiniz; adresiniz o zaman silinir. Lütfen <consent>Glia Notes açık rıza metnini</consent>, <privacy>gizlilik politikasını</privacy> (İngilizce) ve <kvkk>KVKK aydınlatma metnini</kvkk> okuyun."
+    },
+    "honeypot": "Bu alanı boş bırakın",
+    "spamNote": "Spam programlarını uzak tutmak için tarayıcınız form gönderilmeden önce küçük bir bulmaca çözer; gönderilebilecek e-posta sayısını sınırlamak için IP adresinizin ve e-posta adresinin karıştırılmış biçimlerini 24 saat saklarız. <link>Formu nasıl koruyoruz</link>",
+    "submit": "Aylık bülteni al",
+    "sending": "Onay bağlantısı gönderiliyor…",
+    "errors": {
+      "title": "Bir sorun var",
+      "prefix": "Hata:",
+      "emailMissing": "E-posta adresinizi girin: onay bağlantısını bu adrese göndeririz.",
+      "emailInvalid": "E-posta adresini doğru biçimde girin, örneğin ad@example.org.",
+      "emailTooLong": "En fazla 254 karakterlik bir e-posta adresi girin.",
+      "consentMissing": "Glia Notes'u e-postayla almayı kabul etmek için kutuyu işaretleyin.",
+      "needsJs": "Spam denetimi çalışmadı: sayfa yüklenmeyi bitirmemişti ya da tarayıcınızda JavaScript kapalı veya engelli. Sayfa yüklenene kadar bekleyip formu yeniden gönderin.",
+      "spamCheck": "Spam denetiminin süresi doldu veya denetim çalışmadı. Lütfen formu yeniden gönderin.",
+      "rateLimited": "Son zamanlarda buradan veya bu adrese çok fazla bağlantı gönderildi. Lütfen daha sonra yeniden deneyin.",
+      "wait": "Bu adrese bir dakikadan kısa süre önce bağlantı gönderdik. Yeniden istemeden önce lütfen bir dakika bekleyin.",
+      "unavailable": "Onay e-postasını şu anda gönderemedik. Lütfen birkaç dakika sonra yeniden deneyin.",
+      "failed": "Bir sorun oluştu ve onay e-postası gönderilmedi. Lütfen daha sonra yeniden deneyin ya da hello@gliagora.com adresine yazıp {reference} referans kodunu belirtin."
+    },
+    "inbox": {
+      "title": "E-posta kutunuza bakın",
+      "sent": "<strong>{email}</strong> adresine bir onay bağlantısı gönderdik. Bağlantının süresi {days} gün sonra dolar.",
+      "confirm": "Bağlantıyı açıp onayladığınızda abone olursunuz.",
+      "missing": "Bir şey gelmedi mi? İstenmeyen e-posta klasörünüze bakın ya da bağlantıyı yeniden gönderin (en fazla dakikada bir).",
+      "again": "Yeniden gönder",
+      "wrongAddress": "Adres yanlış mı? <link>Geri dönün</link>.",
+      "general": "Adresinizi forma girdiyseniz bu adrese bir onay bağlantısı gönderdik. Bağlantının süresi {days} gün sonra dolar.",
+      "generalMissing": "Bir şey gelmedi mi? İstenmeyen e-posta klasörünüze bakın ve adresinizi doğru yazdığınızdan emin olun. <link>Yeniden abone olabilirsiniz</link>."
+    },
+    "confirm": {
+      "title": "Aboneliğinizi onaylayın",
+      "address": "<strong>{email}</strong> adresini Glia Notes'a abone edin.",
+      "what": "Glia Notes, sitenin herkese açılmasından itibaren ayda bir gelir. Her e-postadaki bağlantıyla istediğiniz zaman abonelikten çıkabilirsiniz.",
+      "notYou": "Bunu siz istemediyseniz bu sayfayı kapatın: hiçbir şey olmaz.",
+      "button": "Aboneliğimi onayla",
+      "expiredTitle": "Bu bağlantının süresi doldu",
+      "expired": "Bu bağlantının süresi doldu ya da bağlantı zaten kullanıldı. Aboneliği onaylama bağlantısı {days} gün boyunca ve yalnızca bir kez çalışır.",
+      "expiredUsed": "Bağlantıyı az önce kullandıysanız abonesiniz. Kullanmadıysanız lütfen yeniden abone olun.",
+      "again": "Yeniden abone ol"
+    },
+    "confirmed": {
+      "title": "Abone oldunuz",
+      "text": "Glia Notes'a abone oldunuz. İlk sayı, sitenin herkese açılmasıyla birlikte gelir; o zamana kadar başka bir şey göndermeyiz.",
+      "welcome": "Size, istediğiniz zaman abonelikten çıkmanızı sağlayan bağlantıyı içeren bir hoş geldiniz e-postası gönderiyoruz. Gelmezse aynı adresle yeniden abone olarak e-postayı bir kez daha alabilirsiniz.",
+      "home": "Ana sayfaya git",
+      "about": "Gliagora hakkında"
+    },
+    "unsubscribe": {
+      "title": "Glia Notes aboneliğinden çıkın",
+      "incomplete": "Bu abonelikten çıkma bağlantısı eksik. Lütfen e-postadaki bağlantının tamamını açın ya da e-posta programınızın abonelikten çıkma düğmesini kullanın. <email>hello@gliagora.com</email> adresine de yazabilirsiniz.",
+      "text": "Glia Notes'u durdurmak için düğmeye basın. Adresiniz o anda bültenden silinir.",
+      "kept": "Yalnızca açık rızanızın ve bu abonelikten çıkmanın kaydını, adresiniz olmadan, 3 yıl saklarız.",
+      "button": "Abonelikten çık"
+    },
+    "unsubscribed": {
+      "title": "Abonelikten çıktınız",
+      "text": "Glia Notes aboneliğinden çıktınız. Bu adres listedeyse onu sildik.",
+      "kept": "Yalnızca açık rızanızın ve bu abonelikten çıkmanın kaydını, adresiniz olmadan, 3 yıl saklarız.",
+      "again": "Fikrinizi mi değiştirdiniz? <link>Yeniden abone olabilirsiniz</link>.",
+      "home": "Ana sayfaya git"
+    }
+  },
   "signIn": {
     "title": "Oturum aç",
     "description": "Gliagora'da oturum açın. Gliagora parolası yoktur.",
@@ -1044,7 +1120,8 @@
       "name-saved": "Görünen adınız kaydedildi.",
       "name-removed": "Görünen adınız kaldırıldı.",
       "not-signed-in": "Oturumunuz açık değil. Hesabınızı az önce sildiyseniz hesabınız silindi.",
-      "othersEnded": "Oturumunuzun açık olduğu diğer tarayıcılarda oturumunuz kapatıldı."
+      "othersEnded": "Oturumunuzun açık olduğu diğer tarayıcılarda oturumunuz kapatıldı.",
+      "resent": "Bağlantıyı yeniden gönderdik. Gelmesi birkaç dakika sürebilir."
     },
     "error": {
       "link-expired": "Bu oturum açma bağlantısının süresi dolmuş ya da bağlantı daha önce kullanılmış. Aşağıdan yeni bir bağlantı isteyin.",
@@ -1074,7 +1151,16 @@
       "digest-consent": "Glia Notes açılmadı: almayı kabul ettiğinizi belirtmek için kutuyu işaretleyin, sonra yeniden Glia Notes'u al düğmesine basın.",
       "digest-needs-email": "Glia Notes için bir e-posta adresi gerekir. Önce hesabınıza bir adres ekleyin.",
       "subfields-too-many": "En fazla 12 alt alan seçin. Tercih ettiğiniz alt alanlar değişmedi.",
-      "name-invalid": "Görünen ad kaydedilmedi: en fazla 80 karakter kullanın, kontrol karakterleri kullanmayın."
+      "name-invalid": "Görünen ad kaydedilmedi: en fazla 80 karakter kullanın, kontrol karakterleri kullanmayın.",
+      "wait": "Son bağlantıyı bir dakikadan kısa süre önce gönderdik. Yeniden istemeden önce lütfen bir dakika bekleyin.",
+      "limited": "Son zamanlarda buradan veya bu adrese çok fazla bağlantı gönderildi. Lütfen daha sonra yeniden deneyin.",
+      "unavailable": "Bu işlem geçici olarak yapılamıyor. Lütfen birkaç dakika sonra yeniden deneyin.",
+      "subscribeFailed": "Aboneliğiniz tamamlanmadı: bir sorun oluştu. Lütfen düğmeye yeniden basın.",
+      "subscribeFailedReference": "Aboneliğiniz tamamlanmadı: bir sorun oluştu. Lütfen düğmeye yeniden basın. Sorun sürerse hello@gliagora.com adresine yazıp {reference} referans kodunu belirtin.",
+      "unsubscribeFailed": "Henüz abonelikten çıkmadınız: bir sorun oluştu. Lütfen yeniden deneyin.",
+      "unsubscribeFailedReference": "Henüz abonelikten çıkmadınız: bir sorun oluştu. Lütfen yeniden deneyin ya da hello@gliagora.com adresine yazıp {reference} referans kodunu belirtin.",
+      "resendFailed": "Bağlantıyı yeniden gönderemedik: bir sorun oluştu. Lütfen yeniden deneyin.",
+      "resendFailedReference": "Bağlantıyı yeniden gönderemedik: bir sorun oluştu. Lütfen yeniden deneyin ya da hello@gliagora.com adresine yazıp {reference} referans kodunu belirtin."
     }
   },
   "emails": {
@@ -1149,6 +1235,21 @@
         "nothing": "Onayladığınız üzere, Gliagora | Neuroscience'ın bu e-posta adresiyle tuttuğu verileri aradık. Bu adresle bir ilan önerisi, hesap, bülten aboneliği veya sorun bildirimi bulamadık; bu nedenle silinecek bir şey yoktu.",
         "kept": "{count, plural, one {Kişilik haklarınızla ilgili bize gönderdiğiniz # talepteki bu adresi saklıyoruz: bu talepleri 5651 sayılı Kanun kapsamında ele alır ve nasıl ele aldığımızı gösterebilmek için adresle birlikte, kapandıktan sonra 2 yıl saklarız.} other {Kişilik haklarınızla ilgili bize gönderdiğiniz # talepteki bu adresi saklıyoruz: bu talepleri 5651 sayılı Kanun kapsamında ele alır ve nasıl ele aldığımızı gösterebilmek için adresle birlikte, kapandıktan sonra 2 yıl saklarız.}}",
         "record": "Talebinizi yerine getirdiğimizi gösterebilmek için talebinizin kaydını bu e-posta adresiyle birlikte 2 yıl saklarız. Yedeklerimiz silinen verileri en fazla 6 ay daha içerebilir; bir yedek geri yüklenirse veriler yeniden silinir. Verilerinizi nasıl işlediğimiz: {privacyUrl}"
+      }
+    },
+    "newsletter": {
+      "confirm": {
+        "subject": "Glia Notes aboneliğinizi onaylayın",
+        "intro": "Birisi, Gliagora | Neuroscience'ın aylık bülteni Glia Notes'u bu e-posta adresine almak istedi. Aboneliği onaylamak için bu bağlantıyı açıp düğmeye basın:",
+        "validity": "Bağlantı 7 gün boyunca ve yalnızca bir kez çalışır.",
+        "notYou": "Bunu siz istemediyseniz bu e-postayı dikkate almayın: hiçbir şey olmaz ve abone olmazsınız. Bu adresi yalnızca bağlantıyla birlikte saklar, 7 gün sonra sileriz."
+      },
+      "welcome": {
+        "subject": "Glia Notes'a abone oldunuz",
+        "text": "Onayladığınız için teşekkürler: bu e-posta adresi, Gliagora | Neuroscience'ın aylık bülteni Glia Notes'a abone oldu.",
+        "launch": "İlk sayı, Gliagora'nın herkese açılmasıyla birlikte gelir. O zamana kadar size başka bir şey göndermeyiz.",
+        "unsubscribe": "İstediğiniz zaman abonelikten çıkabilirsiniz: bu bağlantıyı açıp düğmeye basın; adresiniz o anda silinir. Her sayıda aynı bağlantı bulunur.",
+        "kept": "Adresinizi, abonelikten çıkana kadar bülten sistemimizde; açık rıza kaydınızı (ne zaman istediğiniz ve onayladığınız ile açık rıza metninin sürümü, adresiniz olmadan) abonelikten çıktıktan sonra 3 yıl saklarız. Verilerinizi nasıl işlediğimiz: {privacyUrl}"
       }
     },
     "account": {

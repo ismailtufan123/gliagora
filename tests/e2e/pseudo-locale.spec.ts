@@ -2,6 +2,7 @@ import { type Page, expect, test } from '@playwright/test'
 
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
 import { clientAddress, summary } from './forms'
+import { needsListmonk } from './listmonk'
 import { signInLinkTo } from './mailpit'
 import {
   askForLink,
@@ -129,6 +130,17 @@ for (const viewport of [
       await page.getByRole('button', { name: 'Send request' }).click()
       await expect(summary(page)).toBeFocused()
       await expectLayoutHolds(page, testInfo, 'data request, errors')
+    })
+
+    test('Glia Notes signup, with errors', async ({ page }, testInfo) => {
+      needsMailpit()
+      needsListmonk()
+      await page.setExtraHTTPHeaders({ 'X-Forwarded-For': clientAddress() })
+      await page.goto('/en/newsletter/')
+      await page.getByLabel('Your email address').fill('not an address')
+      await page.getByRole('button', { name: 'Get the monthly digest' }).click()
+      await expect(summary(page)).toBeFocused()
+      await expectLayoutHolds(page, testInfo, 'Glia Notes signup, errors')
     })
 
     test('sign in, with errors', async ({ page }, testInfo) => {

@@ -107,11 +107,12 @@ migration_query() {
 }
 
 # Carried over (M4b, D49; PLAN §18.2), for the app's database only. A restore brings back
-# everything deleted after the snapshot, and sets the ID sequences back. So `database` keeps two
+# everything deleted after the snapshot, and sets the ID sequences back. So `database` keeps three
 # tables of the live database:
-# the deletion log (record IDs only), which lists the deletions to repeat on the restored data, and
-# the data requests, the record of what people asked and what was done. It copies their rows out
-# (binary COPY, into a folder only root can read, since requests hold addresses) before the
+# the deletion log (record IDs only), which lists the deletions to repeat on the restored data, the
+# data requests, the record of what people asked and what was done, and (M2, D50) the consent
+# records of Glia Notes, the evidence of each subscription's consent and unsubscribe. It copies
+# their rows out (binary COPY, into a folder only root can read, since requests hold addresses) before the
 # database is replaced, loads them back into the restored database, where they replace older
 # copies of the same rows, and in the same transaction moves the ID sequences of those tables and
 # of members, suggestions and reports past every ID carried over or named by the log: the next
@@ -125,12 +126,14 @@ migration_query() {
 # step checks its own result: a copy that failed must never let the live database be dropped.
 CARRY_COLUMNS_deletion_log='id, target_collection, target_id, action, at'
 CARRY_COLUMNS_data_requests='id, kind, email, name, locale, details, action_note, outcome, status, action, source, received_at, respond_by, closed_at, purge_at, confirmation_sent_at, email_hash, updated_at, created_at'
-CARRY_TABLES=(deletion_log data_requests)
+CARRY_COLUMNS_consent_log='id, subscriber_uuid, subscriber_id, event, consent_version, source, at, updated_at, created_at'
+CARRY_TABLES=(deletion_log data_requests consent_log)
 # Tables whose ID sequence moves past the carried and logged IDs; the deletion log names records
 # of the first three (its target_collection is the table's name).
-SEQUENCE_TABLES=(members submissions reports data_requests deletion_log)
+SEQUENCE_TABLES=(members submissions reports data_requests deletion_log consent_log)
 # What carry_load returns when the restored database lacks a carried table that has rows to take
-# (a backup from before M4b): the app's migrations make the table when it starts (`carry`).
+# (a backup from before M4b, or from before M2 for the consent log): the app's migrations make the
+# table when it starts (`carry`).
 CARRY_NEEDS_TABLES=3
 
 carry_columns() { local name="CARRY_COLUMNS_$1"; echo "${!name}"; }
@@ -205,7 +208,7 @@ carry_load() {
     if [[ $found -eq 0 ]]; then
       load+=("$table")
     elif [[ $found -eq 1 ]] && ! pgcopy_has_rows "$dir/$table.bin"; then
-      log "The restored database has no $table table (a backup from before M4b); nothing to carry."
+      log "The restored database has no $table table (an older backup); nothing to carry."
     elif [[ $found -eq 1 ]]; then
       missing+=("$table")
     else
@@ -214,7 +217,7 @@ carry_load() {
     fi
   done
   if [[ ${#missing[@]} -gt 0 ]]; then
-    log "ERROR: the restored database is from before M4b and has no ${missing[*]} table, but the live database had rows in it."
+    log "ERROR: the restored database is older and has no ${missing[*]} table, but the live database had rows in it."
     return "$CARRY_NEEDS_TABLES"
   fi
   for table in "${load[@]}"; do
@@ -271,19 +274,28 @@ carry_report() {
   done
 }
 
-# A new log row and a new request can be stored after the carry-over (their IDs are free). A
-# database without both tables (from before M4b) has nothing to check.
+# A new log row, a new request and a new consent record can be stored after the carry-over (their
+# IDs are free). A database without the first two tables (from before M4b) has nothing to check,
+# one without the consent log (from before M2) only those two.
 carry_check_inserts() {
-  local table found
+  local table found consent=''
   for table in deletion_log data_requests; do
     found=0
     has_table "$@" "$table" || found=$?
     if [[ $found -eq 1 ]]; then return 0; fi
     [[ $found -eq 0 ]] || return 1
   done
+  found=0
+  has_table "$@" consent_log || found=$?
+  if [[ $found -eq 0 ]]; then
+    consent="insert into consent_log (event, source, at) values ('unsubscribed', 'unsubscribe-link', now());"
+  elif [[ $found -ne 1 ]]; then
+    return 1
+  fi
   "$@" <<<"begin;
 insert into deletion_log (target_collection, target_id, action, at) values ('members', 0, 'delete', now());
 insert into data_requests (kind, status, source, locale, email) values ('other', 'new', 'email', 'en', 'restore-test@example.org');
+$consent
 rollback;"
 }
 
@@ -384,19 +396,19 @@ case "$command" in
       carry=$(carry_dir)
       trap 'docker rm -f -v "$name" >/dev/null 2>&1 || true; rm -rf "$carry"' EXIT
       restored=(docker exec -i "$name" psql -U postgres -d restore_test -X -q -v ON_ERROR_STOP=1)
-      log "Carrying the live deletion log and data requests over"
+      log "Carrying the live deletion log, data requests and consent records over"
       carry_save "$carry" live_psql "$db" || fail "Could not copy the rows to carry over."
       status=0
       carry_load "$carry" "${restored[@]}" || status=$?
       if [[ $status -eq $CARRY_NEEDS_TABLES ]]; then
-        fail "The snapshot restores, but it is from before M4b, and the live database has rows for \
-tables it lacks. A real restore of it would stop with the app stopped; 'restore.sh carry' would then \
+        fail "The snapshot restores, but it is older than some carried tables (from before M4b or M2), \
+and the live database has rows for tables it lacks. A real restore of it would stop with the app stopped; 'restore.sh carry' would then \
 finish it (deploy/README.md, section 7)."
       fi
       [[ $status -eq 0 ]] || fail "Could not load the carried rows into the restored copy."
       carry_report "${restored[@]}" || fail "Could not read the carried rows in the restored copy."
       carry_check_inserts "${restored[@]}" \
-        || fail "After the carry-over, a new deletion-log row or data request could not be stored."
+        || fail "After the carry-over, a new deletion-log row, data request or consent record could not be stored."
     fi
     log "Restore test passed: $db, $tables tables, $migrations migrations."
     ;;
@@ -453,13 +465,14 @@ ${carry:+ The rows to carry over are in $carry.}"
       status=0
       carry_load "$carry" live_psql "$db" || status=$?
       if [[ $status -eq $CARRY_NEEDS_TABLES ]]; then
-        fail "The snapshot is from before M4b: the live deletion log or data requests have rows, and \
-the restored database has no table for them yet. The app is stopped, and the rows are kept in $carry. \
-Run '$0 carry $carry $db' with an app image that includes M4b (the deployed one does, unless you went \
-back to an older image: then deploy M4b again first, and keep $carry until then). It starts the app \
+        fail "The snapshot is older than some carried tables (from before M4b or M2): the live \
+deletion log, data requests or consent records have rows, and the restored database has no table for \
+them yet. The app is stopped, and the rows are kept in $carry. Run '$0 carry $carry $db' with an app \
+image that includes them (the deployed one does, unless you went back to an older image: then deploy \
+the current one again first, and keep $carry until then). It starts the app \
 once, so that its migrations make the tables, stops it, loads the rows and starts the app. $PRE_RESTORE"
       elif [[ $status -ne 0 ]]; then
-        fail "Carrying the deletion log and data requests over failed. The app is stopped, and the \
+        fail "Carrying the deletion log, data requests and consent records over failed. The app is stopped, and the \
 rows are kept in $carry: fix the cause, then run '$0 carry $carry $db', which starts the app. $PRE_RESTORE"
       fi
       carry_report live_psql "$db" || log "Could not report the carried rows (the carry-over itself is done)."
@@ -486,14 +499,14 @@ rows are kept in $carry: fix the cause, then run '$0 carry $carry $db', which st
     status=0
     carry_load "$carry" live_psql "$db" || status=$?
     if [[ $status -eq $CARRY_NEEDS_TABLES ]]; then
-      # A backup from before M4b: the app's migrations make the tables when it starts.
+      # An older backup (before M4b or M2): the app's migrations make the tables when it starts.
       log "Starting the app once, so that its migrations make the missing tables, then stopping it"
       compose up -d --wait app || fail "The app did not start. The rows are still in $carry. $PRE_RESTORE"
       compose stop app
       status=0
       carry_load "$carry" live_psql "$db" || status=$?
       [[ $status -ne $CARRY_NEEDS_TABLES ]] || fail "The app did not make the tables: its image is \
-from before M4b. Deploy one with M4b, then run '$0 carry $carry $db' again. The app is stopped; the \
+older than them. Deploy the current one, then run '$0 carry $carry $db' again. The app is stopped; the \
 rows are still in $carry. $PRE_RESTORE"
     fi
     [[ $status -eq 0 ]] || fail "Carrying over failed again. The app is stopped; the rows are \

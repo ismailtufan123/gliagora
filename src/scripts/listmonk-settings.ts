@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { drizzle } from '@payloadcms/db-postgres/drizzle/node-postgres'
 
 import { smtpSettings } from '@/lib/email/settings'
+import { DEFAULT_LISTMONK_API_USER } from '@/lib/newsletter/config'
 
 // Applies deploy/listmonk/settings.sql to a listmonk database (M2, D50): the same file the server
 // applies with psql (deploy/listmonk/prepare.sh), here through node-postgres for local development
@@ -18,8 +19,8 @@ type Env = Record<string, string | undefined>
 /** The file, read when it is applied (the Docker image of the app does not hold deploy/). */
 export const SETTINGS_SQL = join(process.cwd(), 'deploy/listmonk/settings.sql')
 
-/** The app's API user in listmonk (settings.sql makes it). */
-export const LISTMONK_API_USER = 'gliagora-app'
+/** The app's API user in listmonk (settings.sql makes it; the app's default LISTMONK_API_USER). */
+export const LISTMONK_API_USER = DEFAULT_LISTMONK_API_USER
 
 /** listmonk's own address when LISTMONK_ROOT_URL is not set: compose.yaml's. */
 export const DEFAULT_ROOT_URL = 'http://localhost:9000'

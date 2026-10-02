@@ -196,6 +196,16 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
     const byId = await api(`/api/subscribers/${id}`)
     expect(byId.status).toBe(200)
     expect(byId.data).toMatchObject({ id, uuid, email: 'reader.one@example.org' })
+    // An unknown ID answers 400 ("not found"), which the app reads as no such subscriber.
+    expect((await api('/api/subscribers/2147483647')).status).toBe(400)
+    // And in the list of Glia Notes, read page by page by ID (`list_id`, no SQL either), as the
+    // deletion log's check reads it (src/lib/newsletter/reconcile.ts), in pages of 500.
+    const page = await api(
+      `/api/subscribers?list_id=${glia}&per_page=500&page=1&order_by=subscribers.id&order=asc`,
+    )
+    expect(page.status).toBe(200)
+    expect(page.data).toMatchObject({ per_page: 500, page: 1 })
+    expect((page.data as { results: { id: number }[] }).results.map((row) => row.id)).toContain(id)
 
     const changed = await api(`/api/subscribers/${id}`, {
       method: 'PATCH',

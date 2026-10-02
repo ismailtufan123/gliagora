@@ -16,6 +16,7 @@ import { OUTCOME_ID } from './paths'
  * (`email-verified`), Glia Notes switched on or off, the preferred subfields saved or all removed,
  * the display name saved or removed. `not-signed-in`: "Delete my account" pressed with no session,
  * as after a second press once the account was deleted (src/lib/members/account-deletion.ts).
+ * Glia Notes (M2, D50): `resent`, a new confirmation link sent from "Check your inbox".
  */
 export const DONE_CODES = [
   'signed-in',
@@ -34,6 +35,7 @@ export const DONE_CODES = [
   'name-saved',
   'name-removed',
   'not-signed-in',
+  'resent',
 ] as const
 /**
  * What a redirect reports as gone wrong. Messages under `outcome.error`. Besides the email link's
@@ -48,7 +50,10 @@ export const DONE_CODES = [
  * to another account (`email-taken`), a link to add an address that expired or was used
  * (`verify-expired`), Glia Notes without the consent box ticked (`digest-consent`) or without an
  * address (`digest-needs-email`), more preferred subfields than there may be
- * (`subfields-too-many`), and a display name that cannot be stored (`name-invalid`).
+ * (`subfields-too-many`), and a display name that cannot be stored (`name-invalid`). Glia Notes
+ * (M2, D50): "Send it again" within a minute of the last email (`wait`), past the form's limits
+ * (`limited`), or while the signup or listmonk is off or the mail server did not take the email
+ * (`unavailable`, also on the confirmation and unsubscribe pages).
  */
 export const ERROR_CODES = [
   'link-expired',
@@ -73,6 +78,9 @@ export const ERROR_CODES = [
   'digest-needs-email',
   'subfields-too-many',
   'name-invalid',
+  'wait',
+  'limited',
+  'unavailable',
 ] as const
 
 export type DoneCode = (typeof DONE_CODES)[number]

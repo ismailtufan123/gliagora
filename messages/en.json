@@ -757,6 +757,82 @@
       "home": "Go to the home page"
     }
   },
+  "newsletter": {
+    "title": "Glia Notes",
+    "description": "Glia Notes, the monthly Gliagora newsletter: new neuroscience positions, upcoming deadlines, papers and funding, once a month by email.",
+    "intro": "The monthly Gliagora newsletter. One email a month: new positions, upcoming deadlines, papers and funding.",
+    "firstIssue": "The first issue comes with our public launch. We first send you a link to confirm your address, then a welcome email, and nothing else until the launch.",
+    "unavailable": "Signing up for Glia Notes is not open yet. Please come back later.",
+    "noscript": "The spam check on this form needs JavaScript, so the form can only be sent with JavaScript turned on.",
+    "email": {
+      "label": "Your email address",
+      "hint": "We send a link there to confirm your subscription. It works for 7 days."
+    },
+    "consent": {
+      "label": "I agree to receive Glia Notes by email.",
+      "hint": "You must be 16 or older. You can unsubscribe at any time with the link in every email, and your address is then deleted. Please read the <consent>Glia Notes consent text (in Turkish)</consent>, the <privacy>privacy policy</privacy> and the <kvkk>KVKK information notice</kvkk> (in Turkish)."
+    },
+    "honeypot": "Leave this field empty",
+    "spamNote": "To keep out spam programs, your browser solves a small puzzle before the form is sent, and we keep scrambled forms of your IP address and of the email address for 24 hours to limit how many emails can be sent. <link>How we protect the form</link>",
+    "submit": "Get the monthly digest",
+    "sending": "Sending the confirmation link…",
+    "errors": {
+      "title": "There is a problem",
+      "prefix": "Error:",
+      "emailMissing": "Enter your email address: we send the confirmation link there.",
+      "emailInvalid": "Enter an email address in the correct format, such as name@example.org.",
+      "emailTooLong": "Enter an email address of 254 characters or fewer.",
+      "consentMissing": "Tick the box to agree to receive Glia Notes by email.",
+      "needsJs": "The spam check did not run: the page had not finished loading, or JavaScript is turned off or blocked in your browser. Wait until the page has loaded and send the form again.",
+      "spamCheck": "The spam check has expired or did not work. Please send the form again.",
+      "rateLimited": "Too many links have been sent recently, from here or to this address. Please try again later.",
+      "wait": "We sent a link to this address less than a minute ago. Please wait a minute before asking again.",
+      "unavailable": "We could not send the confirmation email just now. Please try again in a few minutes.",
+      "failed": "Something went wrong and the confirmation email was not sent. Please try again later, or write to hello@gliagora.com and mention reference {reference}."
+    },
+    "inbox": {
+      "title": "Check your inbox",
+      "sent": "We sent a confirmation link to <strong>{email}</strong>. It expires in {days} days.",
+      "confirm": "You are subscribed only once you open the link and confirm.",
+      "missing": "Nothing arrived? Check your spam folder, or send the link again (once a minute at most).",
+      "again": "Send it again",
+      "wrongAddress": "Wrong address? <link>Go back</link>.",
+      "general": "If you entered your address in the form, we have sent a confirmation link to it. It expires in {days} days.",
+      "generalMissing": "Nothing arrived? Check your spam folder, and check that you typed your address correctly. You can <link>sign up again</link>."
+    },
+    "confirm": {
+      "title": "Confirm your subscription",
+      "address": "Subscribe <strong>{email}</strong> to Glia Notes.",
+      "what": "Glia Notes comes once a month, from our public launch on. You can unsubscribe at any time with the link in every email.",
+      "notYou": "If you did not ask for this, close this page: nothing happens.",
+      "button": "Confirm my subscription",
+      "expiredTitle": "This link has expired",
+      "expired": "This link has expired or has already been used. A link to confirm a subscription works for {days} days and only once.",
+      "expiredUsed": "If you used it a moment ago, you are subscribed. Otherwise, please sign up again.",
+      "again": "Sign up again"
+    },
+    "confirmed": {
+      "title": "You are subscribed",
+      "text": "You are subscribed to Glia Notes. The first issue comes with our public launch; until then we send nothing else.",
+      "welcome": "We are sending you a welcome email with the link to unsubscribe whenever you like. If it does not arrive, sign up again with the same address to get it once more.",
+      "home": "Go to the home page",
+      "about": "About Gliagora"
+    },
+    "unsubscribe": {
+      "title": "Unsubscribe from Glia Notes",
+      "incomplete": "This unsubscribe link is incomplete. Please open the whole link from the email, or use the unsubscribe button of your mail program. You can also write to <email>hello@gliagora.com</email>.",
+      "text": "Press the button to stop Glia Notes. Your address is then deleted from the newsletter at once.",
+      "kept": "We keep only the record of your consent and of this unsubscribe, without your address, for 3 years.",
+      "button": "Unsubscribe"
+    },
+    "unsubscribed": {
+      "title": "You are unsubscribed",
+      "text": "You are unsubscribed from Glia Notes. If this address was on the list, we have deleted it.",
+      "kept": "We keep only the record of your consent and of this unsubscribe, without your address, for 3 years.",
+      "again": "Changed your mind? You can <link>subscribe again</link>.",
+      "home": "Go to the home page"
+    }
+  },
   "signIn": {
     "title": "Sign in",
     "description": "Sign in to Gliagora. There are no Gliagora passwords.",
@@ -1044,7 +1120,8 @@
       "name-saved": "Your display name has been saved.",
       "name-removed": "Your display name has been removed.",
       "not-signed-in": "You are not signed in. If you have just deleted your account, it has been deleted.",
-      "othersEnded": "Other browsers where you were signed in have been signed out."
+      "othersEnded": "Other browsers where you were signed in have been signed out.",
+      "resent": "We have sent the link again. It may take a few minutes to arrive."
     },
     "error": {
       "link-expired": "This sign-in link has expired or has already been used. Ask for a new link below.",
@@ -1074,7 +1151,16 @@
       "digest-consent": "Glia Notes is not on: tick the box to agree to receive it, then press Get Glia Notes again.",
       "digest-needs-email": "Glia Notes needs an email address. Add one to your account first.",
       "subfields-too-many": "Choose at most 12 subfields. Your preferred subfields have not changed.",
-      "name-invalid": "The display name was not saved: use at most 80 characters, without control characters."
+      "name-invalid": "The display name was not saved: use at most 80 characters, without control characters.",
+      "wait": "We sent the last link less than a minute ago. Please wait a minute before asking again.",
+      "limited": "Too many links have been sent recently, from here or to this address. Please try again later.",
+      "unavailable": "This is temporarily unavailable. Please try again in a few minutes.",
+      "subscribeFailed": "Your subscription is not complete: something went wrong. Please press the button again.",
+      "subscribeFailedReference": "Your subscription is not complete: something went wrong. Please press the button again. If it keeps failing, write to hello@gliagora.com and mention reference {reference}.",
+      "unsubscribeFailed": "You are not unsubscribed yet: something went wrong. Please try again.",
+      "unsubscribeFailedReference": "You are not unsubscribed yet: something went wrong. Please try again, or write to hello@gliagora.com and mention reference {reference}.",
+      "resendFailed": "We could not send the link again: something went wrong. Please try again.",
+      "resendFailedReference": "We could not send the link again: something went wrong. Please try again, or write to hello@gliagora.com and mention reference {reference}."
     }
   },
   "emails": {
@@ -1149,6 +1235,21 @@
         "nothing": "As you confirmed, we looked for data that Gliagora | Neuroscience held under this email address. We found no suggestion, account, newsletter subscription or problem report with it, so there was nothing to delete.",
         "kept": "{count, plural, one {We keep this address on # request about your personal rights that you sent us: we handle such requests under Law No. 5651 and keep them, with the address, for 2 years after they are closed, to be able to show how we handled them.} other {We keep this address on # requests about your personal rights that you sent us: we handle such requests under Law No. 5651 and keep them, with the address, for 2 years after they are closed, to be able to show how we handled them.}}",
         "record": "We keep a record of your request, with this email address, for 2 years, to show that we handled it. Our backups may hold the deleted data for up to 6 months; if a backup is ever restored, it is deleted again. How we handle your data: {privacyUrl}"
+      }
+    },
+    "newsletter": {
+      "confirm": {
+        "subject": "Confirm your subscription to Glia Notes",
+        "intro": "Someone asked to receive Glia Notes, the monthly newsletter of Gliagora | Neuroscience, at this email address. To confirm the subscription, open this link and press the button:",
+        "validity": "The link works for 7 days and only once.",
+        "notYou": "If you did not ask for it, ignore this email: nothing happens, and you will not be subscribed. We keep this address only with the link, and delete it after 7 days."
+      },
+      "welcome": {
+        "subject": "You are subscribed to Glia Notes",
+        "text": "Thank you for confirming: this email address is subscribed to Glia Notes, the monthly newsletter of Gliagora | Neuroscience.",
+        "launch": "The first issue arrives with the public launch of Gliagora. Until then we send you nothing else.",
+        "unsubscribe": "You can unsubscribe at any time: open this link and press the button, and your address is deleted at once. Every issue has the same link.",
+        "kept": "We keep your address in our newsletter system until you unsubscribe, and a record of your consent (when you asked and confirmed, and the version of the consent text, without your address) for 3 years after you unsubscribe. How we handle your data: {privacyUrl}"
       }
     },
     "account": {

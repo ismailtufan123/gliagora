@@ -30,6 +30,16 @@ export const memberPageIndexed = (): boolean => false
  */
 export const dataRequestPageIndexed = (): boolean => false
 
+/** The Glia Notes signup (M2, D50; PLAN §2.2, §9.10): indexed, like "Suggest a listing". */
+export const newsletterSignupIndexed = (): boolean => true
+
+/**
+ * The pages after the Glia Notes signup (M2, D50): "check your inbox", the page the emailed link
+ * opens, the unsubscribe page and the pages after confirming or unsubscribing. Never indexed:
+ * each is about one person (or a confirmation of what they did).
+ */
+export const newsletterPageIndexed = (): boolean => false
+
 /** The world map (PLAN §2.2): indexed, like the unfiltered jobs list it shows on a map. */
 export const mapPageIndexed = (): boolean => true
 

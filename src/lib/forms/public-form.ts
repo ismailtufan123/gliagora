@@ -34,10 +34,11 @@ export const FORWARDED_ACTION_HEADER = 'x-action-forwarded'
 
 /**
  * Problems with the whole form rather than a field; messages under `{form}.errors`. `signedOut`:
- * a form for members only (adding an address to the account) sent without a session.
+ * a form for members only (adding an address to the account) sent without a session. `wait`: the
+ * newsletter form sent again for one address within a minute (`newsletterWait`).
  */
 export type FormProblem =
-  'needsJs' | 'spamCheck' | 'rateLimited' | 'unavailable' | 'signedOut' | 'failed'
+  'needsJs' | 'spamCheck' | 'rateLimited' | 'wait' | 'unavailable' | 'signedOut' | 'failed'
 
 export type FormOutcome<Values, Errors> =
   | { kind: 'sent' }
@@ -184,8 +185,8 @@ export async function handlePublicForm<Values, Data, Errors>(
     if (admission === 'replayed') {
       return { kind: 'refused', status: 400, problem: 'spamCheck', values }
     }
-    if (admission === 'rateLimited') {
-      return { kind: 'refused', status: 429, problem: 'rateLimited', values }
+    if (admission === 'rateLimited' || admission === 'wait') {
+      return { kind: 'refused', status: 429, problem: admission, values }
     }
     if (admission === 'unavailable') {
       warnSiteWideCap(spec.name, deps.now)

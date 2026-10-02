@@ -71,9 +71,7 @@ test.describe('home page', () => {
     expect(element).toBe('H1')
   })
 
-  test('both digest blocks lead to the newsletter page until the signup opens (M2)', async ({
-    page,
-  }) => {
+  test('both digest blocks lead to the Glia Notes signup', async ({ page }) => {
     await page.goto('/en/')
     for (const block of ['.home-digest-short', '.home-digest']) {
       await expect(

@@ -5,8 +5,11 @@ import { isReapply, isRetention } from '@/lib/retention/context'
 import { HIDDEN_RECORDS } from './hidden'
 import { isFakeData } from './Jobs'
 
-/** What the log records deletions of. */
-export const LOGGED_COLLECTIONS = ['members', 'submissions', 'reports'] as const
+/**
+ * What the log records deletions of: records of the app's own tables, and (M2, D50) subscribers of
+ * Glia Notes in listmonk (`newsletter`, by listmonk's subscriber ID), deleted when they unsubscribe.
+ */
+export const LOGGED_COLLECTIONS = ['members', 'submissions', 'reports', 'newsletter'] as const
 export type LoggedCollection = (typeof LOGGED_COLLECTIONS)[number]
 
 /** A whole record deleted, or only its email address cleared (reports, on a data request). */
@@ -21,6 +24,10 @@ export const DELETION_ACTIONS = ['delete', 'clear-email'] as const
 // each logged deletion whose record exists again, without logging it a second time. Record IDs
 // only, no personal data; the retention task deletes rows 7 months after `at`, once no backup can
 // hold the deleted data any more (6 months).
+//
+// A subscriber of Glia Notes who unsubscribed is logged too (`newsletter`, listmonk's subscriber
+// ID), since a restore of listmonk's database would bring the address back: the task deletes it
+// again in listmonk (src/lib/newsletter/unsubscribe.ts writes the row).
 //
 // A restore also sets the ID sequences back, so a record made after it can get a logged ID. Two
 // rules keep that from deleting someone else's record: a logged deletion is repeated only on a
@@ -63,7 +70,7 @@ export const DeletionLog: CollectionConfig = {
  * request, so the row is written in its transaction (rolled back with it). Members are logged by
  * `deleteMember` (src/lib/members/store.ts), which deletes them in SQL.
  */
-export function logDeletions(collection: Exclude<LoggedCollection, 'members'>) {
+export function logDeletions(collection: Exclude<LoggedCollection, 'members' | 'newsletter'>) {
   const hook: CollectionAfterDeleteHook = async ({ id, req, context }) => {
     if (isRetention(context) || isReapply(context) || isFakeData(context)) return
     await req.payload.create({

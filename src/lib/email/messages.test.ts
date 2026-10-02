@@ -11,6 +11,8 @@ import {
   dataRequestConfirmEmail,
   emailLocale,
   inactivityWarningEmail,
+  newsletterConfirmEmail,
+  newsletterWelcomeEmail,
   privacyUrl,
   reportAcknowledgement,
   siteUrl,
@@ -363,5 +365,58 @@ describe('dataDeletedEmail', () => {
     expect(email.subject).toBe("Verileriniz Gliagora'dan silindi")
     expect(email.text).toContain('- Gliagora hesabınız')
     expect(email.text).toContain('https://gliagora.com/tr/legal/kvkk-aydinlatma-metni/')
+  })
+})
+
+describe('newsletterConfirmEmail', () => {
+  const link = 'https://gliagora.com/en/newsletter/confirm/?token=' + 'a'.repeat(43)
+
+  it('carries the link for 7 days and says nothing happens without it', () => {
+    const email = newsletterConfirmEmail({ locale: 'en', link })
+    expect(email.subject).toBe('Confirm your subscription to Glia Notes')
+    expect(email.text).toContain(`press the button:\n${link}\n`)
+    expect(email.text).toContain('The link works for 7 days and only once.')
+    expect(email.text).toContain('nothing happens, and you will not be subscribed')
+    expect(email.text).toContain('delete it after 7 days')
+    expect(email.text.startsWith('Hello,\n\n')).toBe(true)
+    expect(email.text.endsWith('Gliagora | Neuroscience\nhttps://gliagora.com/\n')).toBe(true)
+    // An email that asks for a confirmation has no unsubscribe headers: nobody is subscribed yet.
+    expect(email.unsubscribeUrl).toBeUndefined()
+  })
+
+  it('has a Turkish text', () => {
+    const email = newsletterConfirmEmail({ locale: 'tr', link })
+    expect(email.locale).toBe('tr')
+    expect(email.subject).toBe('Glia Notes aboneliğinizi onaylayın')
+    expect(email.text).toContain(link)
+    expect(email.text).toContain('7 gün')
+    expect(email.text.startsWith('Merhaba,\n\n')).toBe(true)
+  })
+})
+
+describe('newsletterWelcomeEmail', () => {
+  const uuid = '0b2c6f8e-3f0a-4c1e-9d55-6f1d2a7b8c9d'
+  const unsubscribePage = `https://gliagora.com/en/newsletter/unsubscribe/?id=7&s=${uuid}`
+  const unsubscribeUrl = `https://gliagora.com/en/newsletter/unsubscribe/use/?id=7&s=${uuid}`
+
+  it('says the first issue comes with the launch, how to unsubscribe and what is kept', () => {
+    const email = newsletterWelcomeEmail({ locale: 'en', unsubscribePage, unsubscribeUrl })
+    expect(email.subject).toBe('You are subscribed to Glia Notes')
+    expect(email.text).toContain('The first issue arrives with the public launch of Gliagora.')
+    expect(email.text).toContain(`press the button, and your address is deleted at once.`)
+    expect(email.text).toContain(`${unsubscribePage}\n`)
+    expect(email.text).toContain('for 3 years after you unsubscribe')
+    expect(email.text).toContain('https://gliagora.com/en/legal/privacy/')
+    // The one-click address goes into the headers (deliver.ts), not into the text.
+    expect(email.unsubscribeUrl).toBe(unsubscribeUrl)
+    expect(email.text).not.toContain('/unsubscribe/use/')
+  })
+
+  it('has a Turkish text, which links the KVKK notice', () => {
+    const email = newsletterWelcomeEmail({ locale: 'tr', unsubscribePage, unsubscribeUrl })
+    expect(email.subject).toBe("Glia Notes'a abone oldunuz")
+    expect(email.text).toContain(unsubscribePage)
+    expect(email.text).toContain('https://gliagora.com/tr/legal/kvkk-aydinlatma-metni/')
+    expect(email.unsubscribeUrl).toBe(unsubscribeUrl)
   })
 })

@@ -1,8 +1,9 @@
 // Names and limits of the public forms ("Suggest a listing", "Report a problem", the sign-in link,
-// the data-request form), shared by the server (suggest-schema.ts, report-schema.ts, sign-in.ts,
-// data-request-schema.ts) and the forms in the browser (src/components/suggest/,
-// src/components/report/, src/components/account/, src/components/data-requests/). Kept apart
-// from the schemas so that the browser does not load zod.
+// the data-request form, the Glia Notes signup), shared by the server (suggest-schema.ts,
+// report-schema.ts, sign-in.ts, data-request-schema.ts, newsletter-schema.ts) and the forms in the
+// browser (src/components/suggest/, src/components/report/, src/components/account/,
+// src/components/data-requests/, src/components/newsletter/). Kept apart from the schemas so that
+// the browser does not load zod.
 
 /** "Suggest a listing": the fields a person fills in, in the order of the form (and of the error summary). */
 export const SUGGEST_FIELDS = ['url', 'kind', 'note', 'email', 'consent'] as const
@@ -15,6 +16,10 @@ export type ReportField = (typeof REPORT_FIELDS)[number]
 /** The data-request form (M4b): the fields a person fills in, in the order of the form. */
 export const DATA_REQUEST_FIELDS = ['email', 'kind', 'name', 'details'] as const
 export type DataRequestField = (typeof DATA_REQUEST_FIELDS)[number]
+
+/** The Glia Notes signup (M2, D50): the fields a person fills in, in the order of the form. */
+export const NEWSLETTER_FIELDS = ['email', 'consent'] as const
+export type NewsletterField = (typeof NEWSLETTER_FIELDS)[number]
 
 /** Names of the other inputs the public forms send. */
 export const FORM_INPUTS = {

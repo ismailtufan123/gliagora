@@ -50,7 +50,7 @@ const JOBS: SitemapJob[] = [
 ]
 
 describe('pageEntries', () => {
-  it('lists the home page, the jobs list, the map, Suggest a listing and the content pages that are not drafts', () => {
+  it('lists the home page, the jobs list, the map, Suggest a listing, the Glia Notes signup and the content pages that are not drafts', () => {
     const entries = pageEntries([])
     const published = Object.values(CONTENT_PAGES).filter((page) => !page.draft)
     expect(entries.map((entry) => entry.path)).toEqual([
@@ -59,6 +59,8 @@ describe('pageEntries', () => {
       // The world map is indexed (PLAN §2.2) since it is built (M5).
       '/en/map/',
       '/en/suggest/',
+      // The Glia Notes signup is indexed (M2, D50); the pages after it are not.
+      '/en/newsletter/',
       ...published.map((page) => page.path),
     ])
     // About is published (D28); the other texts once the operator approves them.

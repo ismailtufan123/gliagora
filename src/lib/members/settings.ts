@@ -55,7 +55,7 @@ export const CONSENT_GIVEN = 'yes'
 /** What the settings route reads and writes (the route gives the real ones). */
 export type SettingsDeps = {
   now: Date
-  /** The date of the Glia Notes consent text (`CONTENT_PAGES.acikRiza.updated`). */
+  /** The Glia Notes consent text's version (`GLIA_NOTES_CONSENT_VERSION`, its date). */
   consentVersion: string
   env?: Record<string, string | undefined>
   /** The session of the request's cookie: its member and token, or null. */

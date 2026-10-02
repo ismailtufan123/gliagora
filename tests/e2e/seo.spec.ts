@@ -80,7 +80,7 @@ test.describe('sitemaps', () => {
     expect(await (await request.get('/sitemap.xml')).text()).not.toContain('subfields.xml')
   })
 
-  test('the pages sitemap lists the home page, the jobs list, the map and the approved texts, and no draft', async ({
+  test('the pages sitemap lists the home page, the jobs list, the map, the forms and the approved texts, and no draft', async ({
     request,
   }) => {
     const paths = locs(await getXml(request, '/sitemaps/pages.xml')).map(pathOf)
@@ -89,7 +89,14 @@ test.describe('sitemaps', () => {
     const approved = Object.values(CONTENT_PAGES)
       .filter((page) => !page.draft && page.locale === 'en')
       .map((page) => page.path)
-    expect(paths).toEqual(['/en/', '/en/jobs/', '/en/map/', '/en/suggest/', ...approved])
+    expect(paths).toEqual([
+      '/en/',
+      '/en/jobs/',
+      '/en/map/',
+      '/en/suggest/',
+      '/en/newsletter/',
+      ...approved,
+    ])
   })
 
   test('the jobs sitemap lists the open jobs, and no closed, gone, withdrawn or draft one', async ({

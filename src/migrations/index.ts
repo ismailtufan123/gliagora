@@ -17,6 +17,8 @@ import * as migration_20261001_142245_members from './20261001_142245_members';
 import * as migration_20261001_142246_member_constraints from './20261001_142246_member_constraints';
 import * as migration_20261001_201739_member_tasks from './20261001_201739_member_tasks';
 import * as migration_20261002_090000_data_request_guards from './20261002_090000_data_request_guards';
+import * as migration_20261002_161547_newsletter from './20261002_161547_newsletter';
+import * as migration_20261002_190000_newsletter_constraints from './20261002_190000_newsletter_constraints';
 
 export const migrations = [
   {
@@ -107,11 +109,21 @@ export const migrations = [
   {
     up: migration_20261001_201739_member_tasks.up,
     down: migration_20261001_201739_member_tasks.down,
-    name: '20261001_201739_member_tasks'
+    name: '20261001_201739_member_tasks',
   },
   {
     up: migration_20261002_090000_data_request_guards.up,
     down: migration_20261002_090000_data_request_guards.down,
     name: '20261002_090000_data_request_guards',
+  },
+  {
+    up: migration_20261002_161547_newsletter.up,
+    down: migration_20261002_161547_newsletter.down,
+    name: '20261002_161547_newsletter',
+  },
+  {
+    up: migration_20261002_190000_newsletter_constraints.up,
+    down: migration_20261002_190000_newsletter_constraints.down,
+    name: '20261002_190000_newsletter_constraints',
   },
 ];

@@ -20,7 +20,16 @@ import tr from '../../../messages/tr.json'
 // matter (the address they suggested, or the Gliagora page a report is about), never the note or
 // the details, and never our internal notes.
 
-export type EmailText = { locale: Locale; subject: string; text: string }
+export type EmailText = {
+  locale: Locale
+  subject: string
+  text: string
+  /**
+   * Where a mail program's one-click unsubscribe posts (RFC 8058; `List-Unsubscribe`): only the
+   * emails of Glia Notes have one (M2).
+   */
+  unsubscribeUrl?: string
+}
 
 /** Why a suggestion was not added, as the email says it (spam gets no email). */
 export type NotAddedReason = Exclude<RejectionReason, 'spam'> | 'duplicate'
@@ -285,5 +294,63 @@ export function dataDeletedEmail({
       t('dataRequest.deleted.record', { privacyUrl: privacyUrl(locale) }),
       ...closing(t),
     ),
+  }
+}
+
+/**
+ * The link that confirms a Glia Notes signup (M2, D50; PLAN §9.10, §13), sent while the person
+ * waits, to the address they typed (and again from "Send it again"). Every address gets the same
+ * text, subscribed or not. It says that nothing happens without the link, and that the address is
+ * kept only with the link, for 7 days. `link` is absolute, on the site's own origin (`appOrigin()`).
+ */
+export function newsletterConfirmEmail({
+  locale,
+  link,
+}: {
+  locale: Locale
+  link: string
+}): EmailText {
+  const t = translator(locale)
+  return {
+    locale,
+    subject: t('newsletter.confirm.subject'),
+    text: paragraphs(
+      t('greeting'),
+      `${t('newsletter.confirm.intro')}\n${link}`,
+      t('newsletter.confirm.validity'),
+      t('newsletter.confirm.notYou'),
+      ...closing(t),
+    ),
+  }
+}
+
+/**
+ * The welcome email once a signup is confirmed (M2, D50; PLAN §13, D41): the first issue comes
+ * with the public launch, how to unsubscribe (the page's link, `unsubscribePage`) and what is kept.
+ * It carries the one-click unsubscribe (`unsubscribeUrl`, the POST route), as every issue will. Both
+ * links are absolute, on the site's own origin, and name the subscriber's UUID, never the address.
+ */
+export function newsletterWelcomeEmail({
+  locale,
+  unsubscribePage,
+  unsubscribeUrl,
+}: {
+  locale: Locale
+  unsubscribePage: string
+  unsubscribeUrl: string
+}): EmailText {
+  const t = translator(locale)
+  return {
+    locale,
+    subject: t('newsletter.welcome.subject'),
+    text: paragraphs(
+      t('greeting'),
+      t('newsletter.welcome.text'),
+      t('newsletter.welcome.launch'),
+      `${t('newsletter.welcome.unsubscribe')}\n${unsubscribePage}`,
+      t('newsletter.welcome.kept', { privacyUrl: privacyUrl(locale) }),
+      ...closing(t),
+    ),
+    unsubscribeUrl,
   }
 }

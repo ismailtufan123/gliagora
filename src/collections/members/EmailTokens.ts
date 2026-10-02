@@ -3,11 +3,18 @@ import type { CollectionConfig } from 'payload'
 import { HIDDEN_RECORDS } from '../hidden'
 
 /** What an email link does; a token is used only for its own purpose. */
-export const EMAIL_TOKEN_PURPOSES = ['sign-in', 'verify-email', 'data-request'] as const
+export const EMAIL_TOKEN_PURPOSES = [
+  'sign-in',
+  'verify-email',
+  'data-request',
+  'newsletter',
+] as const
 export type EmailTokenPurpose = (typeof EMAIL_TOKEN_PURPOSES)[number]
 
 // The links the site emails (M4b, D49; PLAN §18.1): signing in (15 minutes), adding an address to
-// an account (24 hours, bound to the member who asked) and confirming a data request (24 hours).
+// an account (24 hours, bound to the member who asked), confirming a data request (24 hours) and,
+// from M2 (D50), confirming a Glia Notes signup (7 days): until it is confirmed, a signup is only
+// this row, so listmonk never holds an unconfirmed address.
 // Each is used once: using it deletes the row, in one statement that also checks its purpose and
 // expiry (src/lib/members/store.ts). Opening a link only looks it up, so mail scanners that follow
 // links use up nothing. The row holds the SHA-256 of the token, never the token, and backups leave
@@ -47,7 +54,9 @@ export const EmailTokens: CollectionConfig = {
       ],
     },
     // `data-request`: what the form said ({ kind, details, name }), copied into the request only
-    // once the person confirms it. Kept at most 24 hours.
+    // once the person confirms it. Kept at most 24 hours. `newsletter`: the version of the consent
+    // text agreed to, the form and when it was sent ({ version, source, requestedAt }), copied into
+    // the consent records once the person confirms (a database constraint requires exactly these).
     { name: 'requestData', type: 'json' },
     { name: 'expiresAt', type: 'date', required: true, index: true },
   ],

@@ -5,9 +5,10 @@ import { deleteExpiredMemberRows, memberDb } from '@/lib/members/store'
 import { logCounts, maintenanceTask } from './task'
 
 // Sign-in rows past their end (M4b, D49; the M4b design §9), hourly at :10: sessions after their 30
-// days (a session is never extended), email links after their 15 minutes or 24 hours (a used link
-// is deleted at once; these are the ones nobody used), and, as a safety net, saved items whose job
-// or member is gone (the jobs collection deletes a job's saved items itself, and deleteMember a
+// days (a session is never extended), email links after their 15 minutes, 24 hours or, for a Glia
+// Notes signup (M2, D50), 7 days (a used link is deleted at once; these are the ones nobody used,
+// so an unconfirmed signup's address is gone within the hour after its 7 days), and, as a safety
+// net, saved items whose job or member is gone (the jobs collection deletes a job's saved items itself, and deleteMember a
 // member's). Nothing here is personal data anyone could still use, but nothing is kept longer than
 // it serves either. In batches; a run that stops half-way is continued by the next.
 
@@ -30,7 +31,7 @@ export async function purgeMemberAuth(payload: Payload, now: Date) {
 
 export const PurgeMemberAuthTask = maintenanceTask({
   slug: 'purgeMemberAuth',
-  label: 'Delete expired member sessions and sign-in links',
+  label: 'Delete expired member sessions and email links (sign-in, Glia Notes signups)',
   cron: '10 * * * *',
   counts: ['sessions', 'emailLinks', 'savedItems'],
   run: purgeMemberAuth,
