@@ -20,16 +20,20 @@ Everything the production server runs is described in this folder (PLAN §11.5),
 | File | What it is |
 | --- | --- |
 | `setup-server.sh` | One-time hardening of a fresh Ubuntu 24.04 server: admin user, deploy user, firewall, fail2ban, Docker, swap |
-| `compose.prod.yml` | The stack: Caddy, the app, PostgreSQL 18 |
+| `compose.prod.yml` | The stack: Caddy, the app, PostgreSQL 18, listmonk (the newsletter, M2); every container logs to the system journal |
 | `Caddyfile` | HTTPS, security headers, the site-wide password (until M2 the whole site except `/health/`; always `/admin` and `/api`), masked logs (the access log and Caddy's own log) |
 | `admin-auth.caddy.example` | Template for the site-wide password |
 | `postgres/init/10-app-database.sh` | Creates the app's own database user on first start |
+| `postgres/init/20-listmonk-database.sh` | Creates listmonk's database user and database (on first start, and on every update through `listmonk/prepare.sh`) |
+| `listmonk/prepare.sh`, `listmonk/settings.sql` | listmonk's install and its settings from this folder, run by `update.sh` (section 11) |
 | `.env.example` | Template for the server's `.env` (domain, image, secrets) |
-| `update.sh` | Backup, then restart with the new image and wait until healthy |
+| `update.sh` | Backup, then prepare listmonk, restart with the new image and wait until healthy |
 | `deploy-remote.sh` | Server side of the GitHub Deploy workflow (the only command its SSH key may run), with the automatic rollback |
 | `backup/backup.sh` | Encrypted backup of the databases and settings (restic) |
 | `backup/restore.sh` | Restore, list snapshots, or test a restore without touching production |
+| `backup/alert.sh` | Emails the result of a backup or restore test (from M2, once SMTP is set) |
 | `backup/systemd/` | Timers: nightly backup, monthly restore test |
+| `logs/90-gliagora.conf`, `logs/install-journald.sh` | The system journal keeps 14 days (D34), without a copy in `/var/log/syslog` |
 | `basemap/fetch-basemap.sh` | Puts the map's basemap (tiles, fonts, sprites) on the server; run about twice a year (step 8) |
 
 On the server, everything lives in `/opt/gliagora`:
@@ -40,12 +44,14 @@ On the server, everything lives in `/opt/gliagora`:
 | `/opt/gliagora/.env.previous` | `.env` before the last deploy, for the rollback |
 | `/opt/gliagora/admin-auth.caddy` | Hash of the site-wide password (mode 600, never committed) |
 | `/root/site-password` | The site-wide password itself, readable only by root, until you have saved it in your password manager |
+| `/root/listmonk-admin-password` | The password of listmonk's admin (user `gliagora-admin`), readable only by root (section 11) |
 | Docker volume `gliagora_db-data` | The database |
 | Docker volume `gliagora_caddy-data` | TLS certificates |
 | Docker volume `gliagora_caddy-logs` | Access logs with masked IPs, kept 14 days |
 | `/opt/gliagora/backup/` | Backup scripts, `backup.env` (mode 600) and `restic-password` (readable only by root) |
 | `/var/backups/gliagora/restic` | Encrypted backup repository |
 | `/opt/gliagora/basemap/public` | The map's basemap, served by Caddy at `/basemap/` (step 8); not backed up, fetched again |
+| The system journal (`/var/log/journal`) | The containers' logs (`docker compose -f compose.prod.yml logs`), sudo, SSH and the backup units: 14 days, at most 1 GB (`/etc/systemd/journald.conf.d/90-gliagora.conf`) |
 
 ## Who logs in
 
@@ -67,12 +73,13 @@ At M2, switch from the first row to the second: **Settings → Secrets and varia
 Each deploy then goes like this:
 
 1. The workflow connects over SSH as `deploy`, with its own key, and checks the server's host key against the one pinned in a secret. On the server, that key's line in `/home/deploy/.ssh/authorized_keys` starts with `restrict,command="sudo -n /opt/gliagora/deploy-remote.sh"`: it can run nothing else, get no shell and forward nothing.
-2. It sends the job's own `GITHUB_TOKEN` (valid only while the job runs) on stdin. `deploy-remote.sh` accepts only `deploy main` or `deploy sha-<7 characters>`, logs in to GHCR with the token in a temporary Docker config, pulls the images and deletes that config. **No registry login is stored on the server.**
+2. It sends the job's own `GITHUB_TOKEN` (valid only while the job runs) on stdin. `deploy-remote.sh` accepts only `deploy main` or `deploy sha-<7 characters>`, logs in to GHCR with the token in a temporary Docker config, pulls the app's image (only that one, so a hiccup of another registry cannot stop a deploy; a missing public image, such as a new listmonk, is pulled when it is first needed) and deletes that config. **No registry login is stored on the server.**
 3. It pins the image to the commit it was built from (`main` becomes `sha-<commit>`), records it in `.env` (the old file stays as `.env.previous`) and runs `update.sh --no-pull`:
    - a `pre-update` backup (the database is started first if it was stopped), skipped only on the very first start, when there is no database volume yet;
+   - listmonk's preparation (`listmonk/prepare.sh`, section 11): its database, its install and its settings from this folder;
    - a restart;
    - a wait (at most 5 minutes) until every service is healthy. The app applies database migrations when it starts.
-4. If that fails before the app was restarted (for example, the backup fails), `.env` goes back to the previous image and nothing else changed. **If the new image started but did not become healthy, the script switches back to the previous image by itself** (it is still on the server) and waits for it (D42). The workflow then fails with "Rolled back to …", so you see it. Database migrations are not undone; if the new version's migrations broke something, restore the `pre-update` snapshot (step 7).
+4. If that fails before the app was restarted (for example, the backup fails), `APP_IMAGE` in `.env` goes back to the previous image and nothing else changed. **If the new image started but did not become healthy, the script switches back to the previous image by itself** (it is still on the server) and waits for it (D42). The workflow then fails with "Rolled back to …", so you see it. Database migrations are not undone; if the new version's migrations broke something, restore the `pre-update` snapshot (step 7). If the new image is healthy but another service is not (listmonk, say), it does not roll back, since that would not help: the workflow fails with "… is deployed and healthy, but listmonk is not", and `docker compose -f compose.prod.yml logs listmonk` shows why. Going back changes only the `APP_IMAGE` line of `.env`, never the rest: a setting added since the last deploy stays.
 
 A deploy changes only the app's image. The other files in this folder (`compose.prod.yml`, the `Caddyfile`, the scripts) reach the server only when you copy them (step 2's `scp`), and take effect only then: the scripts at once, `compose.prod.yml` with `sudo ./update.sh --no-pull` in `/opt/gliagora`, and a changed `Caddyfile` (or `admin-auth.caddy`) only when Caddy restarts (`docker compose -f compose.prod.yml restart caddy`), which `update.sh` does not do for a changed file. The deploy key cannot change the server's configuration, so a leaked key cannot either.
 
@@ -95,7 +102,7 @@ Until the repository variable `DEPLOY_ENABLED` is `true`, the workflow stops wit
 From your computer:
 
 ```sh
-scp deploy/setup-server.sh root@<server-ip>:/root/
+scp -r deploy/setup-server.sh deploy/logs root@<server-ip>:/root/
 ssh root@<server-ip> "ADMIN_USER=gliagora DEPLOY_PUBLIC_KEY='$(cat ~/.ssh/gliagora-deploy.pub)' bash /root/setup-server.sh"
 ```
 
@@ -105,6 +112,7 @@ The script:
 - copies root's SSH keys to the new admin user `gliagora`, who uses `sudo` without a password (D42);
 - turns off root and password logins (`/etc/ssh/sshd_config.d/00-gliagora.conf`, read before the provider's files, so its values win) and lets only `gliagora` and `deploy` log in;
 - opens only 22 (rate-limited), 80 and 443 in the firewall, and starts fail2ban;
+- keeps the system journal, where the containers log, 14 days, without a copy in `/var/log/syslog` (`logs/install-journald.sh`, D34);
 - installs Docker, with the network's MTU where the server's network is smaller than 1500;
 - creates the user `deploy` with the deploy key, restricted to `deploy-remote.sh`, and its one sudo rule.
 
@@ -117,17 +125,17 @@ From your computer:
 ```sh
 scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/postgres deploy/.env.example \
   deploy/admin-auth.caddy.example deploy/update.sh deploy/deploy-remote.sh deploy/backup deploy/basemap \
-  gliagora@<server-ip>:/opt/gliagora/
+  deploy/listmonk deploy/logs gliagora@<server-ip>:/opt/gliagora/
 ```
 
-On the server, in `/opt/gliagora`, create `.env` with four new secrets. They are generated on the server and never shown; nobody needs to know them:
+On the server, in `/opt/gliagora`, create `.env` with six new secrets (listmonk's two since M2). They are generated on the server and never shown; nobody needs to know them:
 
 ```sh
 cd /opt/gliagora
 umask 077
 while IFS= read -r line; do
   case "$line" in
-    POSTGRES_PASSWORD=* | APP_DB_PASSWORD=* | PAYLOAD_SECRET=* | ALTCHA_HMAC_KEY=*)
+    POSTGRES_PASSWORD=* | APP_DB_PASSWORD=* | PAYLOAD_SECRET=* | ALTCHA_HMAC_KEY=* | LISTMONK_DB_PASSWORD=* | LISTMONK_API_TOKEN=*)
       printf '%s=%s\n' "${line%%=*}" "$(openssl rand -hex 32)" ;;
     *) printf '%s\n' "$line" ;;
   esac
@@ -154,17 +162,17 @@ Do not start the stack by hand: the first deploy (step 5) pulls the images and s
 
 Backups are encrypted with restic (PLAN §11.7.1, §18.2). Each night at 00:30 UTC (03:30 in Istanbul):
 
-- each database is dumped and streamed into the encrypted repository, together with `.env`, `admin-auth.caddy` and the Compose files. The rows of `form_limits` (hashed IP addresses for the form rate limits, kept 24 hours in the app database only, D34), `member_sessions` and `email_tokens` (members' sessions and email links, D49) are left out; after a restore the limits start empty, every member is signed out and no email link works;
+- each database (`DATABASES` in `backup.env`: the app's `gliagora` and, since M2, `listmonk`) is dumped and streamed into the encrypted repository, together with `.env`, `admin-auth.caddy`, the Compose files and the set-up scripts of `postgres/` and `listmonk/`. The rows of `form_limits` (hashed IP addresses for the form rate limits, kept 24 hours in the app database only, D34), `member_sessions` and `email_tokens` (members' sessions and email links, D49), and listmonk's admin sessions are left out; after a restore the limits start empty, everyone is signed out and no email link works. A database the server has but `DATABASES` does not name makes the backup fail (after storing the others), so none is left out by mistake;
 - everything from the last 2 days is kept, plus 7 daily, 4 weekly and 6 monthly snapshots. Backups taken before updates and restores never delete anything themselves;
 - on Sundays the repository is checked for damage.
 
-On the 1st of each month the latest backup is restored into a temporary container, with no network, and checked.
+On the 1st of each month the latest backup of each database is restored into a temporary container of its own, with no network, and checked.
 
 On the server, in `/opt/gliagora/backup`, create the settings and the **backup password** (in a file only root can read):
 
 ```sh
 cd /opt/gliagora/backup
-cp backup.env.example backup.env && chmod 600 backup.env
+cp backup.env.example backup.env && chmod 600 backup.env    # then set ALERT_EMAIL in it (below)
 sudo sh -c 'umask 077 && openssl rand -base64 33 > /opt/gliagora/backup/restic-password'
 sudo ./backup.sh init         # create the repository
 sudo cp systemd/gliagora-*.service systemd/gliagora-*.timer /etc/systemd/system/
@@ -185,7 +193,9 @@ To read that copy, install restic and run `restic -r ~/gliagora-backups/restic s
 
 **Second repository (from M2).** Set `COPY_REPOSITORY` and `COPY_PASSWORD_FILE` in `backup.env`. Each nightly run then also copies the snapshots there and applies the same retention.
 
-**Checking backups:** `cat /var/backups/gliagora/last-success` shows the time of the last good backup; `journalctl -u gliagora-backup` shows the logs. Emails on success and failure come at M2 with the mailbox (D42); until then, check `last-success` now and then.
+**Checking backups:** `cat /var/backups/gliagora/last-success` shows the time of the last good backup; `journalctl -u gliagora-backup` shows the logs (14 days).
+
+**Backup emails** (`backup/alert.sh`, D42). After every run of the backup and of the restore test, systemd runs `alert.sh` (`ExecStopPost` in both units). It emails every failure, and the success of the Sunday backup (the one that checks the repository) and of the monthly restore test, so you hear from the backups at least once a week: **a week without one means something is wrong.** The email holds the unit, its result and the run's own log lines (database names, snapshot IDs, counts; never what a database holds). It goes to `ALERT_EMAIL` in `backup.env`, through the app's mail server (`SMTP_*` in `.env`; STARTTLS required on port 587, TLS from the start with `SMTP_SECURE=true`). With either missing it sends nothing and logs "alerts off": so until M2's mailbox, check `last-success` now and then. Once both are set, try it: `sudo SERVICE_RESULT=exit-code /opt/gliagora/backup/alert.sh gliagora-backup` sends a "backup failed" email for the last run.
 
 ## 4. Connect GitHub (once)
 
@@ -215,7 +225,7 @@ GitHub Free has no environments (with branch rules and required reviewers) for a
    ```sh
    cd /opt/gliagora/backup
    sudo ./backup.sh
-   sudo ./restore.sh test
+   sudo ./restore.sh test            # every database in DATABASES, each in its own container
    sudo systemctl enable --now gliagora-backup.timer gliagora-restore-test.timer
    systemctl list-timers 'gliagora-*'
    ```
@@ -226,25 +236,35 @@ The app's scheduled jobs (`PAYLOAD_JOBS_AUTORUN` in `compose.prod.yml`) run from
 
 CI pushes a new image for every merge to `main`, tagged `main` and `sha-` plus the first 7 characters of the commit (except a merge that changed only documentation, which runs no CI, D46). Until M2 it is deployed by itself once CI passes; from M2 on, push a release tag (see "How deploys work"). By hand, run the Deploy workflow with `main`, or with the `sha-` tag of a specific merge. `.env` then names the exact `sha-` tag that is running.
 
-If the new image does not become healthy, the deploy switches back to the previous one by itself (see "How deploys work"). To go back to an older version on purpose, run the Deploy workflow with its `sha-` tag. On the server, without GitHub, `cd /opt/gliagora && cp .env.previous .env && sudo ./update.sh --no-pull` goes back to the image that ran before the last deploy; it is still on the server. Migrations are not undone automatically. If one damaged data, restore the `pre-update` snapshot (below).
+If the new image does not become healthy, the deploy switches back to the previous one by itself (see "How deploys work"). To go back to an older version on purpose, run the Deploy workflow with its `sha-` tag. On the server, without GitHub, this goes back to the image that ran before the last deploy (it is still on the server), changing only the `APP_IMAGE` line of `.env` (never copy all of `.env.previous` back: a setting added since, such as a new secret, would be lost):
+
+```sh
+cd /opt/gliagora
+previous=$(grep -m1 '^APP_IMAGE=' .env.previous | cut -d= -f2-)
+sudo sed -i "s|^APP_IMAGE=.*|APP_IMAGE=$previous|" .env && sudo ./update.sh --no-pull
+```
+
+Migrations are not undone automatically. If one damaged data, restore the `pre-update` snapshot (below).
 
 ## 7. Restore
 
 ```sh
 cd /opt/gliagora/backup
-sudo ./restore.sh list                          # snapshots with their IDs and times
+sudo ./restore.sh list                          # snapshots with their IDs, times and tags (db:gliagora, db:listmonk)
 sudo ./restore.sh test <snapshot-id>            # try it in a temporary container first
-sudo ./restore.sh database <snapshot-id>        # replace the live database (asks first)
+sudo ./restore.sh database <snapshot-id>        # replace the live database it holds (asks first)
 sudo ./restore.sh config latest /root/restored  # get the backed-up .env and settings back
 ```
 
-`restore.sh database` takes a safety backup (tag `pre-restore`) of the current database, stops the app, recreates the database from the snapshot and starts the app again.
+`restore.sh database` takes a safety backup (tag `pre-restore`) of the current databases, stops the service that uses the database (the app for `gliagora`, listmonk for `listmonk`), recreates the database from the snapshot and starts the service again. For listmonk it first applies the current settings and API user again (`listmonk/prepare.sh`): the snapshot holds them as they were then.
+
+**Restore both databases from the same night** (each night stores one snapshot of each; `restore.sh list` shows them side by side). A restore of listmonk's database alone loses the signups confirmed after its snapshot (their addresses are nowhere else) and brings back the subscribers removed since. Once the newsletter signup and the members' sync are built (M2, D50), the app removes again, within 10 minutes, those whose removal it logged (the deletion log), and its nightly check of members' subscriptions puts members' choices back.
 
 **What a restore keeps (M4b, D49).** A restore brings back everything deleted after the snapshot, so `restore.sh database` keeps two tables of the live database: the deletion log (record IDs of the deletions people asked for, or that the inactivity rule made, to be repeated on the restored data) and the data requests (what people asked, and what was done). Before replacing the database it copies their rows into a folder only root can read (`/root/gliagora-restore-carry.…`); after the restore it loads them back, where they replace older copies of the same rows, and in the same transaction moves the ID sequences of `deletion_log`, `data_requests`, `members`, `submissions` and `reports` past every ID it carried over or that the log names, so no new record takes a logged ID and no new request or log row collides with a carried one. It prints the rows and the next IDs, deletes the folder and starts the app. If carrying over fails, the app stays stopped and the folder stays: fix the cause (the message says what failed), then run `sudo ./restore.sh carry /root/gliagora-restore-carry.… [DB]`, which loads it and starts the app. The rows are also in the `pre-restore` snapshot the restore took first. If copying the rows out fails, nothing is dropped: the restore stops before it changes anything and starts the app again.
 
 **A snapshot from before M4b** (any snapshot older than the deploy that added member accounts, such as that deploy's own `pre-update` snapshot) has no deletion log and no data requests. If the live tables had no rows either, the restore simply completes. If they had rows, the restore stops with the app stopped and keeps the folder: run `sudo ./restore.sh carry /root/gliagora-restore-carry.… [DB]` with an app image that includes M4b. It starts the app once, so that its migrations make the tables, stops it, loads the rows and starts the app again. If you went back to an image from before M4b (step 6), deploy M4b again first, and keep the folder until then. `restore.sh test` of such a snapshot reports the same case.
 
-**Check it:** the monthly `restore.sh test` does the same carry-over from the live database into its temporary copy (it changes nothing live) and reports each table's rows and next ID, and that a new deletion-log row and a new request can be stored afterwards. Run it by hand after any change to the member or data-request tables: `sudo ./restore.sh test latest`. It removes its temporary container together with that container's data. Earlier versions of the script left that data behind, as an unnamed Docker volume holding a full copy of the restored database (since the S-day test, one per run). Remove those volumes once, with the operator's go-ahead: `docker volume ls -f dangling=true` lists them, `docker volume inspect <name>` shows when each was made, and `docker volume rm <name>` removes one (`docker volume prune -f` removes every unused unnamed volume at once; since Docker 23 it never touches named volumes such as `gliagora_db-data`). After a `restore.sh test`, `docker volume ls -f dangling=true` should list nothing new.
+**Check it:** the monthly `restore.sh test` restores the latest snapshot of each database into a temporary container of its own and checks that it has tables and its record of migrations (the app's `payload_migrations`, listmonk's `migrations` setting). For the app's database it also does the same carry-over from the live database into its temporary copy (it changes nothing live) and reports each table's rows and next ID, and that a new deletion-log row and a new request can be stored afterwards. Run it by hand after any change to the member or data-request tables: `sudo ./restore.sh test latest` (all databases) or `sudo ./restore.sh test latest gliagora` (one). It removes its temporary container together with that container's data. Earlier versions of the script left that data behind, as an unnamed Docker volume holding a full copy of the restored database (since the S-day test, one per run). Remove those volumes once, with the operator's go-ahead: `docker volume ls -f dangling=true` lists them, `docker volume inspect <name>` shows when each was made, and `docker volume rm <name>` removes one (`docker volume prune -f` removes every unused unnamed volume at once; since Docker 23 it never touches named volumes such as `gliagora_db-data`). After a `restore.sh test`, `docker volume ls -f dangling=true` should list nothing new.
 
 **New server after losing the old one:**
 
@@ -253,7 +273,7 @@ sudo ./restore.sh config latest /root/restored  # get the backed-up .env and set
 3. Copy the repository back to `/var/backups/gliagora/restic` (from your computer's copy or the second VDS). In `/opt/gliagora/backup`, create `backup.env` from `backup.env.example` and put the backup password from your password manager in `restic-password` (readable only by root).
 4. Recover `.env` and `admin-auth.caddy` with `sudo ./restore.sh config latest /root/restored` and copy them to `/opt/gliagora` (mode 600).
 5. Run the Deploy workflow with the last good `sha-` tag: it starts the stack with an empty database.
-6. Restore the data with `sudo ./restore.sh database latest` (it replaces the empty database, with any account made in between), then switch on the timers (step 5). Until then the database has no editor account; the site-wide password keeps its first-account route closed.
+6. Restore the data with `sudo ./restore.sh database latest gliagora` and `sudo ./restore.sh database latest listmonk` (they replace the empty databases, with any account made in between), then switch on the timers (step 5). Until then the database has no editor account; the site-wide password keeps its first-account route closed. listmonk's admin password is the one in your password manager: delete the `/root/listmonk-admin-password` that the new server's first start made for its empty database (`sudo rm /root/listmonk-admin-password`).
 7. Fetch the map's basemap again (step 8); it is not in the backups.
 
 ## 8. The map's basemap (M5; then about twice a year)
@@ -295,6 +315,8 @@ Then switch sign-in on, only with the operator's go-ahead, in this order:
    scp deploy/backup/backup.sh deploy/backup/restore.sh gliagora@<server-ip>:/opt/gliagora/backup/
    ```
 
+   Since M2's server parts, `compose.prod.yml` also needs listmonk's settings, folder and scripts: if the server does not have them yet, follow section 12 instead, which copies everything.
+
    On the server: `cd /opt/gliagora && sudo ./update.sh --no-pull` (it backs up first and applies `compose.prod.yml`), then restart Caddy so that it reads the new Caddyfile: `docker compose -f compose.prod.yml restart caddy` (`update.sh` does not restart Caddy when only the Caddyfile changed). Then check that Caddy took the new file: `docker compose -f compose.prod.yml logs --tail 20 caddy` shows no error, and a request to `https://gliagora.com/en/sign-in/?next=check` (with the site-wide password) appears in `sudo tail -n 1 /var/lib/docker/volumes/gliagora_caddy-logs/_data/access.log` as `/en/sign-in/?[removed]`.
 2. **Then set the keys** in `/opt/gliagora/.env` (`deploy/.env.example` lists them): `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, `ORCID_CLIENT_ID` and `ORCID_CLIENT_SECRET` (ORCID's own issuer; its sandbox is refused here), and, for sign-in by email link, the M2 `SMTP_*` settings (the link form also needs `ALTCHA_HMAC_KEY`, which is set). Each way of signing in switches on by itself once its settings are there; none needs a new secret.
 3. **Restart the app** (`sudo ./update.sh --no-pull`) and check its start line: `docker compose -f compose.prod.yml logs app | grep 'Member sign-in'`. A line naming a setting that switched a way off says which one; it never shows a value.
@@ -310,6 +332,72 @@ docker compose -f compose.prod.yml exec -T app node -e 'const c=require("node:cr
 
 Then type the address, press Enter and then Ctrl-D: the command prints the code (64 characters). The address is read from what you type, so it is in no shell history, command line or log, and the secret never leaves the container. Capitals do not matter, but every other character does (`name+news@` is another address than `name@`). In the admin, open "Data requests", add the filter "Address code" equals the code (or open `/admin/collections/data-requests?where[emailHash][equals]=<code>`): the list shows the requests sent from that address, with their kind, status and date. Requests the person confirmed also hold the address itself (filter "Email"). An unconfirmed record takes no note and no "What was done" (the admin shows both read-only and the database refuses them), so it never holds the address: answer the person by email, and if their email is itself a request, record it as a new request from that email.
 
+## 11. listmonk, the newsletter service (M2)
+
+[listmonk](https://listmonk.app) (AGPL-3.0, unmodified, the image pinned by digest in `compose.prod.yml`) holds the confirmed subscribers of Glia Notes and will send its issues (M6, M11). It runs beside the app, with its own database `listmonk` and database user in the same PostgreSQL (one database user per app, PLAN §18.2), and is reachable **only inside the server**: the app talks to it at `http://listmonk:9000` on the stack's own network, and its admin is published on the server's loopback only (`127.0.0.1:9000`). Caddy never routes to it and it has no subdomain, so none of its own public pages (subscription, archive) can be reached from outside. Nothing depends on it: if it is down, the site and its deploys keep working (a deploy whose app is healthy is not rolled back because of listmonk). Its logs: `docker compose -f compose.prod.yml logs listmonk`.
+
+**Its admin, through an SSH tunnel.** On your computer:
+
+```sh
+ssh -N -L 9001:127.0.0.1:9000 gliagora@<server-ip>
+```
+
+then open http://localhost:9001/admin/ and sign in as `gliagora-admin`. The tunnel carries the page through SSH, so nothing of it crosses the internet unencrypted, and only someone who can log in to the server can reach it. Stop it with Ctrl-C. (Local port 9001, so that it never collides with a local listmonk on 9000; listmonk's own links in its admin use that address, `app.root_url`.)
+
+**The admin password** is generated once, on the server, into a file only root can read (D42), like the site-wide password. Show it in your own terminal, to save it in your password manager: `ssh -t gliagora@<server-ip> sudo cat /root/listmonk-admin-password`. Once saved, you may delete the file (`sudo rm /root/listmonk-admin-password`). Change it in listmonk's admin (Users) if it is ever exposed.
+
+**What `listmonk/prepare.sh` does.** `update.sh` runs it on every update and deploy, after the backup and before the stack starts; it is idempotent and prints no secret. It:
+
+1. creates listmonk's database user and database if they are missing, and sets the user's password from `LISTMONK_DB_PASSWORD` in `.env` (`postgres/init/20-listmonk-database.sh`, which also runs by itself on a new, empty database volume);
+2. installs listmonk once, with the admin `gliagora-admin`: it generates `/root/listmonk-admin-password` if it is missing and the database is not installed yet, and gives the password to the one-off install on stdin (never in a command line or a container's settings), so listmonk never offers its first account to "the first visitor". Then it brings listmonk's schema up to date (`--upgrade`);
+3. applies `listmonk/settings.sql`: it removes the install's samples, keeps the private list **Glia Notes** (single opt-in: the site runs the double opt-in itself, so listmonk only ever holds confirmed subscribers), the app's API user `gliagora-app` (it may only find, add, change and delete subscribers of Glia Notes; its token is `LISTMONK_API_TOKEN` in `.env`, of which listmonk keeps only the SHA-256) and the settings: no update check, no public pages of its own, no tracking, no recorded IP addresses, none of its own unsubscribe headers (the site sends its own), no captcha services, no bounce processing yet, and the mail server from the app's `SMTP_*` settings (off while `SMTP_HOST` is empty, so until M2 listmonk cannot send);
+4. restarts listmonk if anything changed (it reads its settings only when it starts).
+
+**Changing a setting.** Change `listmonk/settings.sql` in the repository (one pull request, which runs CI with a real listmonk), copy it to `/opt/gliagora/listmonk/` and run `sudo ./update.sh --no-pull` (or `sudo ./listmonk/prepare.sh`). A setting changed only in listmonk's admin is undone at the next update when `settings.sql` manages it, and kept when it does not (campaign templates, for instance). Settings that need a secret come from `.env`.
+
+**Upgrading listmonk.** Change the image in `compose.prod.yml` and `compose.yaml` (the tag and its digest, from the tag's page on Docker Hub or `docker buildx imagetools inspect listmonk/listmonk:<version>`; a unit test checks that both name the same), read its release notes for changes to the settings or the API, run the tests (`pnpm test:db` with a real listmonk) and merge; then copy `compose.prod.yml` to the server and run `sudo ./update.sh --no-pull`: it backs up first, `prepare.sh` applies the new version's database migrations and the settings, and the stack starts the new listmonk. Going back to an older listmonk means restoring the `pre-update` snapshot of `listmonk` (step 7), since its migrations are not undone.
+
+## 12. Putting M2's server parts on the running server (once)
+
+On a new server, steps 1–5 already do all of this. On the server running since S, in this order, with the operator's go-ahead (CLAUDE.md, rule a), and never printing a secret:
+
+1. **Generate the two new secrets in `.env`** (before the new `compose.prod.yml` arrives, which refuses to start without them), without showing them:
+
+   ```sh
+   cd /opt/gliagora
+   for name in LISTMONK_DB_PASSWORD LISTMONK_API_TOKEN; do
+     sudo grep -q "^$name=" .env || printf '%s=%s\n' "$name" "$(openssl rand -hex 32)" | sudo tee -a .env >/dev/null
+   done
+   sudo grep -c '^LISTMONK_' .env    # 2
+   ```
+
+2. **Edit `backup/backup.env`**: `DATABASES="gliagora listmonk"`, and add `ALERT_EMAIL=` (empty until M2's mailbox; then the operator's address):
+
+   ```sh
+   sudo sed -i 's/^DATABASES=.*/DATABASES="gliagora listmonk"/' backup/backup.env
+   sudo grep -q '^ALERT_EMAIL=' backup/backup.env || echo 'ALERT_EMAIL=' | sudo tee -a backup/backup.env >/dev/null
+   ```
+
+3. **Copy the files**, from your computer, in the repository:
+
+   ```sh
+   scp -r deploy/compose.prod.yml deploy/update.sh deploy/deploy-remote.sh deploy/postgres deploy/listmonk \
+     deploy/logs gliagora@<server-ip>:/opt/gliagora/
+   scp deploy/backup/backup.sh deploy/backup/restore.sh deploy/backup/alert.sh deploy/backup/backup.env.example \
+     gliagora@<server-ip>:/opt/gliagora/backup/
+   scp deploy/backup/systemd/* gliagora@<server-ip>:/opt/gliagora/backup/systemd/
+   ```
+
+4. **Install the journal's limit and the units' alert lines**, on the server: `sudo /opt/gliagora/logs/install-journald.sh`, then `sudo cp /opt/gliagora/backup/systemd/gliagora-*.service /opt/gliagora/backup/systemd/gliagora-*.timer /etc/systemd/system/ && sudo systemctl daemon-reload`.
+5. **Apply it:** `cd /opt/gliagora && sudo ./update.sh --no-pull`. It recreates the database container (its new setting and log driver), backs up, prepares listmonk (creates its database, installs it and generates `/root/listmonk-admin-password`, applies its settings) and starts it, then recreates every container with its logs going to the journal.
+6. **Check:**
+   - `docker compose -f compose.prod.yml ps`: four services, each `healthy`;
+   - `curl -s http://127.0.0.1:9000/health` on the server prints `{"data":true}`, and the same from your computer to `<server-ip>:9000` gets no answer;
+   - `docker compose -f compose.prod.yml logs --tail 5 app` shows the app's lines (now read from the journal), including `Email cap of the forms: 50 an hour, 200 a day (default)`;
+   - `cd backup && sudo ./backup.sh`, then `sudo ./restore.sh test latest`: both databases are stored and restored ("Restore tests passed: gliagora listmonk."), and `docker volume ls -f dangling=true` lists nothing new;
+   - the site still asks for the password: `curl -s -o /dev/null -w '%{http_code}\n' https://gliagora.com/en/` answers `401`, and `https://gliagora.com/health/` `200`;
+   - the SSH tunnel and the admin (section 11) work; save the admin password in the password manager.
+
 ## Checking from outside
 
 Check the site from another computer with single requests (`curl`, a browser). Do not scan the server's ports at full speed from your own connection: during S, a scan of all 65,535 ports made the provider's network block that IPv4 address for about 20 minutes (IPv6 kept working). If you must, scan slowly or from elsewhere.
@@ -322,16 +410,20 @@ docker compose -f compose.prod.yml logs -f app      # app logs
 docker compose -f compose.prod.yml restart caddy    # after editing the Caddyfile or admin-auth.caddy
 sudo ufw status verbose                             # firewall
 sudo fail2ban-client status sshd                    # blocked SSH addresses
-sudo journalctl -t sudo | grep deploy-remote        # every deploy the deploy user started
+sudo journalctl -t sudo | grep deploy-remote        # every deploy the deploy user started (14 days)
+docker compose -f compose.prod.yml logs -f listmonk # listmonk's logs
+ssh -N -L 9001:127.0.0.1:9000 gliagora@<server-ip>  # listmonk's admin at http://localhost:9001/admin/ (section 11)
 ```
+
+Every container logs to the system journal, which keeps 14 days (D34): `docker compose … logs` reads it, and so do `journalctl -t gliagora-app-1` and `journalctl -u gliagora-backup`. Kernel lines (the firewall's blocked packets) still go to `/var/log/ufw.log` and `kern.log` through rsyslog, which keeps them about four weeks: an open point, outside the containers' logs.
 
 ## Decided during the server setup (S, D42)
 
 - **Staging:** none while the site is private; production, behind the site-wide password, doubles as staging. A separate staging is reconsidered before the site goes public.
 - **Automatic rollback:** built into `deploy-remote.sh` (see "How deploys work").
 - **Rate limits in Caddy** (for the auth routes and `/en/search/`; they need a plugin and a custom Caddy build): on the pre-launch checklist (PLAN §20). Until then, the site-wide password guards `/admin` and `/api` (so also Payload's sign-in, password-reset and first-account routes), Payload locks an account for 15 minutes after 5 failed sign-ins and sends at most one reset email per account every 15 minutes, the public forms have their own rate limits, and search runs at most two institution searches at a time, each for at most 2 seconds.
-- **Backup alerts** (success and failure emails): at M2, with the mailbox.
+- **Backup alerts** (success and failure emails): built with M2's server parts (`backup/alert.sh`, step 3); they start sending once the mailbox's `SMTP_*` settings and `ALERT_EMAIL` are set.
 - **Deploy secrets:** repository secrets (step 4), a deploy user that is not an admin, and the pinned host key.
 - **Admin sudo:** without a password (see "Who logs in").
 
-listmonk (M2) and Umami each get their own database and user in the same PostgreSQL later.
+listmonk (M2) has its own database and user in the same PostgreSQL (section 11); Umami will get its own the same way.
