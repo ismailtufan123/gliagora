@@ -146,13 +146,34 @@ describe('the production stack (deploy/compose.prod.yml)', () => {
     expect(service(local, 'db')).toContain('pg_isready -h 127.0.0.1 ')
   })
 
+  /**
+   * The lines of listmonk's `ports:` list that do not publish on the loopback, as
+   * `- '127.0.0.1:HOST:CONTAINER'` (quoted either way, or not): every other entry, such as
+   * `- 9000:9000`, `- 0.0.0.0:…` or the long form (`- target: …`, `published: …`), counts.
+   * Comments and blank lines aside. Undefined when there is no list.
+   */
+  const publicPorts = (text: string) => {
+    const ports = /\n {4}ports:\n((?: {6,}.*\n|[ \t]*\n)+)/.exec(service(text, 'listmonk'))?.[1]
+    if (ports === undefined) return undefined
+    const entries = ports.split('\n').filter((line) => line.trim() && !/^\s*#/.test(line))
+    if (entries.length === 0) return undefined
+    return entries.filter((line) => !/^ {6}- (['"]?)127\.0\.0\.1:\d+:\d+\1$/.test(line))
+  }
+
   it('publishes listmonk on the server’s loopback only, and nothing depends on it', () => {
-    for (const text of [compose, local]) {
-      const ports =
-        /\n {4}ports:\n((?: {6}(?:- |# ).*\n)+)/.exec(service(text, 'listmonk'))?.[1] ?? ''
-      const published = [...ports.matchAll(/- '([^']+)'/g)].map((match) => match[1])
-      expect(published.length).toBeGreaterThan(0)
-      for (const port of published) expect(port).toMatch(/^127\.0\.0\.1:/)
+    for (const text of [compose, local]) expect(publicPorts(text)).toEqual([])
+    // Any other entry added next to it is caught, in every form Docker accepts.
+    const loopback = "      - '127.0.0.1:9000:9000'\n"
+    expect(compose).toContain(loopback)
+    for (const extra of [
+      '      - 9000:9000\n',
+      '      - 0.0.0.0:9001:9000\n',
+      '      - "0.0.0.0:9001:9000"\n',
+      "      - '9001:9000'\n",
+      '      - target: 9000\n        published: 9001\n',
+      '      - target: 9000\n        host_ip: 127.0.0.1\n        published: 9001\n',
+    ]) {
+      expect(publicPorts(compose.replace(loopback, loopback + extra)), extra).not.toEqual([])
     }
     // The app and its deploys keep working while listmonk is down.
     for (const name of ['caddy', 'app', 'db']) {
