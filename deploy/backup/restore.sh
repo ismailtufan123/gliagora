@@ -131,10 +131,12 @@ CARRY_TABLES=(deletion_log data_requests consent_log)
 # Tables whose ID sequence moves past the carried and logged IDs; the deletion log names records
 # of the first three (its target_collection is the table's name).
 SEQUENCE_TABLES=(members submissions reports data_requests deletion_log consent_log)
-# What carry_load returns when the restored database lacks a carried table that has rows to take
-# (a backup from before M4b, or from before M2 for the consent log): the app's migrations make the
-# table when it starts (`carry`).
-CARRY_NEEDS_TABLES=3
+# What carry_load returns when the restored database is older than the rows to carry: it lacks a
+# carried table that has rows to take (a backup from before M4b, or from before M2 for the consent
+# log), or a value a carried row uses in one of its enum columns (a label a later migration added,
+# such as the deletion log's `consent-log` and `unlink`, M2): the app's migrations add them when
+# it starts (`carry`).
+CARRY_NEEDS_MIGRATIONS=3
 
 carry_columns() { local name="CARRY_COLUMNS_$1"; echo "${!name}"; }
 
@@ -190,10 +192,17 @@ carry_save() {
 }
 
 # carry_load DIR PSQL...: loads what carry_save kept into a database, in one transaction. Returns
-# CARRY_NEEDS_TABLES, before changing anything, when the database lacks a table that has rows to
-# take; skips one that had none; returns 1 on any other failure.
+# CARRY_NEEDS_MIGRATIONS, before changing anything, when the database lacks a table that has rows to
+# take, or a label of one of its enum types that a carried row uses; skips a table that had no
+# rows; returns 1 on any other failure. The rows are first copied into a table of exactly the
+# carried columns, its enum columns as text (a binary COPY writes an enum's label and a text the
+# same way), so a label the restored database does not know is found before anything changes; the
+# insert then casts them back.
 carry_load() {
-  local dir=$1 table columns column updates live logged line found sql='' sequences load=() missing=()
+  local dir=$1 table columns column type selected count updates live logged line found sql='' \
+    sequences load=() missing=() unknown=() enums=()
+  # Names are checked against plain ASCII ranges, whatever the administrator's locale.
+  local LC_ALL=C
   shift
   # Read first: the psql commands below would take the rest of the file as their input.
   mapfile -t sequences <"$dir/sequences" || return 1
@@ -218,22 +227,48 @@ carry_load() {
   done
   if [[ ${#missing[@]} -gt 0 ]]; then
     log "ERROR: the restored database is older and has no ${missing[*]} table, but the live database had rows in it."
-    return "$CARRY_NEEDS_TABLES"
+    return "$CARRY_NEEDS_MIGRATIONS"
   fi
   for table in "${load[@]}"; do
     columns=$(carry_columns "$table")
     # A table of exactly these columns to load into (it does not survive the transaction below).
     "$@" -c "set client_min_messages = warning; drop table if exists restore_carry_$table; create table restore_carry_$table as select $columns from $table with no data" || return 1
+    # The restored table's enum columns ("name type" lines), as text in the table to load into.
+    mapfile -t enums < <("$@" -tAc "select a.attname || ' ' || format_type(a.atttypid, null) from pg_attribute a join pg_type t on t.oid = a.atttypid where a.attrelid = 'public.$table'::regclass and a.attnum > 0 and not a.attisdropped and t.typtype = 'e' order by a.attnum"; echo "status=$?")
+    [[ "${enums[-1]}" == status=0 ]] || return 1
+    unset 'enums[-1]'
+    for line in "${enums[@]}"; do
+      [[ -n "$line" ]] || continue
+      read -r column type <<<"$line" || return 1
+      [[ "$column" =~ ^[a-z_]+$ && "$type" =~ ^[a-z_.\"]+$ ]] || return 1
+      "$@" -c "alter table restore_carry_$table alter column $column type text" || return 1
+    done
     "$@" -c "copy restore_carry_$table ($columns) from stdin with (format binary)" <"$dir/$table.bin" || return 1
+    selected=$columns
+    for line in "${enums[@]}"; do
+      [[ -n "$line" ]] || continue
+      read -r column type <<<"$line" || return 1
+      count=$("$@" -tAc "select count(*) from restore_carry_$table where $column is not null and $column not in (select enumlabel::text from pg_enum where enumtypid = '$type'::regtype)") || return 1
+      [[ "$count" =~ ^[0-9]+$ ]] || return 1
+      [[ "$count" -eq 0 ]] || unknown+=("$table.$column")
+      selected=$(sed -E "s/(^|, )$column(,|$)/\\1$column::$type\\2/" <<<"$selected")
+    done
     updates=''
     for column in ${columns//,/ }; do
       [[ "$column" == id ]] || updates+="${updates:+, }$column = excluded.$column"
     done
-    sql+="insert into $table ($columns) select $columns from restore_carry_$table
+    sql+="insert into $table ($columns) select $selected from restore_carry_$table
   on conflict (id) do update set $updates;
 drop table restore_carry_$table;
 "
   done
+  if [[ ${#unknown[@]} -gt 0 ]]; then
+    for table in "${load[@]}"; do
+      "$@" -c "set client_min_messages = warning; drop table if exists restore_carry_$table" || true
+    done
+    log "ERROR: the restored database is older and does not know a value the live database's rows use in ${unknown[*]}."
+    return "$CARRY_NEEDS_MIGRATIONS"
+  fi
   for line in "${sequences[@]}"; do
     read -r table live <<<"$line" || return 1
     [[ "$live" =~ ^[0-9]+$ ]] || return 1
@@ -400,10 +435,11 @@ case "$command" in
       carry_save "$carry" live_psql "$db" || fail "Could not copy the rows to carry over."
       status=0
       carry_load "$carry" "${restored[@]}" || status=$?
-      if [[ $status -eq $CARRY_NEEDS_TABLES ]]; then
-        fail "The snapshot restores, but it is older than some carried tables (from before M4b or M2), \
-and the live database has rows for tables it lacks. A real restore of it would stop with the app stopped; 'restore.sh carry' would then \
-finish it (deploy/README.md, section 7)."
+      if [[ $status -eq $CARRY_NEEDS_MIGRATIONS ]]; then
+        fail "The snapshot restores, but it is older than some carried tables or values (from before \
+M4b or M2, or before a migration that added a value the carried rows use), and the live database has \
+rows it cannot hold yet. A real restore of it would stop with the app stopped; 'restore.sh carry' would \
+then finish it (deploy/README.md, section 7)."
       fi
       [[ $status -eq 0 ]] || fail "Could not load the carried rows into the restored copy."
       carry_report "${restored[@]}" || fail "Could not read the carried rows in the restored copy."
@@ -464,13 +500,14 @@ ${carry:+ The rows to carry over are in $carry.}"
       log "Loading the carried rows back and moving the ID sequences"
       status=0
       carry_load "$carry" live_psql "$db" || status=$?
-      if [[ $status -eq $CARRY_NEEDS_TABLES ]]; then
-        fail "The snapshot is older than some carried tables (from before M4b or M2): the live \
-deletion log, data requests or consent records have rows, and the restored database has no table for \
-them yet. The app is stopped, and the rows are kept in $carry. Run '$0 carry $carry $db' with an app \
-image that includes them (the deployed one does, unless you went back to an older image: then deploy \
-the current one again first, and keep $carry until then). It starts the app \
-once, so that its migrations make the tables, stops it, loads the rows and starts the app. $PRE_RESTORE"
+      if [[ $status -eq $CARRY_NEEDS_MIGRATIONS ]]; then
+        fail "The snapshot is older than some carried tables or values (from before M4b or M2, or \
+before a migration that added a value the carried rows use): the live deletion log, data requests or \
+consent records have rows the restored database cannot hold yet. The app is stopped, and the rows are \
+kept in $carry. Run '$0 carry $carry $db' with an app image that includes them (the deployed one does, \
+unless you went back to an older image: then deploy the current one again first, and keep $carry until \
+then). It starts the app once, so that its migrations make the tables and values, stops it, loads the \
+rows and starts the app. $PRE_RESTORE"
       elif [[ $status -ne 0 ]]; then
         fail "Carrying the deletion log, data requests and consent records over failed. The app is stopped, and the \
 rows are kept in $carry: fix the cause, then run '$0 carry $carry $db', which starts the app. $PRE_RESTORE"
@@ -498,15 +535,16 @@ rows are kept in $carry: fix the cause, then run '$0 carry $carry $db', which st
     compose stop app
     status=0
     carry_load "$carry" live_psql "$db" || status=$?
-    if [[ $status -eq $CARRY_NEEDS_TABLES ]]; then
-      # An older backup (before M4b or M2): the app's migrations make the tables when it starts.
-      log "Starting the app once, so that its migrations make the missing tables, then stopping it"
+    if [[ $status -eq $CARRY_NEEDS_MIGRATIONS ]]; then
+      # An older backup (before M4b or M2, or before a migration that added a carried value): the
+      # app's migrations make the tables and values when it starts.
+      log "Starting the app once, so that its migrations make the missing tables and values, then stopping it"
       compose up -d --wait app || fail "The app did not start. The rows are still in $carry. $PRE_RESTORE"
       compose stop app
       status=0
       carry_load "$carry" live_psql "$db" || status=$?
-      [[ $status -ne $CARRY_NEEDS_TABLES ]] || fail "The app did not make the tables: its image is \
-older than them. Deploy the current one, then run '$0 carry $carry $db' again. The app is stopped; the \
+      [[ $status -ne $CARRY_NEEDS_MIGRATIONS ]] || fail "The app did not make the tables or values: its \
+image is older than them. Deploy the current one, then run '$0 carry $carry $db' again. The app is stopped; the \
 rows are still in $carry. $PRE_RESTORE"
     fi
     [[ $status -eq 0 ]] || fail "Carrying over failed again. The app is stopped; the rows are \

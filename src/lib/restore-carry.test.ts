@@ -30,7 +30,13 @@ function folder() {
   return path
 }
 
-type Fake = { tables: string; fail?: 'copy' | 'regclass' | 'garbage'; rows?: boolean }
+type Fake = {
+  tables: string
+  fail?: 'copy' | 'regclass' | 'garbage'
+  rows?: boolean
+  /** The deletion log's `action` as an enum column, its labels known or not (see fake-psql.sh). */
+  enums?: 'present' | 'missing'
+}
 
 /**
  * Runs `call` (carry_save or carry_load with fake_psql) as restore.sh does, inside a condition,
@@ -58,6 +64,7 @@ echo "status=$status"`
       TABLES: fake.tables,
       FAIL: fake.fail ?? '',
       ROWS: fake.rows ? '1' : '',
+      ENUMS: fake.enums ?? '',
     },
   })
   const status = Number(/status=(\d+)\s*$/.exec(output)?.[1])
@@ -187,6 +194,32 @@ describe('restore.sh carry_load', () => {
     expect(stopped.status).toBe(3)
     expect(stopped.output).toContain('has no consent_log table')
     expect(stopped.calls).not.toMatch(/^(statement|copy in|transaction)/m)
+  })
+
+  it('loads enum columns as text, then casts them back in the transaction', () => {
+    const dir = saved(true)
+    const result = run('carry_load "$DIR" fake_psql', dir, { tables: M2_TABLES, enums: 'present' })
+    expect(result.status).toBe(0)
+    expect(result.calls).toContain(
+      'statement alter table restore_carry_deletion_log alter column action type text',
+    )
+    const transaction = result.calls.slice(result.calls.indexOf('transaction'))
+    expect(transaction).toContain(
+      'select id, target_collection, target_id, action::enum_deletion_log_action, at from restore_carry_deletion_log',
+    )
+  })
+
+  it('stops before changing anything when a carried row uses a value the restored database lacks (3: run `carry`)', () => {
+    const dir = saved(true)
+    const result = run('carry_load "$DIR" fake_psql', dir, { tables: M2_TABLES, enums: 'missing' })
+    expect(result.status).toBe(3)
+    expect(result.output).toContain('does not know a value the live database')
+    expect(result.output).toContain('deletion_log.action')
+    expect(result.calls).not.toContain('transaction')
+    // The tables it loaded into are dropped again.
+    expect(result.calls.split('copy in').at(-1)).toContain(
+      'drop table if exists restore_carry_deletion_log',
+    )
   })
 
   it('fails on a damaged carry file or a failed question, never skipping a table', () => {
