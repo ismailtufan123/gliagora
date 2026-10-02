@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto'
 import { drizzle } from '@payloadcms/db-postgres/drizzle/node-postgres'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { listmonkParams } from '@/scripts/listmonk-settings'
+
 import { type Listmonk, listmonkAvailable, startListmonk } from './listmonk'
 
 // listmonk with the server's settings (M2, D50): a real listmonk (the pinned image, or the program
@@ -42,8 +44,11 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
     }
   }
 
-  /** settings.sql as deploy/listmonk/prepare.sh hands it to psql on the server, run the same way. */
-  async function prepareShRun(): Promise<string> {
+  /**
+   * settings.sql as deploy/listmonk/prepare.sh hands it to psql on the server, run the same way,
+   * with the settings it reads from .env (`smtp`: SMTP_*).
+   */
+  async function prepareShRun(smtp: Record<string, string> = {}): Promise<string> {
     const input = execFileSync(
       'bash',
       ['-c', 'source deploy/listmonk/prepare.sh && settings_input'],
@@ -54,6 +59,7 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
           PATH: process.env.PATH,
           LISTMONK_API_TOKEN: listmonk.token,
           LISTMONK_ROOT_URL: listmonk.url,
+          ...smtp,
         },
       },
     )
@@ -326,6 +332,39 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
     expect(await setting('smtp')).toEqual([
       expect.objectContaining({ enabled: false, username: '', password: '' }),
     ])
+  })
+
+  it('stores the same mail server through prepare.sh as through the node-postgres runner', async () => {
+    const smtp = {
+      SMTP_HOST: 'smtp.example.org',
+      SMTP_PORT: '2525',
+      SMTP_USER: 'mailer@example.org',
+      SMTP_PASS: "p'w $x \\ y",
+    }
+    try {
+      expect(await prepareShRun(smtp)).toBe('setting smtp')
+      expect(await setting('smtp')).toEqual([
+        expect.objectContaining({
+          enabled: true,
+          host: 'smtp.example.org',
+          port: 2525,
+          username: 'mailer@example.org',
+          password: "p'w $x \\ y",
+          auth_protocol: 'plain',
+          tls_type: 'STARTTLS',
+        }),
+      ])
+      // The same settings through listmonkParams (pnpm listmonk:setup, the tests, CI): nothing
+      // left to change, so both runners store exactly the same.
+      const params = listmonkParams({
+        LISTMONK_API_TOKEN: listmonk.token,
+        LISTMONK_ROOT_URL: listmonk.url,
+        ...smtp,
+      })
+      expect(await listmonk.applySettings(params)).toEqual([])
+    } finally {
+      expect(await listmonk.applySettings()).toEqual(['setting smtp'])
+    }
   })
 
   it('refuses unusable parameters, or a setting this listmonk lacks, before changing anything', async () => {

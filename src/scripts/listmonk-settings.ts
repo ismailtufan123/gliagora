@@ -43,8 +43,9 @@ export const hashApiToken = (token: string) => createHash('sha256').update(token
  * LISTMONK_ROOT_URL, and the app's SMTP_* settings read as the app reads them (smtpSettings), so
  * listmonk sends through the same server: TLS from the start with SMTP_SECURE, STARTTLS required
  * unless the server is on this computer (Mailpit). deploy/listmonk/prepare.sh reads them the same
- * way on the server (tests/integration/listmonk.db.test.ts checks that both give the same
- * settings).
+ * way on the server: src/lib/deploy-scripts.test.ts compares both runners' parameters for every
+ * kind of setting, and tests/integration/listmonk.db.test.ts checks that both store the same
+ * settings, the mail server included.
  */
 export function listmonkParams(env: Env = process.env): ListmonkParams {
   const token = env.LISTMONK_API_TOKEN?.trim()

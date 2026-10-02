@@ -10,8 +10,10 @@
 #
 # The settings: ALERT_EMAIL, the recipient, in backup.env (only on the server; never a real address
 # in the repository), and the app's SMTP_* settings and EMAIL_FROM, read from /opt/gliagora/.env
-# (never sourced: `EMAIL_FROM=Gliagora <…>` is not shell syntax). Without SMTP_HOST or ALERT_EMAIL
-# it says "alerts off" in the journal and sends nothing. Sent with curl: on port 587 STARTTLS is
+# (never sourced: `EMAIL_FROM=Gliagora <…>` is not shell syntax; a value Compose would read
+# differently, such as a password with a $ outside single quotes, is refused rather than guessed:
+# then it fails without sending). Without SMTP_HOST or ALERT_EMAIL it says "alerts off" in the
+# journal and sends nothing. Sent with curl: on port 587 STARTTLS is
 # required, with SMTP_SECURE=true TLS from the start (smtps://), without TLS only to this computer
 # (localhost, 127.0.0.1, ::1), as the app sends. The SMTP password reaches curl through a file
 # descriptor, never in a command line; never add -v (it shows the login) or `set -x`.
@@ -28,13 +30,29 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 log() { echo "[$(date -u +%FT%TZ)] alert: $*"; }
 
-# A value from .env, read as Compose reads the file (KEY=value, optionally in single or double
-# quotes; the last line wins). listmonk/prepare.sh has the same function.
+# A value from .env, never by sourcing it (`EMAIL_FROM=Gliagora <…>` is not shell syntax), and
+# only where Docker Compose, which gives the app the same file, reads it the same way: KEY=value,
+# nothing around the `=`, and the value either in single quotes (taken as written, by both) or,
+# unquoted or in double quotes, without $ \ " # (which Compose expands or cuts) and without spaces
+# at its ends. The last line wins. Any other line for the key is refused with a message that names
+# the variable, never its value: write that value in single quotes (deploy/.env.example).
+# The same function is in listmonk/prepare.sh and backup/alert.sh (a test checks that they agree).
 env_value() {
-  local line value
-  line=$(grep -E "^$1=" "$ENV_FILE" | tail -n 1) || true
-  value=${line#*=}
-  if [[ "$value" =~ ^\"(.*)\"$ || "$value" =~ ^\'(.*)\'$ ]]; then value=${BASH_REMATCH[1]}; fi
+  local key=$1 line value=''
+  local single="^'([^']*)'\$" double='^"([^"$\#]*)"$'
+  local plain='^([^[:space:]"$\#'\'']([^"$\#]*[^[:space:]"$\#])?)?$'
+  while IFS= read -r line; do
+    if [[ "$line" == "$key="* ]]; then
+      value=${line#"$key="}
+      if [[ "$value" =~ $single && "${BASH_REMATCH[1]}" != *\\ ]] \
+        || [[ "$value" =~ $double || "$value" =~ $plain ]]; then
+        value=${BASH_REMATCH[1]}
+        continue
+      fi
+    fi
+    echo "$key in $ENV_FILE is written in a way Docker Compose reads differently: put its value in single quotes ($key='…'), on a line of its own." >&2
+    return 1
+  done < <(grep -E "^[[:space:]]*(export[[:space:]]+)?$key[[:space:]]*[=:]" "$ENV_FILE" || true)
   printf '%s' "$value"
 }
 
@@ -103,8 +121,18 @@ set -a
 set +a
 ENV_FILE="${ALERT_ENV_FILE:-${COMPOSE_DIR:-/opt/gliagora}/.env}"
 to=$(trim "${ALERT_EMAIL:-}")
-host=''
-[[ -r "$ENV_FILE" ]] && host=$(trim "$(env_value SMTP_HOST)")
+# The mail settings, each into a variable env_<name> (never shown). A line Compose would read
+# differently is not guessed at: no email, and a failure the journal shows.
+for name in SMTP_HOST SMTP_PORT SMTP_SECURE SMTP_USER SMTP_PASS EMAIL_FROM; do
+  value=''
+  if [[ -r "$ENV_FILE" ]] && ! value=$(env_value "$name"); then
+    log "alerts off: $name in $ENV_FILE cannot be read (see the line above); the $(unit_label "$unit") ended: $result"
+    exit 1
+  fi
+  printf -v "env_$name" '%s' "$value"
+done
+unset value
+host=$(trim "$env_SMTP_HOST")
 if [[ -z "$host" || -z "$to" ]]; then
   missing=$([[ -z "$host" ]] && echo "SMTP_HOST in $ENV_FILE" || echo "ALERT_EMAIL in $CONFIG")
   log "alerts off (no $missing); the $(unit_label "$unit") ended: $result"
@@ -118,12 +146,12 @@ if ! should_alert "$unit" "$result" "$(date -u +%u)"; then
 fi
 
 secure=false
-[[ "$(trim "$(env_value SMTP_SECURE)" | tr '[:upper:]' '[:lower:]')" == true ]] && secure=true
-port=$(trim "$(env_value SMTP_PORT)")
+[[ "$(trim "$env_SMTP_SECURE" | tr '[:upper:]' '[:lower:]')" == true ]] && secure=true
+port=$(trim "$env_SMTP_PORT")
 [[ "$port" =~ ^[0-9]{1,5}$ ]] || port=$([[ "$secure" == true ]] && echo 465 || echo 587)
-user=$(trim "$(env_value SMTP_USER)")
-SMTP_PASS=$(env_value SMTP_PASS)
-from_header=$(trim "$(env_value EMAIL_FROM)")
+user=$(trim "$env_SMTP_USER")
+SMTP_PASS=$env_SMTP_PASS
+from_header=$(trim "$env_EMAIL_FROM")
 [[ -n "$from_header" ]] || from_header='Gliagora <hello@gliagora.com>'
 from=$(bare_address "$from_header")
 if [[ "$secure" == true ]]; then

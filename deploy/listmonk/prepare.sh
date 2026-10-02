@@ -31,14 +31,29 @@ log() { echo "[$(date -u +%FT%TZ)] $*"; }
 fail() { log "ERROR: $*" >&2; exit 1; }
 compose() { docker compose --project-directory "$COMPOSE_DIR" -f "$COMPOSE_DIR/compose.prod.yml" "$@"; }
 
-# A value from .env, read as Compose reads the file (KEY=value, optionally in single or double
-# quotes; the last line wins), never by sourcing it: `EMAIL_FROM=Gliagora <…>` is not shell syntax.
-# backup/alert.sh has the same function.
+# A value from .env, never by sourcing it (`EMAIL_FROM=Gliagora <…>` is not shell syntax), and
+# only where Docker Compose, which gives the app the same file, reads it the same way: KEY=value,
+# nothing around the `=`, and the value either in single quotes (taken as written, by both) or,
+# unquoted or in double quotes, without $ \ " # (which Compose expands or cuts) and without spaces
+# at its ends. The last line wins. Any other line for the key is refused with a message that names
+# the variable, never its value: write that value in single quotes (deploy/.env.example).
+# The same function is in listmonk/prepare.sh and backup/alert.sh (a test checks that they agree).
 env_value() {
-  local line value
-  line=$(grep -E "^$1=" "$ENV_FILE" | tail -n 1) || true
-  value=${line#*=}
-  if [[ "$value" =~ ^\"(.*)\"$ || "$value" =~ ^\'(.*)\'$ ]]; then value=${BASH_REMATCH[1]}; fi
+  local key=$1 line value=''
+  local single="^'([^']*)'\$" double='^"([^"$\#]*)"$'
+  local plain='^([^[:space:]"$\#'\'']([^"$\#]*[^[:space:]"$\#])?)?$'
+  while IFS= read -r line; do
+    if [[ "$line" == "$key="* ]]; then
+      value=${line#"$key="}
+      if [[ "$value" =~ $single && "${BASH_REMATCH[1]}" != *\\ ]] \
+        || [[ "$value" =~ $double || "$value" =~ $plain ]]; then
+        value=${BASH_REMATCH[1]}
+        continue
+      fi
+    fi
+    echo "$key in $ENV_FILE is written in a way Docker Compose reads differently: put its value in single quotes ($key='…'), on a line of its own." >&2
+    return 1
+  done < <(grep -E "^[[:space:]]*(export[[:space:]]+)?$key[[:space:]]*[=:]" "$ENV_FILE" || true)
   printf '%s' "$value"
 }
 
@@ -54,9 +69,10 @@ sql_text() { printf "'%s'" "${1//\'/\'\'}"; }
 # except on this computer (Mailpit). Every value is written by printf, a bash builtin, so none
 # appears in a command line; the session never logs a failed statement.
 settings_input() {
-  local token_hash host port user pass tls secure default_port
-  [[ -n "${LISTMONK_API_TOKEN:-}" ]] || { echo "LISTMONK_API_TOKEN is not set" >&2; return 1; }
-  token_hash=$(printf '%s' "$LISTMONK_API_TOKEN" | sha256sum | cut -d' ' -f1)
+  local token token_hash host port user pass tls secure default_port
+  token=$(trim "${LISTMONK_API_TOKEN:-}")
+  [[ -n "$token" ]] || { echo "LISTMONK_API_TOKEN is not set" >&2; return 1; }
+  token_hash=$(printf '%s' "$token" | sha256sum | cut -d' ' -f1)
   host=$(trim "${SMTP_HOST:-}")
   secure=false
   [[ "$(trim "${SMTP_SECURE:-}" | tr '[:upper:]' '[:lower:]')" == true ]] && secure=true
@@ -106,14 +122,15 @@ settings_input() {
 
 [[ $EUID -eq 0 ]] || fail "Run as root (sudo): the admin password file is root's."
 [[ -r "$ENV_FILE" ]] || fail "$ENV_FILE not found."
-LISTMONK_API_TOKEN=$(env_value LISTMONK_API_TOKEN)
+# Each value into the variable of its name (never shown); a line Compose would read differently
+# stops here, before anything changes, so listmonk never gets another password than the app.
+for name in LISTMONK_API_TOKEN SMTP_HOST SMTP_PORT SMTP_SECURE SMTP_USER SMTP_PASS; do
+  value=$(env_value "$name") || fail "Nothing was changed: correct $name in $ENV_FILE (see above)."
+  printf -v "$name" '%s' "$value"
+done
+unset value
 [[ -n "$LISTMONK_API_TOKEN" ]] \
   || fail "Set LISTMONK_API_TOKEN in $ENV_FILE first (deploy/README.md, \"listmonk\")."
-SMTP_HOST=$(env_value SMTP_HOST)
-SMTP_PORT=$(env_value SMTP_PORT)
-SMTP_SECURE=$(env_value SMTP_SECURE)
-SMTP_USER=$(env_value SMTP_USER)
-SMTP_PASS=$(env_value SMTP_PASS)
 LISTMONK_ROOT_URL=$TUNNEL_URL
 
 log "listmonk 1/4: its database and role"

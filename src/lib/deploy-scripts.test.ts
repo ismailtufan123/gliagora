@@ -12,7 +12,9 @@ import {
 import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { listmonkParams } from '@/scripts/listmonk-settings'
 
 // The server's scripts in deploy/ (M2, D50), run by bash against stand-ins for curl, docker, restic
 // and journalctl (tests/fixtures/deploy/bin) or sourced for their functions, as
@@ -454,29 +456,73 @@ describe('deploy-remote.sh', () => {
 describe('listmonk/prepare.sh', () => {
   const PREPARE = 'deploy/listmonk/prepare.sh'
 
-  it('reads .env as Compose does, without sourcing it', () => {
+  it('reads .env only where Compose reads it the same way, without sourcing it', () => {
     const dir = folder()
     const env = join(dir, '.env')
+    const lines: Record<string, string> = {
+      EMAIL_FROM: 'EMAIL_FROM=Gliagora <hello@gliagora.com>',
+      QUOTED: 'QUOTED="two words"',
+      SINGLE: `SINGLE='a$b#c\\d "q" it'`,
+      ITS: "ITS=it's",
+      EMPTY: 'EMPTY=',
+      EMPTY_QUOTES: "EMPTY_QUOTES=''",
+      // Compose: $$ is $, $x a variable, \" and \$ escapes, " #" a comment, and the rest it
+      // reads too, but differently or not at all; so each is refused, naming only the variable.
+      DOLLARS: 'DOLLARS=Ab$$9',
+      VARIABLE: 'VARIABLE=$HOME',
+      ESCAPED_QUOTE: 'ESCAPED_QUOTE="a\\"b"',
+      ESCAPED_DOLLAR: 'ESCAPED_DOLLAR="a\\$b"',
+      DOUBLE_DOLLAR: 'DOUBLE_DOLLAR="x$y"',
+      COMMENT: 'COMMENT=pass # note',
+      HASH: 'HASH=a#b',
+      BACKSLASH: 'BACKSLASH=a\\b',
+      EXPORTED: 'export EXPORTED=v',
+      SPACED: 'SPACED = v',
+      COLON: 'COLON: v',
+      INDENTED: '  INDENTED=v',
+      TRAILING: 'TRAILING=v  ',
+      TRAILING_QUOTED: "TRAILING_QUOTED='v' ",
+      CARRIAGE: 'CARRIAGE=v\r',
+      OPEN: "OPEN='v",
+      SPLIT: "SPLIT='a'b'",
+      ESCAPED_END: "ESCAPED_END='v\\'",
+    }
     writeFileSync(
       env,
-      [
-        'EMAIL_FROM=Gliagora <hello@gliagora.com>',
-        'QUOTED="two words"',
-        "SINGLE='x y'",
-        'TWICE=first',
-        'TWICE=second',
-        'EMPTY=',
-        '',
-      ].join('\n'),
+      `${Object.values(lines).join('\n')}\nTWICE=first\nTWICE=second\nLATER=ok\nLATER=$$\n`,
     )
     const value = (name: string) =>
       sourced(PREPARE, `ENV_FILE="$ENV"; env_value ${name}`, { ENV: env })
     expect(value('EMAIL_FROM')).toBe('Gliagora <hello@gliagora.com>')
     expect(value('QUOTED')).toBe('two words')
-    expect(value('SINGLE')).toBe('x y')
-    expect(value('TWICE')).toBe('second')
+    // Single quotes: taken as written, by Compose too.
+    expect(value('SINGLE')).toBe('a$b#c\\d "q" it')
+    expect(value('ITS')).toBe("it's")
     expect(value('EMPTY')).toBe('')
+    expect(value('EMPTY_QUOTES')).toBe('')
+    expect(value('TWICE')).toBe('second')
     expect(value('MISSING')).toBe('')
+    const refused = [
+      ...Object.keys(lines).slice(6),
+      // A line Compose reads differently refuses the key even when a later line is fine.
+      'LATER',
+    ]
+    expect(refused).toHaveLength(19)
+    for (const name of refused) {
+      let failure: { status?: number; stderr?: string } = {}
+      try {
+        value(name)
+      } catch (error) {
+        failure = error as typeof failure
+      }
+      expect(failure.status, name).toBe(1)
+      expect(failure.stderr).toContain(`${name} in ${env} is written in a way Docker Compose`)
+      expect(failure.stderr).toContain(`put its value in single quotes (${name}='…')`)
+      // Never the value as written.
+      const line = lines[name] ?? ''
+      const written = line.slice(line.indexOf(name) + name.length + 1).trim()
+      if (written.length > 2) expect(failure.stderr).not.toContain(written)
+    }
   })
 
   const input = (env: Record<string, string>) => sourced(PREPARE, 'settings_input', env)
@@ -537,6 +583,47 @@ describe('listmonk/prepare.sh', () => {
     })
     expect(smtp({ SMTP_HOST: 'smtp.example.org', SMTP_PORT: '99999' }).port).toBe('587')
   })
+
+  it('gives settings.sql the same parameters as the node-postgres runner (pnpm listmonk:setup)', () => {
+    // The server's way (prepare.sh's psql input) and the tests' and CI's (listmonkParams, which
+    // reads SMTP as the app does): the same mail server, login, TLS and token, for every kind of
+    // setting. tests/integration/listmonk.db.test.ts checks that both store the same.
+    const keys = Object.keys(listmonkParams({ LISTMONK_API_TOKEN: 't' }))
+    expect(keys).toHaveLength(7)
+    const cases: Record<string, string>[] = [
+      {},
+      { SMTP_HOST: 'smtp.example.org' },
+      {
+        SMTP_HOST: ' smtp.example.org ',
+        SMTP_USER: ' mailer@example.org ',
+        SMTP_PASS: "it's $ \\",
+      },
+      { SMTP_HOST: 'smtp.example.org', SMTP_SECURE: 'TRUE', SMTP_USER: 'm', SMTP_PASS: 'p w' },
+      { SMTP_HOST: 'smtp.example.org', SMTP_SECURE: 'false', SMTP_PORT: '2525' },
+      { SMTP_HOST: 'smtp.example.org', SMTP_PORT: '99999' },
+      { SMTP_HOST: 'smtp.example.org', SMTP_PORT: 'abc', SMTP_SECURE: 'true' },
+      { SMTP_HOST: 'localhost', SMTP_PORT: '1025', SMTP_USER: 'u', SMTP_PASS: 'x' },
+      { SMTP_HOST: '127.0.0.1', SMTP_PASS: 'without a user' },
+      { SMTP_HOST: '[::1]', SMTP_PORT: '025' },
+    ]
+    const quiet = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      for (const smtp of cases) {
+        const env = {
+          LISTMONK_API_TOKEN: ' the-token ',
+          LISTMONK_ROOT_URL: 'http://localhost:9001',
+          ...smtp,
+        }
+        const sqlText = input(env)
+        const bash = Object.fromEntries(
+          keys.map((key) => [key, (param(sqlText, key) ?? 'missing').replaceAll("''", "'")]),
+        )
+        expect(bash, JSON.stringify(smtp)).toEqual(listmonkParams(env))
+      }
+    } finally {
+      quiet.mockRestore()
+    }
+  })
 })
 
 describe('backup/alert.sh', () => {
@@ -549,7 +636,8 @@ describe('backup/alert.sh', () => {
     {
       env = {},
       backup = {},
-    }: { env?: Record<string, string>; backup?: Record<string, string> } = {},
+      extra = '',
+    }: { env?: Record<string, string>; backup?: Record<string, string>; extra?: string } = {},
   ) {
     const dir = folder()
     const settings = {
@@ -560,11 +648,12 @@ describe('backup/alert.sh', () => {
       EMAIL_FROM: 'Gliagora <hello@gliagora.com>',
       ...env,
     }
+    // In single quotes, as deploy/.env.example asks; `extra` adds lines as they are.
     writeFileSync(
       join(dir, '.env'),
       Object.entries(settings)
-        .map(([key, value]) => `${key}=${value}\n`)
-        .join(''),
+        .map(([key, value]) => `${key}='${value}'\n`)
+        .join('') + extra,
     )
     const backupSettings = { COMPOSE_DIR: dir, ALERT_EMAIL: 'operator@example.org', ...backup }
     writeFileSync(
@@ -647,6 +736,19 @@ describe('backup/alert.sh', () => {
     ]) {
       expect(run.status).toBe(0)
       expect(run.output).toContain('alerts off')
+      expect(run.args).toBeNull()
+    }
+  })
+
+  it('sends nothing, and fails, when .env holds a mail setting Compose would read differently', () => {
+    for (const line of ['SMTP_PASS=Ab$$9xY', 'SMTP_PASS="Ab\\$9xY"', 'EMAIL_FROM=a # b']) {
+      const run = alert('gliagora-backup', 'exit-code', { extra: `${line}\n` })
+      expect(run.status, line).toBe(1)
+      const name = line.slice(0, line.indexOf('='))
+      expect(run.output).toContain(`alerts off: ${name} in `)
+      expect(run.output).toContain(`put its value in single quotes (${name}='…')`)
+      expect(run.output).not.toContain('Ab')
+      expect(run.output).not.toContain('s3cr')
       expect(run.args).toBeNull()
     }
   })
