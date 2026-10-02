@@ -27,22 +27,81 @@ describe('emailCap', () => {
     })
   })
 
-  it('keeps the default for an unusable value, naming the variable but never the value', () => {
-    for (const value of ['0', '-5', '12.5', '1e3', 'fifty', '0x20', String(EMAIL_CAP_MAX + 1)]) {
-      const cap = emailCap({ EMAIL_CAP_HOUR: value, EMAIL_CAP_DAY: '400' })
-      expect(cap).toMatchObject({ hour: 50, day: 400, set: true })
-      expect(cap.problems).toHaveLength(1)
-      expect(cap.problems[0]).toMatch(/^EMAIL_CAP_HOUR is not a whole number/)
-      expect(cap.problems[0]).not.toContain(` ${value}`)
+  it('never raises a lower value the operator set: an empty hour follows a smaller day', () => {
+    // The mailbox allows little a day: the day alone sets both, with nothing to report.
+    expect(emailCap({ EMAIL_CAP_DAY: '20' })).toEqual({
+      hour: 20,
+      day: 20,
+      set: true,
+      problems: [],
+    })
+    expect(emailCap({ EMAIL_CAP_DAY: '40', EMAIL_CAP_HOUR: ' ' })).toEqual({
+      hour: 40,
+      day: 40,
+      set: true,
+      problems: [],
+    })
+  })
+
+  it('lowers an hour above the day to the day, naming the variables but never the values', () => {
+    const cap = emailCap({ EMAIL_CAP_HOUR: '300', EMAIL_CAP_DAY: '100' })
+    expect(cap).toMatchObject({ hour: 100, day: 100, set: true })
+    expect(cap.problems).toEqual([
+      'EMAIL_CAP_HOUR is above EMAIL_CAP_DAY: the hour is limited to the day.',
+    ])
+    // Also above the default day, when the day is empty: the day is never raised.
+    const alone = emailCap({ EMAIL_CAP_HOUR: '300' })
+    expect(alone).toMatchObject({ hour: 200, day: 200, set: true })
+    expect(alone.problems).toEqual([
+      'EMAIL_CAP_HOUR is above the default of EMAIL_CAP_DAY: the hour is limited to the day.',
+    ])
+    for (const problem of [...cap.problems, ...alone.problems]) {
+      expect(problem).not.toMatch(/\d/)
     }
   })
 
-  it('keeps both defaults when the hour is above the day, since one of them is a mistake', () => {
-    const cap = emailCap({ EMAIL_CAP_HOUR: '300', EMAIL_CAP_DAY: '100' })
-    expect(cap).toMatchObject({ hour: 50, day: 200, set: false })
-    expect(cap.problems).toEqual([expect.stringMatching(/^EMAIL_CAP_HOUR is above EMAIL_CAP_DAY/)])
-    // Also when only the day is set, below the default hour.
-    expect(emailCap({ EMAIL_CAP_DAY: '20' }).problems).toHaveLength(1)
+  it('replaces an unusable value by the stricter of its default and the other setting', () => {
+    for (const value of ['0', '-5', '12.5', '1e3', 'fifty', '0x20', String(EMAIL_CAP_MAX + 1)]) {
+      // The hour: the default, or the day when that is lower.
+      const hour = emailCap({ EMAIL_CAP_HOUR: value, EMAIL_CAP_DAY: '400' })
+      expect(hour).toMatchObject({ hour: 50, day: 400, set: true })
+      expect(hour.problems).toHaveLength(1)
+      expect(hour.problems[0]).toMatch(/^EMAIL_CAP_HOUR is not a whole number/)
+      expect(hour.problems[0]).not.toContain(` ${value}`)
+      expect(emailCap({ EMAIL_CAP_HOUR: value, EMAIL_CAP_DAY: '20' })).toMatchObject({
+        hour: 20,
+        day: 20,
+      })
+      // The day: the default, or the hour when that is lower (never above what was set).
+      const day = emailCap({ EMAIL_CAP_HOUR: '30', EMAIL_CAP_DAY: value })
+      expect(day).toMatchObject({ hour: 30, day: 30, set: true })
+      expect(day.problems).toEqual([expect.stringMatching(/^EMAIL_CAP_DAY is not a whole number/)])
+      expect(day.problems[0]).not.toContain(` ${value}`)
+      expect(emailCap({ EMAIL_CAP_HOUR: '300', EMAIL_CAP_DAY: value })).toMatchObject({
+        hour: 200,
+        day: 200,
+        problems: [expect.stringMatching(/^EMAIL_CAP_DAY/)],
+      })
+      expect(emailCap({ EMAIL_CAP_DAY: value })).toMatchObject({ hour: 50, day: 200, set: false })
+    }
+    const both = emailCap({ EMAIL_CAP_HOUR: 'x', EMAIL_CAP_DAY: 'y' })
+    expect(both).toMatchObject({ hour: 50, day: 200, set: false })
+    expect(both.problems).toHaveLength(2)
+  })
+
+  it('is never above what was set, whatever the two settings are', () => {
+    const values = ['', '1', '20', '49', '50', '51', '199', '200', '201', '5000', 'bad']
+    for (const hourText of values) {
+      for (const dayText of values) {
+        const cap = emailCap({ EMAIL_CAP_HOUR: hourText, EMAIL_CAP_DAY: dayText })
+        const hourSet = /^\d+$/.test(hourText) ? Number(hourText) : null
+        const daySet = /^\d+$/.test(dayText) ? Number(dayText) : null
+        expect(cap.hour).toBeLessThanOrEqual(cap.day)
+        expect(cap.hour).toBeLessThanOrEqual(hourSet ?? EMAILS_SITE_WIDE.hour)
+        expect(cap.day).toBeLessThanOrEqual(daySet ?? EMAILS_SITE_WIDE.day)
+        expect(cap.hour).toBeGreaterThanOrEqual(1)
+      }
+    }
   })
 })
 

@@ -236,7 +236,8 @@ describe('several limits (M4b)', () => {
       // The next hour: one more, then the day's 3 are used up.
       expect(await mail(store, 'c@example.org', 'ip-c', HOUR + MINUTE)).toBe('accepted')
       expect(await mail(store, 'd@example.org', 'ip-d', HOUR + 2 * MINUTE)).toBe('unavailable')
-      // An unusable setting keeps the default (email-cap.test.ts).
+      // An unusable setting is replaced by the stricter of its default and the other one
+      // (email-cap.test.ts).
       vi.stubEnv('EMAIL_CAP_HOUR', 'many')
       vi.stubEnv('EMAIL_CAP_DAY', '')
       const limits = emailLimits('hash').filter((limit) => limit.key === 'mail:all')
@@ -244,6 +245,11 @@ describe('several limits (M4b)', () => {
         EMAILS_SITE_WIDE.hour,
         EMAILS_SITE_WIDE.day,
       ])
+      // A day below the default hour, alone, holds the hour to it.
+      vi.stubEnv('EMAIL_CAP_HOUR', '')
+      vi.stubEnv('EMAIL_CAP_DAY', '20')
+      const low = emailLimits('hash').filter((limit) => limit.key === 'mail:all')
+      expect(low.map((limit) => limit.perWindow)).toEqual([20, 20])
     } finally {
       vi.unstubAllEnvs()
     }

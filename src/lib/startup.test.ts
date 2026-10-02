@@ -63,7 +63,8 @@ describe('connectOnStart', () => {
     vi.stubEnv('EMAIL_CAP_HOUR', '120')
     vi.stubEnv('EMAIL_CAP_DAY', 'lots')
     await connectOnStart()
-    expect(log).toHaveBeenLastCalledWith('Email cap of the forms: 120 an hour, 200 a day')
+    // An unusable day: the stricter of its default and the hour, never more than was set.
+    expect(log).toHaveBeenLastCalledWith('Email cap of the forms: 120 an hour, 120 a day')
     expect(error).toHaveBeenCalledWith(
       expect.stringMatching(/^EMAIL_CAP_DAY is not a whole number/),
     )

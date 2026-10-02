@@ -19,36 +19,61 @@ export type EmailCap = {
   day: number
   /** Whether a setting chose it (otherwise the default). */
   set: boolean
-  /** One line for each unusable setting, naming the variable, never its value. */
+  /** One line for each setting not used as given, naming the variables, never their values. */
   problems: string[]
 }
 
+/** A setting: a usable number, `null` when empty, or `'unusable'` (with a problem). */
 function read(env: Env, name: 'EMAIL_CAP_HOUR' | 'EMAIL_CAP_DAY', problems: string[]) {
   const text = env[name]?.trim()
   if (!text) return null
   const value = /^\d{1,6}$/.test(text) ? Number(text) : Number.NaN
   if (value >= 1 && value <= EMAIL_CAP_MAX) return value
-  problems.push(`${name} is not a whole number from 1 to ${EMAIL_CAP_MAX}: it is not used.`)
-  return null
+  problems.push(
+    `${name} is not a whole number from 1 to ${EMAIL_CAP_MAX}: the stricter of its default and the other setting is used.`,
+  )
+  return 'unusable' as const
 }
 
 /**
  * The cap from EMAIL_CAP_HOUR and EMAIL_CAP_DAY: each a whole number from 1 to EMAIL_CAP_MAX, or
- * empty for its default. An unusable one keeps its default, with a problem; an hour above the day
- * keeps both defaults, since one of them is a mistake.
+ * empty for its default. It never raises a value the operator set, since the cap protects the
+ * mailbox's limit:
+ * - an empty hour is the default hour, or the day when that is lower (EMAIL_CAP_DAY=40 alone: 40
+ *   an hour and 40 a day), with no problem;
+ * - an hour above the day (or above the default day) is lowered to the day, with a problem;
+ * - an unusable value is replaced by the stricter of its default and the other setting, with a
+ *   problem (fail closed: a typing error never raises the cap).
+ * Problems name the variables, never their values.
  */
 export function emailCap(env: Env = process.env): EmailCap {
   const problems: string[] = []
-  const hour = read(env, 'EMAIL_CAP_HOUR', problems)
-  const day = read(env, 'EMAIL_CAP_DAY', problems)
-  const cap = { hour: hour ?? EMAILS_SITE_WIDE.hour, day: day ?? EMAILS_SITE_WIDE.day }
-  if (cap.hour > cap.day) {
-    problems.push(
-      `EMAIL_CAP_HOUR is above EMAIL_CAP_DAY: both are not used (${EMAILS_SITE_WIDE.hour} an hour, ${EMAILS_SITE_WIDE.day} a day).`,
-    )
-    return { ...EMAILS_SITE_WIDE, set: false, problems }
+  const hourIn = read(env, 'EMAIL_CAP_HOUR', problems)
+  const dayIn = read(env, 'EMAIL_CAP_DAY', problems)
+  const day =
+    typeof dayIn === 'number'
+      ? dayIn
+      : dayIn === 'unusable' && typeof hourIn === 'number'
+        ? Math.min(EMAILS_SITE_WIDE.day, hourIn)
+        : EMAILS_SITE_WIDE.day
+  let hour = Math.min(EMAILS_SITE_WIDE.hour, day)
+  if (typeof hourIn === 'number') {
+    hour = Math.min(hourIn, day)
+    // An unusable day already said which value is used.
+    if (hourIn > day && dayIn !== 'unusable') {
+      problems.push(
+        dayIn === null
+          ? 'EMAIL_CAP_HOUR is above the default of EMAIL_CAP_DAY: the hour is limited to the day.'
+          : 'EMAIL_CAP_HOUR is above EMAIL_CAP_DAY: the hour is limited to the day.',
+      )
+    }
   }
-  return { ...cap, set: hour !== null || day !== null, problems }
+  return {
+    hour,
+    day,
+    set: typeof hourIn === 'number' || typeof dayIn === 'number',
+    problems,
+  }
 }
 
 /** The start line: the cap in force, and whether it is the default. */

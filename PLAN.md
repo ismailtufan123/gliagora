@@ -1612,7 +1612,7 @@ Until S, each milestone ends merged to `main` with CI green and its image in GHC
   - Deploys: only the app's image is pulled; a deploy whose app is healthy is not rolled back when another service is not (it names the service); going back changes only `APP_IMAGE` in `.env`.
   - Container logs: every service logs to the systemd journal, which keeps 14 days (`MaxRetentionSec=14day`, daily files, at most 1 GB) with no copy for syslog (D34); `docker compose logs` works as before. Open point: kernel lines (the firewall's blocked packets, unmasked addresses) still reach `/var/log/ufw.log` and `kern.log` through rsyslog, kept about four weeks.
   - Backup emails (D42): `deploy/backup/alert.sh` after every run of both units: every failure, the Sunday backup's and the restore test's success; through the app's mail server (STARTTLS required), to `ALERT_EMAIL`, with the run's own log lines and no address; off until both are set.
-  - The cap on the forms' emails is a setting (`EMAIL_CAP_HOUR`, `EMAIL_CAP_DAY`; default 50 and 200; the start line names it), to be set from the mailbox's limit at M2 with room for the scheduled emails and Glia Notes.
+  - The cap on the forms' emails is a setting (`EMAIL_CAP_HOUR`, `EMAIL_CAP_DAY`; default 50 and 200; the start line names it), to be set from the mailbox's limit at M2 with room for the scheduled emails and Glia Notes. It never goes above a value set: the hour is held to the day (also to the default day), and an unreadable value becomes the stricter of its default and the other setting, with an error line.
 
 **Pre-launch checklist** (after S, before the M6 public launch; M6 works through it together with the §3.4 gate):
 
