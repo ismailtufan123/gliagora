@@ -315,7 +315,7 @@ Then switch sign-in on, only with the operator's go-ahead, in this order:
    scp deploy/backup/backup.sh deploy/backup/restore.sh gliagora@<server-ip>:/opt/gliagora/backup/
    ```
 
-   Since M2's server parts, `compose.prod.yml` also needs listmonk's settings, folder and scripts: if the server does not have them yet, follow section 12 instead, which copies everything.
+   Since M2's server parts, `compose.prod.yml` also needs listmonk's settings, folder and scripts: if the server does not have them yet, follow section 12 instead. It copies these files too (the `Caddyfile` included), restarts Caddy and makes the check below (its step 6); then continue here with step 2.
 
    On the server: `cd /opt/gliagora && sudo ./update.sh --no-pull` (it backs up first and applies `compose.prod.yml`), then restart Caddy so that it reads the new Caddyfile: `docker compose -f compose.prod.yml restart caddy` (`update.sh` does not restart Caddy when only the Caddyfile changed). Then check that Caddy took the new file: `docker compose -f compose.prod.yml logs --tail 20 caddy` shows no error, and a request to `https://gliagora.com/en/sign-in/?next=check` (with the site-wide password) appears in `sudo tail -n 1 /var/lib/docker/volumes/gliagora_caddy-logs/_data/access.log` as `/en/sign-in/?[removed]`.
 2. **Then set the keys** in `/opt/gliagora/.env` (`deploy/.env.example` lists them): `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, `ORCID_CLIENT_ID` and `ORCID_CLIENT_SECRET` (ORCID's own issuer; its sandbox is refused here), and, for sign-in by email link, the M2 `SMTP_*` settings (`SMTP_PASS` and `EMAIL_FROM` in single quotes, step 2; the link form also needs `ALTCHA_HMAC_KEY`, which is set). Each way of signing in switches on by itself once its settings are there; none needs a new secret.
@@ -368,7 +368,7 @@ If `prepare.sh` fails during an update (listmonk's database, its upgrade or a re
 
 ## 12. Putting M2's server parts on the running server (once)
 
-On a new server, steps 1–5 already do all of this. On the server running since S, in this order, with the operator's go-ahead (CLAUDE.md, rule a), and never printing a secret:
+On a new server, steps 1–5 already do all of this. On the server running since S, in this order, with the operator's go-ahead (CLAUDE.md, rule a), and never printing a secret. Do it when no merge to `main` is waiting to deploy (merges deploy themselves until M2, this branch's own merge too), or switch deploys off for the time: `gh variable set DEPLOY_ENABLED --body false` before step 1, and `--body true` after step 6.
 
 1. **Generate the two new secrets in `.env`** (before the new `compose.prod.yml` arrives, which refuses to start without them), without showing them:
 
@@ -380,27 +380,29 @@ On a new server, steps 1–5 already do all of this. On the server running since
    sudo grep -c '^LISTMONK_' .env    # 2
    ```
 
-2. **Edit `backup/backup.env`**: `DATABASES="gliagora listmonk"`, and add `ALERT_EMAIL=` (empty until M2's mailbox; then the operator's address):
+2. **Copy the files**, from your computer, in the repository. The `Caddyfile` too: the server's may still be the one from before M4b, which does not remove the query strings of the sign-in, account and data-request addresses from Caddy's logs (section 9, step 1):
 
    ```sh
-   sudo sed -i 's/^DATABASES=.*/DATABASES="gliagora listmonk"/' backup/backup.env
-   sudo grep -q '^ALERT_EMAIL=' backup/backup.env || echo 'ALERT_EMAIL=' | sudo tee -a backup/backup.env >/dev/null
-   ```
-
-3. **Copy the files**, from your computer, in the repository:
-
-   ```sh
-   scp -r deploy/compose.prod.yml deploy/update.sh deploy/deploy-remote.sh deploy/postgres deploy/listmonk \
-     deploy/logs gliagora@<server-ip>:/opt/gliagora/
+   scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/update.sh deploy/deploy-remote.sh deploy/postgres \
+     deploy/listmonk deploy/logs gliagora@<server-ip>:/opt/gliagora/
    scp deploy/backup/backup.sh deploy/backup/restore.sh deploy/backup/alert.sh deploy/backup/backup.env.example \
      gliagora@<server-ip>:/opt/gliagora/backup/
    scp deploy/backup/systemd/* gliagora@<server-ip>:/opt/gliagora/backup/systemd/
    ```
 
+3. **Then, at once, edit `backup/backup.env`** (in the same session, before step 5: the backup script from before this step fails on a database that does not exist yet, and a nightly backup or a deploy could run in between): `DATABASES="gliagora listmonk"`, and add `ALERT_EMAIL=` (empty until M2's mailbox; then the operator's address):
+
+   ```sh
+   cd /opt/gliagora
+   sudo sed -i 's/^DATABASES=.*/DATABASES="gliagora listmonk"/' backup/backup.env
+   sudo grep -q '^ALERT_EMAIL=' backup/backup.env || echo 'ALERT_EMAIL=' | sudo tee -a backup/backup.env >/dev/null
+   ```
+
 4. **Install the journal's limit and the units' alert lines**, on the server: `sudo /opt/gliagora/logs/install-journald.sh`, then `sudo cp /opt/gliagora/backup/systemd/gliagora-*.service /opt/gliagora/backup/systemd/gliagora-*.timer /etc/systemd/system/ && sudo systemctl daemon-reload`.
-5. **Apply it:** `cd /opt/gliagora && sudo ./update.sh --no-pull`. It recreates the database container (its new setting, log driver, terse error log and health check over TCP), backs up, prepares listmonk (creates its database, installs it and generates `/root/listmonk-admin-password`, applies its settings) and starts it, then recreates every container with its logs going to the journal.
+5. **Apply it:** `cd /opt/gliagora && sudo ./update.sh --no-pull`. It recreates the database container (its new setting, log driver, terse error log and health check over TCP), backs up, prepares listmonk (creates its database, installs it and generates `/root/listmonk-admin-password`, applies its settings) and starts it, then recreates every container with its logs going to the journal; Caddy's recreation makes it read the new `Caddyfile`. Then restart Caddy anyway, so that it reads the file even if its container was kept: `docker compose -f compose.prod.yml restart caddy`.
 6. **Check:**
-   - `docker compose -f compose.prod.yml ps`: four services, each `healthy`;
+   - `docker compose -f compose.prod.yml ps`: four services running; app, db and listmonk show `(healthy)`, and caddy only `Up …` (it has no health check);
+   - Caddy took the new `Caddyfile`, as in section 9, step 1: `docker compose -f compose.prod.yml logs --tail 20 caddy` shows no error, and a request to `https://gliagora.com/en/sign-in/?next=check` (with the site-wide password) appears in `sudo tail -n 1 /var/lib/docker/volumes/gliagora_caddy-logs/_data/access.log` as `/en/sign-in/?[removed]`;
    - `curl -s http://127.0.0.1:9000/health` on the server prints `{"data":true}`, and the same from your computer to `<server-ip>:9000` gets no answer; `docker version --format '{{.Server.Version}}'` is 28 or later (older Docker let machines on the same network segment reach ports published on 127.0.0.1);
    - `docker compose -f compose.prod.yml logs app | grep 'Email cap'` shows the app's start line, now read from the journal: `Email cap of the forms: 50 an hour, 200 a day (default)`;
    - `cd backup && sudo ./backup.sh`, then `sudo ./restore.sh test latest`: both databases are stored and restored ("Restore tests passed: gliagora listmonk."), and `docker volume ls -f dangling=true` lists nothing new;
@@ -424,7 +426,7 @@ docker compose -f compose.prod.yml logs -f listmonk # listmonk's logs
 ssh -N -L 9001:127.0.0.1:9000 gliagora@<server-ip>  # listmonk's admin at http://localhost:9001/admin/ (section 11)
 ```
 
-Every container logs to the system journal, which keeps 14 days (D34): `docker compose … logs` reads it, and so do `journalctl -t gliagora-app-1` and `journalctl -u gliagora-backup`. Kernel lines (the firewall's blocked packets) still go to `/var/log/ufw.log` and `kern.log` through rsyslog, which keeps them about four weeks: an open point, outside the containers' logs.
+Every container logs to the system journal, which keeps 14 days (D34): `docker compose … logs` reads it, and so do `journalctl -t gliagora-app-1` and `journalctl -u gliagora-backup`. The journal's SSH and fail2ban lines hold full IP addresses (for security; only Caddy's logs are masked). Kernel lines (the firewall's blocked packets) still go to `/var/log/ufw.log` and `kern.log` through rsyslog, and fail2ban's own ban lines to `/var/log/fail2ban.log`; both are kept about four weeks, with full addresses: an open point (PLAN §18.1), outside the containers' logs.
 
 ## Decided during the server setup (S, D42)
 
