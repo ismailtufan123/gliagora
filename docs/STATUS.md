@@ -2,7 +2,7 @@
 
 One page for whoever picks up the work next: what is done, what is live, what is open and what comes next. Updated at the end of every task (CLAUDE.md, "Session handoff"). The details are in `PLAN.md` (the milestone notes in §20, the decisions in §22.3).
 
-Last updated: 2026-10-02, at the end of the task "CI minutes, decisions after M6, the handoff files, then M4b" (`docs/NEXT.md`, done: pull requests #62–#71).
+Last updated: 2026-10-02, during the task "the M4b decisions, the server steps, then M2's technical parts behind the password" (`docs/NEXT.md`, open). The previous task (CI minutes, decisions after M6, the handoff files, then M4b) was done with pull requests #62–#71.
 
 ## Done
 
@@ -22,7 +22,8 @@ Last updated: 2026-10-02, at the end of the task "CI minutes, decisions after M6
 
 ## Open decisions and waiting items
 
-- **M4b design (D49)**: the operator reviews where M4b differs from PLAN (PLAN §20, M4b notes, "Open points"), for example: one "Account" link in the header for everyone; accounts without an email address, or whose address the mail server twice refuses as non-existent, deleted without a delivered warning; the data-request form public at M2. For M2: should deleting an inactive account also end its newsletter subscription? (Proposal: no.)
+- **M4b design (D49)**: approved by the operator on 2026-10-02 as built, with one addition (the account page tells members without an email address that we cannot warn them before an inactivity deletion; being built now). Deleting an inactive account does not end its newsletter subscription (decided 2026-10-02).
+- **M2's technical parts (D50)**: being built now, behind the password: listmonk, the signup and unsubscribe, the consent log, the members' sync, the M2 state of the site (switched off). Its design points come to the operator for review at the end of the task.
 - **Real sign-in**: register the Google and ORCID apps (steps in `deploy/README.md`, step 9). The first ORCID sign-in shows whether ORCID works with our safety checks.
 - **Lawyer review** (`docs/legal-open-questions.md`), before M2; M4b added points to B4, B5, B9, B11 and B13. All legal texts stay drafts until the operator approves them.
 - **On the server, with the operator's go-ahead**: remove, once, the old copies of the database that earlier restore tests left behind, after copying the new `restore.sh` (`deploy/README.md` steps 7 and 9).
@@ -31,4 +32,4 @@ Last updated: 2026-10-02, at the end of the task "CI minutes, decisions after M6
 
 ## Next step
 
-The one-time lawyer review, then M2. Nothing starts before the operator says so.
+Finish the current task (`docs/NEXT.md`): the server steps the operator approved, then M2's technical parts behind the password (D50). After it: the one-time lawyer review, then M2. Nothing else starts before the operator says so.
