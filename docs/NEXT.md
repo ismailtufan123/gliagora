@@ -1,6 +1,6 @@
 # Next task
 
-Status: **open**
+Status: **done** (2026-10-05; pull requests #73–#78: #73 the M4b decisions, #74 listmonk and the server's parts, #75 the M2 state, #76 the Glia Notes signup, #77 members' Glia Notes and the legal drafts, #78 the journal's fix and the wrap-up; the three server steps of section 2 done on 2026-10-05)
 Written: 2026-10-02, by the operator's planning chat (Claude) on the operator's behalf.
 
 ## How this file works

@@ -501,6 +501,8 @@ When the M2 mailbox's `SMTP_*` settings are set, the signup switches on by itsel
 
 Check the site from another computer with single requests (`curl`, a browser). Do not scan the server's ports at full speed from your own connection: during S, a scan of all 65,535 ports made the provider's network block that IPv4 address for about 20 minutes (IPv6 kept working). If you must, scan slowly or from elsewhere.
 
+The firewall also limits new SSH connections (six within 30 seconds, `ufw limit`): several `scp` and `ssh` commands in a row are refused for a moment ("Connection refused"). Wait half a minute, or reuse one connection (`-o ControlMaster=auto -o ControlPath=~/.ssh/cm-%C -o ControlPersist=600`).
+
 ## Useful commands
 
 ```sh
