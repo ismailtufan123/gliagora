@@ -28,7 +28,7 @@ Last updated: 2026-10-05, at the end of the task "the M4b decisions, the server 
 - **Nothing sends email and nothing is public**: there is no mailbox yet, so sign-in by email link, the data-request form and the Glia Notes signup say they are not available; the site's stage is `private`.
 - **Sign-in is still off**: the Google and ORCID keys are not set.
 - No real positions yet, so the home page's figures read 0.
-- **CI minutes**: this task used about 180 of October's 2,000 (a code pull request about 19–27, a merge to `main` 6–7, a deploy 2, documentation 0). Check github.com/settings/billing; if the free minutes run out, CI and deploys stop until the next month.
+- **CI minutes**: this task used about 205 of October's 2,000 (a code pull request about 19–27, a merge to `main` 6–7, a deploy 2, documentation 0). Check github.com/settings/billing; if the free minutes run out, CI and deploys stop until the next month.
 
 ## Open decisions and waiting items
 

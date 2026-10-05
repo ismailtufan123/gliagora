@@ -165,12 +165,20 @@ test.describe('admin API', () => {
     })
 
     await test.step('an emptied field stays empty while the deadline changes kind', async () => {
+      // Payload decides on the server whether a field is shown (a form-state request after each
+      // change). While other tests run, the answer to one change can arrive after the next one's
+      // and show the form as it was before (seen in CI, whose runners have two processors, as a
+      // field that never hid). So each change waits until the form's requests have ended.
+      const settled = () => page.waitForLoadState('networkidle')
       await zone.locator('.clear-indicator').click()
       await expect(shown).toHaveCount(0)
-      await choose(page, 'deadlineKind', 'Rolling')
-      // Payload decides on the server whether a field is shown (a form-state request after each
-      // change), which takes longer while other tests run (CI's runners have two processors).
-      await expect(zone).toBeHidden({ timeout: 30_000 })
+      await settled()
+      // And the choice is made again if the field has not followed it.
+      await expect(async () => {
+        await choose(page, 'deadlineKind', 'Rolling')
+        await expect(zone).toBeHidden({ timeout: 8_000 })
+      }).toPass({ timeout: 45_000 })
+      await settled()
       // Shown again, the field reads the institution's zone again: wait for it before looking.
       const read = page.waitForResponse(
         (response) => /\/api\/institutions\/\d+\/?\?.*select/.test(response.url()) && response.ok(),
@@ -184,8 +192,14 @@ test.describe('admin API', () => {
       await expect(shown).toHaveCount(0)
 
       // An institution chosen while the field is hidden fills it once it is shown again.
-      await choose(page, 'deadlineKind', 'Rolling')
+      await settled()
+      await expect(async () => {
+        await choose(page, 'deadlineKind', 'Rolling')
+        await expect(zone).toBeHidden({ timeout: 8_000 })
+      }).toPass({ timeout: 45_000 })
+      await settled()
       await choose(page, 'institution', 'University College London')
+      await settled()
       await choose(page, 'deadlineKind', 'Fixed date')
       await expect(shown).toHaveText('Europe/London', { timeout: 15_000 })
     })
