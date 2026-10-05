@@ -7,10 +7,10 @@ Our editor writes and checks every item. Under Turkish Law No. 5651, our editor 
 ## How to reach us
 
 - **"Report a problem":** every item has this link. It opens a short form with the item already filled in. Use it for a wrong fact, a broken link or a closed position. The form asks what is wrong, for the details and for your email address. The email address is optional, except for a request about your personal rights, which needs it so that we can reply.
-- **[The report form](/en/report/):** the same form, also without an item, for corrections, removals and requests about your personal rights. If you give your email address, you get an automatic email as soon as we receive your request.
+- **Without an item:** [report it to us](/en/report/), also for corrections, removals and requests about your personal rights. Through the report form, if you give your email address, you get an automatic email as soon as we receive your request.
 - **Email:** [hello@gliagora.com](mailto:hello@gliagora.com), in English or Turkish.
 
-For a request about your personal rights, use [the report form](/en/report/) or email, so that we can reply.
+For a request about your personal rights, [report it to us](/en/report/) with your email address, so that we can reply.
 
 To see, correct or delete the personal data we hold about you, such as your newsletter address, use the [data-request page](/en/legal/data-requests/) or write to [privacy@gliagora.com](mailto:privacy@gliagora.com).
 

@@ -47,7 +47,7 @@ Bir içerik nedeniyle kişilik haklarınızın ihlal edildiğini düşünüyorsa
 
 Hatalı bir bilgiyi ya da kapanmış veya geri çekilmiş bir ilanı bildirmek için de bize yazabilirsiniz. İşverenler kendi ilanlarının güncellenmesini ya da kaldırılmasını isteyebilir.
 
-Talebinizi İngilizce [{en: Report a problem}](/en/report/) (Sorun bildirin) formuyla ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine gönderebilirsiniz. Bu forma [{en: Notice and takedown}](/en/legal/takedown/) sayfasından da ulaşılır. Talebinizde şunları belirtin:
+Talebinizi [bize bildirebilir](/en/report/) ya da [hello@gliagora.com](mailto:hello@gliagora.com) adresine yazabilirsiniz. Sitedeki İngilizce bildirim formuna ("{en: Report a problem}", Sorun bildirin) [{en: Notice and takedown}](/en/legal/takedown/) sayfasından da ulaşılır. Talebinizde şunları belirtin:
 
 - ilgili sayfanın bağlantısı;
 - sorunun ne olduğu;
@@ -70,7 +70,7 @@ Bu formu kullanır ve e-posta adresinizi verirseniz, talebiniz bize ulaştığı
 Kişisel verilerinizin hangi amaçlarla işlendiği, veri sorumlusunun kimliği ve KVKK'nın 11. maddesinden doğan haklarınız [aydınlatma metninde](/tr/legal/kvkk-aydinlatma-metni/) yer alır. Haklarınızı şu yollarla kullanabilirsiniz:
 
 - Üyeyseniz verilerinizi hesap ayarlarınızdan indirebilir ya da hesabınızı silebilirsiniz.
-- Glia Notes bülteni için verdiğiniz açık rızayı istediğiniz zaman geri alabilirsiniz. Bunun için her e-postadaki abonelikten çıkma bağlantısına tıklamanız yeterlidir; üyeyseniz bülteni hesap ayarlarınızdan da kapatabilirsiniz. Aboneliğiniz hemen sona erer.
+- Glia Notes bülteni için verdiğiniz açık rızayı istediğiniz zaman geri alabilirsiniz. Bunun için hoş geldin e-postasındaki veya her bültendeki abonelikten çıkma bağlantısını (tek düğmeli bir sayfa açar) ya da e-posta programınızın abonelikten çıkma düğmesini kullanabilirsiniz; aboneliğiniz hemen sona erer. Üyeyseniz bülteni hesap ayarlarınızdan da kapatabilirsiniz.
 - Diğer başvurular için İngilizce [{en: Data requests}](/en/legal/data-requests/) sayfasını kullanabilir ya da [privacy@gliagora.com](mailto:privacy@gliagora.com) adresine Türkçe ya da İngilizce yazabilirsiniz.
 
 Üye hesapları ve {en: Data requests} sayfası, Gliagora'yı geliştirdikçe adım adım açılacaktır. {en: Data requests} sayfası açılana kadar [privacy@gliagora.com](mailto:privacy@gliagora.com) adresine yazabilirsiniz.

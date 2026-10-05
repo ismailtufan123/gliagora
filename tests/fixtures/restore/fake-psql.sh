@@ -2,7 +2,9 @@
 # It answers which tables exist (TABLES, separated by spaces), writes binary copies (with one row
 # when ROWS is set), gives every sequence the value 7 and fails where FAIL says: `regclass` (the
 # question whether a table exists), `copy` (a copy out) or `garbage` (a copy out that writes no
-# COPY file). Every call is added to the file CALLS.
+# COPY file). With ENUMS, the deletion log's `action` is an enum column, whose labels the carried
+# rows all have (`present`) or not (`missing`); without it, no table has one. Every call is added to
+# the file CALLS.
 fake_psql() {
   local query='' table
   while [[ $# -gt 0 ]]; do
@@ -38,6 +40,16 @@ fake_psql() {
       printf '\377\377'
       ;;
     *pg_sequences*) echo 7 ;;
+    *pg_attribute*)
+      echo "enums $query" >>"$CALLS"
+      if [[ -n "${ENUMS:-}" && "$query" == *"'public.deletion_log'"* ]]; then
+        echo 'action enum_deletion_log_action'
+      fi
+      ;;
+    *pg_enum*)
+      echo "labels $query" >>"$CALLS"
+      if [[ "${ENUMS:-}" == missing ]]; then echo 1; else echo 0; fi
+      ;;
     "copy restore_carry"*)
       cat >/dev/null
       echo "copy in" >>"$CALLS"

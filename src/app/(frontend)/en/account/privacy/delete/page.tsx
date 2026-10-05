@@ -88,6 +88,8 @@ export default async function Page({ searchParams }: Props) {
           <ul className="grid list-disc gap-2 ps-6">
             <li>{t('gone.account')}</li>
             <li>{t('gone.saved')}</li>
+            {/* Glia Notes needs an address (M2): deleting the account ends a subscription. */}
+            {member.email && <li>{t('gone.newsletter')}</li>}
             <li>{t('gone.settings')}</li>
             <li>{t('gone.sessions')}</li>
           </ul>
@@ -99,6 +101,8 @@ export default async function Page({ searchParams }: Props) {
           </h2>
           <ul className="grid list-disc gap-2 ps-6">
             <li>{t('kept.record')}</li>
+            {/* The consent records of a subscription the deletion ends stay, without its number. */}
+            {member.email && <li>{t('kept.consent')}</li>}
             <li>{t('kept.backups')}</li>
             <li>
               {t.rich('kept.other', {

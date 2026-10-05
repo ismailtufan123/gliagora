@@ -30,6 +30,11 @@ const member = (changes: Partial<MemberRecord> = {}): MemberRecord => ({
   digestOptIn: false,
   digestChangedAt: null,
   digestConsentVersion: null,
+  digestConsentSource: null,
+  digestRequestedAt: null,
+  digestSyncedAt: null,
+  digestSubscriber: null,
+  digestAdoptCheckAt: null,
   lastSeenAt: new Date('2026-10-01T08:00:00Z'),
   deletionWarnedAt: null,
   warningRefusedAt: null,
@@ -56,6 +61,7 @@ function fakes(signedIn: MemberRecord | null = member()) {
     setDigest: vi.fn(async (_id: number, choice: { optIn: boolean }) =>
       choice.optIn ? signedIn?.email != null : true,
     ),
+    syncDigest: vi.fn(),
     setSubfields: vi.fn(async (_id: number, slugs: string[]) => slugs.length),
     setName: vi.fn(async () => true),
     unlink: vi.fn(async (): Promise<Awaited<ReturnType<SettingsDeps['unlink']>>> => ({
@@ -152,6 +158,9 @@ describe('Glia Notes', () => {
     )
     expect(location(ticked)).toBe('/en/account/?done=digest-on#outcome')
     expect(deps.setDigest).toHaveBeenCalledWith(7, { optIn: true, version: CONSENT_VERSION })
+    // The stored choice goes to listmonk once right after the answer (M2), and only then.
+    expect(deps.syncDigest).toHaveBeenCalledTimes(1)
+    expect(deps.syncDigest).toHaveBeenCalledWith(7)
   })
 
   it('needs an email address', async () => {
@@ -168,6 +177,22 @@ describe('Glia Notes', () => {
     )
     expect(location(response)).toBe('/en/account/?error=digest-needs-email#outcome')
     expect(deps.setDigest).not.toHaveBeenCalled()
+    expect(deps.syncDigest).not.toHaveBeenCalled()
+  })
+
+  it('tries no sync when the choice was not stored', async () => {
+    const deps = fakes()
+    deps.setDigest.mockResolvedValue(false)
+    const response = await handleSettings(
+      post([
+        ['intent', 'digest'],
+        ['digest', 'on'],
+        ['consent', CONSENT_GIVEN],
+      ]),
+      deps,
+    )
+    expect(location(response)).toBe('/en/account/?error=digest-needs-email#outcome')
+    expect(deps.syncDigest).not.toHaveBeenCalled()
   })
 
   it('switches off in one press, without the box', async () => {
@@ -181,6 +206,7 @@ describe('Glia Notes', () => {
     )
     expect(location(response)).toBe('/en/account/?done=digest-off#outcome')
     expect(deps.setDigest).toHaveBeenCalledWith(7, { optIn: false })
+    expect(deps.syncDigest).toHaveBeenCalledWith(7)
   })
 })
 

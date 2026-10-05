@@ -7,7 +7,12 @@ export type DeletionOutcome = {
   suggestionsDeleted: number
   /** A member account with the address, deleted (0 or 1). */
   accountDeleted: 0 | 1
-  /** The Glia Notes subscription of the address, removed (0 or 1; none until M2). */
+  /**
+   * Glia Notes subscribers removed with it, as 0 or 1: 1 when the erasure (eraseNewsletter,
+   * src/lib/newsletter/erase.ts) found in listmonk the subscriber of the address or the member's
+   * own subscriber (which can still have an older address). Stored for a confirmed data request and
+   * for an account deletion (with `accountDeleted`).
+   */
   newsletterRemoved: 0 | 1
   /** Reports sent with the address whose address was cleared. */
   reportAddressesCleared: number

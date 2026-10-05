@@ -16,7 +16,8 @@ import {
   findMember,
 } from '@/lib/members/store'
 import { isToken } from '@/lib/members/tokens'
-import { eraseNewsletter } from '@/lib/newsletter/erase'
+import { eraseNewsletter, finishNewsletterErasure } from '@/lib/newsletter/erase'
+import { type ListmonkClient, listmonkFromEnv } from '@/lib/newsletter/listmonk'
 import { PERSONAL_RIGHTS } from '@/lib/reports/status'
 import type { DataRequest } from '@/payload-types'
 
@@ -35,8 +36,11 @@ import { AUTOMATIC_ACTION } from './status'
 //   - the suggestions sent with it, found without regard to case (suggestions keep the address as
 //     typed), deleted through the local API as editors delete them, so their candidates keep their
 //     decision and each deletion is logged (the `logDeletions()` hook);
+//   - its Glia Notes subscription, and the subscriber of a member with it (`eraseNewsletter`, M2:
+//     logged deletions in listmonk, deleted there after the commit, and unlinked consent records;
+//     listmonk unreachable, or not configured while there may be something to erase, fails the
+//     whole confirmation, and the link still works);
 //   - a member account with it (`deleteMember`, which logs it too);
-//   - its newsletter subscription (`eraseNewsletter`, nothing until M2);
 //   - the address on the reports sent with it, each logged as `clear-email`, except requests about
 //     personal rights (Law No. 5651), whose handling we must be able to show: they keep it for
 //     their period, and are counted.
@@ -76,6 +80,9 @@ class NotDeleted extends Error {
   override name = 'NotDeleted'
 }
 
+/** What a deletion by address did, and the listmonk subscribers to delete after the commit. */
+export type AddressErasure = { outcome: DeletionOutcome; subscriberIds: number[] }
+
 /**
  * Deletes what is held under `email` (see above), in the caller's transaction: `req` for the local
  * API, `db` for SQL. `email` is in its stored form (lowercased).
@@ -86,7 +93,8 @@ export async function eraseByAddress(
   db: TransactionDb,
   email: string,
   now: Date,
-): Promise<DeletionOutcome> {
+  listmonk: ListmonkClient | null = listmonkFromEnv(),
+): Promise<AddressErasure> {
   const at = now.toISOString()
 
   const { rows: sent } = await db.execute<{ id: number }>(
@@ -105,11 +113,15 @@ export async function eraseByAddress(
     suggestionsDeleted = docs.length
   }
 
-  const member = await findMember(db, { email })
+  const member = await findMember(db, { email }, { forUpdate: true })
+  const newsletter = await eraseNewsletter(
+    db,
+    { email, member: member && { id: member.id, subscriber: member.digestSubscriber } },
+    now,
+    listmonk,
+  )
   const accountDeleted =
     member && (await deleteMember(db, member.id, { reason: 'request' }, now)) ? 1 : 0
-
-  const newsletterRemoved = (await eraseNewsletter(email)) > 0 ? 1 : 0
 
   // In SQL, as `applyDeletionLog` repeats it: the report's fields from the form are fixed for every
   // save (fixedFieldHooks), and reports keep no versions, so this clears the only copy.
@@ -130,11 +142,14 @@ export async function eraseByAddress(
     WHERE lower(email) = ${email} AND kind = ${PERSONAL_RIGHTS}`)
 
   return {
-    suggestionsDeleted,
-    accountDeleted,
-    newsletterRemoved,
-    reportAddressesCleared: cleared.length,
-    personalRightsReportsKept: Number(kept[0]?.n ?? 0),
+    outcome: {
+      suggestionsDeleted,
+      accountDeleted,
+      newsletterRemoved: newsletter.removed > 0 ? 1 : 0,
+      reportAddressesCleared: cleared.length,
+      personalRightsReportsKept: Number(kept[0]?.n ?? 0),
+    },
+    subscriberIds: newsletter.subscriberIds,
   }
 }
 
@@ -188,40 +203,51 @@ async function settle(
 
 /**
  * Uses a data-request link (see above): what happened, or null when the link is unknown, used,
- * expired or made for something else.
+ * expired or made for something else. After the commit, the erased Glia Notes subscribers are
+ * deleted in listmonk (best effort: the deletion log repeats it). `listmonk` is the newsletter's
+ * client (the environment's by default; tests pass their own).
  */
-export function confirmDataRequest(
+export async function confirmDataRequest(
   payload: Payload,
   token: string | null | undefined,
   now: Date,
+  listmonk: ListmonkClient | null = listmonkFromEnv(),
 ): Promise<Confirmation | null> {
-  return inTransaction(payload, async (req, db) => {
-    const link = await consumeEmailToken(db, token, 'data-request', now)
-    if (!link) return null
-    const pending = pendingRequest(link)
-    if (!pending) throw new UnreadableRequest()
-    if (pending.kind === 'deletion') {
-      const outcome = await eraseByAddress(payload, req, db, link.email, now)
+  let subscriberIds: number[] = []
+  const confirmation = await inTransaction(
+    payload,
+    async (req, db): Promise<Confirmation | null> => {
+      const link = await consumeEmailToken(db, token, 'data-request', now)
+      if (!link) return null
+      const pending = pendingRequest(link)
+      if (!pending) throw new UnreadableRequest()
+      if (pending.kind === 'deletion') {
+        const erased = await eraseByAddress(payload, req, db, link.email, now, listmonk)
+        const { outcome } = erased
+        await settle(
+          payload,
+          req,
+          link,
+          pending.kind,
+          { email: link.email, status: 'closed', action: AUTOMATIC_ACTION, outcome },
+          now,
+        )
+        subscriberIds = erased.subscriberIds
+        return { kind: 'deleted', outcome }
+      }
       await settle(
         payload,
         req,
         link,
         pending.kind,
-        { email: link.email, status: 'closed', action: AUTOMATIC_ACTION, outcome },
+        { email: link.email, name: pending.name, details: pending.details, status: 'new' },
         now,
       )
-      return { kind: 'deleted', outcome }
-    }
-    await settle(
-      payload,
-      req,
-      link,
-      pending.kind,
-      { email: link.email, name: pending.name, details: pending.details, status: 'new' },
-      now,
-    )
-    return { kind: 'registered' }
-  })
+      return { kind: 'registered' }
+    },
+  )
+  await finishNewsletterErasure(subscriberIds, listmonk)
+  return confirmation
 }
 
 /** What the confirmation route reads and does (the route gives the real ones). */

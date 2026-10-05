@@ -8,6 +8,7 @@ import { promisify } from 'node:util'
 import { sql } from '@payloadcms/db-postgres'
 import { drizzle } from '@payloadcms/db-postgres/drizzle/node-postgres'
 
+import type { ListmonkClient } from '@/lib/newsletter/listmonk'
 import {
   LISTMONK_API_USER,
   type ListmonkParams,
@@ -221,3 +222,23 @@ export async function startListmonk({ smtp = {}, withoutAdmin = false }: Listmon
 }
 
 export type Listmonk = Awaited<ReturnType<typeof startListmonk>>
+
+/**
+ * A listmonk client with no subscribers, for the tests of deletions that need the newsletter
+ * configured but have nothing in it: an erasure refuses while listmonk is not configured once the
+ * newsletter has records (src/lib/newsletter/erase.ts), and the scratch database is shared with the
+ * newsletter's own tests. It never subscribes anyone.
+ */
+export const noSubscribers: ListmonkClient = {
+  listId: async () => 1,
+  findByEmail: async () => null,
+  findById: async () => null,
+  listPage: async () => ({ subscribers: [], total: 0 }),
+  subscribe: async () => {
+    throw new Error('noSubscribers subscribes nobody')
+  },
+  changeEmail: async () => {
+    throw new Error('noSubscribers has nobody to move')
+  },
+  remove: async () => {},
+}

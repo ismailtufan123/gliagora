@@ -26,6 +26,11 @@ const member = (changes: Partial<MemberRecord> = {}): MemberRecord => ({
   digestOptIn: true,
   digestChangedAt: new Date('2026-09-30T11:00:00Z'),
   digestConsentVersion: '2026-09-27',
+  digestConsentSource: 'account',
+  digestRequestedAt: new Date('2026-09-30T11:00:00Z'),
+  digestSyncedAt: null,
+  digestSubscriber: null,
+  digestAdoptCheckAt: null,
   lastSeenAt: new Date('2026-10-01T08:00:00Z'),
   deletionWarnedAt: null,
   warningRefusedAt: null,
@@ -49,6 +54,20 @@ const saved = (changes: Partial<SavedJobExportRow> = {}): SavedJobExportRow => (
 
 const data = (changes: Partial<ExportData> = {}): ExportData => ({
   member: member(),
+  consent: [
+    {
+      event: 'requested',
+      consentVersion: '2026-09-27',
+      source: 'account',
+      at: new Date('2026-09-30T11:00:00Z'),
+    },
+    {
+      event: 'confirmed',
+      consentVersion: '2026-09-27',
+      source: 'account',
+      at: new Date('2026-09-30T11:00:00Z'),
+    },
+  ],
   subfields: [
     { slug: 'glia', label: 'Glial biology', active: true },
     { slug: 'retired-one', label: 'Retired subfield', active: false },
@@ -134,10 +153,27 @@ describe('exportDocument', () => {
       inactivityWarningAt: null,
       inactivityWarningRefusedAt: null,
     })
+    // The consent records of the member's subscription (M2), never listmonk's UUID or ID.
     expect(document.gliaNotes).toEqual({
       on: true,
       changedAt: '2026-09-30T11:00:00.000Z',
       consentVersion: '2026-09-27',
+      consentGivenOn: 'account',
+      consentRequestedAt: '2026-09-30T11:00:00.000Z',
+      consentRecords: [
+        {
+          event: 'requested',
+          consentVersion: '2026-09-27',
+          source: 'account',
+          at: '2026-09-30T11:00:00.000Z',
+        },
+        {
+          event: 'confirmed',
+          consentVersion: '2026-09-27',
+          source: 'account',
+          at: '2026-09-30T11:00:00.000Z',
+        },
+      ],
     })
     expect(document.preferredSubfields).toEqual([
       { slug: 'glia', label: 'Glial biology', active: true },

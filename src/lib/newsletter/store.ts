@@ -126,6 +126,20 @@ export function hasLoggedSubscribers(db: MemberDb): Promise<boolean> {
   })
 }
 
+/**
+ * Whether the newsletter has ever been used here: a consent record, or a logged deletion of a
+ * subscriber. An erasure while listmonk is not configured refuses then (src/lib/newsletter/
+ * erase.ts): there may be a subscription it cannot see.
+ */
+export function newsletterInUse(db: MemberDb): Promise<boolean> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{ found: boolean }>(sql`
+      SELECT (EXISTS (SELECT 1 FROM consent_log)
+        OR EXISTS (SELECT 1 FROM deletion_log WHERE target_collection = 'newsletter')) AS found`)
+    return rows[0]?.found === true
+  })
+}
+
 const subscriberIds = z.array(subscriberId).max(1000)
 const subscriberUuids = z.array(z.string().regex(SUBSCRIBER_UUID_PATTERN)).max(1000)
 
@@ -197,16 +211,23 @@ export function openSubscriptions(db: MemberDb): Promise<OpenSubscription[]> {
 }
 
 /**
- * Records the end of subscriptions listmonk no longer has (event `unsubscribed`, source
- * `listmonk`), so their consent records are deleted 3 years later (CONSENT_LOG_YEARS); only where
- * the newest record is still not an unsubscribe. Returns how many it recorded.
+ * Records the end of subscriptions (event `unsubscribed`), so their consent records are deleted 3
+ * years later (CONSENT_LOG_YEARS); only where the subscription still has a linked record and its
+ * newest is a request or a confirmation. A subscription whose records an erasure unlinked has none
+ * left: nothing is written for it, so no new record names the erased subscriber again. The newest
+ * record is locked (`FOR UPDATE`), so an erasure still in progress is waited for and checked again
+ * once it ends. The source says why: `listmonk`, listmonk no longer has the subscriber
+ * (src/lib/newsletter/reconcile.ts); `account`, a member's sync deleted it (Glia Notes off, or
+ * another subscriber holds it now, src/lib/newsletter/members.ts). Returns how many it recorded.
  */
 export function recordEndedSubscriptions(
   db: MemberDb,
   ended: readonly OpenSubscription[],
   now: Date,
+  source: Extract<ConsentSource, 'listmonk' | 'account'> = 'listmonk',
 ): Promise<number> {
   return guarded(async () => {
+    const why = checked(z.enum(['listmonk', 'account']), source, 'source')
     let recorded = 0
     for (const subscription of ended) {
       const uuid = checked(z.string().regex(SUBSCRIBER_UUID_PATTERN), subscription.uuid, 'uuid')
@@ -214,10 +235,10 @@ export function recordEndedSubscriptions(
       const { rows } = await db.execute<{ id: number }>(sql`
         INSERT INTO consent_log (subscriber_uuid, subscriber_id, event, consent_version, source, at,
           created_at, updated_at)
-        SELECT ${uuid}, ${id}, 'unsubscribed', NULL, 'listmonk', ${iso(now)}, ${iso(now)},
-          ${iso(now)}
+        SELECT ${uuid}, ${id}, 'unsubscribed', NULL, ${why}::enum_consent_log_source, ${iso(now)},
+          ${iso(now)}, ${iso(now)}
         WHERE (SELECT event::text FROM consent_log WHERE subscriber_uuid = ${uuid}
-          ORDER BY at DESC, id DESC LIMIT 1) IS DISTINCT FROM 'unsubscribed'
+          ORDER BY at DESC, id DESC LIMIT 1 FOR UPDATE) IN ('requested', 'confirmed')
         RETURNING id`)
       recorded += rows.length
     }
@@ -246,6 +267,176 @@ export function purgeConsentLog(db: MemberDb, now: Date, limit: number): Promise
         WHERE (subscriber_uuid IS NULL AND at <= ${cutoff})
           OR subscriber_uuid IN (SELECT subscriber_uuid FROM ended)
         ORDER BY id
+        LIMIT ${n})
+      RETURNING id`)
+    return rows.length
+  })
+}
+
+const uuidSchema = z.string().regex(SUBSCRIBER_UUID_PATTERN)
+
+/**
+ * Whether the subscription of this subscriber has its consent on record since `since`: a
+ * `confirmed` record at that time or later, and no unsubscribe as its newest record. A member's sync
+ * writes the member's consent where it is not (src/lib/newsletter/members.ts).
+ */
+export function consentOnRecord(db: MemberDb, subscriber: string, since: Date): Promise<boolean> {
+  return guarded(async () => {
+    const wanted = checked(uuidSchema, subscriber, 'uuid')
+    const { rows } = await db.execute<{ found: boolean }>(sql`
+      SELECT EXISTS (
+          SELECT 1 FROM consent_log
+          WHERE subscriber_uuid = ${wanted} AND event = 'confirmed' AND at >= ${iso(since)})
+        AND (SELECT event::text FROM consent_log WHERE subscriber_uuid = ${wanted}
+          ORDER BY at DESC, id DESC LIMIT 1) IS DISTINCT FROM 'unsubscribed' AS found`)
+    return rows[0]?.found === true
+  })
+}
+
+/**
+ * When the subscription of this subscriber was withdrawn on the site, if that is its newest
+ * record: an `unsubscribed` from the unsubscribe page, a mail program's one click or a member's
+ * account (any source but `listmonk`, which only notes that listmonk no longer has the
+ * subscriber). Null otherwise: no record, a running subscription, or one listmonk lost. A member's
+ * sync and the daily check never subscribe such a member again (src/lib/newsletter/members.ts).
+ */
+export function withdrawalOf(db: MemberDb, subscriber: string): Promise<Date | null> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{ event: string; source: string; at: unknown }>(sql`
+      SELECT event, source, at FROM consent_log
+      WHERE subscriber_uuid = ${checked(uuidSchema, subscriber, 'uuid')}
+      ORDER BY at DESC, id DESC LIMIT 1`)
+    const newest = rows[0]
+    return newest && newest.event === 'unsubscribed' && newest.source !== 'listmonk'
+      ? toDate(newest.at)
+      : null
+  })
+}
+
+/** The consent a running subscription has on record: its latest confirmation, and the request. */
+export type RunningConsent = {
+  version: string
+  source: ConsentSource
+  /** The latest request at or before the confirmation (the confirmation's time without one). */
+  requestedAt: Date
+  confirmedAt: Date
+}
+
+/**
+ * The consent on record for this subscriber's subscription, while it runs: its latest
+ * `confirmed` record (with the version, the source and the request before it), unless its newest
+ * record is an unsubscribe. Null otherwise (also for a subscriber without records, or with
+ * unlinked ones). A member's account takes such a subscription over with these (src/lib/newsletter/
+ * members.ts).
+ */
+export function runningConsent(db: MemberDb, subscriber: string): Promise<RunningConsent | null> {
+  return guarded(async () => {
+    const wanted = checked(uuidSchema, subscriber, 'uuid')
+    const { rows } = await db.execute<{
+      consent_version: string | null
+      source: ConsentSource
+      at: unknown
+      requested_at: unknown
+    }>(sql`
+      SELECT c.consent_version, c.source, c.at,
+        (SELECT max(r.at) FROM consent_log r
+          WHERE r.subscriber_uuid = ${wanted} AND r.event = 'requested' AND r.at <= c.at)
+          AS requested_at
+      FROM consent_log c
+      WHERE c.subscriber_uuid = ${wanted} AND c.event = 'confirmed'
+        AND (SELECT event::text FROM consent_log WHERE subscriber_uuid = ${wanted}
+          ORDER BY at DESC, id DESC LIMIT 1) IS DISTINCT FROM 'unsubscribed'
+      ORDER BY c.at DESC, c.id DESC LIMIT 1`)
+    const row = rows[0]
+    if (!row?.consent_version) return null
+    const confirmedAt = toDate(row.at)
+    return {
+      version: row.consent_version,
+      source: row.source,
+      requestedAt: row.requested_at == null ? confirmedAt : toDate(row.requested_at),
+      confirmedAt,
+    }
+  })
+}
+
+/** A consent record as the person's own data export shows it (no subscriber, no row ID). */
+export type ExportedConsent = {
+  event: ConsentEvent
+  consentVersion: string | null
+  source: ConsentSource
+  at: Date
+}
+
+/** The consent records of a subscriber, oldest first (a member's data export). */
+export function consentRecordsOf(db: MemberDb, subscriber: string): Promise<ExportedConsent[]> {
+  return guarded(async () => {
+    const { rows } = await db.execute<{
+      event: ConsentEvent
+      consent_version: string | null
+      source: ConsentSource
+      at: unknown
+    }>(sql`
+      SELECT event, consent_version, source, at FROM consent_log
+      WHERE subscriber_uuid = ${checked(uuidSchema, subscriber, 'uuid')}
+      ORDER BY at, id`)
+    return rows.map((row) => ({
+      event: row.event,
+      consentVersion: row.consent_version,
+      source: row.source,
+      at: toDate(row.at),
+    }))
+  })
+}
+
+/**
+ * An erasure (src/lib/newsletter/erase.ts): the consent records of these subscribers no longer
+ * name them (listmonk's UUID and ID cleared together), so they no longer lead to a subscriber in
+ * listmonk. That is not anonymisation: the closed data request of the erasure (kept 2 years, with
+ * the address) and the deletion log's rows share its time, and backups keep the linked copies for
+ * their months. Each record is logged (`consent-log`, `unlink`, the record's ID) in the same
+ * transaction, so `applyDeletionLog` unlinks it again if a restore brings the link back. Its
+ * `updated_at` stays as it was. The records stay, as evidence of the consent, until their 3 years
+ * from their own time are up. Returns how many it unlinked.
+ */
+export function unlinkConsent(
+  db: MemberDb,
+  subscribers: readonly string[],
+  now: Date,
+): Promise<number> {
+  return guarded(async () => {
+    const wanted = checked(subscriberUuids, [...new Set(subscribers)], 'uuids')
+    if (wanted.length === 0) return 0
+    const { rows } = await db.execute<{ target_id: number }>(sql`
+      WITH unlinked AS (
+        UPDATE consent_log SET subscriber_uuid = NULL, subscriber_id = NULL
+        WHERE subscriber_uuid IN (${sql.join(
+          wanted.map((value) => sql`${value}`),
+          sql`, `,
+        )})
+        RETURNING id)
+      INSERT INTO deletion_log (target_collection, target_id, action, at)
+      SELECT 'consent-log', id, 'unlink', ${iso(now)}::timestamptz FROM unlinked
+      RETURNING target_id`)
+    return rows.length
+  })
+}
+
+/**
+ * `applyDeletionLog`: unlinks again, at most `limit`, the consent records the log names as
+ * unlinked that name a subscriber again (a restore brought the link back), if they were created no
+ * later than the logged unlink (a restore also sets the IDs back). Returns how many.
+ */
+export function unlinkLoggedConsent(db: MemberDb, limit: number): Promise<number> {
+  return guarded(async () => {
+    const n = checked(z.number().int().min(1).max(10_000), limit, 'limit')
+    const { rows } = await db.execute<{ id: number }>(sql`
+      UPDATE consent_log SET subscriber_uuid = NULL, subscriber_id = NULL
+      WHERE id IN (
+        SELECT c.id FROM deletion_log l
+          JOIN consent_log c ON c.id = l.target_id AND c.created_at <= l.at
+        WHERE l.target_collection = 'consent-log' AND l.action = 'unlink'
+          AND c.subscriber_uuid IS NOT NULL
+        ORDER BY c.id
         LIMIT ${n})
       RETURNING id`)
     return rows.length

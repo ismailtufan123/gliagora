@@ -7,7 +7,7 @@ export const CONSENT_EVENTS = ['requested', 'confirmed', 'unsubscribed'] as cons
 export type ConsentEvent = (typeof CONSENT_EVENTS)[number]
 
 /**
- * Where it happened: the newsletter form (/en/newsletter/), a member's settings (PR D), the
+ * Where it happened: the newsletter form (/en/newsletter/), a member's settings (the sync), the
  * unsubscribe page's button, a mail program's one-click unsubscribe (RFC 8058), or listmonk (an
  * unsubscribe the site noted because listmonk no longer has the subscriber: a restore of
  * listmonk's database lost it, or it was deleted there).
@@ -29,8 +29,10 @@ export type ConsentSource = (typeof CONSENT_SOURCES)[number]
 // longer has the subscriber, which `applyDeletionLog` checks by its ID every 10 minutes) gets an
 // `unsubscribed` record with the source `listmonk`, so its records do not outlive their 3 years.
 // Never an email address: the address lives in listmonk only, and only once it is confirmed. No
-// relation to members, so deleting an account leaves the record as it is (the erasure that unlinks
-// it is PR D's, which clears the UUID and the ID together).
+// relation to members: deleting an account for inactivity leaves the record as it is, while an
+// erasure (an account deleted on purpose, a confirmed deletion request; src/lib/newsletter/erase.ts)
+// unlinks the records of the subscribers it deletes, clearing the UUID and the ID together, and logs
+// each (`deletion-log`, `consent-log`/`unlink`).
 //
 // Written only in SQL by src/lib/newsletter/store.ts, inside the transaction of what it records;
 // hidden like the member collections (`nobody`, no API routes, no versions). Its rules are database
@@ -44,7 +46,7 @@ export const ConsentLog: CollectionConfig = {
   ...HIDDEN_RECORDS,
   indexes: [{ fields: ['subscriberUuid', 'at'] }],
   fields: [
-    // listmonk's subscriber UUID; empty once unlinked (an erasure, PR D).
+    // listmonk's subscriber UUID; empty once unlinked (an erasure, src/lib/newsletter/erase.ts).
     { name: 'subscriberUuid', type: 'text' },
     // listmonk's subscriber ID, with the UUID (empty with it): how the site asks listmonk whether
     // the subscriber still exists (`GET /api/subscribers/:id`).

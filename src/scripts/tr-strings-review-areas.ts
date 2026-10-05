@@ -1214,6 +1214,10 @@ export const AREAS: Area[] = [
         'Account, and the sign-in page when signed in - who is signed in, for an account with only Google',
       'account.displayName':
         'Account - line under who is signed in, when the account has a display name (the name from the ORCID record, if the member chose it)',
+      'account.noEmailNotice':
+        'Account - notice under who is signed in, for an account without an email address: no warning before the deletion for inactivity (the link leads to the add-an-address form)',
+      'account.noEmailNoticeLater':
+        'Account - the same notice while adding an address is not available (no link)',
       'account.digest.heading': 'Account - heading of the Glia Notes section',
       'account.digest.text': 'Account - Glia Notes section - first paragraph',
       'account.digest.needsEmail':
@@ -1570,6 +1574,8 @@ export const AREAS: Area[] = [
         'Email after a confirmed deletion - what stays, with the link to the privacy notice',
       'emails.account.deleted.subject': 'Email after a member deleted their account - subject',
       'emails.account.deleted.text': 'Email after a member deleted their account - first paragraph',
+      'emails.account.deleted.newsletter':
+        'Email after a member deleted their account - paragraph when a Glia Notes subscription ended with it',
       'emails.account.deleted.kept':
         'Email after a member deleted their account - what stays, with the link to the privacy notice',
       'emails.account.inactiveWarning.subject':

@@ -123,6 +123,16 @@ test.describe('Glia Notes', () => {
       '#email',
     )
     await expect(page.locator('#email')).toContainText('Your account has no email address.')
+    // The operator's addition to D49: no warning before the deletion for inactivity without an
+    // address, said under who is signed in, with a link to the form that adds one.
+    const warning = page.locator('main p.notice', { hasText: 'cannot warn you' })
+    await expect(warning).toHaveText(
+      'Your account has no email address, so we cannot warn you before it is deleted after 24 months and 30 days without activity. If you add an email address, we can (and you can join Glia Notes).',
+    )
+    await expect(warning.getByRole('link', { name: 'add an email address' })).toHaveAttribute(
+      'href',
+      '#email',
+    )
     // Asked for anyway (an old page, another tab): refused, nothing stored.
     const response = await page.request.post('/en/account/settings/', {
       form: { intent: 'digest', digest: 'on', consent: 'yes' },
@@ -131,6 +141,16 @@ test.describe('Glia Notes', () => {
     })
     expect(response.status()).toBe(303)
     expect(response.headers()['location']).toBe('/en/account/?error=digest-needs-email#outcome')
+  })
+
+  test('an account with an email address gets no notice about the deletion', async ({
+    page,
+    baseURL,
+  }) => {
+    await signInAs(page.context(), 'email', baseURL!)
+    await page.goto('/en/account/')
+    await expect(page.locator('#digest')).toBeVisible()
+    await expect(page.getByText('cannot warn you')).toHaveCount(0)
   })
 })
 

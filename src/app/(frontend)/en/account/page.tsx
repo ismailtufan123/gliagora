@@ -12,6 +12,7 @@ import {
   SubfieldSettings,
 } from '@/components/account/AccountSettings'
 import { MemberUnavailable } from '@/components/account/MemberUnavailable'
+import { NoEmailNotice } from '@/components/account/NoEmailNotice'
 import { OutcomeMessage } from '@/components/account/OutcomeMessage'
 import { SignInPanel } from '@/components/account/SignInPanel'
 import { SignedInAs } from '@/components/account/SignedInAs'
@@ -23,13 +24,15 @@ import { type CurrentMember, currentMember, memberRequest } from '@/lib/members/
 import { memberDb, preferredSubfields } from '@/lib/members/store'
 import { activeSubfields } from '@/lib/records'
 
-// The account (M4b, D49; the M4b design §2, §5, §7.4): who is signed in; Glia Notes; the preferred
-// subfields, the jobs list's default filter (D35); the email address, added or changed through an
-// emailed link; the ways to sign in (Google and ORCID can be linked, through their start routes
-// with `link=1`, and removed, unless one is the last way in); and the display name. Downloading
-// the data, signing out everywhere and deleting the account are on the privacy page
-// (/en/account/privacy/). For a visitor who is signed out, the same address shows the sign-in panel (200, not
-// a redirect: the header links here, and every header link must lead to a page). `?done=` and
+// The account (M4b, D49; the M4b design §2, §5, §7.4): who is signed in (with a notice for an
+// account without an email address, which gets no warning before its deletion for inactivity: the
+// operator's addition to D49); Glia Notes; the preferred subfields, the jobs list's default filter
+// (D35); the email address, added or changed through an emailed link; the ways to sign in (Google
+// and ORCID can be linked, through their start routes with `link=1`, and removed, unless one is the
+// last way in); and the display name. Downloading the data, signing out everywhere and deleting the
+// account are on the privacy page (/en/account/privacy/). For a visitor who is signed out, the same
+// address shows the sign-in panel (200, not a redirect: the header links here, and every header
+// link must lead to a page). `?done=` and
 // `?error=` are the outcomes of the routes and links that lead here (OutcomeMessage). Rendered for
 // each request, never indexed.
 export const dynamic = 'force-dynamic'
@@ -189,6 +192,8 @@ export default async function Page({ searchParams }: Props) {
               })}
             </p>
           )}
+          {/* Without an address there is no warning before the deletion for inactivity. */}
+          {member.email === null && <NoEmailNotice canAddEmail={canAddEmail} />}
         </div>
 
         <DigestSettings member={member} canAddEmail={canAddEmail} />

@@ -109,17 +109,18 @@ When you sign in with Google or ORCID, their own terms also apply to your accoun
 ### Ending your account
 
 - Before you delete your account, you can download your data with "Download my data". You get one file in JSON, a common format that other programs can read.
-- You can delete your account at any time with "Delete my account" in your account settings. We delete your account, saved items, preferences and newsletter subscription straight away and, if your account has an email address, send you one email to confirm.
+- You can delete your account at any time with "Delete my account" in your account settings. We delete your account, saved items, preferences and the Glia Notes subscription of its address straight away and, if your account has an email address, send you one email to confirm.
 - Copies in our encrypted backups disappear as the backups age out, within 6 months. The [privacy policy](/en/legal/privacy/) explains what we keep and for how long.
-- If you have not used Gliagora while signed in for 24 months, we email you a warning. If you do not sign in within 30 days of that email, we delete your account. An account without an email address cannot be warned: we delete it 24 months and 30 days after you last used it.
+- If you have not used Gliagora while signed in for 24 months, we email you a warning. If you do not sign in within 30 days of that email, we delete your account. An account without an email address cannot be warned: we delete it 24 months and 30 days after you last used it, and your account page says so while it has no address. Deleting an account for inactivity does not end Glia Notes: it continues, with its own unsubscribe link.
 - We may suspend or delete an account that breaks these terms. When we can, we tell you why. [TO DECIDE: B16 – suspension]
 
 ## Glia Notes newsletter
 
 Glia Notes is the monthly Gliagora newsletter. It is free, and every subscriber receives the same issue.
 
-- We add you only after you confirm your address with the link we email you. If you have an account, you can subscribe by ticking a separate box in your account settings.
-- Every issue has a one-click unsubscribe link, and unsubscribing takes effect at once. Members can also switch the newsletter off in their settings.
+- We add you only after you confirm your address with the link we email you. If you have an account, you can subscribe by ticking a separate box in your account settings; the address of your account is then subscribed, and a new address of your account takes the subscription over. [TO DECIDE: B19 – whether a member's subscription may move to a newly verified address without new consent]
+- The first issue comes with our public launch. Until then, if you sign up on the newsletter page, we send only the confirmation email and a welcome email; if you switch Glia Notes on in your account settings, we send nothing until the first issue.
+- The welcome email and every issue have an unsubscribe link, and your mail program can unsubscribe you from them with one click. Unsubscribing takes effect at once, and we delete your address from the newsletter list then. Members can also switch the newsletter off in their settings: it stops at once, and the address is deleted from the newsletter list within minutes.
 - We do not track whether you open Glia Notes or which links you personally click. We only count, in total and without cookies, how many visits to Gliagora come from the newsletter.
 
 How we handle your email address is explained in the [privacy policy](/en/legal/privacy/). In Turkish: the [{tr: KVKK aydınlatma metni}](/tr/legal/kvkk-aydinlatma-metni/) (privacy notice under Turkish data protection law) and the [{tr: açık rıza metni}](/tr/legal/acik-riza-metni/) (consent text for the newsletter).

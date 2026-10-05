@@ -41,7 +41,7 @@ For now, this page gives email addresses only. Before Gliagora earns any income,
 Tell us if something we published is wrong or out of date, or if it affects your personal rights (for example, your privacy or your reputation). You can:
 
 - use the **Report a problem** link on the listing or page;
-- fill in our [report form](/en/report/), also linked from our [notice and takedown page](/en/legal/takedown/), our page for correction and removal requests;
+- [report it to us](/en/report/), also from our [notice and takedown page](/en/legal/takedown/), the page for correction and removal requests;
 - email [hello@gliagora.com](mailto:hello@gliagora.com).
 
 The **Report a problem** link and the report form open step by step, as we build Gliagora. Until they are open, email [hello@gliagora.com](mailto:hello@gliagora.com).
@@ -57,7 +57,7 @@ We confirm within 24 hours that we have received a request about your personal r
 You can ask to see your personal data, get a copy of it, correct it or delete it, or object to how we use it. Requests are free. We answer within 30 days. If the EU GDPR applies to you, we answer within one month, even when that is shorter than 30 days. [TO DECIDE: B10 – answer period]
 
 - **If you have a Gliagora account:** download your data or delete your account at any time in your account settings.
-- **If you receive Glia Notes:** unsubscribe with one click from any Glia Notes email.
+- **If you receive Glia Notes:** unsubscribe with the link in the welcome email or any issue (it opens a page with one button), or with your mail program's own unsubscribe button. Members can also switch Glia Notes off in their account settings.
 - **For any other request, or if you have no account:** use the [data-request page](/en/legal/data-requests/) or email [privacy@gliagora.com](mailto:privacy@gliagora.com).
 
 Accounts and the data-request page open step by step, as we build Gliagora. Until the data-request page is open, email [privacy@gliagora.com](mailto:privacy@gliagora.com).

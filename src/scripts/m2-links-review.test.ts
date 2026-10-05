@@ -57,6 +57,6 @@ describe('docs/m2-links-review.md', () => {
     expect(FIRST_APPROVALS).toEqual(['about', 'contact', 'iletisim', 'privacy', 'kvkk', 'acikRiza'])
     // The form links of the contact page, which become an email at M2 (D41 (1)).
     const contact = doc.slice(doc.indexOf('## `/en/contact/`'), doc.indexOf('## `/tr/iletisim/`'))
-    expect(contact).toContain('“report form” (`/en/report/`): **email** to hello@gliagora.com.')
+    expect(contact).toContain('“report it to us” (`/en/report/`): **email** to hello@gliagora.com.')
   })
 })

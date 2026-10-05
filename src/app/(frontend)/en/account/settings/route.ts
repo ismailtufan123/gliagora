@@ -8,6 +8,7 @@ import { rotateSession, unlinkProvider } from '@/lib/members/provider-sign-in'
 import { seeOther } from '@/lib/members/responses'
 import { handleSettings } from '@/lib/members/settings'
 import { GLIA_NOTES_CONSENT_VERSION } from '@/lib/newsletter/consent'
+import { syncSoon } from '@/lib/newsletter/sync-soon'
 import {
   findSession,
   memberDb,
@@ -18,9 +19,10 @@ import {
 
 // The account's settings (M4b, D49; the M4b design §5, §7.3, §7.4): the forms on /en/account/ post
 // here with an `intent`: Glia Notes on or off, the preferred subfields, the display name, removing
-// Google or ORCID. The rules are in src/lib/members/settings.ts; this gives them the database. The
-// Glia Notes choice is only stored for now: listmonk receives it at M2 (PLAN §13), with the
-// consent records.
+// Google or ORCID. The rules are in src/lib/members/settings.ts; this gives them the database. A
+// stored Glia Notes choice is carried to listmonk with its consent records (M2, D50; PLAN §13):
+// tried once after the answer is sent (`after`), and by the task `syncGliaNotes` within 5 minutes
+// if that fails or listmonk is off.
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
       return session && { member: session.member, token }
     },
     setDigest: (memberId, choice) => setDigest(db, memberId, choice, now),
+    syncDigest: (memberId) => syncSoon(db, memberId, 'the settings'),
     setSubfields: (memberId, slugs) => setPreferredSubfields(db, memberId, slugs, now),
     setName: (memberId, name) => setDisplayName(db, memberId, name, now),
     unlink: (memberId, method) => unlinkProvider(db, memberId, method, now),

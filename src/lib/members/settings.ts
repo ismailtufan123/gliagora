@@ -19,7 +19,8 @@ import type { DigestChoice, MemberRecord } from './store'
 // - `digest`: Glia Notes on (`digest=on`, with the consent box `consent=yes`, which is never ticked
 //   in advance; only for an account with an email address, always one the member proved) or off
 //   (`digest=off`, one press). The choice is recorded with its time and the date of the consent
-//   text; it is only stored until M2, when listmonk receives it (PLAN §13).
+//   text, and carried to listmonk by the sync (M2, D50; src/lib/newsletter/members.ts), which is
+//   tried once right after the answer and otherwise runs within 5 minutes (PLAN §13).
 // - `subfields`: the preferred subfields (`subfield`, one per ticked box), at most 12: the jobs
 //   list's default filter (D35). None removes them all.
 // - `name`: the display name (`displayName`), at most 80 characters; empty removes it.
@@ -61,6 +62,11 @@ export type SettingsDeps = {
   /** The session of the request's cookie: its member and token, or null. */
   session(): Promise<{ member: MemberRecord; token: string } | null>
   setDigest(memberId: number, choice: DigestChoice): Promise<boolean>
+  /**
+   * After a stored choice: one attempt to carry it to listmonk once the answer is sent (best effort,
+   * never throws; the task `syncGliaNotes` does it otherwise).
+   */
+  syncDigest(memberId: number): void
   setSubfields(memberId: number, slugs: string[]): Promise<number>
   setName(memberId: number, name: string | null): Promise<boolean>
   unlink(memberId: number, method: 'google' | 'orcid'): Promise<ProviderChange>
@@ -109,7 +115,7 @@ export async function handleSettings(request: Request, deps: SettingsDeps): Prom
       case 'digest': {
         const choice = formValue(form, SETTINGS_INPUTS.digest)
         if (choice === 'off') {
-          await deps.setDigest(member.id, { optIn: false })
+          if (await deps.setDigest(member.id, { optIn: false })) deps.syncDigest(member.id)
           return toAccount({ done: 'digest-off' })
         }
         if (choice !== 'on') return toAccount({ error: 'failed' })
@@ -121,6 +127,7 @@ export async function handleSettings(request: Request, deps: SettingsDeps): Prom
           optIn: true,
           version: deps.consentVersion,
         })
+        if (stored) deps.syncDigest(member.id)
         return toAccount(stored ? { done: 'digest-on' } : { error: 'digest-needs-email' })
       }
       case 'subfields': {
