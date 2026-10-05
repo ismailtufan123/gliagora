@@ -34,7 +34,7 @@ Everything the production server runs is described in this folder (PLAN §11.5),
 | `backup/restore.sh` | Restore, list snapshots, or test a restore without touching production |
 | `backup/alert.sh` | Emails the result of a backup or restore test (from M2, once SMTP is set) |
 | `backup/systemd/` | Timers: nightly backup, monthly restore test |
-| `logs/90-gliagora.conf`, `logs/install-journald.sh` | The system journal keeps 14 days (D34), without a copy in `/var/log/syslog` |
+| `logs/zz-gliagora.conf`, `logs/install-journald.sh` | The system journal keeps 14 days (D34), without a copy in `/var/log/syslog` |
 | `basemap/fetch-basemap.sh` | Puts the map's basemap (tiles, fonts, sprites) on the server; run about twice a year (step 8) |
 
 On the server, everything lives in `/opt/gliagora`:
@@ -53,7 +53,7 @@ On the server, everything lives in `/opt/gliagora`:
 | `/opt/gliagora/backup/` | Backup scripts, `backup.env` (mode 600) and `restic-password` (readable only by root) |
 | `/var/backups/gliagora/restic` | Encrypted backup repository |
 | `/opt/gliagora/basemap/public` | The map's basemap, served by Caddy at `/basemap/` (step 8); not backed up, fetched again |
-| The system journal (`/var/log/journal`) | The containers' logs (`docker compose -f compose.prod.yml logs`), sudo, SSH and the backup units: 14 days, at most 1 GB (`/etc/systemd/journald.conf.d/90-gliagora.conf`) |
+| The system journal (`/var/log/journal`) | The containers' logs (`docker compose -f compose.prod.yml logs`), sudo, SSH and the backup units: 14 days, at most 1 GB (`/etc/systemd/journald.conf.d/zz-gliagora.conf`, named to be read after Ubuntu's own `syslog.conf`, which would otherwise keep a copy of every line in `/var/log/syslog`; the installer checks the settings in force) |
 
 ## Who logs in
 
@@ -409,6 +409,7 @@ On a new server, steps 1–5 already do all of this. On the server running since
 6. **Check:**
    - `docker compose -f compose.prod.yml ps`: four services running; app, db and listmonk show `(healthy)`, and caddy only `Up …` (it has no health check);
    - Caddy took the new `Caddyfile`, as in section 9, step 1: `docker compose -f compose.prod.yml logs --tail 20 caddy` shows no error, and a request to `https://gliagora.com/en/sign-in/?next=check` (with the site-wide password) appears in `sudo tail -n 1 /var/lib/docker/volumes/gliagora_caddy-logs/_data/access.log` as `/en/sign-in/?[removed]`;
+   - the journal's settings are the ones in force: `systemd-analyze cat-config systemd/journald.conf | grep '^ForwardToSyslog=' | tail -n 1` prints `ForwardToSyslog=no` (the last file read wins; `install-journald.sh` fails if another file overrides ours), and a line written with `logger -t gliagora-check test` appears in `sudo journalctl -t gliagora-check` but not in `/var/log/syslog`;
    - `curl -s http://127.0.0.1:9000/health` on the server prints `{"data":true}`, and the same from your computer to `<server-ip>:9000` gets no answer; `docker version --format '{{.Server.Version}}'` is 28 or later (older Docker let machines on the same network segment reach ports published on 127.0.0.1);
    - `docker compose -f compose.prod.yml logs app | grep 'Email cap'` shows the app's start line, now read from the journal: `Email cap of the forms: 50 an hour, 200 a day (default)`;
    - `cd backup && sudo ./backup.sh`, then `sudo ./restore.sh test latest`: both databases are stored and restored ("Restore tests passed: gliagora listmonk."), and `docker volume ls -f dangling=true` lists nothing new;
@@ -499,6 +500,8 @@ When the M2 mailbox's `SMTP_*` settings are set, the signup switches on by itsel
 ## Checking from outside
 
 Check the site from another computer with single requests (`curl`, a browser). Do not scan the server's ports at full speed from your own connection: during S, a scan of all 65,535 ports made the provider's network block that IPv4 address for about 20 minutes (IPv6 kept working). If you must, scan slowly or from elsewhere.
+
+The firewall also limits new SSH connections (six within 30 seconds, `ufw limit`): several `scp` and `ssh` commands in a row are refused for a moment ("Connection refused"). Wait half a minute, or reuse one connection (`-o ControlMaster=auto -o ControlPath=~/.ssh/cm-%C -o ControlPersist=600`).
 
 ## Useful commands
 

@@ -8,7 +8,7 @@
 # loopback only (127.0.0.1), reached through an SSH tunnel (README.md, "listmonk").
 name: gliagora
 
-# Every container logs to the systemd journal, which keeps 14 days (D34; logs/90-gliagora.conf,
+# Every container logs to the systemd journal, which keeps 14 days (D34; logs/zz-gliagora.conf,
 # installed by logs/install-journald.sh). Docker's default would rotate by size only, so on a quiet
 # site its lines would outlive the 14 days the privacy texts give. `docker compose logs` reads the
 # journal as before; `journalctl -t gliagora-app-1` does too.
