@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# A stand-in for `systemd-analyze cat-config systemd/journald.conf`: prints the drop-ins journald
+# would read, in the order of their file names, as systemd does: Ubuntu's own syslog.conf
+# (ForwardToSyslog=yes; left out with FAKE_NO_VENDOR) and every file in $JOURNALD_DROPIN_DIR. A
+# file there named like the vendor's replaces it.
+[[ "$*" == "cat-config systemd/journald.conf" ]] || exit 1
+dir=${JOURNALD_DROPIN_DIR:?}
+{
+  [[ -n "${FAKE_NO_VENDOR:-}" ]] || echo syslog.conf
+  ls "$dir" 2>/dev/null
+} | LC_ALL=C sort -u | while IFS= read -r name; do
+  echo "# $name"
+  if [[ -e "$dir/$name" ]]; then cat "$dir/$name"; else printf '[Journal]\nForwardToSyslog=yes\n'; fi
+done

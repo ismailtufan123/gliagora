@@ -218,12 +218,12 @@ describe('the production stack (deploy/compose.prod.yml)', () => {
     expect(services).toEqual(['caddy', 'app', 'db', 'listmonk'])
     for (const name of services) expect(service(compose, name)).toContain('logging: *logging')
     expect(compose).toMatch(/x-logging: &logging\n {2}driver: journald\n/)
-    const journald = read('deploy/logs/90-gliagora.conf')
+    const journald = read('deploy/logs/zz-gliagora.conf')
     expect(journald).toMatch(/^MaxRetentionSec=14day$/m)
     expect(journald).toMatch(/^ForwardToSyslog=no$/m)
     // New servers get it from setup-server.sh.
     expect(read('deploy/setup-server.sh')).toContain('bash "$SCRIPT_DIR/logs/install-journald.sh"')
-    expect(read('deploy/logs/install-journald.sh')).toContain('90-gliagora.conf')
+    expect(read('deploy/logs/install-journald.sh')).toContain('zz-gliagora.conf')
   })
 
   it('passes the email cap to the app, empty by default', () => {
@@ -1235,5 +1235,71 @@ describe('backup/alert.sh', () => {
     expect(decide('gliagora-backup', 'success', 7)).toBe('yes')
     expect(decide('gliagora-restore-test', 'success', 3)).toBe('yes')
     expect(decide('gliagora-restore-test', 'timeout', 3)).toBe('yes')
+  })
+})
+
+describe('logs/install-journald.sh', () => {
+  const SCRIPT = join(DEPLOY, 'logs/install-journald.sh')
+  const NAME = 'zz-gliagora.conf'
+
+  /** Runs the installer on a folder of its own, beside the stand-in for Ubuntu's syslog.conf. */
+  function install(dir: string, env: Record<string, string> = {}) {
+    const run = runScript(SCRIPT, [], { JOURNALD_DROPIN_DIR: dir, FAKE_LOG: dir, ...env })
+    let restarts = ''
+    try {
+      restarts = readFileSync(join(dir, 'systemctl.args'), 'utf8')
+    } catch {
+      // No call of systemctl.
+    }
+    return { ...run, restarts }
+  }
+
+  it('is read after Ubuntu’s own drop-in, whose ForwardToSyslog=yes would otherwise win', () => {
+    // journald reads the drop-ins of /usr/lib and /etc in the order of their names; the last wins.
+    // The file's first name, 90-gliagora.conf, sorted before syslog.conf (found on the server).
+    const names = ['90-gliagora.conf', 'syslog.conf', NAME].sort()
+    expect(names.at(-1)).toBe(NAME)
+    expect(filesUnder('deploy/logs')).toEqual([
+      'deploy/logs/install-journald.sh',
+      `deploy/logs/${NAME}`,
+    ])
+  })
+
+  it('installs the file, removes its first name and leaves its settings in force', () => {
+    const dir = folder()
+    writeFileSync(join(dir, '90-gliagora.conf'), '[Journal]\nForwardToSyslog=no\n')
+    const run = install(dir)
+    expect(run.output).toContain('the journal keeps 14 days')
+    expect(run.status).toBe(0)
+    expect(readdirSync(dir).filter((name) => name.endsWith('.conf'))).toEqual([NAME])
+    expect(readFileSync(join(dir, NAME), 'utf8')).toBe(read(`deploy/logs/${NAME}`))
+    expect(run.restarts).toBe('restart systemd-journald\n')
+
+    // Again: nothing to do, and journald is not restarted.
+    const again = install(dir)
+    expect(again.status).toBe(0)
+    expect(again.output).toContain('already in place')
+    expect(again.restarts).toBe('restart systemd-journald\n')
+  })
+
+  it('fails, naming the setting, when a later file still overrides one', () => {
+    const dir = folder()
+    writeFileSync(join(dir, 'zzz-other.conf'), '[Journal]\nForwardToSyslog=yes\n')
+    const run = install(dir)
+    expect(run.status).not.toBe(0)
+    expect(run.output).toContain('ERROR: ForwardToSyslog=no is not in force')
+    expect(run.output).not.toContain('MaxRetentionSec')
+    // Also on a later run, when the file itself is in place.
+    const again = install(dir)
+    expect(again.status).not.toBe(0)
+    expect(again.output).toContain('ERROR: ForwardToSyslog=no is not in force')
+    expect(again.output).not.toContain('already in place')
+  })
+
+  it('still refuses to run without root on the server', () => {
+    if (process.getuid?.() === 0) return // CI's containers may run as root
+    const run = runScript(SCRIPT, [], { FAKE_LOG: folder() })
+    expect(run.status).toBe(1)
+    expect(run.output).toContain('run as root')
   })
 })
