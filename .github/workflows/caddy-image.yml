@@ -1,0 +1,103 @@
+# Builds the server's Caddy image, Caddy with the rate-limit module (deploy/caddy-image, PLAN §18.2,
+# D42), and pushes it to GHCR as ghcr.io/<owner>/<repository>-caddy, only when its inputs change:
+# the image's tag holds a hash of them (deploy/caddy-image/tag.sh), and a tag that exists is never
+# built or pushed again, so its digest, which deploy/compose.prod.yml pins, stays the same.
+#
+# It runs on a push to any branch that changes the folder, so that the pull request that changes
+# an input can pin the new image's digest in the same pull request (the run's summary shows the
+# line for compose.prod.yml); the push to main that merges it finds the tag and builds nothing.
+# About 3 minutes when it builds, a few seconds when it does not (CI minutes, D46).
+# Third-party actions and images are pinned to exact versions (PLAN §18.2).
+name: Caddy image
+
+on:
+  push:
+    paths:
+      - 'deploy/caddy-image/**'
+      - '.github/workflows/caddy-image.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: caddy-image-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  image:
+    name: Build and push, unless it exists
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}-caddy
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: The image's tag, and whether it exists
+        id: tag
+        run: |
+          set -euo pipefail
+          tag=$(deploy/caddy-image/tag.sh)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if digest=$(docker buildx imagetools inspect "$IMAGE:$tag" --format '{{.Manifest.Digest}}' 2>/dev/null) \
+            && [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "digest=$digest" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Not built again::$IMAGE:$tag exists ($digest)."
+          else
+            echo "digest=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        if: steps.tag.outputs.digest == ''
+
+      # One manifest for the server's platform, without attestations: the digest in
+      # compose.prod.yml is then the image's own.
+      - name: Build and push
+        id: build
+        if: steps.tag.outputs.digest == ''
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: deploy/caddy-image
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          sbom: false
+          tags: ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=Caddy with the rate-limit module, for the Gliagora server (deploy/caddy-image)
+            org.opencontainers.image.licenses=Apache-2.0
+          cache-from: type=gha,scope=caddy-image
+          cache-to: type=gha,scope=caddy-image,mode=max
+
+      - name: The line for deploy/compose.prod.yml
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          DIGEST: ${{ steps.tag.outputs.digest || steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]]
+          line="image: $IMAGE:$TAG@$DIGEST"
+          echo "$line"
+          {
+            echo '### Caddy image'
+            echo
+            echo 'In `deploy/compose.prod.yml`, the `caddy` service:'
+            echo
+            echo '```yaml'
+            echo "$line"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
