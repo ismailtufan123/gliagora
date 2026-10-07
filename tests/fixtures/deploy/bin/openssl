@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# A stand-in for openssl (monitor/check.sh). With FAKE_CERTS, a list of "HOST=START,END" entries
+# separated by spaces (times as 2026-09-30T10:00:00Z), `openssl s_client … -servername HOST` prints
+# the host in place of its certificate, or fails for a host that is not listed (Caddy is down, or
+# has no certificate for it), and `openssl x509 … -dateopt iso_8601` prints the two dates of the
+# host it reads. Every other call (`openssl rand`, which other scripts use) is the real openssl.
+if [[ -z "${FAKE_CERTS+set}" || ( "$1" != s_client && "$1" != x509 ) ]]; then
+  command -p openssl "$@"
+  exit $?
+fi
+dates_of() {
+  local entry
+  for entry in $FAKE_CERTS; do
+    [[ "${entry%%=*}" == "$1" ]] && { printf '%s' "${entry#*=}"; return 0; }
+  done
+  return 1
+}
+if [[ "$1" == s_client ]]; then
+  printf '%s\n' "$*" >>"$FAKE_LOG/openssl.args"
+  host=''
+  while [[ $# -gt 0 ]]; do
+    [[ "$1" == -servername ]] && host=$2
+    shift
+  done
+  dates_of "$host" >/dev/null || exit 1
+  printf 'certificate of %s\n' "$host"
+  exit 0
+fi
+[[ " $* " == *' -dateopt iso_8601 '* ]] || { echo 'the stand-in knows only -dateopt iso_8601' >&2; exit 2; }
+read -r _ _ host || exit 1
+dates=$(dates_of "$host") || exit 1
+start=${dates%%,*} end=${dates#*,}
+printf 'notBefore=%s\nnotAfter=%s\n' "${start/T/ }" "${end/T/ }"

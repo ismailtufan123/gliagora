@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# A stand-in for df (monitor/check.sh). With FAKE_DF, a list of "PATH=USE:FREE_KB:MOUNT:IUSE"
+# entries separated by spaces (IUSE may be "-", as on a file system without an inode count),
+# `df -Pk PATH` and `df -Pi PATH` print the header and that file system's line; a path that is
+# not listed fails, as df does for one that is not there. Without FAKE_DF, the real df runs.
+if [[ -z "${FAKE_DF:-}" ]]; then
+  command -p df "$@"
+  exit $?
+fi
+mode=$1 path=$2
+for entry in $FAKE_DF; do
+  [[ "${entry%%=*}" == "$path" ]] || continue
+  IFS=: read -r use free mount iuse <<<"${entry#*=}"
+  if [[ "$mode" == -Pi ]]; then
+    printf 'Filesystem Inodes IUsed IFree IUse%% Mounted on\n/dev/fake 1000 10 990 %s %s\n' \
+      "$([[ "$iuse" == - ]] && echo - || echo "$iuse%")" "$mount"
+  else
+    printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\n/dev/fake 1000 10 %s %s%% %s\n' \
+      "$free" "$use" "$mount"
+  fi
+  exit 0
+done
+echo "df: $path: No such file or directory" >&2
+exit 1
