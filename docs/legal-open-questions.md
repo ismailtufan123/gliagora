@@ -7,10 +7,10 @@ After M1 the drafts had 111 open questions, plus one open point that was only ma
 | Group | What happens | Count |
 |---|---|---|
 | (a) Answerable from PLAN.md | The answer is now written into the draft and its marker is gone. | 49 questions |
-| (b) Needs a lawyer | One review by a lawyer between S and M2, before the texts go live (pre-launch checklist, PLAN §20, D32). | 47 questions, merged into **17** (B1–B17), plus **B18** added on 2026-09-27 (C2), **B19** added with the açık rıza metni on 2026-09-27 and **B20** added with the map on 2026-10-01 (M5): **20** in all |
-| (c) Only the operator can decide | Decided by the operator on 2026-09-27 (PLAN D32–D36). The decisions are written into the drafts and their markers are gone. | 13 questions, merged into **5** (C1–C5) |
+| (b) Needs a lawyer | One review by a lawyer between S and M2, before the texts go live (pre-launch checklist, PLAN §20, D32). | 47 questions, merged into **17** (B1–B17), plus **B18** added on 2026-09-27 (C2), **B19** added with the açık rıza metni on 2026-09-27 **B20** added with the map on 2026-10-01 (M5), and **B21** and **B22** added with the accessibility statement and the sources and editorial policy on 2026-10-07: **22** in all |
+| (c) Only the operator can decide | Decided by the operator on 2026-09-27 (PLAN D32–D36). The decisions are written into the drafts and their markers are gone. | 13 questions, merged into **5** (C1–C5); **7** more (C6–C12), from the two texts drafted on 2026-10-07, are open |
 
-Five more questions were settled by a default (listed below, with the other defaults the drafts follow). Two questions were split between groups (privacy policy 22 and terms 3), so the tables at the end have 114 rows for 112 questions. In the drafts every remaining marker names its item, for example `[TO DECIDE: B4 – …]` or `[KARAR VERİLECEK: B7 – …]`. A few markers name a milestone or a step instead ("S and M4b", "M4", "M4b", "M2 and the translated-version notice", "before publication", "when the translated-version notice is built", and "before signing" in the processing agreement): they are facts to fill in at that point, not questions.
+Five more questions were settled by a default (listed below, with the other defaults the drafts follow). Two questions were split between groups (privacy policy 22 and terms 3), so the tables at the end have 114 rows for 112 questions. In the drafts every remaining marker names its item, for example `[TO DECIDE: B4 – …]` or `[KARAR VERİLECEK: B7 – …]`. A few markers name a milestone or a step instead ("S and M4b", "M4", "M4b", "M2 and the translated-version notice", "before publication", "when the translated-version notice is built", "pre-launch checks" in the accessibility statement, and "before signing" in the processing agreement): they are facts to fill in at that point, not questions.
 
 ## (c) Decisions for the operator — decided 2026-09-27
 
@@ -62,6 +62,52 @@ Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md
 
 Texts: `content/en/legal/terms.md`, `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`, `content/en/legal/cookies.md`
 
+## (c) Decisions for the operator — open, added 2026-10-07
+
+The accessibility statement and the sources and editorial policy were drafted on 2026-10-07 (PLAN §15.4). Both are drafts. These points are the operator's to decide; each is marked in its draft with its item, and each draft says what it assumes until then.
+
+### C6. Accessibility: WCAG 2.1 or 2.2 as the target
+
+PLAN §17.1 names WCAG 2.1 level AA, and the statement says so. The tests already check one new criterion of WCAG 2.2 on every change (a focused control is never hidden under the header), and on 2026-10-07 axe-core's own WCAG 2.2 rule (the size of touch targets) found nothing on any template. Naming 2.2 would also promise its other new criteria, which no program checks (for example dragging on the map, and help that is in the same place on every page), so they would join the checks by hand of the pre-launch checklist. **Until decided:** the statement names 2.1 and says which 2.2 checks run.
+
+Text: `content/en/legal/accessibility.md`
+
+### C7. Accessibility: the response time, the review cycle and an outside audit
+
+The statement promises an answer to a message about a barrier within 7 days, and a review of the statement at least once a year; PLAN §15.4 asks for a response time without naming one. It also says that no outside expert has audited the site and that people with disabilities have not tested it yet. (1) Is 7 days right? (2) Is a yearly review right? (3) Is an outside audit or a test with users planned, and when? **Until decided:** 7 days, yearly, and no audit planned.
+
+Text: `content/en/legal/accessibility.md`
+
+### C8. Sources policy: the sections that open later
+
+The policy describes the positions window as it works today, and lists in a few lines how events, funding, papers, news, resources and Learn will be handled (from PLAN §6.2), so that it needs no new approval each time a section opens (the default the contact pages follow). The other way is to leave them out and add each section with its milestone. **Until decided:** the short list stays.
+
+Text: `content/en/about/sources.md`
+
+### C9. Sources policy: how often open items are checked again
+
+The policy says that a fact is published only after it was seen on the original page, that each item shows when it was last verified, and that a position leaves the lists when its deadline has passed. It does not promise how often an open item is looked at again: the weekly link check of PLAN §6.3 comes with M7. Should the policy name a rhythm, and which? **Until decided:** none is named.
+
+Text: `content/en/about/sources.md`
+
+### C10. Sources policy: letting a program check employers' career pages (M7)
+
+Today's rule (PLAN §6.1) is in the policy: a program may read a source only if it is an official feed or interface whose terms and `robots.txt` allow it; a person reads everything else; job boards are never read by a program. The operator is considering automatic checks of employers' own career pages for M7. If that is decided, the section "What the site does by itself" must say which pages are checked, how often, and that a person still approves every item; lawyer question B22 asks what the law allows. **Until decided:** today's rule, and "today no program reads any source of positions".
+
+Text: `content/en/about/sources.md`
+
+### C11. Sources policy: saying that the site itself was built with an AI assistant
+
+The policy's section on AI is about the items: no AI tool chooses, writes or checks them today, and it describes how AI drafting would work if it is switched on (PLAN §6.6, B17). The site's software, and the first drafts of some of its own pages (the legal texts, this policy), were prepared with an AI assistant and checked by the operator. Should the policy say so? **Until decided:** it does not; the draft carries the question.
+
+Text: `content/en/about/sources.md`
+
+### C12. Sources policy: the editor's own ties
+
+Editorial policies often say how the editor handles items close to the editor's own work, for example a position at an institution where the editor studies or works. Should the policy have such a line, and what should it say? **Until decided:** no such line.
+
+Text: `content/en/about/sources.md`
+
 ## (b) Questions for the one-time lawyer review
 
 To be answered in one review before the texts go live. Each question is written so that it can be sent to the lawyer as it is; "why" says what the answer changes.
@@ -84,6 +130,11 @@ To be answered in one review before the texts go live. Each question is written 
 - **B11 (pending signups and logs):** an address whose signup is not confirmed is kept 7 days in our own database (never in the newsletter software, never in backups), then deleted. Server logs: Caddy's logs and the system journal (the programs' own logs, sudo and SSH) 14 days; the firewall's and fail2ban's own files (blocked addresses, unmasked) about four weeks: name them in the texts, or shorten them?
 - **B14 (cookie):** the newsletter's "Check your inbox" page uses one cookie for an hour (`__Host-gliagora-newsletter`: the address the link went to, sealed, with the time and version of the form and the page's language), so that "Send it again" needs no second form. Is it strictly necessary in the sense of the cookie rules, like the two sign-in cookies?
 - **B10 (unsubscribe):** every Glia Notes email will carry an unsubscribe link and the one-click header mail programs use (RFC 8058); the link opens a page with one button (so that mail scanners do not unsubscribe people), the one-click header works without a page. The confirmation email has no unsubscribe link (nobody is subscribed yet). Is "one click" described correctly in the texts?
+
+**Added with the accessibility statement and the sources and editorial policy (2026-10-07).** Both texts are now drafted (`content/en/legal/accessibility.md`, `content/en/about/sources.md`; PLAN §15.4), with each point marked in the drafts by its item. Two new questions, B21 and B22, are at the end of this list. Please also consider:
+
+- **B1 (Press Law):** the policy describes an editor, corrections and, later, a News section (our own headline and two or three sentences of our own, with a link to the source). Could Gliagora, or that section, count as an internet news site (internet haber sitesi) under Press Law No. 5187, as amended by Law No. 7418 in 2022? If so, what must the site show (the details of a periodical) and do (the reply and correction of Art. 14, and its deadline)?
+- **B17 (what the policy says about AI):** the policy says that no AI tool chooses, writes or checks items today, and how AI drafting would work if it is switched on: a first draft from text without names and contact details, every fact checked and the text approved by the editor, who stays responsible. The EU AI Act's transparency rule for AI-generated text that informs the public (Art. 50(4), applied since 2 August 2026) has an exception for text that a person has reviewed and for which someone holds editorial responsibility. Is that general statement enough, or must each item drafted with AI say so?
 
 ### B1. Law 5651: who the content provider is and what the contact page must show
 
@@ -246,6 +297,22 @@ The map credits "© OpenStreetMap contributors" in its corner and under it (ODbL
 Until it is answered (D45, 2026-10-01): the credit is in the terms' "Material from others" and on the About page ("Data and credits"), and job pages carry no notice of their own.
 
 Texts: `content/en/legal/terms.md` ("Material from others"); possibly the job page
+
+### B21. Accessibility: whether a law applies, and messages about barriers
+
+Gliagora publishes an accessibility statement of its own accord (PLAN §15.4): its target (WCAG 2.1 level AA), how the site is tested, the known limitations, a contact and a response time (7 days; C7). (1) Does any accessibility law apply to a site like this one, run by one natural person in Türkiye without revenue? In Türkiye: Law No. 5378 on persons with disabilities, or the Presidential Circular 2025/10 on the accessibility of websites and mobile applications (which names public bodies and some private-sector services). In the EU: the European Accessibility Act (Directive (EU) 2019/882), which covers a list of services, such as e-commerce, and exempts microenterprises that provide services. If one applies, must the statement follow a set form, name a body to complain to, or meet a deadline? (2) Does a statement made of our own accord create duties of its own, for example through the response time it promises? (3) A message about a barrier can reveal a disability, which is special-category data (KVKK Art. 6; GDPR Art. 9). The statement asks people not to send such details. How should a message that does be handled, how long may it be kept, and must the privacy texts mention it?
+
+**Why it matters.** Decides the wording of the statement (how far it may claim conformance, the response time) and whether the privacy texts need a line about messages that reveal a disability. The statement must be live before the M6 launch (PLAN §3.4).
+
+Texts: `content/en/legal/accessibility.md`; possibly `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
+
+### B22. Reading sources by program (only if the operator decides to automate, C10)
+
+Today a person reads every source of positions. The sources and editorial policy says that a program may read a source only if it is an official feed or interface whose terms and `robots.txt` allow it, and never a job board (PLAN §6.1). The operator is considering letting a program check employers' own career pages for new or changed positions (M7, C10); a person would still check and approve every item, and an item would still hold only facts, our own summary and a link. If that is decided: (1) which limits does the EU database right set (Directive 96/9/EC Art. 7; CJEU C-762/19) when the pages are single employers' own and not a job board's database, and does the database maker's right in Turkish law (Law No. 5846, additional Art. 8) set others? (2) What weight do a site's terms of use and its `robots.txt` have under Turkish law, for example as unfair competition under the Turkish Commercial Code? (3) Do the privacy texts' "People named in listings and sources" (B4) need to change when a program, not a person, first reads a page that names people?
+
+**Why it matters.** Decides whether the automation rule of the sources policy may change, and what the policy must then say. It is asked in the same review so that no second review is needed.
+
+Texts: `content/en/about/sources.md`; possibly `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
 
 ## Defaults applied
 

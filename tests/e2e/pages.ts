@@ -10,12 +10,14 @@ export const PAGES = [
   { path: '/en/contact/', name: 'contact (en)' },
   { path: '/tr/iletisim/', name: 'contact (tr)' },
   { path: '/en/about/', name: 'about' },
+  { path: '/en/about/sources/', name: 'sources and editorial policy' },
   { path: '/en/legal/privacy/', name: 'privacy policy' },
   { path: '/tr/legal/kvkk-aydinlatma-metni/', name: 'KVKK notice (tr)' },
   { path: '/tr/legal/acik-riza-metni/', name: 'consent text (tr)' },
   { path: '/en/legal/cookies/', name: 'cookies and storage' },
   { path: '/en/legal/terms/', name: 'terms of use' },
   { path: '/en/legal/takedown/', name: 'notice and takedown' },
+  { path: '/en/legal/accessibility/', name: 'accessibility statement' },
   // With the data-request form at its end (M4b), where the app can send email (as in CI);
   // without a mail server it says the form is unavailable. The pages after it: an unknown link is
   // expired. The link's page with a valid link (a deletion, another request) and after a failure

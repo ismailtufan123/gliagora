@@ -9,8 +9,8 @@ import { CONTACT_EMAIL, SOCIAL_LINKS, WINDOWS, paths } from '@/lib/site'
 
 // PLAN §2.3: sitemap footer (Windows | Learn | About | Legal). The contact and legal notice link
 // is on every page (Law 5651, PLAN §15). Profiles elsewhere are plain links (D14).
-// Sources and the accessibility statement join their columns with their pages. The Legal column
-// follows PLAN §2.3; the Turkish texts carry hrefLang="tr".
+// The columns follow PLAN §2.3 (the sources and editorial policy in About, the accessibility
+// statement last in Legal); the Turkish texts carry hrefLang="tr".
 // In the M2 state (D41 (4), D50) the footer of the public pages links to public pages only: About,
 // and the contact page and the legal texts once each is approved (src/lib/public-pages.ts); no
 // Windows or Learn. Until the contact page is approved, its place at the bottom gives the address
@@ -37,6 +37,7 @@ export async function SiteFooter({
     { label: t('pages.terms.title'), href: CONTENT_PAGES.terms.path },
     { label: t('pages.takedown.title'), href: CONTENT_PAGES.takedown.path },
     { label: t('pages.dataRequests.title'), href: CONTENT_PAGES.dataRequests.path },
+    { label: t('pages.accessibility.title'), href: CONTENT_PAGES.accessibility.path },
   ].filter(shown)
 
   const columns: { heading: string; links: FooterLink[] }[] = [
@@ -59,6 +60,7 @@ export async function SiteFooter({
       heading: t('footer.about'),
       links: [
         { label: t('sections.about'), href: paths.section('about') },
+        { label: t('pages.sources.title'), href: CONTENT_PAGES.sources.path },
         { label: t('footer.contact'), href: paths.contact(locale) },
       ].filter(shown),
     },

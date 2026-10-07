@@ -2,13 +2,13 @@
 
 Every text of the Gliagora interface in Turkish, next to its English original and where it appears, so that a native speaker can review them all in one pass (PLAN §12, D40). Until then the Turkish texts are drafts.
 
-Updated 2026-10-02: 958 strings in 22 areas, 75 of them shown on the Turkish site now.
+Updated 2026-10-07: 962 strings in 22 areas, 77 of them shown on the Turkish site now.
 
 This file is generated from `messages/en.json` and `messages/tr.json` by `pnpm tr:review`; do not edit it by hand. A test fails when it no longer matches the messages.
 
 ## Public at M2: review these first
 
-At M2 (D41, D47) the coming-soon page, the newsletter signup, About and the legal texts the operator has approved go public; everything else stays private until the launch. Of these, only the contact page and the two Turkish legal texts (/tr/iletisim/, /tr/legal/kvkk-aydinlatma-metni/, /tr/legal/acik-riza-metni/) are in Turkish, each once its text is approved, with a reduced header and footer that link to public pages only. These 31 strings appear on them; please review them first. About, the newsletter signup and the coming-soon page are in English only at M2, so in Turkish they appear only as the links in that header and footer. The strings below appear again in the full table.
+At M2 (D41, D47) the coming-soon page, the newsletter signup, About and the legal texts the operator has approved go public; everything else stays private until the launch. Of these, only the contact page and the two Turkish legal texts (/tr/iletisim/, /tr/legal/kvkk-aydinlatma-metni/, /tr/legal/acik-riza-metni/) are in Turkish, each once its text is approved, with a reduced header and footer that link to public pages only. These 33 strings appear on them; please review them first. About, the newsletter signup and the coming-soon page are in English only at M2, so in Turkish they appear only as the links in that header and footer. The strings below appear again in the full table.
 
 | Key | English | Turkish | Where it appears at M2 |
 | --- | --- | --- | --- |
@@ -24,6 +24,7 @@ At M2 (D41, D47) the coming-soon page, the newsletter signup, About and the lega
 | `header.digest` | Get the monthly digest | Aylık bülteni alın | Turkish pages - header (from 768px) and mobile menu - button to the newsletter signup, while the signup is public (with the açık rıza metni) |
 | `header.menu` | Menu | Menü | Turkish pages - header on phones - Menu button (language list, newsletter) |
 | `sections.about` | About | Hakkında | Turkish pages - footer (About column) and mobile menu - link to About |
+| `pages.sources.title` | Sources and editorial policy | Kaynaklar ve yayın ilkeleri (İngilizce) | Turkish pages - footer, About column - link, once the text is approved |
 | `footer.sitemap` | Site map | Site haritası | Turkish pages - footer - name of the footer navigation, for screen readers |
 | `footer.about` | About | Hakkında | Turkish pages - footer - heading of the About column |
 | `footer.contact` | Contact and legal notice | İletişim ve yasal bilgiler | Turkish pages - footer - link to the contact and legal notice page |
@@ -36,6 +37,7 @@ At M2 (D41, D47) the coming-soon page, the newsletter signup, About and the lega
 | `pages.terms.title` | Terms of use | Kullanım koşulları (İngilizce) | Turkish pages - footer, Legal column - link, once the text is approved |
 | `pages.takedown.title` | Notice and takedown | Kaldırma ve düzeltme talepleri (İngilizce) | Turkish pages - footer, Legal column - link, once the text is approved |
 | `pages.dataRequests.title` | Data requests | Veri talepleri (İngilizce) | Turkish pages - footer, Legal column - link, once the text is approved |
+| `pages.accessibility.title` | Accessibility statement | Erişilebilirlik beyanı (İngilizce) | Turkish pages - footer, Legal column - link, once the text is approved |
 | `pages.contact.title` | Contact and legal notice | İletişim ve yasal bilgiler | Turkish contact page (/tr/iletisim/) - heading, tab title and description |
 | `pages.contact.description` | How to contact Gliagora \| Neuroscience, who is responsible for its content, and how to ask for a correction, a removal or your personal data. | Gliagora \| Neuroscience ile nasıl iletişim kurabileceğiniz, içerikten kimin sorumlu olduğu ve düzeltme, kaldırma ya da kişisel veri talebinde nasıl bulunabileceğiniz. | Turkish contact page (/tr/iletisim/) - heading, tab title and description |
 | `pages.kvkk.description` | The information notice under the Turkish Personal Data Protection Law (KVKK), in Turkish. | 6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında Gliagora \| Neuroscience aydınlatma metni. | KVKK notice - description in search results and link previews |
@@ -67,7 +69,7 @@ The rows of the table are grouped by these areas, in this order.
 - **1. Header, menus and search box**: 53 strings, shown on the Turkish site now: partly (52 of 53). On every page, so also on the Turkish pages (/tr/iletisim/, /tr/legal/kvkk-aydinlatma-metni/, /tr/legal/acik-riza-metni/). The code EN on the language button is shown only on English pages, which use the English text.
 - **2. Footer**: 11 strings, shown on the Turkish site now: partly (8 of 11). On every page, so also on the Turkish pages. The social media links stay hidden on every page until the addresses of the profiles are known (D31).
 - **3. Browser tab titles and link previews**: 4 strings, shown on the Turkish site now: partly (2 of 4). The title pattern and the site name are used on the Turkish pages. The home page title and the general description are not: every Turkish page has a title and a description of its own, and the home page exists only in English.
-- **4. Legal and contact pages**: 20 strings, shown on the Turkish site now: partly (13 of 20). The Turkish contact page and the two Turkish legal texts show their own titles and descriptions, and every Turkish page shows the titles of all legal pages in its footer. The descriptions of the English legal pages and of the About page are not yet shown: those pages exist only in English. The texts of the pages themselves are reviewed separately (see the top of this file).
+- **4. Legal and contact pages**: 24 strings, shown on the Turkish site now: partly (15 of 24). The Turkish contact page and the two Turkish legal texts show their own titles and descriptions, and every Turkish page shows the titles of all legal pages in its footer. The descriptions of the English legal pages and of the About page are not yet shown: those pages exist only in English. The texts of the pages themselves are reviewed separately (see the top of this file).
 - **5. Home page**: 37 strings, shown on the Turkish site now: not yet. The home page (M6) is in English only (/en/); there is no Turkish home page yet. At M2 the public /en/ is the coming-soon page instead (D41), in English only too, while the home page stays private until the launch.
 - **6. Pages being built**: 5 strings, shown on the Turkish site now: not yet. These stand-in pages for the sections that are not built yet exist only in English (/en/events/, /en/funding/, /en/papers/, /en/news/, /en/resources/, /en/learn/, /en/learn/bench-to-bedside/).
 - **7. Error pages**: 7 strings, shown on the Turkish site now: not yet. Always in English. The not-found page answers every unknown address, also under /tr/; the removed page and the short answer while the database is unreachable are in English too.
@@ -87,7 +89,7 @@ The rows of the table are grouped by these areas, in this order.
 - **21. Save buttons and saved positions**: 17 strings, shown on the Turkish site now: not yet. The Save buttons are on the jobs list and the job pages, and the saved positions on /en/account/saved/, all only in English, like the rest of the site until the Turkish locale gate (PLAN §3.4). They show only once a way of signing in is switched on.
 - **22. Automatic emails**: 72 strings, shown on the Turkish site now: not yet. Each email goes out in the language of the form the person used, and those forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).
 
-Total: 958 strings, 75 of them shown on the Turkish site now.
+Total: 962 strings, 77 of them shown on the Turkish site now.
 
 ## Strings
 
@@ -179,6 +181,10 @@ Total: 958 strings, 75 of them shown on the Turkish site now.
 | 4. Legal and contact pages | `pages.takedown.description` | How to ask Gliagora \| Neuroscience to correct or remove an item, what to include, how quickly we act, and what happens to a removed listing. | Gliagora'daki bir içeriğin düzeltilmesini veya kaldırılmasını nasıl isteyebileceğiniz, talebinizde neleri belirtmeniz gerektiği, ne kadar sürede işlem yaptığımız ve kaldırılan bir ilana ne olduğu (İngilizce). | Notice and takedown (/en/legal/takedown/) - description in search results and link previews | not yet |
 | 4. Legal and contact pages | `pages.dataRequests.title` | Data requests | Veri talepleri (İngilizce) | Every page - footer, Legal column - link; also the heading of the data requests page (/en/legal/data-requests/) | yes |
 | 4. Legal and contact pages | `pages.dataRequests.description` | How to see, download, correct or delete the personal data Gliagora holds about you, how we check that a request is yours and how quickly we answer. | Gliagora'nın hakkınızda tuttuğu kişisel verileri nasıl görebileceğiniz ve indirebileceğiniz, bunların düzeltilmesini veya silinmesini nasıl isteyebileceğiniz, talebin size ait olduğunu nasıl doğruladığımız ve ne kadar sürede yanıt verdiğimiz (İngilizce). | Data requests (/en/legal/data-requests/) - description in search results and link previews | not yet |
+| 4. Legal and contact pages | `pages.accessibility.title` | Accessibility statement | Erişilebilirlik beyanı (İngilizce) | Every page - footer, Legal column - link; also the heading of the accessibility statement (/en/legal/accessibility/) | yes |
+| 4. Legal and contact pages | `pages.accessibility.description` | How accessible Gliagora \| Neuroscience is today, how we test it, what is still missing, and how to tell us about a barrier. | Gliagora \| Neuroscience'ın bugün ne kadar erişilebilir olduğu, siteyi nasıl test ettiğimiz, nelerin henüz eksik olduğu ve karşılaştığınız bir engeli bize nasıl bildirebileceğiniz (İngilizce). | Accessibility statement (/en/legal/accessibility/) - description in search results and link previews | not yet |
+| 4. Legal and contact pages | `pages.sources.title` | Sources and editorial policy | Kaynaklar ve yayın ilkeleri (İngilizce) | Every page - footer, About column - link; also the heading of the sources and editorial policy (/en/about/sources/) | yes |
+| 4. Legal and contact pages | `pages.sources.description` | Where the items on Gliagora \| Neuroscience come from, how we check and write them, what the site does by itself, how AI tools are used, and how to get something corrected. | Gliagora \| Neuroscience'taki içeriklerin nereden geldiği, onları nasıl doğrulayıp yazdığımız, sitenin kendiliğinden neler yaptığı, yapay zekâ araçlarının nasıl kullanıldığı ve bir düzeltmeyi nasıl isteyebileceğiniz (İngilizce). | Sources and editorial policy (/en/about/sources/) - description in search results and link previews | not yet |
 | 4. Legal and contact pages | `pages.about.title` | About Gliagora | Gliagora hakkında | About page (/en/about/) - heading and browser tab | not yet |
 | 4. Legal and contact pages | `pages.about.description` | Why Gliagora exists, where its name comes from, how entries are chosen and checked, and who runs it. | Gliagora'nın neden var olduğu, adının nereden geldiği, içeriklerin nasıl seçilip doğrulandığı ve siteyi kimin yürüttüğü. | About page (/en/about/) - description in search results and link previews | not yet |
 | 5. Home page | `brand.tagline` | Where neuroscience meets | Sinirbilimin buluştuğu yer | Home page (/en/) - main heading; also the heading of the coming-soon page | not yet |
