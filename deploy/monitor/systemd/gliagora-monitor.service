@@ -6,9 +6,13 @@ After=docker.service
 Type=oneshot
 ExecStart=/opt/gliagora/monitor/check.sh
 Nice=10
-# Where check.sh keeps what it has reported, so that no alert repeats every few minutes
-# (/var/lib/gliagora-monitor, made by systemd).
-StateDirectory=gliagora-monitor
+# A check that hangs (a file system that does not answer) must not hold up the next ones.
+TimeoutStartSec=120
+# Where check.sh keeps what it has reported, so that no alert repeats every few minutes:
+# /run/gliagora-monitor, in memory (a full disk cannot keep it from writing), made by systemd and
+# kept between runs.
+RuntimeDirectory=gliagora-monitor
+RuntimeDirectoryPreserve=yes
 # Emails a run that found something to report (check.sh exits 1 then), through the backup emails'
 # script (off until SMTP_HOST and ALERT_EMAIL are set). "-": a failed email never fails the run.
 ExecStopPost=-/opt/gliagora/backup/alert.sh %N

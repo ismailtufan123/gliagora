@@ -75,11 +75,16 @@ const ZONES: { name: string; counted: Call[]; free: Call[] }[] = [
       { path: '/admin/login/' },
       { path: '/admin/forgot/' },
       { path: '/admin/reset/0123456789abcdef/' },
-      { path: '/admin/create-first-user/' },
       // Caddy compares paths without regard to case; the app would not know this one.
       { method: 'POST', path: '/API/Users/Login/' },
     ],
-    free: [{ path: '/api/users/me/' }, { path: '/admin/' }, { path: '/admin/collections/jobs/' }],
+    free: [
+      { path: '/api/users/me/' },
+      { path: '/admin/' },
+      { path: '/admin/collections/jobs/' },
+      // The first account's form asks the server after every change: its page is not counted.
+      { method: 'POST', path: '/admin/create-first-user/' },
+    ],
   },
   {
     name: 'member_sign_in',
@@ -122,13 +127,14 @@ const ZONES: { name: string; counted: Call[]; free: Call[] }[] = [
       { path: '/en/search/' },
       { path: '/en/jobs/?q=glia' },
       { path: '/en/jobs/?type=phd&q=glia' },
-      { path: '/api/map/institutions/?q=glia' },
-    ],
-    free: [
-      { path: '/en/jobs/' },
       { path: '/en/jobs/?type=phd' },
-      { path: '/api/map/institutions/' },
+      { path: '/api/map/institutions/?q=glia' },
+      // Queries Caddy cannot parse, which the app reads all the same and searches for.
+      { path: '/en/jobs/?q=glia&utm_source=%' },
+      { path: '/en/jobs/?q=glia&x=a;b' },
+      { path: '/api/map/institutions/?q=glia&x=%' },
     ],
+    free: [{ path: '/en/jobs/' }, { path: '/api/map/institutions/' }, { path: '/en/map/' }],
   },
 ]
 

@@ -1278,16 +1278,59 @@ describe('backup/alert.sh', () => {
     expect(decide('gliagora-monitor', 'exit-code', 3)).toBe('yes')
   })
 
-  it('emails what the server check found, and says so when the check itself failed', () => {
-    const found = alert('gliagora-monitor', 'exit-code')
+  it('emails what the server check found, and tells the check once the email has gone', () => {
+    const state = folder()
+    const at = 1_791_374_400
+    writeFileSync(join(state, 'disk-root'), `${at - 900} 0 0\n`)
+    writeFileSync(join(state, '.due'), 'disk-root\n')
+    const run = { INVOCATION_ID: '0123456789abcdef0123456789abcdef', MONITOR_STATE_DIR: state }
+    // The mail server refuses: the report stays due.
+    const refused = alert('gliagora-monitor', 'exit-code', {
+      systemd: { ...run, MONITOR_NOW: String(at), FAKE_CURL_EXIT: '1' },
+    })
+    expect(refused.status, refused.output).toBe(1)
+    expect(readFileSync(join(state, 'disk-root'), 'utf8')).toBe(`${at - 900} 0 0\n`)
+    expect(readdirSync(state).sort()).toEqual(['.due', 'disk-root'])
+    // It goes out: the problem counts as reported from then on.
+    const found = alert('gliagora-monitor', 'exit-code', {
+      systemd: { ...run, MONITOR_NOW: String(at + 900) },
+    })
     expect(found.status, found.output).toBe(0)
     expect(found.mail).toContain('Subject: [gliagora] server check found a problem\n')
     expect(found.mail).toContain('Unit: gliagora-monitor.service on ')
-    const broken = alert('gliagora-monitor', 'exit-code', {
-      systemd: { INVOCATION_ID: '0123456789abcdef0123456789abcdef', EXIT_STATUS: '2' },
-    })
-    expect(broken.mail).toContain('Subject: [gliagora] server check failed\n')
-    expect(alert('gliagora-monitor', 'success').mail).toBeNull()
+    expect(readFileSync(join(state, 'disk-root'), 'utf8')).toBe(`${at - 900} ${at + 900} 0\n`)
+    expect(readdirSync(state)).toEqual(['disk-root'])
+  })
+
+  it('emails a failure of the server check itself once a day, and says nothing when it ends well', () => {
+    const state = folder()
+    const at = 1_791_374_400
+    const broken = (now: number) =>
+      alert('gliagora-monitor', 'exit-code', {
+        systemd: {
+          INVOCATION_ID: '0123456789abcdef0123456789abcdef',
+          EXIT_STATUS: '2',
+          MONITOR_STATE_DIR: state,
+          MONITOR_NOW: String(now),
+        },
+      })
+    const first = broken(at)
+    expect(first.mail).toContain('Subject: [gliagora] server check failed\n')
+    // Every 15 minutes while it lasts: no second email that day.
+    const again = broken(at + 900)
+    expect(again.status, again.output).toBe(0)
+    expect(again.mail).toBeNull()
+    expect(again.output).toContain(
+      'no email: a failure of the server check was reported within the last day',
+    )
+    expect(broken(at + 86_400).mail).toContain('Subject: [gliagora] server check failed\n')
+    // A run that ends well sends nothing and writes no line, 96 times a day.
+    const well = alert('gliagora-monitor', 'success')
+    expect(well.mail).toBeNull()
+    expect(well.output).toBe('')
+    // A test sent by hand is not a run of the check: nothing is noted.
+    const byHand = alert('gliagora-monitor', 'exit-code', { systemd: { MONITOR_STATE_DIR: state } })
+    expect(byHand.mail).toContain('server check found a problem (test, sent by hand)')
   })
 })
 
@@ -1313,11 +1356,26 @@ describe('monitor/check.sh', () => {
     args?: string[]
   }
 
-  /** A server of its own: .env, the memory files and the state folder; `run` checks it at a time. */
+  /**
+   * A server of its own: .env, the memory files and the state folder. `run` checks it at a time;
+   * `delivered` is what alert.sh says once the email about a run has gone out.
+   */
   function server(dotEnv = "SITE_DOMAIN='gliagora.test'\n") {
     const dir = folder()
     writeFileSync(join(dir, '.env'), dotEnv)
     const state = join(dir, 'state')
+    const settings = (at: number, df: string) => ({
+      MONITOR_NOW: String(at),
+      MONITOR_STATE_DIR: state,
+      MONITOR_ENV_FILE: join(dir, '.env'),
+      MONITOR_PATHS: df
+        .split(' ')
+        .map((entry) => entry.split('=')[0])
+        .join(' '),
+      MONITOR_MEMINFO: join(dir, 'meminfo'),
+      MONITOR_PRESSURE: join(dir, 'pressure'),
+      FAKE_LOG: dir,
+    })
     const run = (at: number, world: World = {}) => {
       const {
         df = '/=41:20480000:/:5',
@@ -1339,29 +1397,41 @@ describe('monitor/check.sh', () => {
         )
       }
       return runScript(SCRIPT, args, {
-        MONITOR_NOW: String(at),
-        MONITOR_STATE_DIR: state,
-        MONITOR_ENV_FILE: join(dir, '.env'),
-        MONITOR_PATHS: df
-          .split(' ')
-          .map((entry) => entry.split('=')[0])
-          .join(' '),
-        MONITOR_MEMINFO: join(dir, 'meminfo'),
-        MONITOR_PRESSURE: join(dir, 'pressure'),
+        ...settings(at, df),
         FAKE_DF: df,
         FAKE_CERTS: certs,
-        FAKE_LOG: dir,
         ...env,
       })
     }
+    const delivered = (at: number, status = '1') =>
+      runScript(SCRIPT, ['--delivered', status], settings(at, '/=41:20480000:/:5'))
+    const failureReported = (at: number) =>
+      runScript(SCRIPT, ['--failure-reported'], settings(at, '/=41:20480000:/:5')).status === 0
+    /** The problems it remembers (its own notes, `.due` and `.failed`, apart). */
     const remembered = () => {
       try {
-        return readdirSync(state).sort()
+        return readdirSync(state)
+          .filter((name) => !name.startsWith('.'))
+          .sort()
       } catch {
         return []
       }
     }
-    return { dir, run, remembered }
+    const note = (name: string) => {
+      try {
+        return readFileSync(join(state, name), 'utf8')
+      } catch {
+        return null
+      }
+    }
+    return { dir, state, run, delivered, failureReported, remembered, note }
+  }
+
+  /** What the second run in a row says about a world: the first sighting is never a report. */
+  const second = (world: World, dotEnv?: string) => {
+    const { run } = server(dotEnv)
+    run(NOW, world)
+    return run(NOW + 15 * MINUTE, world)
   }
 
   it('says one line and ends well when all is well', () => {
@@ -1379,8 +1449,8 @@ describe('monitor/check.sh', () => {
     )
   })
 
-  it('reports a problem once two runs in a row see it, then once a day, never every few minutes', () => {
-    const { run, remembered } = server()
+  it('reports a problem once a second run sees it, then once a day, never every few minutes', () => {
+    const { run, delivered, remembered, note } = server()
     const full = { df: '/=91:3072000:/:5' }
     const first = run(NOW, full)
     expect(first.status, first.output).toBe(0)
@@ -1388,10 +1458,14 @@ describe('monitor/check.sh', () => {
     expect(first.output).toContain('the rest is fine: memory 60% available')
     expect(remembered()).toEqual(['disk-root'])
 
-    const second = run(NOW + 15 * MINUTE, full)
-    expect(second.status, second.output).toBe(1)
-    expect(second.output).toContain('PROBLEM: disk: / is 91% full (limit 85%), 3000 MB free')
-    expect(second.output).toContain('once now and once a day while it lasts')
+    const report = run(NOW + 15 * MINUTE, full)
+    expect(report.status, report.output).toBe(1)
+    expect(report.output).toContain('PROBLEM: disk: / is 91% full (limit 85%), 3000 MB free')
+    expect(report.output).toContain('goes out once, then once a day while it lasts')
+    expect(note('.due')).toBe('disk-root\n')
+    // alert.sh sent the email, and says so.
+    expect(delivered(NOW + 15 * MINUTE).status).toBe(0)
+    expect(note('.due')).toBeNull()
 
     // The next runs of the day say that it lasts, without failing (no email).
     for (const later of [30 * MINUTE, 6 * 60 * MINUTE, 15 * MINUTE + DAY - 1]) {
@@ -1405,15 +1479,57 @@ describe('monitor/check.sh', () => {
     expect(reminder.output).toContain(
       'STILL A PROBLEM since 2026-10-07T12:00:00Z: disk: / is 91% full',
     )
+    delivered(NOW + 15 * MINUTE + DAY)
     expect(run(NOW + 30 * MINUTE + DAY, full).status).toBe(0)
 
-    // Over: the journal says so, nothing fails, and a new problem starts from the beginning.
-    const over = run(NOW + 2 * DAY)
+    // Over only after four runs in a row without it; the journal says so, and nothing fails.
+    for (const clear of [1, 2, 3]) {
+      const waiting = run(NOW + 2 * DAY + clear * 15 * MINUTE)
+      expect(waiting.status, waiting.output).toBe(0)
+      expect(waiting.output).toContain('not seen in this run: disk-root')
+      expect(remembered()).toEqual(['disk-root'])
+    }
+    const over = run(NOW + 2 * DAY + 60 * MINUTE)
     expect(over.status, over.output).toBe(0)
     expect(over.output).toContain('over: disk-root')
     expect(over.output).toContain('ok: disk / 41%')
     expect(remembered()).toEqual([])
+    // A new problem starts from the beginning.
     expect(run(NOW + 3 * DAY, full).output).toContain('seen once: disk')
+  })
+
+  it('keeps a report due until its email has gone: no mail server yet, or one that refuses', () => {
+    const { run, delivered } = server()
+    const full = { df: '/=91:3072000:/:5' }
+    run(NOW, full)
+    // Nobody says "delivered": every run fails again with the problem, so the next email carries it.
+    for (const later of [15, 30, 45]) {
+      const again = run(NOW + later * MINUTE, full)
+      expect(again.status, again.output).toBe(1)
+      expect(again.output).toContain('PROBLEM: disk: / is 91% full')
+    }
+    delivered(NOW + 45 * MINUTE)
+    const after = run(NOW + 60 * MINUTE, full)
+    expect(after.status, after.output).toBe(0)
+    expect(after.output).toContain('reported at 2026-10-07T12:45:00Z')
+  })
+
+  it('treats a problem that comes and goes as one problem, reported once a day', () => {
+    const { run, delivered, remembered } = server()
+    const low = { availableKb: 200_000 }
+    // Every other run: the second sighting within the hour is the report.
+    expect(run(NOW, low).status).toBe(0)
+    expect(run(NOW + 15 * MINUTE).output).toContain('not seen in this run: memory')
+    const report = run(NOW + 30 * MINUTE, low)
+    expect(report.status, report.output).toBe(1)
+    delivered(NOW + 30 * MINUTE)
+    // Two runs with it, one without, for the rest of the day: no second email.
+    for (let step = 3; step < 3 + 4 * 23; step++) {
+      const world = step % 3 === 2 ? {} : low
+      const { status, output } = run(NOW + step * 15 * MINUTE, world)
+      expect(status, `run ${step}: ${output}`).toBe(0)
+    }
+    expect(remembered()).toEqual(['memory'])
   })
 
   it('does not report what a single run saw (a backup, a restart)', () => {
@@ -1424,24 +1540,22 @@ describe('monitor/check.sh', () => {
       'certificate-www.gliagora.test',
       'memory',
     ])
-    const after = run(NOW + 15 * MINUTE)
-    expect(after.status, after.output).toBe(0)
-    expect(after.output).toContain('over: memory')
+    for (const clear of [1, 2, 3, 4]) {
+      const after = run(NOW + clear * 15 * MINUTE)
+      expect(after.status, after.output).toBe(0)
+    }
     expect(remembered()).toEqual([])
   })
 
   it('checks each file system once, by space and by inodes, and skips what is not there', () => {
-    const { run } = server()
-    const world = {
+    const { status, output } = second({
       // Two folders of one file system, one of its own that is full of small files, and one
       // whose file system counts no inodes.
       df: '/=41:20480000:/:5 /var/lib/docker=41:20480000:/:5 /var/backups/gliagora=50:900000:/var/backups:97 /opt/gliagora=85:512000:/opt/gliagora:-',
       env: {
         MONITOR_PATHS: '/ /var/lib/docker /var/backups/gliagora /opt/gliagora /no/such/folder',
       },
-    }
-    run(NOW, world)
-    const { status, output } = run(NOW + 15 * MINUTE, world)
+    })
     expect(status, output).toBe(1)
     expect(output.match(/disk \/ 41%/g)).toHaveLength(1)
     expect(output).toContain(
@@ -1452,43 +1566,34 @@ describe('monitor/check.sh', () => {
   })
 
   it('reports little available memory, and waiting for memory where the kernel says', () => {
-    const report = (world: World) => {
-      const { run } = server()
-      run(NOW, world)
-      return run(NOW + 15 * MINUTE, world)
-    }
-    const low = report({ availableKb: 360_000 })
+    const low = second({ availableKb: 360_000 })
     expect(low.status, low.output).toBe(1)
     expect(low.output).toContain(
       'PROBLEM: memory: 9% of the memory is available (351 of 3906 MB; limit 10%)',
     )
-    expect(report({ availableKb: 400_000 }).status).toBe(0)
-    const waiting = report({ pressure: '12.50' })
+    expect(second({ availableKb: 400_000 }).status).toBe(0)
+    const waiting = second({ pressure: '12.50' })
     expect(waiting.status, waiting.output).toBe(1)
     expect(waiting.output).toContain(
       'PROBLEM: memory: programs waited for memory during 12% of the last five minutes (limit 10%)',
     )
-    expect(report({ pressure: '9.99' }).status).toBe(0)
-    const both = report({ availableKb: 100_000, pressure: '40.00' })
+    expect(second({ pressure: '9.99' }).status).toBe(0)
+    const both = second({ availableKb: 100_000, pressure: '40.00' })
     expect(both.output).toMatch(
       /PROBLEM: memory: 2% of the memory is available .*; programs waited/,
     )
     // A kernel without pressure figures: the available memory alone.
-    const without = report({ pressure: null })
+    const without = second({ pressure: null })
     expect(without.status, without.output).toBe(0)
     expect(without.output).toContain('memory 60% available')
     // A memory file that cannot be read is a problem to report, not a crash.
-    const unread = report({ env: { MONITOR_MEMINFO: '/no/such/file' } })
+    const unread = second({ env: { MONITOR_MEMINFO: '/no/such/file' } })
     expect(unread.status, unread.output).toBe(1)
     expect(unread.output).toContain('PROBLEM: memory: /no/such/file could not be read')
   })
 
   it('reports a certificate with less than a sixth of its lifetime left, for the site and www.', () => {
-    const report = (certs: string) => {
-      const { run } = server()
-      run(NOW, { certs })
-      return run(NOW + 15 * MINUTE, { certs })
-    }
+    const report = (certs: string) => second({ certs })
     const other = cert('www.gliagora.test', 60)
     // 90 days: Caddy renews 30 days before the end; 15 days is the limit.
     expect(report(`${cert('gliagora.test', 16)} ${other}`).status).toBe(0)
@@ -1518,45 +1623,102 @@ describe('monitor/check.sh', () => {
     )
   })
 
-  it('reads SITE_DOMAIN as alert.sh reads .env, and reports a line it cannot read', () => {
+  it('reads SITE_DOMAIN as alert.sh reads .env, and never prints a line it cannot use', () => {
     const quoted = server('OTHER=1\nSITE_DOMAIN="gliagora.test"\n')
     expect(quoted.run(NOW).output).toContain('certificate gliagora.test 60 days')
     for (const dotEnv of ['SITE_DOMAIN=glia$gora.test\n', 'OTHER=1\n']) {
-      const { run } = server(dotEnv)
-      run(NOW)
-      const { status, output } = run(NOW + 15 * MINUTE)
+      const { status, output } = second({}, dotEnv)
       expect(status, output).toBe(1)
       expect(output).toContain('PROBLEM: certificate: SITE_DOMAIN could not be read from ')
     }
+    // Two settings on one line: Compose and env_value read them as one value; it is not shown.
+    const joined = second({}, 'SITE_DOMAIN=gliagora.test SMTP_PASS=not-a-real-secret\n')
+    expect(joined.status, joined.output).toBe(1)
+    expect(joined.output).toContain('PROBLEM: certificate: SITE_DOMAIN in ')
+    expect(joined.output).toContain(' is no host name')
+    expect(joined.output).not.toContain('not-a-real-secret')
+    expect(joined.output).not.toContain('SMTP_PASS')
   })
 
   it('shows what it would say with --dry-run, without changing what it remembers', () => {
-    const { run, remembered } = server()
+    const { run, delivered, remembered, note } = server()
     const full = { df: '/=91:3072000:/:5' }
     const dry = run(NOW, { ...full, args: ['--dry-run'] })
     expect(dry.status, dry.output).toBe(0)
     expect(dry.output).toContain('seen once: disk: / is 91% full')
     expect(remembered()).toEqual([])
     run(NOW, full)
+    // A dry run that has a report says so and ends like the run would, noting nothing.
+    const due = run(NOW + 15 * MINUTE, { ...full, args: ['--dry-run'] })
+    expect(due.status, due.output).toBe(1)
+    expect(note('.due')).toBeNull()
+    expect(note('disk-root')).toBe(`${NOW} 0 0\n`)
     run(NOW + 15 * MINUTE, full)
-    // Reported; a dry run when all is well again says "over" and leaves the file.
-    expect(run(NOW + 30 * MINUTE, { args: ['--dry-run'] }).output).toContain('over: disk-root')
-    expect(remembered()).toEqual(['disk-root'])
+    delivered(NOW + 15 * MINUTE)
+    // All well again: a dry run counts no clear run.
+    expect(run(NOW + 30 * MINUTE, { args: ['--dry-run'] }).output).toContain(
+      'not seen in this run: disk-root',
+    )
+    expect(note('disk-root')).toBe(`${NOW} ${NOW + 15 * MINUTE} 0\n`)
   })
 
   it('ends with 2 and a line when the check itself fails, so the email says "failed"', () => {
-    const { run } = server()
-    const { status, output } = run(NOW, {
-      env: { MONITOR_STATE_DIR: '/proc/no-such-folder/state' },
-    })
-    expect(status, output).toBe(2)
-    expect(output).toMatch(/ERROR: the check itself failed \(status \d+\)/)
+    const { run, state } = server()
+    // A state folder that cannot be made, or written: no silent "seen once" for ever.
+    const unmade = run(NOW, { env: { MONITOR_STATE_DIR: '/proc/no-such-folder/state' } })
+    expect(unmade.status, unmade.output).toBe(2)
+    expect(unmade.output).toContain('ERROR: cannot make /proc/no-such-folder/state')
+    run(NOW)
+    chmodSync(state, 0o500)
+    try {
+      const unwritable = run(NOW + 15 * MINUTE, { df: '/=99:1024:/:5' })
+      expect(unwritable.status, unwritable.output).toBe(2)
+      expect(unwritable.output).toContain(`ERROR: cannot write ${state}/disk-root`)
+    } finally {
+      chmodSync(state, 0o700)
+    }
+    // A limit that is no whole number would switch its check off: refused, by name.
+    for (const [name, value] of [
+      ['DISK_MAX_PERCENT', '90%'],
+      ['MEMORY_MIN_PERCENT', 'ten'],
+      ['CERT_MIN_LIFETIME_PARTS', '0'],
+    ] as const) {
+      const mistyped = run(NOW, {
+        df: '/=99:1024:/:5',
+        availableKb: 40_000,
+        env: { [name]: value },
+      })
+      expect(mistyped.status, mistyped.output).toBe(2)
+      expect(mistyped.output).toContain(`${name} must be a whole number above 0`)
+      expect(mistyped.output).not.toContain('ok:')
+    }
+    const usage = runScript(SCRIPT, ['--unknown'], {})
+    expect(usage.status).toBe(2)
   })
 
-  it('runs every 15 minutes, keeps its state in its own folder and emails through alert.sh', () => {
+  it('remembers a failure of its own for a day, for alert.sh, until it runs well again', () => {
+    const { run, delivered, failureReported } = server()
+    expect(failureReported(NOW)).toBe(false)
+    delivered(NOW, '2')
+    expect(failureReported(NOW + 15 * MINUTE)).toBe(true)
+    expect(failureReported(NOW + DAY - 1)).toBe(true)
+    expect(failureReported(NOW + DAY)).toBe(false)
+    // A time ahead of now (the clock was set back) is no reason to stay silent.
+    expect(failureReported(NOW - 60)).toBe(false)
+    // The check runs again: the next failure is news.
+    delivered(NOW + DAY, '2')
+    run(NOW + DAY + 15 * MINUTE)
+    expect(failureReported(NOW + DAY + 30 * MINUTE)).toBe(false)
+  })
+
+  it('runs every 15 minutes, keeps what it reported in memory and emails through alert.sh', () => {
     const service = read('deploy/monitor/systemd/gliagora-monitor.service')
     expect(service).toMatch(/^ExecStart=\/opt\/gliagora\/monitor\/check\.sh$/m)
-    expect(service).toMatch(/^StateDirectory=gliagora-monitor$/m)
+    // Under /run, kept between the runs: a full disk cannot keep it from writing.
+    expect(service).toMatch(/^RuntimeDirectory=gliagora-monitor$/m)
+    expect(service).toMatch(/^RuntimeDirectoryPreserve=yes$/m)
+    expect(service).not.toMatch(/^StateDirectory=/m)
+    expect(service).toMatch(/^TimeoutStartSec=\d+$/m)
     expect(service).toMatch(/^ExecStopPost=-\/opt\/gliagora\/backup\/alert\.sh %N$/m)
     expect(read('deploy/monitor/systemd/gliagora-monitor.timer')).toMatch(/^OnCalendar=\*:07\/15$/m)
     // The unit's name is the one alert.sh knows.

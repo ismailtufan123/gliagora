@@ -57,7 +57,7 @@ describe('the Caddy of the tests', () => {
     // The server trusts no proxy (tests/caddy/limits.test.ts), and neither do the other Caddies.
     expect(adaptedFiles(SETUP).caddyfile).not.toContain('trusted_proxies')
     expect(adaptedFiles({ ...SETUP, trustForwarded: true }).caddyfile).toContain(
-      '\thttp_port 8080\n\tservers {\n\t\ttrusted_proxies static 127.0.0.1/32\n\t}\n\tlog default {',
+      '\tservers {\n\t\t0rtt off\n\t\ttrusted_proxies static 127.0.0.1/32\n\t}\n}\n',
     )
   })
 

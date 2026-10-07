@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { CADDYFILE } from './serve'
 
 /** One `match` block of a zone: every line must hold (the paths are alternatives). */
-export type ZoneMatch = { methods: string[]; paths: string[]; query: string[] }
+export type ZoneMatch = { methods: string[]; paths: string[]; expression: string | null }
 
 export type Zone = {
   name: string
@@ -43,10 +43,14 @@ function blocks(text: string, name: string): { label: string; body: string }[] {
   return found
 }
 
-const words = (text: string, directive: string): string[] =>
-  [...text.matchAll(new RegExp(`^\\s*${directive}\\s+(.+)$`, 'gm'))].flatMap((match) =>
-    (match[1] ?? '').trim().split(/\s+/),
+/** What follows a directive on its line, for each line that has it. */
+const lines = (text: string, directive: string): string[] =>
+  [...text.matchAll(new RegExp(`^\\s*${directive}\\s+(.+)$`, 'gm'))].map((match) =>
+    (match[1] ?? '').trim(),
   )
+
+const words = (text: string, directive: string): string[] =>
+  lines(text, directive).flatMap((line) => line.split(/\s+/))
 
 /** The zones of the Caddyfile's rate limits. */
 export function rateLimitZones(caddyfile: string = readFileSync(CADDYFILE, 'utf8')): Zone[] {
@@ -56,7 +60,7 @@ export function rateLimitZones(caddyfile: string = readFileSync(CADDYFILE, 'utf8
     const matches = blocks(body, 'match').map(({ body: match }) => ({
       methods: words(match, 'method'),
       paths: words(match, 'path'),
-      query: words(match, 'query'),
+      expression: lines(match, 'expression')[0] ?? null,
     }))
     // What the zone says outside its match blocks.
     const own = blocks(body, 'match').reduce(

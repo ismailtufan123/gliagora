@@ -53,6 +53,11 @@ services:
     depends_on:
       app:
         condition: service_healthy
+    # Caddy needs well under 100 MB. Its rate limiter keeps a small record per visitor address,
+    # before the password, so a flood from many addresses can make it grow (Caddyfile): with this
+    # limit Caddy holds its own memory down and at worst starts again, and the database and the app
+    # keep theirs.
+    mem_limit: 768m
     logging: *logging
     security_opt:
       - no-new-privileges:true
