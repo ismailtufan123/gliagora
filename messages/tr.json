@@ -202,6 +202,14 @@
     "dataRequests": {
       "title": "Veri talepleri (İngilizce)",
       "description": "Gliagora'nın hakkınızda tuttuğu kişisel verileri nasıl görebileceğiniz ve indirebileceğiniz, bunların düzeltilmesini veya silinmesini nasıl isteyebileceğiniz, talebin size ait olduğunu nasıl doğruladığımız ve ne kadar sürede yanıt verdiğimiz (İngilizce)."
+    },
+    "accessibility": {
+      "title": "Erişilebilirlik beyanı (İngilizce)",
+      "description": "Gliagora | Neuroscience'ın bugün ne kadar erişilebilir olduğu, siteyi nasıl test ettiğimiz, nelerin henüz eksik olduğu ve karşılaştığınız bir engeli bize nasıl bildirebileceğiniz (İngilizce)."
+    },
+    "sources": {
+      "title": "Kaynaklar ve yayın ilkeleri (İngilizce)",
+      "description": "Gliagora | Neuroscience'taki içeriklerin nereden geldiği, onları nasıl doğrulayıp yazdığımız, sitenin kendiliğinden neler yaptığı, yapay zekâ araçlarının nasıl kullanıldığı ve bir düzeltmeyi nasıl isteyebileceğiniz (İngilizce)."
     }
   },
   "jobs": {

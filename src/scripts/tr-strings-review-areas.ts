@@ -57,6 +57,7 @@ export const PUBLIC_AT_M2: Record<string, AtM2> = {
     'Turkish pages - header (from 768px) and mobile menu - button to the newsletter signup, while the signup is public (with the açık rıza metni)',
   'header.menu': 'Turkish pages - header on phones - Menu button (language list, newsletter)',
   'sections.about': 'Turkish pages - footer (About column) and mobile menu - link to About',
+  'pages.sources.title': 'Turkish pages - footer, About column - link, once the text is approved',
   'footer.sitemap': 'Turkish pages - footer - name of the footer navigation, for screen readers',
   'footer.about': 'Turkish pages - footer - heading of the About column',
   'footer.contact': 'Turkish pages - footer - link to the contact and legal notice page',
@@ -75,6 +76,8 @@ export const PUBLIC_AT_M2: Record<string, AtM2> = {
   'pages.terms.title': 'Turkish pages - footer, Legal column - link, once the text is approved',
   'pages.takedown.title': 'Turkish pages - footer, Legal column - link, once the text is approved',
   'pages.dataRequests.title':
+    'Turkish pages - footer, Legal column - link, once the text is approved',
+  'pages.accessibility.title':
     'Turkish pages - footer, Legal column - link, once the text is approved',
   'pages.contact': 'Turkish contact page (/tr/iletisim/) - heading, tab title and description',
   'pages.kvkk.description': 'KVKK notice - description in search results and link previews',
@@ -252,6 +255,20 @@ export const AREAS: Area[] = [
       'pages.dataRequests.description': {
         where:
           'Data requests (/en/legal/data-requests/) - description in search results and link previews',
+        shown: false,
+      },
+      'pages.accessibility.title':
+        'Every page - footer, Legal column - link; also the heading of the accessibility statement (/en/legal/accessibility/)',
+      'pages.accessibility.description': {
+        where:
+          'Accessibility statement (/en/legal/accessibility/) - description in search results and link previews',
+        shown: false,
+      },
+      'pages.sources.title':
+        'Every page - footer, About column - link; also the heading of the sources and editorial policy (/en/about/sources/)',
+      'pages.sources.description': {
+        where:
+          'Sources and editorial policy (/en/about/sources/) - description in search results and link previews',
         shown: false,
       },
       'pages.about.title': {

@@ -23,6 +23,7 @@ No link changes.
 - “Cookies and storage” (`/en/legal/cookies/`): **words only** (the page is not public). In: “[Cookies and storage]”
 - “Notice and takedown” (`/en/legal/takedown/`): **words only** (the page is not public). In: “[Notice and takedown] (corrections and removals)”
 - “Data requests” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “[Data requests]”
+- “Accessibility statement” (`/en/legal/accessibility/`): **words only** (the page is not public). In: “[Accessibility statement]”
 
 ## `/tr/iletisim/`
 
@@ -65,6 +66,7 @@ No link changes.
 
 ## `/en/legal/terms/`
 
+- “sources and editorial policy” (`/en/about/sources/`): **words only** (the page is not public). In: “Our [sources and editorial policy] explains how we work.”
 - “Notice and takedown” (`/en/legal/takedown/`): **words only** (the page is not public). In: “Use the [Notice and takedown] page or write to hello@gliagora.com.”
 - “cookies and storage page” (`/en/legal/cookies/`): **words only** (the page is not public). In: “the [cookies and storage page];”
 - “Data requests” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “To see, correct, download or delete your data, use your account settings or the [Data requests] page.”
@@ -80,3 +82,15 @@ No link changes.
 ## `/en/legal/data-requests/`
 
 - “notice and takedown page” (`/en/legal/takedown/`): **words only** (the page is not public). In: “To have content about you corrected or removed from a listing, use the [notice and takedown page].”
+
+## `/en/legal/accessibility/`
+
+- “report it to us” (`/en/report/`): **email** to hello@gliagora.com. In: “If something on Gliagora is hard or impossible for you to use, please [report it to us] or write to [hello@gliagora.com], in English or Turkish.”
+
+## `/en/about/sources/`
+
+- “terms of use” (`/en/legal/terms/`): **words only** (the page is not public). In: “The [terms of use] say more about this.”
+- “send us one” (`/en/suggest/`): **email** to hello@gliagora.com. In: “Your suggestions ([send us one])”
+- “notice and takedown page” (`/en/legal/takedown/`): **words only** (the page is not public). In: “Every item has a "Report a problem" link, and the [notice and takedown page] lists every way to reach us and how quickly we act.”
+- “send it to us” (`/en/suggest/`): **email** to hello@gliagora.com. In: “**To suggest a position,** [send it to us].”
+- “notice and takedown page” (`/en/legal/takedown/#employers-updates-and-removals`): **words only** (the page is not public). In: “The [notice and takedown page] has the details.”

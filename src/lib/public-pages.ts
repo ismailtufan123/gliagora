@@ -106,6 +106,8 @@ export const M2_PAGES: readonly PublicPage[] = [
   text('cookies'),
   text('terms'),
   text('takedown'),
+  text('accessibility'),
+  text('sources'),
   // The data-request page with its form (its Server Action posts to the page), and the pages after
   // it (src/lib/data-requests/paths.ts).
   text('dataRequests', { post: true }),

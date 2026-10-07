@@ -19,6 +19,8 @@ type ContentPageInfo = {
     | 'terms'
     | 'takedown'
     | 'dataRequests'
+    | 'accessibility'
+    | 'sources'
   path: string
   file: string
   updated: string
@@ -41,7 +43,7 @@ export const CONTENT_PAGES = {
     messages: 'contact',
     path: '/en/contact/',
     file: 'en/contact.md',
-    updated: '2026-10-02',
+    updated: '2026-10-07',
     draft: true,
   },
   iletisim: {
@@ -89,7 +91,7 @@ export const CONTENT_PAGES = {
     messages: 'terms',
     path: '/en/legal/terms/',
     file: 'en/legal/terms.md',
-    updated: '2026-10-02',
+    updated: '2026-10-07',
     draft: true,
   },
   takedown: {
@@ -106,6 +108,24 @@ export const CONTENT_PAGES = {
     path: '/en/legal/data-requests/',
     file: 'en/legal/data-requests.md',
     updated: '2026-10-02',
+    draft: true,
+  },
+  // The accessibility statement and the sources and editorial policy (PLAN §15.4, §2.2): drafts
+  // written on 2026-10-07, before the lawyer review; due before the M6 launch (§3.4).
+  accessibility: {
+    locale: 'en',
+    messages: 'accessibility',
+    path: '/en/legal/accessibility/',
+    file: 'en/legal/accessibility.md',
+    updated: '2026-10-07',
+    draft: true,
+  },
+  sources: {
+    locale: 'en',
+    messages: 'sources',
+    path: '/en/about/sources/',
+    file: 'en/about/sources.md',
+    updated: '2026-10-07',
     draft: true,
   },
 } as const satisfies Record<string, ContentPageInfo>

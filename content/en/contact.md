@@ -73,5 +73,5 @@ The [privacy policy](/en/legal/privacy/) explains how we handle personal data. U
 - [Cookies and storage](/en/legal/cookies/)
 - [Notice and takedown](/en/legal/takedown/) (corrections and removals)
 - [Data requests](/en/legal/data-requests/)
-- Accessibility statement
+- [Accessibility statement](/en/legal/accessibility/)
 - In Turkish: [information notice under KVKK](/tr/legal/kvkk-aydinlatma-metni/) ({tr: KVKK aydınlatma metni}), [newsletter consent text](/tr/legal/acik-riza-metni/) ({tr: açık rıza metni}) and [contact page](/tr/iletisim/) ({tr: İletişim})

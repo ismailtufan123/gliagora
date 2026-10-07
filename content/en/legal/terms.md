@@ -31,7 +31,7 @@ We call each thing we publish an "item", for example a job listing. Every item h
 - a short summary in our own words;
 - a "Last verified" date.
 
-Our editor approves every item before it is published and checks the facts against the original posting. Our sources and editorial policy explains how we work.
+Our editor approves every item before it is published and checks the facts against the original posting. Our [sources and editorial policy](/en/about/sources/) explains how we work.
 
 No one pays to appear on Gliagora. We do not publish paid placements.
 

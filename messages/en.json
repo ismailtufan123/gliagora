@@ -202,6 +202,14 @@
     "dataRequests": {
       "title": "Data requests",
       "description": "How to see, download, correct or delete the personal data Gliagora holds about you, how we check that a request is yours and how quickly we answer."
+    },
+    "accessibility": {
+      "title": "Accessibility statement",
+      "description": "How accessible Gliagora | Neuroscience is today, how we test it, what is still missing, and how to tell us about a barrier."
+    },
+    "sources": {
+      "title": "Sources and editorial policy",
+      "description": "Where the items on Gliagora | Neuroscience come from, how we check and write them, what the site does by itself, how AI tools are used, and how to get something corrected."
     }
   },
   "jobs": {
