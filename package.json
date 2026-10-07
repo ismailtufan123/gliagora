@@ -33,6 +33,8 @@
     "tr:review": "payload run src/scripts/tr-strings-review.ts",
     "caddy:public": "payload run src/scripts/caddy-public.ts",
     "m2:links": "payload run src/scripts/m2-links-review.ts",
+    "lighthouse:prod": "node tools/lighthouse/run.mjs --prod",
+    "lighthouse:local": "node tools/lighthouse/run.mjs --local",
     "test:e2e": "playwright test"
   },
   "dependencies": {

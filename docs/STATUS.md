@@ -2,7 +2,7 @@
 
 One page for whoever picks up the work next: what is done, what is live, what is open and what comes next. Updated at the end of every task (CLAUDE.md, "Session handoff"). The details are in `PLAN.md` (the milestone notes in §20, the decisions in §22.3).
 
-Last updated: 2026-10-05, at the end of the task "the M4b decisions, the server steps, then M2's technical parts behind the password" (`docs/NEXT.md`, done: pull requests #73–#78).
+Last updated: 2026-10-07, during the task "the D50 approval, then the technical items of the pre-launch checklist" (`docs/NEXT.md`, still open: pull requests #80–#84 are merged; four points wait for the operator, the first four under "Open decisions and waiting items").
 
 ## Done
 
@@ -21,28 +21,34 @@ Last updated: 2026-10-05, at the end of the task "the M4b decisions, the server 
   - **The legal drafts** describe all of this as built. They are still drafts.
 - **The server check** (2026-10-07): every 15 minutes the server looks at its disk space, its memory and the site's certificate, and reports a problem by email, the way the backup emails go (so from M2, once the mailbox exists; until then the server's journal keeps the lines). A problem is reported once a second check sees it, then once a day while it lasts; one that comes and goes counts as one problem.
 - **Rate limits in Caddy** (2026-10-07, D42): Caddy counts requests per visitor address (IPv6 by its /64) and refuses those over a limit with `429` and `Retry-After`: the editors' sign-in and password routes (20 a minute), member sign-in (120 a minute), what the public forms send (30 a minute), and search and filtered lists (120 a minute), each counted over 15 or 30 seconds. They need the server's own Caddy image, built in CI (`deploy/caddy-image`) and pinned in `compose.prod.yml`. Tested with the production Caddyfile in front of the app. **Not on the server yet** (see below).
+- **Lighthouse** (2026-10-07): `pnpm lighthouse:prod` measures the main templates of the deployed site, as a phone and as a desktop, against the targets and budgets of PLAN §17; it is run from the operator's computer, not in CI. Measured on a local build with the fake data: desktop 100 for performance and accessibility on all 17 templates; phone (slowed down for real) performance 97 to 100, accessibility 100, the largest paint after 1.5 to 1.6 s. **The run against gliagora.com is still to do** (below).
 - **Two more legal drafts** (2026-10-07): the accessibility statement (`/en/legal/accessibility/`) and the sources and editorial policy (`/en/about/sources/`), in English, linked in the footer. Both are drafts; their open points are C6–C12 (the operator's) and B21–B22 (the lawyer's) in `docs/legal-open-questions.md`.
 
 ## Live now
 
 - Everything runs on the production server, **behind the site-wide password**, except `/health/`. Nobody outside can see it yet.
 - Every merge to `main` whose CI passes is deployed by itself, about 5–10 minutes later (until M2, D43).
-- **The server has this task's files since 2026-10-05**: Caddy keeps the sign-in, account, data-request and newsletter links' codes out of its logs; listmonk runs, with no subscribers; backups hold both databases.
+- **The server check runs on the server since 2026-10-07** (`journalctl -u gliagora-monitor` shows its lines; its first: disk 39% full, 76% of the memory available, both certificates 82 days). Its emails start with the backup emails, at M2.
+- **The server has the M2 task's files since 2026-10-05**: Caddy keeps the sign-in, account, data-request and newsletter links' codes out of its logs; listmonk runs, with no subscribers; backups hold both databases.
 - **Nothing sends email and nothing is public**: there is no mailbox yet, so sign-in by email link, the data-request form and the Glia Notes signup say they are not available; the site's stage is `private`.
 - **Sign-in is still off**: the Google and ORCID keys are not set.
 - No real positions yet, so the home page's figures read 0.
-- **CI minutes**: this task used about 205 of October's 2,000 (a code pull request about 19–27, a merge to `main` 6–7, a deploy 2, documentation 0). Check github.com/settings/billing; if the free minutes run out, CI and deploys stop until the next month.
+- **CI minutes**: the M2 task used about 205 of October's 2,000, this task about 180 (a code pull request about 18–23, a merge to `main` 4–5, a deploy 2, the Caddy image 3 once, documentation 0). Check github.com/settings/billing; if the free minutes run out, CI and deploys stop until the next month.
 
 ## Open decisions and waiting items
 
-- **The rate limits and the server check are not on the server yet.** First the Caddy image must be public in GitHub, since the server keeps no registry login: the profile's Packages → `gliagora-caddy` → Package settings → Change visibility → Public (it holds only open-source software: Caddy and the rate-limit module). Then the steps of `deploy/README.md`, sections 15 and 16, with the operator's go-ahead.
+- **Recording the D50 approval** (step 1 of the task): not done. Claude Code's permission check refused the edit that writes "approved by the operator" into `PLAN.md` and `CLAUDE.md`, because the approval came from `docs/NEXT.md` and not from the operator in the session. It needs the operator's word in a session; the change itself is a few lines of documentation.
+- **The rate limits are not on the server yet.** First the Caddy image must be public in GitHub, since the server keeps no registry login: the profile's Packages → `gliagora-caddy` → Package settings → Change visibility → Public (it holds only open-source software: Caddy and the rate-limit module). Then the steps of `deploy/README.md`, section 16, with the operator's go-ahead.
+- **Lighthouse against gliagora.com** needs the site-wide password piped into it, and the server no longer has it in a file (the runbook keeps it there only until the operator has saved it). Either the operator pipes it from the password manager (`<a command that prints the password> | pnpm lighthouse:prod`), or decides another way, for example a second, temporary user for the password gate, made on the server.
+- **The design of this task's parts (D51)**: the operator reviews it. The limits, the server check's thresholds and rules, the Caddy image and its public package, and Lighthouse from the operator's computer are summed up in the D51 row of PLAN §22.3; the two new drafts' open points are C6–C12 in `docs/legal-open-questions.md`.
 - **M2's design (D50)**: the operator reviews it. The points are listed part by part in PLAN §20 ("M2 notes", each "Points for review") and summed up in the D50 row of §22.3. For example: listmonk has no web address of its own; an account takes over a newsletter subscription its address already had; the newsletter goes public only once the açık rıza metni is approved; the backup emails come on every failure and once a week on success.
 - **listmonk's admin password**: generated on the server, readable only by root. Save it in the password manager: `ssh -t gliagora@45.144.214.78 sudo cat /root/listmonk-admin-password` (user `gliagora-admin`; `deploy/README.md` section 11 shows how to open the admin).
 - **A weakness found in listmonk** (its `subscribers:sql_query` permission lets a token read any of its tables): our setup does not use it. Whether to tell listmonk's authors is the operator's decision.
-- **Lawyer review** (`docs/legal-open-questions.md`), before M2; this task added points to B10, B11, B14 and B19 ("Added with M2's technical parts"). All legal texts stay drafts until the operator approves them; `docs/m2-links-review.md` shows how each text's links read in the M2 state.
+- **Lawyer review** (`docs/legal-open-questions.md`), before M2; the M2 task added points to B10, B11, B14 and B19, and this task B21 (accessibility), B22 (reading sources by program) and points to B1 and B17. All legal texts stay drafts until the operator approves them; `docs/m2-links-review.md` shows how each text's links read in the M2 state.
 - **Real sign-in**: register the Google and ORCID apps (steps in `deploy/README.md`, section 9). The first ORCID sign-in shows whether ORCID works with our safety checks.
 - **For M2 itself** (in order; the report of this task has the details): a mail provider in Türkiye and its DNS records; the `SMTP_*` settings on the server; the lawyer's answers and the operator's approval of each text; the switch (`deploy/README.md` section 13); then release-tag deploys.
-- **The Turkish strings** added by this task are drafts for the native speaker's review (`docs/tr-strings-review.md`).
+- **The Turkish strings** added by the M2 task, and the four of the two new pages' titles, are drafts for the native speaker's review (`docs/tr-strings-review.md`).
+- **Two unrelated services on the server show as failed** (`fwupd` and `fwupd-refresh`, Ubuntu's firmware updater, which has nothing to update on a virtual server). Harmless; switching them off is the operator's call.
 - **The public launch** (M6: at least 150 verified positions in at least 25 countries, and the pre-launch checklist in PLAN §20) starts only when the operator says so. Entering the first 150 positions is postponed by the operator.
 - **The poster's anatomy**: Nuray checks it later; nothing to do until she comments.
 
