@@ -32,17 +32,19 @@ const DESTRUCTIVE = [/\/data-requests\.spec\.ts$/, /\/account-delete\.spec\.ts$/
 const baseURL = process.env.BASE_URL ?? 'http://localhost:3000'
 
 /**
- * The M2 state behind the production Caddyfile (D41, D50; tests/e2e/m2.spec.ts, its own project):
- * with CADDY_BIN (the production image's Caddy, or the same version) and M2_APP_URL (an app started
- * with SITE_STAGE=m2 beside the app under test), Playwright starts three Caddies
- * (tests/caddy/serve.ts): two in the M2 state in front of that app, one with the repository's list
- * of public addresses, which the project `m2` opens, and one with a list that opens every text
- * (`wide`), and one in the private stage in front of the app under test. Without them the project
- * skips. The M2 Caddies are ready when they answer, without the app behind them (its own
+ * The production Caddyfile in front of the app (the project `m2`): the M2 state (D41, D50;
+ * tests/e2e/m2.spec.ts) and the rate limits (D42; tests/e2e/rate-limits.spec.ts). With CADDY_BIN
+ * (the production image's Caddy, or the same build: deploy/caddy-image) and M2_APP_URL (an app
+ * started with SITE_STAGE=m2 beside the app under test), Playwright starts four Caddies
+ * (tests/caddy/serve.ts): three in the M2 state in front of that app, one with the repository's
+ * list of public addresses, which the project `m2` opens, one with a list that opens every text
+ * (`wide`) and one like it for the rate limits, where each test is a visitor of its own
+ * (`limits`); and one in the private stage in front of the app under test. Without them the
+ * project skips. The M2 Caddies are ready when they answer, without the app behind them (its own
  * readiness is checked by m2.spec.ts, which fails with a clear message without it), so that the
  * other projects never wait for an app they do not need.
  */
-const M2 = /\/m2\.spec\.ts$/
+const M2 = [/\/m2\.spec\.ts$/, /\/rate-limits\.spec\.ts$/]
 const caddies = testCaddies(process.env, baseURL)
 
 export default defineConfig({
@@ -77,7 +79,7 @@ export default defineConfig({
         ]
       : []),
     ...Object.values(caddies ?? {}).map((caddy) => ({
-      command: `node tests/caddy/serve.ts ${caddy.stage} ${caddy.app} ${caddy.httpsPort} ${caddy.httpPort}`,
+      command: `node tests/caddy/serve.ts ${caddy.stage} ${caddy.app} ${caddy.httpsPort} ${caddy.httpPort}${caddy.trustForwarded ? ' trust' : ''}`,
       // The private stage through Caddy to the app under test, which every project needs; the M2
       // state at Caddy alone (a private page answers 401 without reaching the app).
       url: caddy.stage === 'private' ? `${caddy.url}/health/` : `${caddy.url}/en/jobs/`,
@@ -96,9 +98,9 @@ export default defineConfig({
     {
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
-      testIgnore: [...DESTRUCTIVE, M2],
+      testIgnore: [...DESTRUCTIVE, ...M2],
     },
-    { name: 'mobile', use: { ...devices['Pixel 7'] }, testIgnore: [...DESTRUCTIVE, M2] },
+    { name: 'mobile', use: { ...devices['Pixel 7'] }, testIgnore: [...DESTRUCTIVE, ...M2] },
     {
       name: 'destructive',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },

@@ -1,16 +1,21 @@
-// The production Caddyfile (deploy/Caddyfile) run in front of an app, for the M2 state's
-// end-to-end tests (tests/e2e/m2.spec.ts; playwright.config.ts starts two of these, one per stage):
+// The production Caddyfile (deploy/Caddyfile) run in front of an app, for the end-to-end tests of
+// the M2 state and of the rate limits (tests/e2e/m2.spec.ts, tests/e2e/rate-limits.spec.ts;
+// playwright.config.ts starts four of these):
 //
-//   CADDY_BIN=/path/to/caddy node tests/caddy/serve.ts <stage> <app host:port> <https port> <http port>
+//   CADDY_BIN=/path/to/caddy node tests/caddy/serve.ts <stage> <app host:port> <https port> <http port> [trust]
 //
 // `stage` is the site's stage Caddy is given (SITE_STAGE: private or m2). Caddy then routes, asks
 // for the site-wide password and opens the M2 state's pages exactly as on the server, at
 // https://localhost:<https port> (and www.localhost), with its own local certificate authority and
 // the test's password (tests/fixtures/caddy/admin-auth.caddy). CADDY_BIN is the Caddy of the
-// production image (CI copies it out of the image deploy/compose.prod.yml pins) or the same version
-// installed on this computer. It runs without root and without the server's folders: everything it
-// writes goes into a temporary folder, deleted when it stops (SIGTERM or SIGINT) or fails to start,
-// but its access log, which the tests read (`accessLogOf`, deleted with it).
+// production image (CI copies it out of the image deploy/compose.prod.yml pins) or the same build
+// on this computer (deploy/caddy-image: the official Caddy does not know `rate_limit`). It runs
+// without root and without the server's folders: everything it writes goes into a temporary
+// folder, deleted when it stops (SIGTERM or SIGINT) or fails to start, but its access log and its
+// own log, which the tests read (`accessLogOf`, `ownLogOf`, deleted with it).
+// `trust` makes it take a visitor's address from X-Forwarded-For when the request comes from this
+// computer, so that each test of the rate limits can be a visitor of its own; the server trusts
+// no proxy, and neither do the other Caddies of the tests.
 // M2_PUBLIC_CADDY_TEXT, when set, stands in for deploy/caddy/m2-public.caddy (a list that opens
 // more than the app's own, as after a rollback: playwright.config.ts writes it).
 //
@@ -19,7 +24,14 @@
 // (tests/caddy/serve.test.ts) instead of testing something else. Node's modules only, so `node`,
 // Playwright and Vitest load this file as it is.
 import { spawn } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  appendFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -77,11 +89,20 @@ export type Setup = {
   httpPort: number
   /** Where the access log goes (in `dir` unless the tests read it: `accessLogOf`). */
   accessLog?: string
+  /**
+   * Takes the visitor's address from X-Forwarded-For on requests from this computer (the rate
+   * limits' tests, each a visitor of its own). The server has no such line.
+   */
+  trustForwarded?: boolean
 }
 
 /** The access log of the Caddy at this HTTPS port, which tests/e2e/m2.spec.ts reads. */
 export const accessLogOf = (httpsPort: number) =>
   path.join(tmpdir(), `gliagora-caddy-${httpsPort}-access.log`)
+
+/** Caddy's own log (all of its stderr) at this HTTPS port, which the rate limits' tests read. */
+export const ownLogOf = (httpsPort: number) =>
+  path.join(tmpdir(), `gliagora-caddy-${httpsPort}-own.log`)
 
 /** What changes in deploy/Caddyfile, each with how often it occurs there. */
 export function caddyfileReplacements({
@@ -89,16 +110,20 @@ export function caddyfileReplacements({
   app,
   httpPort,
   accessLog = `${dir}/access.log`,
+  trustForwarded = false,
 }: Setup): Replacement[] {
   if (/\s/.test(dir) || /\s/.test(accessLog)) {
     throw new Error('The folder must not contain spaces (a Caddyfile token).')
   }
   return [
     // Global options: no admin endpoint, no root certificate put into this computer's trust
-    // store, only this computer's address, and a port without root for the redirect to HTTPS.
+    // store, only this computer's address, and a port without root for the redirect to HTTPS;
+    // for the rate limits' tests also the visitor's address from X-Forwarded-For.
     {
       from: '{\n\tlog default {',
-      to: `{\n\tadmin off\n\tskip_install_trust\n\tdefault_bind 127.0.0.1\n\thttp_port ${httpPort}\n\tlog default {`,
+      to: `{\n\tadmin off\n\tskip_install_trust\n\tdefault_bind 127.0.0.1\n\thttp_port ${httpPort}\n${
+        trustForwarded ? '\tservers {\n\t\ttrusted_proxies static 127.0.0.1/32\n\t}\n' : ''
+      }\tlog default {`,
       count: 1,
     },
     // The basemap, the admin and the catch-all.
@@ -145,22 +170,28 @@ export type TestCaddy = {
   url: string
   /** Its access log (removed when it stops). */
   accessLog: string
+  /** Its own log: everything Caddy writes to stderr (removed when it stops). */
+  ownLog: string
+  /** Whether it takes a visitor's address from X-Forwarded-For (only the `limits` Caddy). */
+  trustForwarded: boolean
 }
 
 /**
- * The three Caddies of the M2 state's end-to-end tests (playwright.config.ts,
- * tests/e2e/m2.spec.ts), from the environment: `m2` with SITE_STAGE=m2 in front of the app at
- * M2_APP_URL (started with SITE_STAGE=m2); `wide`, the same with a list of public addresses that
- * opens every text, also those the app still holds as drafts (as after a rollback, or a text taken
- * back); `private` with the private stage in front of the app under test (`baseURL`). Their HTTPS
- * ports are CADDY_M2_PORT, CADDY_WIDE_PORT and CADDY_PRIVATE_PORT (8443, 8445 and 8444 by
- * default), each with its port for plain HTTP 100 above. Null without CADDY_BIN and M2_APP_URL:
- * the tests then skip.
+ * The Caddies of the end-to-end tests (playwright.config.ts), from the environment. For the M2
+ * state (tests/e2e/m2.spec.ts): `m2` with SITE_STAGE=m2 in front of the app at M2_APP_URL (started
+ * with SITE_STAGE=m2); `wide`, the same with a list of public addresses that opens every text,
+ * also those the app still holds as drafts (as after a rollback, or a text taken back); `private`
+ * with the private stage in front of the app under test (`baseURL`). For the rate limits
+ * (tests/e2e/rate-limits.spec.ts): `limits`, like `wide` (so it has private addresses and public
+ * forms), where each test is a visitor of its own (`trustForwarded`), so that no test uses up
+ * another's count. Their HTTPS ports are CADDY_M2_PORT, CADDY_WIDE_PORT, CADDY_PRIVATE_PORT and
+ * CADDY_LIMITS_PORT (8443, 8445, 8444 and 8446 by default), each with its port for plain HTTP 100
+ * above. Null without CADDY_BIN and M2_APP_URL: the tests then skip.
  */
 export function testCaddies(
   env: Record<string, string | undefined>,
   baseURL: string,
-): Record<'m2' | 'wide' | 'private', TestCaddy> | null {
+): Record<'m2' | 'wide' | 'private' | 'limits', TestCaddy> | null {
   if (!env.CADDY_BIN || !env.M2_APP_URL) return null
   const caddy = (
     stage: TestCaddy['stage'],
@@ -168,6 +199,7 @@ export function testCaddies(
     port: string | undefined,
     fallback: number,
     allApproved = false,
+    trustForwarded = false,
   ): TestCaddy => {
     const httpsPort = Number(port || fallback)
     // Caddy dials the app at this computer's IPv4 address, where the app listens in CI.
@@ -181,37 +213,50 @@ export function testCaddies(
       httpPort: httpsPort + 100,
       url: `https://localhost:${httpsPort}`,
       accessLog: accessLogOf(httpsPort),
+      ownLog: ownLogOf(httpsPort),
+      trustForwarded,
     }
   }
   return {
     m2: caddy('m2', env.M2_APP_URL, env.CADDY_M2_PORT, 8443),
     wide: caddy('m2', env.M2_APP_URL, env.CADDY_WIDE_PORT, 8445, true),
     private: caddy('private', baseURL, env.CADDY_PRIVATE_PORT, 8444),
+    limits: caddy('m2', env.M2_APP_URL, env.CADDY_LIMITS_PORT, 8446, true, true),
   }
 }
 
 /** Starts Caddy as the command line says, until it is stopped. */
 function main() {
-  const [stage, app, httpsPort, httpPort] = process.argv.slice(2)
+  const [stage, app, httpsPort, httpPort, trust] = process.argv.slice(2)
   const caddy = process.env.CADDY_BIN
-  if (!stage || !app || !/^\d+$/.test(httpsPort ?? '') || !/^\d+$/.test(httpPort ?? '') || !caddy) {
+  if (
+    !stage ||
+    !app ||
+    !/^\d+$/.test(httpsPort ?? '') ||
+    !/^\d+$/.test(httpPort ?? '') ||
+    !caddy ||
+    (trust !== undefined && trust !== 'trust')
+  ) {
     console.error(
-      'Usage: CADDY_BIN=… node tests/caddy/serve.ts <stage> <app host:port> <https port> <http port>',
+      'Usage: CADDY_BIN=… node tests/caddy/serve.ts <stage> <app host:port> <https port> <http port> [trust]',
     )
     process.exit(2)
   }
 
   const dir = mkdtempSync(path.join(tmpdir(), 'gliagora-caddy-'))
   const accessLog = accessLogOf(Number(httpsPort))
+  const ownLog = ownLogOf(Number(httpsPort))
   // Also when the setup below throws or Caddy cannot start: Node emits `exit` then too.
   process.on('exit', () => {
     rmSync(dir, { recursive: true, force: true })
     rmSync(accessLog, { force: true })
+    rmSync(ownLog, { force: true })
   })
   const files = adaptedFiles(
-    { dir, app, httpPort: Number(httpPort), accessLog },
+    { dir, app, httpPort: Number(httpPort), accessLog, trustForwarded: trust === 'trust' },
     process.env.M2_PUBLIC_CADDY_TEXT || undefined,
   )
+  writeFileSync(ownLog, '')
   writeFileSync(path.join(dir, 'Caddyfile'), files.caddyfile)
   writeFileSync(path.join(dir, 'm2-public.caddy'), files.publicCaddy)
   writeFileSync(path.join(dir, 'admin-auth.caddy'), files.adminAuth)
@@ -236,9 +281,11 @@ function main() {
     },
   )
   // Caddy logs every step of its start at the info level: only warnings and errors are shown.
+  // Its own log, whole, goes into a file for the tests (`ownLogOf`).
   let rest = ''
   child.stderr.setEncoding('utf8')
   child.stderr.on('data', (chunk: string) => {
+    appendFileSync(ownLog, chunk)
     const lines = (rest + chunk).split('\n')
     rest = lines.pop() ?? ''
     for (const line of lines) if (line && !line.includes('"level":"info"')) console.error(line)

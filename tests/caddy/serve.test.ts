@@ -15,6 +15,7 @@ import {
   TEST_AUTH,
   accessLogOf,
   adaptedFiles,
+  ownLogOf,
   caddyfileReplacements,
   publicCaddyReplacements,
   replaceExactly,
@@ -50,6 +51,14 @@ describe('the Caddy of the tests', () => {
     expect(files.caddyfile).toMatch(/^\{\n\tadmin off\n\tskip_install_trust\n/m)
     // The stage is still chosen by SITE_STAGE, as on the server.
     expect(files.caddyfile).toContain('import "stage-{$SITE_STAGE:private}"')
+  })
+
+  it('trusts X-Forwarded-For only where a test asks, for the rate limits’ own Caddy', () => {
+    // The server trusts no proxy (tests/caddy/limits.test.ts), and neither do the other Caddies.
+    expect(adaptedFiles(SETUP).caddyfile).not.toContain('trusted_proxies')
+    expect(adaptedFiles({ ...SETUP, trustForwarded: true }).caddyfile).toContain(
+      '\thttp_port 8080\n\tservers {\n\t\ttrusted_proxies static 127.0.0.1/32\n\t}\n\tlog default {',
+    )
   })
 
   it('can stand a list of its own in for the repository’s, for the `wide` Caddy', () => {
@@ -141,6 +150,8 @@ describe('testCaddies', () => {
         httpPort: 8543,
         url: 'https://localhost:8443',
         accessLog: accessLogOf(8443),
+        ownLog: ownLogOf(8443),
+        trustForwarded: false,
       },
       wide: {
         stage: 'm2',
@@ -150,6 +161,8 @@ describe('testCaddies', () => {
         httpPort: 8545,
         url: 'https://localhost:8445',
         accessLog: accessLogOf(8445),
+        ownLog: ownLogOf(8445),
+        trustForwarded: false,
       },
       private: {
         stage: 'private',
@@ -159,6 +172,20 @@ describe('testCaddies', () => {
         httpPort: 9744,
         url: 'https://localhost:9644',
         accessLog: accessLogOf(9644),
+        ownLog: ownLogOf(9644),
+        trustForwarded: false,
+      },
+      // For the rate limits: like `wide`, and the only one where a test names its own address.
+      limits: {
+        stage: 'm2',
+        allApproved: true,
+        app: '127.0.0.1:3001',
+        httpsPort: 8446,
+        httpPort: 8546,
+        url: 'https://localhost:8446',
+        accessLog: accessLogOf(8446),
+        ownLog: ownLogOf(8446),
+        trustForwarded: true,
       },
     })
     const ports = Object.values(caddies!).flatMap((caddy) => [caddy.httpsPort, caddy.httpPort])

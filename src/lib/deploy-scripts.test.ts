@@ -122,6 +122,44 @@ describe('the production stack (deploy/compose.prod.yml)', () => {
     expect(image(local)).toBe(image(compose))
   })
 
+  it('runs the Caddy built from deploy/caddy-image, pinned by digest, which CI tests with', () => {
+    const image = /image:\s*(\S*caddy\S*)/.exec(service(compose, 'caddy'))?.[1] ?? ''
+    const pinned = /^ghcr\.io\/ismailtufan123\/gliagora-caddy:([\w.-]+)@sha256:[0-9a-f]{64}$/.exec(
+      image,
+    )
+    expect(pinned, image).not.toBeNull()
+    // The tag is the one of the folder as it is: the version of Caddy and a hash of the build's
+    // inputs. A changed input needs a new image and its line here (deploy/caddy-image/README.md).
+    const tag = execFileSync(join(DEPLOY, 'caddy-image/tag.sh'), { encoding: 'utf8' }).trim()
+    expect(pinned?.[1], 'build the image again and pin it: deploy/caddy-image/README.md').toBe(tag)
+
+    // One version of Caddy: the official image it is put into, the program built, and the tag.
+    const dockerfile = read('deploy/caddy-image/Dockerfile')
+    const version = /^ARG CADDY_VERSION=(\d+\.\d+\.\d+)$/m.exec(dockerfile)?.[1]
+    expect(version).toBeDefined()
+    expect(tag.startsWith(`${version}-`)).toBe(true)
+    expect(dockerfile).toMatch(
+      new RegExp(`^ARG CADDY_IMAGE=caddy:${version}-alpine@sha256:[0-9a-f]{64}$`, 'm'),
+    )
+    expect(dockerfile).toMatch(/^ARG GO_IMAGE=golang:[\d.]+-alpine@sha256:[0-9a-f]{64}$/m)
+    const goMod = read('deploy/caddy-image/go.mod')
+    expect(goMod).toMatch(new RegExp(`^\\tgithub\\.com/caddyserver/caddy/v2 v${version}$`, 'm'))
+    // The module at one commit, and the sums of everything it is built from.
+    expect(goMod).toMatch(/^\tgithub\.com\/mholt\/caddy-ratelimit v[\w.-]+$/m)
+    expect(read('deploy/caddy-image/go.sum')).toContain('github.com/mholt/caddy-ratelimit ')
+
+    // Built only by its own workflow, from that folder, under that tag; and the end-to-end tests
+    // run the program of the image named here.
+    const workflow = read('.github/workflows/caddy-image.yml')
+    expect(workflow).toContain('tag=$(deploy/caddy-image/tag.sh)')
+    expect(workflow).toContain('context: deploy/caddy-image')
+    expect(workflow).toContain('IMAGE: ghcr.io/${{ github.repository }}-caddy')
+    const ci = read('.github/workflows/ci.yml')
+    const taken = /caddy_image=\$\(grep -oE '([^']+)' deploy\/compose\.prod\.yml/.exec(ci)?.[1]
+    expect(taken).toBeDefined()
+    expect(new RegExp(taken!.replaceAll('[:space:]', '\\s')).exec(compose)?.[0]).toBe(image)
+  })
+
   it('is what CI tests with: the same PostgreSQL image', () => {
     const image = /image:\s*(postgres:\S+)/.exec(compose)?.[1]
     expect(image).toMatch(/^postgres:[\d.]+@sha256:[0-9a-f]{64}$/)
