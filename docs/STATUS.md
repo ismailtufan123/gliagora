@@ -19,6 +19,7 @@ Last updated: 2026-10-05, at the end of the task "the M4b decisions, the server 
   - **The M2 state of the site**, prepared and tested but switched off: one setting gives the reduced header and footer, the coming-soon text on `/en/`, email in place of the suggest and report forms, and opens only the approved public pages without the password.
   - **Smaller items**: the cap on emails is a setting, the server's logs are kept 14 days, and backups can email their result once a mailbox exists.
   - **The legal drafts** describe all of this as built. They are still drafts.
+- **The server check** (2026-10-07): every 15 minutes the server looks at its disk space, its memory and the site's certificate, and reports a problem by email, the way the backup emails go (so from M2, once the mailbox exists; until then the server's journal keeps the lines). A problem is reported once it has lasted two checks, then once a day while it lasts.
 - **Two more legal drafts** (2026-10-07): the accessibility statement (`/en/legal/accessibility/`) and the sources and editorial policy (`/en/about/sources/`), in English, linked in the footer. Both are drafts; their open points are C6–C12 (the operator's) and B21–B22 (the lawyer's) in `docs/legal-open-questions.md`.
 
 ## Live now

@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Emails the result of a backup or restore test (D42; M2, D50). Run by systemd after the unit's
-# run, whatever its result (ExecStopPost=-/opt/gliagora/backup/alert.sh %N in
-# gliagora-backup.service and gliagora-restore-test.service), with SERVICE_RESULT ("success" or
+# Emails the result of a backup or restore test (D42; M2, D50), and what the server check found
+# (monitor/check.sh, PLAN §18.2). Run by systemd after the unit's run, whatever its result
+# (ExecStopPost=-/opt/gliagora/backup/alert.sh %N in gliagora-backup.service,
+# gliagora-restore-test.service and gliagora-monitor.service), with SERVICE_RESULT ("success" or
 # what failed), EXIT_CODE and EXIT_STATUS set by systemd. It emails:
-#   - every failure;
+#   - every failure (the server check fails only when it has something to report, and no more
+#     than once a day for one problem);
 #   - a success only of the monthly restore test and of the Sunday backup (the one that checks the
 #     repository), so the operator hears from the backups at least once a week: a week without an
 #     email means that something is wrong (a timer that stopped, a mail server that refuses).
@@ -64,6 +66,7 @@ unit_label() {
   case $1 in
     gliagora-backup) echo backup ;;
     gliagora-restore-test) echo 'restore test' ;;
+    gliagora-monitor) echo 'server check' ;;
     *) echo "$1" ;;
   esac
 }
@@ -172,6 +175,9 @@ fi
 label=$(unit_label "$unit")
 if [[ "$result" == success ]]; then
   outcome=$([[ "$unit" == gliagora-restore-test ]] && echo passed || echo finished)
+elif [[ "$unit" == gliagora-monitor && "${EXIT_STATUS:-}" == 1 ]]; then
+  # monitor/check.sh ends with 1 when it has something to report, with 2 when it failed itself.
+  outcome='found a problem'
 else
   outcome=failed
 fi

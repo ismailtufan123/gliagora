@@ -32,8 +32,9 @@ Everything the production server runs is described in this folder (PLAN §11.5),
 | `deploy-remote.sh` | Server side of the GitHub Deploy workflow (the only command its SSH key may run), with the automatic rollback |
 | `backup/backup.sh` | Encrypted backup of the databases and settings (restic) |
 | `backup/restore.sh` | Restore, list snapshots, or test a restore without touching production |
-| `backup/alert.sh` | Emails the result of a backup or restore test (from M2, once SMTP is set) |
+| `backup/alert.sh` | Emails the result of a backup or restore test, and what the server check found (from M2, once SMTP is set) |
 | `backup/systemd/` | Timers: nightly backup, monthly restore test |
+| `monitor/check.sh`, `monitor/systemd/` | The server check, every 15 minutes: disk space, memory and the certificate (section 15) |
 | `logs/zz-gliagora.conf`, `logs/install-journald.sh` | The system journal keeps 14 days (D34), without a copy in `/var/log/syslog` |
 | `basemap/fetch-basemap.sh` | Puts the map's basemap (tiles, fonts, sprites) on the server; run about twice a year (step 8) |
 
@@ -52,6 +53,7 @@ On the server, everything lives in `/opt/gliagora`:
 | Docker volume `gliagora_caddy-logs` | Access logs with masked IPs, kept 14 days |
 | `/opt/gliagora/backup/` | Backup scripts, `backup.env` (mode 600) and `restic-password` (readable only by root) |
 | `/var/backups/gliagora/restic` | Encrypted backup repository |
+| `/var/lib/gliagora-monitor` | What the server check has reported, one small file per problem (section 15) |
 | `/opt/gliagora/basemap/public` | The map's basemap, served by Caddy at `/basemap/` (step 8); not backed up, fetched again |
 | The system journal (`/var/log/journal`) | The containers' logs (`docker compose -f compose.prod.yml logs`), sudo, SSH and the backup units: 14 days, at most 1 GB (`/etc/systemd/journald.conf.d/zz-gliagora.conf`, named to be read after Ubuntu's own `syslog.conf`, which would otherwise keep a copy of every line in `/var/log/syslog`; the installer checks the settings in force) |
 
@@ -127,7 +129,7 @@ From your computer:
 ```sh
 scp -r deploy/compose.prod.yml deploy/Caddyfile deploy/caddy deploy/postgres deploy/.env.example \
   deploy/admin-auth.caddy.example deploy/update.sh deploy/deploy-remote.sh deploy/backup deploy/basemap \
-  deploy/listmonk deploy/logs gliagora@<server-ip>:/opt/gliagora/
+  deploy/listmonk deploy/logs deploy/monitor gliagora@<server-ip>:/opt/gliagora/
 ```
 
 On the server, in `/opt/gliagora`, create `.env` with six new secrets (listmonk's two since M2). They are generated on the server and never shown; nobody needs to know them:
@@ -178,6 +180,7 @@ cp backup.env.example backup.env && chmod 600 backup.env    # then set ALERT_EMA
 sudo sh -c 'umask 077 && openssl rand -base64 33 > /opt/gliagora/backup/restic-password'
 sudo ./backup.sh init         # create the repository
 sudo cp systemd/gliagora-*.service systemd/gliagora-*.timer /etc/systemd/system/
+sudo cp ../monitor/systemd/gliagora-monitor.service ../monitor/systemd/gliagora-monitor.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 ```
 
@@ -228,7 +231,7 @@ GitHub Free has no environments (with branch rules and required reviewers) for a
    cd /opt/gliagora/backup
    sudo ./backup.sh
    sudo ./restore.sh test            # every database in DATABASES, each in its own container
-   sudo systemctl enable --now gliagora-backup.timer gliagora-restore-test.timer
+   sudo systemctl enable --now gliagora-backup.timer gliagora-restore-test.timer gliagora-monitor.timer
    systemctl list-timers 'gliagora-*'
    ```
 
@@ -497,6 +500,45 @@ The signup's code reaches the server with its deploy, behind the site-wide passw
 
 When the M2 mailbox's `SMTP_*` settings are set, the signup switches on by itself, still behind the site-wide password: the start line then says `Glia Notes: signup on, unsubscribe on`. The app does not check whether the texts the signup links to are approved: the signup becomes public only with M2's public pages (section 13), which list the newsletter's pages and routes once the açık rıza metni is approved (`draft: false`; the form's links to the privacy policy and the KVKK notice keep only their words while those are drafts, so approve them together, D32); until then only the team, behind the password, can sign up (and each signup records the date of the draft it showed).
 
+## 15. The server check and its emails
+
+`monitor/check.sh` looks at the server every 15 minutes (`gliagora-monitor.timer`; PLAN §18.2) and reports:
+
+| What | When it is reported |
+| --- | --- |
+| **Disk** | A file system the site uses (the system's, Docker's, the backups', `/opt/gliagora` with the basemap) is at least 85% full, by space or by the number of files (inodes) |
+| **Memory** | Less than 10% of the memory is available, or programs waited for memory during at least 10% of the last five minutes (the kernel's pressure figures) |
+| **Certificate** | The certificate Caddy serves for the site, or for `www.`, has less than a sixth of its lifetime left (15 days of 90), has ended, or cannot be read (Caddy is down). Caddy renews at a third (30 days of 90), so this is a renewal that has failed for two weeks |
+
+**No report repeats every few minutes.** A problem is reported once two runs in a row see it (low memory for a moment during a backup, or Caddy restarting, is not one), then again once a day while it lasts. When it is over, the journal says so; no email follows.
+
+**The emails** go the way of the backup emails (section 3): a run with something to report ends with a failure, and systemd then runs `backup/alert.sh`, which sends "[gliagora] server check found a problem" with the run's lines to `ALERT_EMAIL`, through the app's mail server. So they start with the backup emails, once `SMTP_HOST` and `ALERT_EMAIL` are set (M2); until then the journal keeps the lines. "[gliagora] server check failed" means the check itself could not run.
+
+```sh
+journalctl -u gliagora-monitor --since today     # every run: one "ok: …" line, or what it found
+sudo /opt/gliagora/monitor/check.sh --dry-run    # what it would say now, changing nothing
+ls /var/lib/gliagora-monitor                     # the problems it remembers (empty: none)
+```
+
+A run that reports leaves the unit "failed" until the next run 15 minutes later (`systemctl --failed`); that is how the email is sent, not a second problem. The limits are at the top of `check.sh`; the unit file can set others (`Environment=DISK_MAX_PERCENT=90`). It prints no setting and no address: only the site's name, percentages, megabytes and dates.
+
+**On the running server (once)**, with the operator's go-ahead:
+
+```sh
+# on your computer, in the repository
+scp -r deploy/monitor gliagora@<server-ip>:/opt/gliagora/
+scp deploy/backup/alert.sh gliagora@<server-ip>:/opt/gliagora/backup/
+# on the server
+cd /opt/gliagora
+sudo ./monitor/check.sh --dry-run
+sudo cp monitor/systemd/gliagora-monitor.service monitor/systemd/gliagora-monitor.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now gliagora-monitor.timer
+sudo systemctl start gliagora-monitor.service && journalctl -u gliagora-monitor -n 5 --no-pager
+```
+
+The dry run and the first run must each end with one line that starts with `ok:` and names the disks, the memory and both certificates.
+
 ## Checking from outside
 
 Check the site from another computer with single requests (`curl`, a browser). Do not scan the server's ports at full speed from your own connection: during S, a scan of all 65,535 ports made the provider's network block that IPv4 address for about 20 minutes (IPv6 kept working). If you must, scan slowly or from elsewhere.
@@ -523,7 +565,7 @@ Every container logs to the system journal, which keeps 14 days (D34): `docker c
 - **Staging:** none while the site is private; production, behind the site-wide password, doubles as staging. A separate staging is reconsidered before the site goes public.
 - **Automatic rollback:** built into `deploy-remote.sh` (see "How deploys work").
 - **Rate limits in Caddy** (for the auth routes and `/en/search/`; they need a plugin and a custom Caddy build): on the pre-launch checklist (PLAN §20). Until then, the site-wide password guards `/admin` and `/api` (so also Payload's sign-in, password-reset and first-account routes), Payload locks an account for 15 minutes after 5 failed sign-ins and sends at most one reset email per account every 15 minutes, the public forms have their own rate limits, and search runs at most two institution searches at a time, each for at most 2 seconds.
-- **Backup alerts** (success and failure emails): built with M2's server parts (`backup/alert.sh`, step 3); they start sending once the mailbox's `SMTP_*` settings and `ALERT_EMAIL` are set.
+- **Backup alerts** (success and failure emails): built with M2's server parts (`backup/alert.sh`, step 3); they start sending once the mailbox's `SMTP_*` settings and `ALERT_EMAIL` are set. The server check's emails (disk, memory, certificate; section 15) go the same way.
 - **Deploy secrets:** repository secrets (step 4), a deploy user that is not an admin, and the pinned host key.
 - **Admin sudo:** without a password (see "Who logs in").
 
