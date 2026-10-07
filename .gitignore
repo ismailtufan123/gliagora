@@ -19,6 +19,10 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 
+# Lighthouse (tools/lighthouse): its own packages, and the reports of a run
+/tools/lighthouse/node_modules/
+/lighthouse-reports/
+
 # Logs and OS files
 *.log
 .DS_Store

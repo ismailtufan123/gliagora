@@ -1530,7 +1530,9 @@ describe('monitor/check.sh', () => {
       expect(status, `run ${step}: ${output}`).toBe(0)
     }
     expect(remembered()).toEqual(['memory'])
-  })
+    // A day of runs, each a bash process: more time than a test's usual five seconds (CI's
+    // runners took six).
+  }, 60_000)
 
   it('does not report what a single run saw (a backup, a restart)', () => {
     const { run, remembered } = server()
