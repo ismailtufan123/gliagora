@@ -4,8 +4,11 @@
 # (ExecStopPost=-/opt/gliagora/backup/alert.sh %N in gliagora-backup.service,
 # gliagora-restore-test.service and gliagora-monitor.service), with SERVICE_RESULT ("success" or
 # what failed), EXIT_CODE and EXIT_STATUS set by systemd. It emails:
-#   - every failure (the server check fails only when it has something to report, and no more
-#     than once a day for one problem);
+#   - every failure. The server check fails when it has something to report; it keeps what was
+#     reported, so this script tells it when an email about its run has gone out
+#     (`check.sh --delivered`), and sends an email about a failure of the check itself once a day
+#     at most (`check.sh --failure-reported`). Its runs that end well, every 15 minutes, say
+#     nothing here;
 #   - a success only of the monthly restore test and of the Sunday backup (the one that checks the
 #     repository), so the operator hears from the backups at least once a week: a week without an
 #     email means that something is wrong (a timer that stopped, a mail server that refuses).
@@ -123,6 +126,12 @@ send_mail() {
 
 unit="${1:?Usage: alert.sh UNIT (the unit name without .service: %N in the unit)}"
 result="${SERVICE_RESULT:-unknown}"
+# The server check's own run by systemd (not a test sent by hand), and its script.
+monitor_run=false
+[[ "$unit" == gliagora-monitor && -n "${INVOCATION_ID:-}" ]] && monitor_run=true
+MONITOR_CHECK="$SCRIPT_DIR/../monitor/check.sh"
+# It runs every 15 minutes and mostly ends well: nothing to send, and no line each time.
+[[ "$monitor_run" == true && "$result" == success ]] && exit 0
 CONFIG="${BACKUP_CONFIG:-$SCRIPT_DIR/backup.env}"
 [[ -r "$CONFIG" ]] || { log "alerts off: $CONFIG not found"; exit 0; }
 set -a
@@ -152,6 +161,12 @@ fi
   || { log "ALERT_EMAIL in $CONFIG is not an email address; nothing sent"; exit 1; }
 if ! should_alert "$unit" "$result" "$(date -u +%u)"; then
   log "no email for this success (only the Sunday backup and the restore test send one)"
+  exit 0
+fi
+# A failure of the server check itself (it ended otherwise than with 1, "a report is due") would
+# come every 15 minutes while it lasts: once a day is enough.
+if [[ "$monitor_run" == true && "${EXIT_STATUS:-}" != 1 ]] && "$MONITOR_CHECK" --failure-reported; then
+  log "no email: a failure of the server check was reported within the last day"
   exit 0
 fi
 
@@ -197,6 +212,10 @@ message=$(
 )
 if send_mail "$url" "$from" "$to" "$tls" "$user" <<<"$message"; then
   log "sent \"$subject\" to ALERT_EMAIL"
+  # The server check now counts this run's problems as reported (or its own failure).
+  if [[ "$monitor_run" == true ]] && ! "$MONITOR_CHECK" --delivered "${EXIT_STATUS:-}"; then
+    log "could not note that the email went out (see the line above): it will go out again"
+  fi
 else
   log "could not send \"$subject\" (curl failed; see the line above)"
   exit 1

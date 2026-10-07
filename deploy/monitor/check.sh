@@ -13,16 +13,26 @@
 #     of its lifetime left (15 days of 90), or cannot be read. Caddy renews at a third (30 days of
 #     90), so this means its renewal has failed for half of the time it had.
 #
-# No alert repeats every few minutes. A problem is reported once two runs in a row see it (a
-# moment of low memory during a backup, or Caddy restarting, is not one), then again once a day
-# while it lasts. It keeps what it has seen in its state folder, one file per problem; when a
-# problem is over, the file goes and the journal says so (no email). A run without a report ends
-# well, also while a problem that was reported is still there.
+# No alert repeats every few minutes:
+#   - a problem is reported once a second run sees it (a moment of low memory during a backup, or
+#     Caddy restarting, is not one), then again once a day while it lasts;
+#   - it counts as over only after four runs in a row without it (an hour), so one that comes and
+#     goes is one problem, reported once a day; the journal says when it is over (no email);
+#   - a report counts only once its email has gone: alert.sh says so (`--delivered`). While no
+#     email can go (no mail server yet, or it refuses), the report stays due, the unit fails on
+#     every run, and the first email that can go carries it;
+#   - a failure of the check itself is emailed once a day at most (`--failure-reported`).
+# What it has seen is in its state folder, one small file per problem: under /run, in memory, so
+# that a full disk cannot keep the report about that disk from being remembered. A restart of the
+# server forgets it; a problem that is still there is then reported again.
 #
-# Exit: 0 nothing to report now; 1 a report is due (the email); 2 the check itself failed (a
-# line says where). It reads SITE_DOMAIN from /opt/gliagora/.env with alert.sh's own reader and prints no
-# other setting. To see what it would say, without changing its state:
+# Exit: 0 nothing to report now; 1 a report is due (the email); 2 the check itself failed (a line
+# says why). It reads SITE_DOMAIN from /opt/gliagora/.env with alert.sh's own reader and prints
+# no other setting. To see what it would say, without changing what it remembers:
 #   sudo /opt/gliagora/monitor/check.sh --dry-run
+# alert.sh alone uses the two other ways to call it:
+#   check.sh --delivered STATUS    an email about a run that ended with STATUS has gone
+#   check.sh --failure-reported    ends well when a failure of the check was emailed within a day
 set -euo pipefail
 
 MONITOR_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -40,6 +50,19 @@ MEMORY_PRESSURE_PERCENT=${MEMORY_PRESSURE_PERCENT:-10}
 CERT_MIN_LIFETIME_PARTS=${CERT_MIN_LIFETIME_PARTS:-6}
 # A problem that lasts is reported again after this long.
 REMIND_SECONDS=${REMIND_SECONDS:-86400}
+# A problem is over after this many runs in a row without it (an hour).
+OVER_RUNS=${OVER_RUNS:-4}
+
+# A limit that is no whole number would switch its check off without a word.
+limits_valid() {
+  local name
+  for name in DISK_MAX_PERCENT MEMORY_MIN_PERCENT MEMORY_PRESSURE_PERCENT CERT_MIN_LIFETIME_PARTS \
+    REMIND_SECONDS OVER_RUNS; do
+    [[ "${!name}" =~ ^[1-9][0-9]*$ ]] && continue
+    echo "$name must be a whole number above 0" >&2
+    return 1
+  done
+}
 
 COMPOSE_DIR=${COMPOSE_DIR:-/opt/gliagora}
 # The file systems of the site: the system, Docker's images and volumes (the databases), the
@@ -150,73 +173,142 @@ check_certificates() {
     return 0
   fi
   domain=$(trim "$domain")
+  # A host name and nothing else: a line that holds more (a second setting after a space) is
+  # never printed.
+  if [[ ! "$domain" =~ ^[A-Za-z0-9.-]+$ ]]; then
+    problem certificate-setting "certificate: SITE_DOMAIN in $ENV_FILE is no host name"
+    return 0
+  fi
   check_certificate "$domain"
   check_certificate "www.$domain"
 }
 
-# report: compares the problems with the state folder and says what is new, what lasts and what
-# is over. Returns 1 when a report is due: a problem seen in two runs in a row and not reported
-# yet, or reported REMIND_SECONDS ago or longer.
+fatal() {
+  log "ERROR: $*"
+  exit 2
+}
+
+# A problem's record in the state folder, a file named by its key: "FIRST DELIVERED CLEAR" (when
+# it was first seen; when an email about it last went out, 0: never; the runs in a row without it).
+# read_record KEY sets first, delivered and clear, and fails without a record it can read.
+read_record() {
+  local file="$STATE_DIR/$1"
+  first='' delivered='' clear=''
+  if [[ -r "$file" ]]; then read -r first delivered clear <"$file" || true; fi
+  [[ "$first" =~ ^[0-9]+$ && "$delivered" =~ ^[0-9]+$ && "$clear" =~ ^[0-9]+$ ]]
+}
+
+# write_record KEY FIRST DELIVERED CLEAR. A record that cannot be written ends the check (2): it
+# would report again and again, or never.
+write_record() {
+  [[ "$DRY_RUN" == true ]] && return 0
+  printf '%s %s %s\n' "$2" "$3" "$4" >"$STATE_DIR/$1" || fatal "cannot write $STATE_DIR/$1"
+}
+
+# What this run has to report: the keys of the problems whose email is due.
+due_keys=()
+
+# report: compares the problems with the records and says what is new, what lasts and what is
+# over. A report is due for a problem that a second run sees and that no email has carried yet, or
+# whose last email is REMIND_SECONDS old or older.
 report() {
-  local entry key message file first alerted due=0 current=' ' since
+  local entry key message file current=' ' first delivered clear
   for entry in "${problems[@]}"; do
     key=${entry%%$'\t'*} message=${entry#*$'\t'}
     current+="$key "
-    file="$STATE_DIR/$key"
-    first='' alerted=''
-    [[ -r "$file" ]] && read -r first alerted <"$file" || true
-    if [[ ! "$first" =~ ^[0-9]+$ || ! "$alerted" =~ ^[0-9]+$ ]]; then
-      log "seen once: $message (reported if the next run sees it too)"
-      remember "$file" "$NOW 0"
-    elif (( alerted == 0 )); then
+    if ! read_record "$key"; then
+      log "seen once: $message (reported if another run sees it within the hour)"
+      write_record "$key" "$NOW" 0 0
+      continue
+    fi
+    # A time ahead of now (the clock was set back) counts as never.
+    if (( delivered > NOW )); then delivered=0; fi
+    write_record "$key" "$first" "$delivered" 0
+    if (( delivered == 0 )); then
       log "PROBLEM: $message"
-      remember "$file" "$first $NOW"
-      due=1
-    elif (( NOW - alerted >= REMIND_SECONDS )); then
-      since=$(date -u -d "@$first" +%FT%TZ)
-      log "STILL A PROBLEM since $since: $message"
-      remember "$file" "$first $NOW"
-      due=1
+      due_keys+=("$key")
+    elif (( NOW - delivered >= REMIND_SECONDS )); then
+      log "STILL A PROBLEM since $(date -u -d "@$first" +%FT%TZ): $message"
+      due_keys+=("$key")
     else
-      log "reported at $(date -u -d "@$alerted" +%FT%TZ), again a day after that while it lasts: $message"
+      log "reported at $(date -u -d "@$delivered" +%FT%TZ), again a day after that while it lasts: $message"
     fi
   done
   for file in "$STATE_DIR"/*; do
     [[ -f "$file" ]] || continue
     key=${file##*/}
     [[ "$current" == *" $key "* ]] && continue
-    log "over: $key"
-    [[ "$DRY_RUN" == true ]] || rm -f "$file"
+    if read_record "$key" && (( clear + 1 < OVER_RUNS )); then
+      log "not seen in this run: $key (over after $OVER_RUNS runs in a row without it)"
+      write_record "$key" "$first" "$delivered" "$(( clear + 1 ))"
+    else
+      log "over: $key"
+      [[ "$DRY_RUN" == true ]] || rm -f "$file" || fatal "cannot remove $file"
+    fi
   done
   if (( ${#fine[@]} > 0 )); then
     log "$( (( ${#problems[@]} > 0 )) && echo 'the rest is fine' || echo ok): $(IFS=,; echo "${fine[*]}" | sed 's/,/, /g')"
   fi
-  if (( due )); then
-    log "This is reported once now and once a day while it lasts (deploy/README.md, \"Monitoring emails\")."
-    return 1
-  fi
 }
-
-remember() { [[ "$DRY_RUN" == true ]] || printf '%s\n' "$2" >"$1"; }
 
 # Sourced, as src/lib/deploy-scripts.test.ts does: the functions above only.
 [[ "${BASH_SOURCE[0]}" == "$0" ]] || return 0
+
+DRY_RUN=false
+# systemd makes the folder (RuntimeDirectory= in the unit, kept between runs) and names it.
+STATE_DIR=${MONITOR_STATE_DIR:-${RUNTIME_DIRECTORY:-/run/gliagora-monitor}}
+NOW=${MONITOR_NOW:-$(date -u +%s)}
+
+case "${1:-}" in
+  '') ;;
+  --dry-run) DRY_RUN=true ;;
+  --delivered)
+    # alert.sh, after its email went out: the problems of that run now count as reported (their
+    # keys are in .due), or, for a run that ended otherwise than with 1, the check's own failure.
+    mkdir -p "$STATE_DIR" || fatal "cannot make $STATE_DIR"
+    if [[ "${2:-}" == 1 ]]; then
+      if [[ -r "$STATE_DIR/.due" ]]; then
+        while IFS= read -r key; do
+          [[ "$key" =~ ^[A-Za-z0-9.-]+$ ]] || continue
+          if read_record "$key"; then write_record "$key" "$first" "$NOW" "$clear"; fi
+        done <"$STATE_DIR/.due"
+        rm -f "$STATE_DIR/.due" || fatal "cannot remove $STATE_DIR/.due"
+      fi
+    else
+      printf '%s\n' "$NOW" >"$STATE_DIR/.failed" || fatal "cannot write $STATE_DIR/.failed"
+    fi
+    exit 0
+    ;;
+  --failure-reported)
+    at=''
+    if [[ -r "$STATE_DIR/.failed" ]]; then read -r at <"$STATE_DIR/.failed" || true; fi
+    [[ "$at" =~ ^[0-9]+$ ]] && (( at <= NOW && NOW - at < REMIND_SECONDS )) && exit 0
+    exit 1
+    ;;
+  *)
+    echo "Usage: check.sh [--dry-run]" >&2
+    exit 2
+    ;;
+esac
 
 # A failure of the check itself (any other way out than the two at the end) ends with 2 and a line.
 due=false
 trap 'status=$?; [[ $status -eq 0 || "$due" == true ]] || { log "ERROR: the check itself failed (status $status)"; exit 2; }' EXIT
 
-DRY_RUN=false
-[[ "${1:-}" == --dry-run ]] && DRY_RUN=true
-# systemd makes the folder (StateDirectory= in the unit) and names it in STATE_DIRECTORY.
-STATE_DIR=${MONITOR_STATE_DIR:-${STATE_DIRECTORY:-/var/lib/gliagora-monitor}}
-[[ "$DRY_RUN" == true ]] || mkdir -p "$STATE_DIR"
-NOW=${MONITOR_NOW:-$(date -u +%s)}
+limits_valid || fatal "a limit is no whole number (see the line above)"
+[[ "$DRY_RUN" == true ]] || mkdir -p "$STATE_DIR" || fatal "cannot make $STATE_DIR"
 
 check_disk
 check_memory
 check_certificates
-if ! report; then
+report
+# The check ran: an earlier failure of its own is over.
+[[ "$DRY_RUN" == true ]] || rm -f "$STATE_DIR/.failed"
+if (( ${#due_keys[@]} > 0 )); then
+  [[ "$DRY_RUN" == true ]] || printf '%s\n' "${due_keys[@]}" >"$STATE_DIR/.due" \
+    || fatal "cannot write $STATE_DIR/.due"
+  log "An email about this goes out once, then once a day while it lasts (deploy/README.md, section 15)."
   due=true
   exit 1
 fi
+[[ "$DRY_RUN" == true ]] || rm -f "$STATE_DIR/.due"

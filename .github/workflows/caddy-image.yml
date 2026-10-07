@@ -6,12 +6,15 @@
 # It runs on a push to any branch that changes the folder, so that the pull request that changes
 # an input can pin the new image's digest in the same pull request (the run's summary shows the
 # line for compose.prod.yml); the push to main that merges it finds the tag and builds nothing.
+# Never on a pushed tag (a release tag, from M2 on): GitHub does not apply `paths` to those. One
+# run at a time, on whatever branch, so that two never push the same tag.
 # About 3 minutes when it builds, a few seconds when it does not (CI minutes, D46).
 # Third-party actions and images are pinned to exact versions (PLAN §18.2).
 name: Caddy image
 
 on:
   push:
+    branches: ['**']
     paths:
       - 'deploy/caddy-image/**'
       - '.github/workflows/caddy-image.yml'
@@ -21,7 +24,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: caddy-image-${{ github.ref }}
+  group: caddy-image
   cancel-in-progress: false
 
 jobs:
@@ -52,12 +55,18 @@ jobs:
           set -euo pipefail
           tag=$(deploy/caddy-image/tag.sh)
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          if digest=$(docker buildx imagetools inspect "$IMAGE:$tag" --format '{{.Manifest.Digest}}' 2>/dev/null) \
-            && [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
-            echo "digest=$digest" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Not built again::$IMAGE:$tag exists ($digest)."
-          else
+          # Built only when the registry says that the tag is not there. Any other answer (the
+          # registry down, a login that failed) stops the run: building then would move an
+          # existing tag to a new image.
+          if answer=$(docker buildx imagetools inspect "$IMAGE:$tag" --format '{{.Manifest.Digest}}' 2>&1); then
+            [[ "$answer" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Unexpected answer for $IMAGE:$tag: $answer"; exit 1; }
+            echo "digest=$answer" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Not built again::$IMAGE:$tag exists ($answer)."
+          elif grep -qiE 'not found|manifest unknown|name unknown' <<<"$answer"; then
             echo "digest=" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Could not ask the registry whether $IMAGE:$tag exists: $answer"
+            exit 1
           fi
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1

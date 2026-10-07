@@ -54,7 +54,7 @@ On the server, everything lives in `/opt/gliagora`:
 | Docker volume `gliagora_caddy-logs` | Access logs with masked IPs, kept 14 days |
 | `/opt/gliagora/backup/` | Backup scripts, `backup.env` (mode 600) and `restic-password` (readable only by root) |
 | `/var/backups/gliagora/restic` | Encrypted backup repository |
-| `/var/lib/gliagora-monitor` | What the server check has reported, one small file per problem (section 15) |
+| `/run/gliagora-monitor` | What the server check has seen and reported, one small file per problem, in memory (section 15) |
 | `/opt/gliagora/basemap/public` | The map's basemap, served by Caddy at `/basemap/` (step 8); not backed up, fetched again |
 | The system journal (`/var/log/journal`) | The containers' logs (`docker compose -f compose.prod.yml logs`), sudo, SSH and the backup units: 14 days, at most 1 GB (`/etc/systemd/journald.conf.d/zz-gliagora.conf`, named to be read after Ubuntu's own `syslog.conf`, which would otherwise keep a copy of every line in `/var/log/syslog`; the installer checks the settings in force) |
 
@@ -86,7 +86,7 @@ Each deploy then goes like this:
    - a wait (at most 5 minutes) until every service with a health check is healthy (Caddy has none: running is enough). The app applies database migrations when it starts.
 4. If that fails before the app was restarted (for example, the backup fails), the app keeps running the previous image and `APP_IMAGE` in `.env` goes back to it. **If the new image started but did not become healthy, the script switches back to the previous image by itself** (it is still on the server) and waits for it (D42). The workflow then fails with "Rolled back to …", so you see it. Database migrations are not undone; if the new version's migrations broke something, restore the `pre-update` snapshot (step 7). If the new image is healthy but another service is not (listmonk, say), it does not roll back, since that would not help: the workflow fails with "… is deployed and healthy, but listmonk is not" (or "… but listmonk could not be prepared", when `prepare.sh` failed), and `docker compose -f compose.prod.yml logs listmonk` (or the deploy's log) shows why. Going back changes only the `APP_IMAGE` line of `.env`, never the rest: a setting added since the last deploy stays.
 
-A deploy changes only the app's image. The other files in this folder (`compose.prod.yml`, the `Caddyfile`, the scripts) reach the server only when you copy them (step 2's `scp`), and take effect only then: the scripts at once, `compose.prod.yml` with `sudo ./update.sh --no-pull` in `/opt/gliagora`, and a changed `Caddyfile` (or `admin-auth.caddy`) only when Caddy restarts (`docker compose -f compose.prod.yml restart caddy`), which `update.sh` does not do for a changed file. The deploy key cannot change the server's configuration, so a leaked key cannot either.
+A deploy changes only the app's image. The other files in this folder (`compose.prod.yml`, the `Caddyfile`, the scripts) reach the server only when you copy them (step 2's `scp`), and take effect only then: the scripts at once, `compose.prod.yml` with `sudo ./update.sh --no-pull` in `/opt/gliagora`, and a changed `Caddyfile` (or `admin-auth.caddy`) only when Caddy restarts (`docker compose -f compose.prod.yml restart caddy`), which `update.sh` does not do for a changed file. Since the rate limits (section 16) the `Caddyfile` needs the Caddy image that `compose.prod.yml` names, so the two files are copied together, and after copying them Caddy is started with `docker compose -f compose.prod.yml up -d caddy`, which takes a new image and the new file; `restart caddy` alone keeps the image the container has. The deploy key cannot change the server's configuration, so a leaked key cannot either.
 
 Until the repository variable `DEPLOY_ENABLED` is `true`, the workflow stops with a notice ("Deploy skipped") and changes nothing, whatever `DEPLOY_AUTO` says: it is the main switch. Run by hand, it also refuses any branch other than `main`.
 
@@ -511,17 +511,24 @@ When the M2 mailbox's `SMTP_*` settings are set, the signup switches on by itsel
 | **Memory** | Less than 10% of the memory is available, or programs waited for memory during at least 10% of the last five minutes (the kernel's pressure figures) |
 | **Certificate** | The certificate Caddy serves for the site, or for `www.`, has less than a sixth of its lifetime left (15 days of 90), has ended, or cannot be read (Caddy is down). Caddy renews at a third (30 days of 90), so this is a renewal that has failed for two weeks |
 
-**No report repeats every few minutes.** A problem is reported once two runs in a row see it (low memory for a moment during a backup, or Caddy restarting, is not one), then again once a day while it lasts. When it is over, the journal says so; no email follows.
+**No report repeats every few minutes.**
+
+- A problem is reported once a second run sees it (low memory for a moment during a backup, or Caddy restarting, is not one), then again once a day while it lasts.
+- It counts as over only after four runs in a row without it (an hour), so a problem that comes and goes is one problem, reported once a day. The journal says when it is over; no email follows.
+- A report counts only once its email has gone. While no email can go (no mail server yet, or one that refuses), the report stays due and the unit fails on every run; the first email that can go carries it.
+- A failure of the check itself ("server check failed") is emailed once a day at most.
+
+What it has seen is in `/run/gliagora-monitor`, in memory, so that a full disk cannot keep the report about that disk from being remembered. A restart of the server forgets it; a problem that is still there is then reported again.
 
 **The emails** go the way of the backup emails (section 3): a run with something to report ends with a failure, and systemd then runs `backup/alert.sh`, which sends "[gliagora] server check found a problem" with the run's lines to `ALERT_EMAIL`, through the app's mail server. So they start with the backup emails, once `SMTP_HOST` and `ALERT_EMAIL` are set (M2); until then the journal keeps the lines. "[gliagora] server check failed" means the check itself could not run.
 
 ```sh
 journalctl -u gliagora-monitor --since today     # every run: one "ok: …" line, or what it found
 sudo /opt/gliagora/monitor/check.sh --dry-run    # what it would say now, changing nothing
-ls /var/lib/gliagora-monitor                     # the problems it remembers (empty: none)
+sudo ls -A /run/gliagora-monitor                 # the problems it remembers (empty: none)
 ```
 
-A run that reports leaves the unit "failed" until the next run 15 minutes later (`systemctl --failed`); that is how the email is sent, not a second problem. The limits are at the top of `check.sh`; the unit file can set others (`Environment=DISK_MAX_PERCENT=90`). It prints no setting and no address: only the site's name, percentages, megabytes and dates.
+A run that reports leaves the unit "failed" until the next run 15 minutes later (`systemctl --failed`); that is how the email is sent, not a second problem. The limits are at the top of `check.sh`; the unit file can set others (`Environment=DISK_MAX_PERCENT=90`, whole numbers only: the check refuses to run with anything else). It prints no setting and no address: only the site's name, percentages, megabytes and dates.
 
 **On the running server (once)**, with the operator's go-ahead:
 
@@ -546,14 +553,17 @@ Caddy counts requests per visitor address before the password and before the app
 
 | Zone | What it counts | Limit per address |
 | --- | --- | --- |
-| `editors` | The editors' sign-in and password routes: Payload's (`/api/users/login`, `forgot-password`, `reset-password`, `first-register`, `unlock`) and the admin's pages for them | 20 a minute |
-| `member_sign_in` | Everything under `/en/sign-in/` (the pages, Google and ORCID with their answers, the emailed link, "Create account"), and what the account pages' forms send | 120 a minute |
-| `forms` | What the public forms send: a suggestion, a report, a data request and its confirmation, the Glia Notes signup, "Send it again" and its confirmation. Not the one-click unsubscribe, which mail providers send from a few addresses of their own | 30 a minute |
-| `search` | The search page, and the jobs list and the map's data with words to search for (`q`) | 120 a minute |
+| `editors` | The editors' sign-in and password routes: Payload's (`/api/users/login`, `forgot-password`, `reset-password`, `first-register`, `unlock`) and the admin's pages for signing in and for a forgotten or new password (not its page for the first account, whose form asks the server after every change) | 10 in 30 seconds (20 a minute) |
+| `member_sign_in` | Everything under `/en/sign-in/` (the pages, Google and ORCID with their answers, the emailed link, "Create account"), and what the account pages' forms send | 30 in 15 seconds (120 a minute) |
+| `forms` | What the public forms send: a suggestion, a report, a data request and its confirmation, the Glia Notes signup, "Send it again" and its confirmation. Not the one-click unsubscribe, which mail providers send from a few addresses of their own | 15 in 30 seconds (30 a minute) |
+| `search` | The search page, and the jobs list and the map's data with any query: words to search for (`q`) or filters. Any query, since Caddy cannot read every query the app reads, and one it cannot read would pass a rule on `q` alone | 30 in 15 seconds (120 a minute) |
 
-- **One address** is an IPv4 address, or an IPv6 /64 (one home, campus or phone network). The count runs over the last minute.
+- **One address** is an IPv4 address, or an IPv6 /64 (one home, campus or phone network). The count runs over the last 15 or 30 seconds. People behind one IPv4 address (a campus, a conference) share its counts.
 - **Over a limit**, a request gets `429` with `Retry-After` (the seconds until the next one is let through) and the line "Too many requests. Please wait a moment and try again." It never reaches the app.
-- **Nothing more is logged:** a refused request is one line of the access log like any other, with its masked address and the `429`; the limiter's own log line (which would name the whole address) is switched off, and so are its counters. The counts themselves are in Caddy's memory only, for a minute.
+- **Nothing more is logged:** a refused request is one line of the access log like any other, with its masked address and the `429`; the limiter's own log line (which would name the whole address) is switched off, and so are its counters. The counts themselves are in Caddy's memory only, for less than a minute.
+- **Memory:** the limiter keeps a small record for each address it sees, also before the password, so a flood from very many addresses makes Caddy use more memory (measured: one request from each of the 65,536 networks of one IPv6 /48 to three zones took it from 60 to about 355 MB for a minute or so). That is why the zones count over 15 or 30 seconds: the records are small and soon forgotten. They are cleared every 10 seconds, and the `caddy` container has a memory limit (`mem_limit` in `compose.prod.yml`): at worst Caddy starts again, and the database and the app keep their memory.
+- **Caddy's own log no longer gives the reason for a `502`** (the app restarting, a deploy rolling back): with an answer of its own for the `429`, Caddy writes the errors of requests only at its debug level, which is off. The access log still has every such request with its status.
+- **HTTP/3 early data (0-RTT) is off:** a request sent with a returning visitor's first packet arrives before its sender's address is checked, and could be counted under another address.
 - **Changing a limit:** in the `(rate_limits)` part of the `Caddyfile`, with `tests/caddy/limits.test.ts`; then copy the `Caddyfile` and restart Caddy, as in "How deploys work".
 
 The `rate_limit` directive needs the server's own Caddy image (`caddy-image/` in the repository: the official Caddy 2.11.4 image with the program built from the same version plus `github.com/mholt/caddy-ratelimit`). **The official `caddy` image refuses this `Caddyfile`**, so the image and the file change together.
@@ -570,27 +580,33 @@ docker pull ghcr.io/ismailtufan123/gliagora-caddy:<tag>@sha256:<digest>
 scp deploy/Caddyfile gliagora@<server-ip>:/opt/gliagora/Caddyfile.new
 scp deploy/compose.prod.yml gliagora@<server-ip>:/opt/gliagora/compose.prod.yml.new
 
-# 3. On the server, in /opt/gliagora: the new image accepts the new Caddyfile, with the server's own
-#    settings (it prints "Valid configuration"; nothing is changed yet)
-docker run --rm --env-file <(grep -E '^(SITE_DOMAIN|SITE_STAGE)=' .env) \
+# 3. On the server, in /opt/gliagora: the new image accepts the new Caddyfile, with the site's name
+#    and its stage (SITE_STAGE in .env: private, or m2 once the site is in the M2 state). It prints
+#    "Valid configuration"; nothing is changed yet
+docker run --rm -e SITE_DOMAIN=gliagora.com -e SITE_STAGE=private \
   -v "$PWD/Caddyfile.new:/etc/caddy/Caddyfile:ro" -v "$PWD/admin-auth.caddy:/etc/caddy/admin-auth.caddy:ro" \
   -v "$PWD/caddy/m2-public.caddy:/etc/caddy/m2-public.caddy:ro" \
   ghcr.io/ismailtufan123/gliagora-caddy:<tag>@sha256:<digest> caddy validate --config /etc/caddy/Caddyfile
 
-# 4. Switch: keep the old files, put the new ones in place, and update (it backs up first, then
-#    starts Caddy again on the new image with the new file)
+# 4. A backup first, as before every change of the stack; stop here if it fails
+sudo ./backup/backup.sh pre-update
+
+# 5. Switch: keep the old files, put the new ones in place and start Caddy again, on the new image
+#    with the new file (only Caddy; the app and the databases keep running)
 cp -p Caddyfile Caddyfile.before-limits && cp -p compose.prod.yml compose.prod.yml.before-limits
 mv Caddyfile.new Caddyfile && mv compose.prod.yml.new compose.prod.yml
-sudo ./update.sh --no-pull
+docker compose -f compose.prod.yml up -d caddy
 ```
 
-**Check:** `docker compose -f compose.prod.yml ps` shows Caddy up on the new image; `https://gliagora.com/health/` answers `200` and `https://gliagora.com/en/` `401` (the password, as before); and the limits work, from your computer (the last line must print `429`, with `retry-after` in its headers; you are then held up on that zone for a minute):
+Do steps 4 and 5 in one go: between the `mv` and the `up`, the running Caddy still has the old image, which could not read the new file if it started again. If `up` fails, or Caddy does not stay up (`docker compose -f compose.prod.yml ps caddy`), go back at once (below).
+
+**Check:** `docker compose -f compose.prod.yml ps` shows Caddy up on the new image; `https://gliagora.com/health/` answers `200` and `https://gliagora.com/en/` `401` (the password, as before); and the limits work, from your computer (it must print ten `401` and one `429`; you are then held up on that zone for half a minute):
 
 ```sh
-for i in $(seq 1 21); do curl -s -o /dev/null -w '%{http_code}\n' -X POST https://gliagora.com/api/users/login/; done | sort | uniq -c
+for i in $(seq 1 11); do curl -s -o /dev/null -w '%{http_code}\n' -X POST https://gliagora.com/api/users/login/; done | sort | uniq -c
 ```
 
-**Going back:** `mv Caddyfile.before-limits Caddyfile && mv compose.prod.yml.before-limits compose.prod.yml && sudo ./update.sh --no-pull`. The official image is still on the server.
+**Going back:** `mv Caddyfile.before-limits Caddyfile && mv compose.prod.yml.before-limits compose.prod.yml && docker compose -f compose.prod.yml up -d caddy`. The official image is still on the server, so this needs no download.
 
 ## Checking from outside
 

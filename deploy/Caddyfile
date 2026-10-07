@@ -4,14 +4,18 @@
 # Caddy does not know it and refuses this file.
 
 # What both logs keep of a request (PLAN §18.1, §18.2): the access log and Caddy's own log, which
-# also gets the errors of requests (a 502 while the app restarts or a deploy rolls back), with the
-# whole address and the visitor's IP address. IP addresses masked (IPv4 to /24, IPv6 to /48), no
+# can hold the errors of requests (a 502 while the app restarts or a deploy rolls back), with the
+# whole address and the visitor's IP address. Since the rate limits' own answer (handle_errors,
+# below), Caddy writes those errors only at the debug level, which is off: the access log has each
+# such request with its status, not the reason. The filters stay for a debug session. IP addresses masked (IPv4 to /24, IPv6 to /48), no
 # cookies or credentials, no admin or API query strings, reset tokens, or queries in referrers,
 # redirect targets and the app's rewrites, and no queries of the sign-in, account, data-request and
 # newsletter addresses.
 (log_fields) {
 	request>remote_ip ip_mask 24 48
 	request>client_ip ip_mask 24 48
+	# At the debug level, Caddy's events name the address of a request the rate limiter refused.
+	data>remote_ip ip_mask 24 48
 	# Password-reset links carry a one-time token in the path (/admin/reset/<token>): a credential.
 	# Admin list filters and the admin's searches put what an editor types (e.g. an email address
 	# for a data request) in the query of /admin and /api addresses. The queries of the member
@@ -60,6 +64,13 @@
 		}
 		exclude http.handlers.rate_limit
 	}
+	# HTTP/3 without early data (0-RTT): a request in a returning visitor's first packet is
+	# answered before the address it came from is checked, so it could be sent under another
+	# address, past the rate limits or onto someone else's count. Connections take one round
+	# trip more to resume.
+	servers {
+		0rtt off
+	}
 }
 
 (security_headers) {
@@ -86,26 +97,33 @@
 # guard against floods and guessing, set far above what people do. The app's own limits on the
 # forms are much tighter and answer with their own messages (src/lib/forms/rate-limit.ts); these
 # only bound what reaches it. Each zone counts the requests of one visitor address over the last
-# minute: an IPv4 address, or an IPv6 /64 (one home, campus or phone network; a visitor can pick
-# any address inside it). The address is the connection's own: no proxy stands in front of Caddy.
-# A request over a limit never reaches the app: it gets 429 with Retry-After (the seconds until
-# the next one is let through) and one line of text. Nothing is kept but the times of the last
-# requests per address, in memory, for a minute; nothing about it is logged or counted elsewhere
-# (the limiter's log line is left out above, its metrics are off).
+# 15 or 30 seconds: an IPv4 address, or an IPv6 /64 (one home, campus or phone network; a
+# visitor can pick any address inside it). The address is the connection's own: no proxy stands in
+# front of Caddy. A request over a limit never reaches the app: it gets 429 with Retry-After (the
+# seconds until the next one is let through) and one line of text. Nothing is kept but the times
+# of the last requests per address, in memory, for that long; nothing about it is logged or
+# counted elsewhere (the limiter's log line is left out above, its metrics are off).
+# The limiter keeps a small record for every address it sees, before the password, so someone
+# with many addresses (65,536 networks in one IPv6 /48) can make it use memory. So the zones count
+# over short times (a small record, forgotten soon: 20 and 30 a minute as 10 and 15 in half a
+# minute, 120 a minute as 30 in a quarter), records are cleared every 10 seconds, and the
+# container has a memory limit (compose.prod.yml): at worst Caddy starts again, not the database.
 # tests/e2e/rate-limits.spec.ts sends requests through this file to each zone.
 (rate_limits) {
 	rate_limit {
 		# The editors' sign-in and password routes: Payload's own (sign-in, forgotten and new
-		# password, the first account, unlocking) and the admin's pages for them. An editor opens
-		# the sign-in page and signs in: three requests.
+		# password, the first account, unlocking) and the admin's pages for signing in and for a
+		# forgotten or new password. An editor opens the sign-in page and signs in: three
+		# requests. Not the admin's page for the first account: its form asks the server after
+		# every change (the route that makes the account is counted).
 		zone editors {
 			match {
-				path /api/users/login /api/users/login/ /api/users/forgot-password /api/users/forgot-password/ /api/users/reset-password /api/users/reset-password/ /api/users/first-register /api/users/first-register/ /api/users/unlock /api/users/unlock/ /admin/login /admin/login/* /admin/forgot /admin/forgot/* /admin/reset /admin/reset/* /admin/create-first-user /admin/create-first-user/*
+				path /api/users/login /api/users/login/ /api/users/forgot-password /api/users/forgot-password/ /api/users/reset-password /api/users/reset-password/ /api/users/first-register /api/users/first-register/ /api/users/unlock /api/users/unlock/ /admin/login /admin/login/* /admin/forgot /admin/forgot/* /admin/reset /admin/reset/*
 			}
 			key {client_ip}
 			ipv6_prefix 64
-			window 1m
-			events 20
+			window 30s
+			events 10
 		}
 		# Member sign-in (M4b): its pages, the start with Google or ORCID and their answers, the
 		# emailed link and "Create account"; and what the account pages' forms send (signed out,
@@ -121,8 +139,8 @@
 			}
 			key {client_ip}
 			ipv6_prefix 64
-			window 1m
-			events 120
+			window 15s
+			events 30
 		}
 		# What the public forms send: a suggestion, a report, a data request and its
 		# confirmation, the Glia Notes signup, "Send it again" and its confirmation. Not the
@@ -135,24 +153,28 @@
 			}
 			key {client_ip}
 			ipv6_prefix 64
-			window 1m
-			events 30
+			window 30s
+			events 15
 		}
-		# Search: the search page, and the jobs list and the map's data with words to search for
-		# (`q`). One search is one request; nothing is sent while typing.
+		# Search and filtered lists: the search page, and the jobs list and the map's data with
+		# any query (words to search for, `q`, or filters). Any query, not `q` alone: Caddy reads
+		# a query more strictly than the app, and a query it cannot read (a stray % or ;) would
+		# pass a match on `q` and still be searched for. One search or filter is one request;
+		# nothing is sent while typing.
 		zone search {
 			match {
 				path /en/search /en/search/*
 			}
 			match {
 				path /en/jobs /en/jobs/ /api/map/institutions /api/map/institutions/
-				query q=*
+				expression `{http.request.uri.query} != ""`
 			}
 			key {client_ip}
 			ipv6_prefix 64
-			window 1m
-			events 120
+			window 15s
+			events 30
 		}
+		sweep_interval 10s
 		disable_metrics
 	}
 

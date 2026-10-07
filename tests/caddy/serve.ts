@@ -117,13 +117,19 @@ export function caddyfileReplacements({
   }
   return [
     // Global options: no admin endpoint, no root certificate put into this computer's trust
-    // store, only this computer's address, and a port without root for the redirect to HTTPS;
-    // for the rate limits' tests also the visitor's address from X-Forwarded-For.
+    // store, only this computer's address, and a port without root for the redirect to HTTPS.
     {
       from: '{\n\tlog default {',
-      to: `{\n\tadmin off\n\tskip_install_trust\n\tdefault_bind 127.0.0.1\n\thttp_port ${httpPort}\n${
-        trustForwarded ? '\tservers {\n\t\ttrusted_proxies static 127.0.0.1/32\n\t}\n' : ''
-      }\tlog default {`,
+      to: `{\n\tadmin off\n\tskip_install_trust\n\tdefault_bind 127.0.0.1\n\thttp_port ${httpPort}\n\tlog default {`,
+      count: 1,
+    },
+    // For the rate limits' tests also the visitor's address from X-Forwarded-For, in the server
+    // options the Caddyfile has.
+    {
+      from: '\tservers {\n\t\t0rtt off\n\t}\n',
+      to: `\tservers {\n\t\t0rtt off\n${
+        trustForwarded ? '\t\ttrusted_proxies static 127.0.0.1/32\n' : ''
+      }\t}\n`,
       count: 1,
     },
     // The basemap, the admin and the catch-all.

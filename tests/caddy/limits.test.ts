@@ -20,15 +20,16 @@ const zones = rateLimitZones(caddyfile)
 const both = (path: string) => [path.replace(/\/$/, ''), path]
 
 describe('the rate limits of the Caddyfile', () => {
-  it('are these four, each per visitor address over a minute, IPv6 by its /64', () => {
-    expect(zones.map(({ name, events }) => [name, events])).toEqual([
-      ['editors', 20],
-      ['member_sign_in', 120],
-      ['forms', 30],
-      ['search', 120],
+  it('are these four, each per visitor address over a short time, IPv6 by its /64', () => {
+    // 20, 120, 30 and 120 a minute, counted over 30 or 15 seconds: the record per address is
+    // then small and soon forgotten (the limiter keeps one for every address it sees).
+    expect(zones.map(({ name, events, window }) => [name, events, window])).toEqual([
+      ['editors', 10, '30s'],
+      ['member_sign_in', 30, '15s'],
+      ['forms', 15, '30s'],
+      ['search', 30, '15s'],
     ])
     for (const one of zones) {
-      expect(one.window, one.name).toBe('1m')
       // The connection's own address: no proxy stands in front of Caddy on the server.
       expect(one.key, one.name).toBe('{client_ip}')
       expect(one.ipv6Prefix, one.name).toBe(64)
@@ -48,11 +49,14 @@ describe('the rate limits of the Caddyfile', () => {
     ]) {
       expect(match?.paths, route).toEqual(expect.arrayContaining(both(`/api/users/${route}/`)))
     }
-    for (const page of ['login', 'forgot', 'reset', 'create-first-user']) {
+    for (const page of ['login', 'forgot', 'reset']) {
       expect(match?.paths, page).toEqual(
         expect.arrayContaining([`/admin/${page}`, `/admin/${page}/*`]),
       )
     }
+    // Not the admin's page for the first account: its form asks the server after every change
+    // (Payload's form state), which would use up the allowance before the account is made.
+    expect(match?.paths.join(' ')).not.toContain('create-first-user')
     // Whatever the method, and nothing an editor's daily work calls again and again.
     expect(match?.methods).toEqual([])
     expect(match?.paths.join(' ')).not.toMatch(/\/api\/users\/(?:me|refresh-token|logout)/)
@@ -62,8 +66,8 @@ describe('the rate limits of the Caddyfile', () => {
     // Everything under the sign-in page, and what the account pages' forms send: signed out,
     // they show the sign-in panel in place, and its form posts to the page it is on.
     expect(zone('member_sign_in', zones).matches).toEqual([
-      { methods: [], paths: ['/en/sign-in', '/en/sign-in/*'], query: [] },
-      { methods: ['POST'], paths: ['/en/account', '/en/account/*'], query: [] },
+      { methods: [], paths: ['/en/sign-in', '/en/sign-in/*'], expression: null },
+      { methods: ['POST'], paths: ['/en/account', '/en/account/*'], expression: null },
     ])
     for (const [name, path] of Object.entries(MEMBER_PATHS)) {
       if (path === MEMBER_PATHS.signOut) continue
@@ -89,16 +93,31 @@ describe('the rate limits of the Caddyfile', () => {
     expect(match?.paths).not.toContain(NEWSLETTER_PATHS.unsubscribeUse)
   })
 
-  it('cover search: its page, and the jobs list and the map’s data with words to search for', () => {
+  it('cover search: its page, and the jobs list and the map’s data with any query', () => {
+    // Any query, never `query q=*`: Caddy's query matcher is false for a query it cannot parse
+    // (a stray % or ;), which the app still reads and searches for.
     expect(zone('search', zones).matches).toEqual([
-      { methods: [], paths: ['/en/search', '/en/search/*'], query: [] },
+      { methods: [], paths: ['/en/search', '/en/search/*'], expression: null },
       {
         methods: [],
         paths: [...both(paths.window('jobs')), ...both('/api/map/institutions/')],
-        query: ['q=*'],
+        expression: '`{http.request.uri.query} != ""`',
       },
     ])
     expect(paths.search()).toBe('/en/search/')
+    expect(caddyfile.slice(caddyfile.indexOf('\trate_limit {'))).not.toMatch(/^\s*query\s/m)
+  })
+
+  it('bound what the limiter can be made to remember, before the password', () => {
+    // A record per address seen: cleared every 10 seconds, and Caddy's memory has a limit.
+    const limiter = caddyfile.slice(caddyfile.indexOf('\trate_limit {'))
+    expect(limiter).toMatch(/^\t\tsweep_interval 10s$/m)
+    expect(Math.max(...zones.map((one) => one.events))).toBeLessThanOrEqual(30)
+    expect(readFileSync(new URL('../../deploy/compose.prod.yml', import.meta.url), 'utf8')).toMatch(
+      /\n  caddy:\n(?:    .*\n|\s*\n)*?    mem_limit: \d+m\n/,
+    )
+    // No early data over HTTP/3: its sender's address is not checked yet.
+    expect(caddyfile).toMatch(/\n\tservers \{\n\t\t0rtt off\n\t\}\n\}\n/)
   })
 
   it('apply before the password and every handle, in each stage', () => {
