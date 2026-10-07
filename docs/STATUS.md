@@ -20,6 +20,7 @@ Last updated: 2026-10-05, at the end of the task "the M4b decisions, the server 
   - **Smaller items**: the cap on emails is a setting, the server's logs are kept 14 days, and backups can email their result once a mailbox exists.
   - **The legal drafts** describe all of this as built. They are still drafts.
 - **The server check** (2026-10-07): every 15 minutes the server looks at its disk space, its memory and the site's certificate, and reports a problem by email, the way the backup emails go (so from M2, once the mailbox exists; until then the server's journal keeps the lines). A problem is reported once it has lasted two checks, then once a day while it lasts.
+- **Rate limits in Caddy** (2026-10-07, D42): Caddy counts requests per visitor address (IPv6 by its /64) and refuses those over a limit with `429` and `Retry-After`: the editors' sign-in and password routes (20 a minute), member sign-in (120), what the public forms send (30) and search (120). They need the server's own Caddy image, built in CI (`deploy/caddy-image`) and pinned in `compose.prod.yml`. Tested with the production Caddyfile in front of the app. **Not on the server yet** (see below).
 - **Two more legal drafts** (2026-10-07): the accessibility statement (`/en/legal/accessibility/`) and the sources and editorial policy (`/en/about/sources/`), in English, linked in the footer. Both are drafts; their open points are C6–C12 (the operator's) and B21–B22 (the lawyer's) in `docs/legal-open-questions.md`.
 
 ## Live now
@@ -34,6 +35,7 @@ Last updated: 2026-10-05, at the end of the task "the M4b decisions, the server 
 
 ## Open decisions and waiting items
 
+- **The rate limits and the server check are not on the server yet.** First the Caddy image must be public in GitHub, since the server keeps no registry login: the profile's Packages → `gliagora-caddy` → Package settings → Change visibility → Public (it holds only open-source software: Caddy and the rate-limit module). Then the steps of `deploy/README.md`, sections 15 and 16, with the operator's go-ahead.
 - **M2's design (D50)**: the operator reviews it. The points are listed part by part in PLAN §20 ("M2 notes", each "Points for review") and summed up in the D50 row of §22.3. For example: listmonk has no web address of its own; an account takes over a newsletter subscription its address already had; the newsletter goes public only once the açık rıza metni is approved; the backup emails come on every failure and once a week on success.
 - **listmonk's admin password**: generated on the server, readable only by root. Save it in the password manager: `ssh -t gliagora@45.144.214.78 sudo cat /root/listmonk-admin-password` (user `gliagora-admin`; `deploy/README.md` section 11 shows how to open the admin).
 - **A weakness found in listmonk** (its `subscribers:sql_query` permission lets a token read any of its tables): our setup does not use it. Whether to tell listmonk's authors is the operator's decision.

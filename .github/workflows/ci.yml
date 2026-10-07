@@ -317,11 +317,16 @@ jobs:
       # state's public pages open without the password and everything else asks for it, and the
       # private stage asks for it everywhere but /health/ (tests/e2e/m2.spec.ts, project m2); a
       # third Caddy opens every text in front of the M2 app, which answers a plain 404 for those it
-      # holds as drafts. Caddy is the binary of the image compose.prod.yml pins, copied out of it.
+      # holds as drafts, and a fourth like it serves the tests of the rate limits
+      # (tests/e2e/rate-limits.spec.ts, D42). Caddy is the binary of the image compose.prod.yml
+      # pins, the server's own build with the rate-limit module (deploy/caddy-image, in GHCR),
+      # copied out of it.
       # Also checks that the production Compose file is well-formed, with the placeholders of its
       # .env.example.
       - name: Start the M2 state beside it
         if: needs.tested.outputs.run == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           docker run -d --name app-m2 --network host --no-healthcheck \
@@ -333,12 +338,15 @@ jobs:
             -e LISTMONK_URL=http://127.0.0.1:9000 -e LISTMONK_API_TOKEN="$APP_LISTMONK_API_TOKEN" \
             -e EMAIL_CAP_HOUR=1000 -e EMAIL_CAP_DAY=5000 \
             gliagora:ci
-          caddy_image=$(grep -oE 'caddy:[0-9][^[:space:]]+' deploy/compose.prod.yml | head -n 1)
+          caddy_image=$(grep -oE 'ghcr\.io/[^[:space:]]+-caddy:[^[:space:]]+' deploy/compose.prod.yml | head -n 1)
           test -n "$caddy_image"
+          docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin <<<"$GH_TOKEN"
           id=$(docker create "$caddy_image")
           docker cp "$id:/usr/bin/caddy" "$RUNNER_TEMP/caddy"
           docker rm "$id" > /dev/null
+          docker logout ghcr.io
           "$RUNNER_TEMP/caddy" version
+          "$RUNNER_TEMP/caddy" list-modules | grep -qx http.handlers.rate_limit
           docker compose --env-file deploy/.env.example -f deploy/compose.prod.yml config --quiet
           for i in $(seq 1 60); do curl -fsS http://localhost:3001/health/ && break; sleep 2; done
           echo

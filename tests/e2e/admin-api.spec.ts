@@ -170,14 +170,25 @@ test.describe('admin API', () => {
       // and show the form as it was before (seen in CI, whose runners have two processors, as a
       // field that never hid). So each change waits until the form's requests have ended.
       const settled = () => page.waitForLoadState('networkidle')
+      // And the choice is made again if the field has not followed it: from "Fixed date" once
+      // more, since choosing the kind the form already holds changes nothing and sends no
+      // request (seen in CI: the field stayed shown through every repeat of the same choice).
+      const makeRolling = async () => {
+        let again = false
+        await expect(async () => {
+          if (again) {
+            await choose(page, 'deadlineKind', 'Fixed date')
+            await settled()
+          }
+          again = true
+          await choose(page, 'deadlineKind', 'Rolling')
+          await expect(zone).toBeHidden({ timeout: 8_000 })
+        }).toPass({ timeout: 45_000 })
+      }
       await zone.locator('.clear-indicator').click()
       await expect(shown).toHaveCount(0)
       await settled()
-      // And the choice is made again if the field has not followed it.
-      await expect(async () => {
-        await choose(page, 'deadlineKind', 'Rolling')
-        await expect(zone).toBeHidden({ timeout: 8_000 })
-      }).toPass({ timeout: 45_000 })
+      await makeRolling()
       await settled()
       // Shown again, the field reads the institution's zone again: wait for it before looking.
       const read = page.waitForResponse(
@@ -193,10 +204,7 @@ test.describe('admin API', () => {
 
       // An institution chosen while the field is hidden fills it once it is shown again.
       await settled()
-      await expect(async () => {
-        await choose(page, 'deadlineKind', 'Rolling')
-        await expect(zone).toBeHidden({ timeout: 8_000 })
-      }).toPass({ timeout: 45_000 })
+      await makeRolling()
       await settled()
       await choose(page, 'institution', 'University College London')
       await settled()

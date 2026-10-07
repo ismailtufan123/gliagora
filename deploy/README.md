@@ -21,7 +21,8 @@ Everything the production server runs is described in this folder (PLAN §11.5),
 | --- | --- |
 | `setup-server.sh` | One-time hardening of a fresh Ubuntu 24.04 server: admin user, deploy user, firewall, fail2ban, Docker, swap |
 | `compose.prod.yml` | The stack: Caddy, the app, PostgreSQL 18, listmonk (the newsletter, M2); every container logs to the system journal |
-| `Caddyfile` | HTTPS, security headers, the site-wide password (until M2 the whole site except `/health/`; always `/admin` and `/api`), masked logs (the access log and Caddy's own log) |
+| `Caddyfile` | HTTPS, security headers, the site-wide password (until M2 the whole site except `/health/`; always `/admin` and `/api`), the rate limits (section 16), masked logs (the access log and Caddy's own log) |
+| `caddy-image/` | The server's Caddy image: the official one with the rate-limit module, built in CI and pinned by digest in `compose.prod.yml` (its own `README.md`); not copied to the server |
 | `caddy/m2-public.caddy` | The addresses the M2 state opens without the password (`SITE_STAGE=m2`, section 13); written by `pnpm caddy:public`, never by hand |
 | `admin-auth.caddy.example` | Template for the site-wide password |
 | `postgres/init/10-app-database.sh` | Creates the app's own database user on first start |
@@ -539,6 +540,58 @@ sudo systemctl start gliagora-monitor.service && journalctl -u gliagora-monitor 
 
 The dry run and the first run must each end with one line that starts with `ok:` and names the disks, the memory and both certificates.
 
+## 16. Rate limits in Caddy (D42)
+
+Caddy counts requests per visitor address before the password and before the app, and refuses those over a limit. The limits are a guard against floods and guessing, set far above what people do; the app's own limits on the forms are much tighter and answer with their own messages.
+
+| Zone | What it counts | Limit per address |
+| --- | --- | --- |
+| `editors` | The editors' sign-in and password routes: Payload's (`/api/users/login`, `forgot-password`, `reset-password`, `first-register`, `unlock`) and the admin's pages for them | 20 a minute |
+| `member_sign_in` | Everything under `/en/sign-in/` (the pages, Google and ORCID with their answers, the emailed link, "Create account"), and what the account pages' forms send | 120 a minute |
+| `forms` | What the public forms send: a suggestion, a report, a data request and its confirmation, the Glia Notes signup, "Send it again" and its confirmation. Not the one-click unsubscribe, which mail providers send from a few addresses of their own | 30 a minute |
+| `search` | The search page, and the jobs list and the map's data with words to search for (`q`) | 120 a minute |
+
+- **One address** is an IPv4 address, or an IPv6 /64 (one home, campus or phone network). The count runs over the last minute.
+- **Over a limit**, a request gets `429` with `Retry-After` (the seconds until the next one is let through) and the line "Too many requests. Please wait a moment and try again." It never reaches the app.
+- **Nothing more is logged:** a refused request is one line of the access log like any other, with its masked address and the `429`; the limiter's own log line (which would name the whole address) is switched off, and so are its counters. The counts themselves are in Caddy's memory only, for a minute.
+- **Changing a limit:** in the `(rate_limits)` part of the `Caddyfile`, with `tests/caddy/limits.test.ts`; then copy the `Caddyfile` and restart Caddy, as in "How deploys work".
+
+The `rate_limit` directive needs the server's own Caddy image (`caddy-image/` in the repository: the official Caddy 2.11.4 image with the program built from the same version plus `github.com/mholt/caddy-ratelimit`). **The official `caddy` image refuses this `Caddyfile`**, so the image and the file change together.
+
+**The image must be public in GHCR** (it holds only open-source software, and the server keeps no registry login, D27): GitHub → the profile's **Packages** → `gliagora-caddy` → **Package settings** → **Change visibility** → Public. Until then the server cannot pull it.
+
+**On the running server (once)**, with the operator's go-ahead, in this order:
+
+```sh
+# 1. On the server: the new image can be pulled (the line of `caddy:` in the new compose.prod.yml)
+docker pull ghcr.io/ismailtufan123/gliagora-caddy:<tag>@sha256:<digest>
+
+# 2. On your computer, in the repository: the new files beside the old ones
+scp deploy/Caddyfile gliagora@<server-ip>:/opt/gliagora/Caddyfile.new
+scp deploy/compose.prod.yml gliagora@<server-ip>:/opt/gliagora/compose.prod.yml.new
+
+# 3. On the server, in /opt/gliagora: the new image accepts the new Caddyfile, with the server's own
+#    settings (it prints "Valid configuration"; nothing is changed yet)
+docker run --rm --env-file <(grep -E '^(SITE_DOMAIN|SITE_STAGE)=' .env) \
+  -v "$PWD/Caddyfile.new:/etc/caddy/Caddyfile:ro" -v "$PWD/admin-auth.caddy:/etc/caddy/admin-auth.caddy:ro" \
+  -v "$PWD/caddy/m2-public.caddy:/etc/caddy/m2-public.caddy:ro" \
+  ghcr.io/ismailtufan123/gliagora-caddy:<tag>@sha256:<digest> caddy validate --config /etc/caddy/Caddyfile
+
+# 4. Switch: keep the old files, put the new ones in place, and update (it backs up first, then
+#    starts Caddy again on the new image with the new file)
+cp -p Caddyfile Caddyfile.before-limits && cp -p compose.prod.yml compose.prod.yml.before-limits
+mv Caddyfile.new Caddyfile && mv compose.prod.yml.new compose.prod.yml
+sudo ./update.sh --no-pull
+```
+
+**Check:** `docker compose -f compose.prod.yml ps` shows Caddy up on the new image; `https://gliagora.com/health/` answers `200` and `https://gliagora.com/en/` `401` (the password, as before); and the limits work, from your computer (the last line must print `429`, with `retry-after` in its headers; you are then held up on that zone for a minute):
+
+```sh
+for i in $(seq 1 21); do curl -s -o /dev/null -w '%{http_code}\n' -X POST https://gliagora.com/api/users/login/; done | sort | uniq -c
+```
+
+**Going back:** `mv Caddyfile.before-limits Caddyfile && mv compose.prod.yml.before-limits compose.prod.yml && sudo ./update.sh --no-pull`. The official image is still on the server.
+
 ## Checking from outside
 
 Check the site from another computer with single requests (`curl`, a browser). Do not scan the server's ports at full speed from your own connection: during S, a scan of all 65,535 ports made the provider's network block that IPv4 address for about 20 minutes (IPv6 kept working). If you must, scan slowly or from elsewhere.
@@ -564,7 +617,7 @@ Every container logs to the system journal, which keeps 14 days (D34): `docker c
 
 - **Staging:** none while the site is private; production, behind the site-wide password, doubles as staging. A separate staging is reconsidered before the site goes public.
 - **Automatic rollback:** built into `deploy-remote.sh` (see "How deploys work").
-- **Rate limits in Caddy** (for the auth routes and `/en/search/`; they need a plugin and a custom Caddy build): on the pre-launch checklist (PLAN §20). Until then, the site-wide password guards `/admin` and `/api` (so also Payload's sign-in, password-reset and first-account routes), Payload locks an account for 15 minutes after 5 failed sign-ins and sends at most one reset email per account every 15 minutes, the public forms have their own rate limits, and search runs at most two institution searches at a time, each for at most 2 seconds.
+- **Rate limits in Caddy** (for the auth routes and `/en/search/`; they need a plugin and a custom Caddy build): put on the pre-launch checklist at S, and built on 2026-10-07 (section 16, `caddy-image/`). Besides them, as before: the site-wide password guards `/admin` and `/api` (so also Payload's sign-in, password-reset and first-account routes), Payload locks an account for 15 minutes after 5 failed sign-ins and sends at most one reset email per account every 15 minutes, the public forms have their own rate limits, and search runs at most two institution searches at a time, each for at most 2 seconds.
 - **Backup alerts** (success and failure emails): built with M2's server parts (`backup/alert.sh`, step 3); they start sending once the mailbox's `SMTP_*` settings and `ALERT_EMAIL` are set. The server check's emails (disk, memory, certificate; section 15) go the same way.
 - **Deploy secrets:** repository secrets (step 4), a deploy user that is not an admin, and the pinned host key.
 - **Admin sudo:** without a password (see "Who logs in").

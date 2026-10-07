@@ -19,7 +19,11 @@ x-logging: &logging
 
 services:
   caddy:
-    image: caddy:2.11.4-alpine@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b
+    # Caddy with the rate-limit module, which the Caddyfile's limits need (D42): the official image
+    # of this version with the program built in CI from fixed sources (caddy-image/ in the
+    # repository). The tag names the version of Caddy and the build's inputs; the digest pins the
+    # image itself (a unit test fails when the tag is not that of caddy-image/ as it is).
+    image: ghcr.io/ismailtufan123/gliagora-caddy:2.11.4-0d57413a9667@sha256:fd36d3d33d748421d35e5ae84cd5d0c9343e538ec0276bed89d673f5a10f8bc2
     restart: unless-stopped
     ports:
       - '80:80'
