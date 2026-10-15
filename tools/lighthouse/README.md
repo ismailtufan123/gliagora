@@ -28,6 +28,22 @@ browser gives the header to every address a page asks for, so in such a run it c
 host than the site's. The password may hold letters, digits and `. _ ~ -` only (the runbook makes
 it of letters and digits): any other could be spelled differently in a report and be missed.
 
+**Where the server no longer has `/root/site-password`** (the runbook keeps it there only until it
+is saved in the password manager), either pipe it from the password manager into
+`pnpm lighthouse:prod`, or give the run a user of its own, as on 2026-10-16: on the server, a
+random password into a root-only file, a copy of `admin-auth.caddy`, one line
+`lighthouse <hash>` added to it in place (`caddy hash-password` reads the password on its standard
+input; write the file in place, since Caddy's container sees the file it was started with) and
+`caddy reload`; then
+`ssh gliagora@<server> sudo cat /root/lighthouse-password | pnpm lighthouse:prod --user lighthouse`;
+afterwards the copy written back in place, `caddy reload`, and both files deleted. Each step needs
+the operator's go-ahead.
+
+With the password in a header, the map's worker gets `401` for the one file it fetches itself
+(Chrome does not add the header to a worker's own requests), so map pages show "Worker failed to
+load" in the console and lose a few best-practices points. A visitor who typed the password in the
+browser's prompt has no such problem.
+
 The server has no positions before the launch, so its lists are empty and the job page is not
 measured there ("Not measured"). Measure those templates locally as well.
 
