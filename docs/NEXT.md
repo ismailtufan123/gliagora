@@ -1,6 +1,6 @@
 # Next task
 
-Status: **open**
+Status: **open** (2026-10-16): sections 1 to 5 are done and merged (#80–#84, and the wrap-up #85); the rate limits wait to be put on the server until the Caddy image's package is public (`docs/STATUS.md`).
 Written: 2026-10-06, by the operator's planning chat (Claude) on the operator's behalf.
 
 ## How this file works
