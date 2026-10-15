@@ -8,7 +8,7 @@ After M1 the drafts had 111 open questions, plus one open point that was only ma
 |---|---|---|
 | (a) Answerable from PLAN.md | The answer is now written into the draft and its marker is gone. | 49 questions |
 | (b) Needs a lawyer | One review by a lawyer between S and M2, before the texts go live (pre-launch checklist, PLAN §20, D32). | 47 questions, merged into **17** (B1–B17), plus **B18** added on 2026-09-27 (C2), **B19** added with the açık rıza metni on 2026-09-27 **B20** added with the map on 2026-10-01 (M5), and **B21** and **B22** added with the accessibility statement and the sources and editorial policy on 2026-10-07: **22** in all |
-| (c) Only the operator can decide | Decided by the operator on 2026-09-27 (PLAN D32–D36). The decisions are written into the drafts and their markers are gone. | 13 questions, merged into **5** (C1–C5); **7** more (C6–C12), from the two texts drafted on 2026-10-07, are open |
+| (c) Only the operator can decide | Decided by the operator on 2026-09-27 (PLAN D32–D36). The decisions are written into the drafts and their markers are gone. | 13 questions, merged into **5** (C1–C5); **7** more (C6–C12), from the two texts drafted on 2026-10-07: C10 decided on 2026-10-07 (D52), the other six open |
 
 Five more questions were settled by a default (listed below, with the other defaults the drafts follow). Two questions were split between groups (privacy policy 22 and terms 3), so the tables at the end have 114 rows for 112 questions. In the drafts every remaining marker names its item, for example `[TO DECIDE: B4 – …]` or `[KARAR VERİLECEK: B7 – …]`. A few markers name a milestone or a step instead ("S and M4b", "M4", "M4b", "M2 and the translated-version notice", "before publication", "when the translated-version notice is built", "pre-launch checks" in the accessibility statement, and "before signing" in the processing agreement): they are facts to fill in at that point, not questions.
 
@@ -90,9 +90,9 @@ The policy says that a fact is published only after it was seen on the original 
 
 Text: `content/en/about/sources.md`
 
-### C10. Sources policy: letting a program check employers' career pages (M7)
+### C10. Sources policy: letting a program check employers' career pages (M7): decided 2026-10-07
 
-Today's rule (PLAN §6.1) is in the policy: a program may read a source only if it is an official feed or interface whose terms and `robots.txt` allow it; a person reads everything else; job boards are never read by a program. The operator is considering automatic checks of employers' own career pages for M7. If that is decided, the section "What the site does by itself" must say which pages are checked, how often, and that a person still approves every item; lawyer question B22 asks what the law allows. **Until decided:** today's rule, and "today no program reads any source of positions".
+**Decided by the operator on 2026-10-07 (PLAN D52):** a scheduled program may read employers' own vacancy pages (universities, institutes, companies) besides official feeds and interfaces, never job boards: at most once a day per source, one request at a time per site, with a user agent that names Gliagora and links to a short section of the About page; `robots.txt` checked before every run; the source's terms of use followed (a source whose terms forbid automated access stays with a person); only what the review queue needs is kept (the posting's address and title, the facts, and its source text without names and contact details until 30 days after the decision); a person checks and approves every item. The section "What the site does by itself" says this once M7 is built; lawyer question B22 asks what the law allows.
 
 Text: `content/en/about/sources.md`
 
@@ -266,9 +266,11 @@ Texts: `content/en/legal/terms.md`
 
 ### B17. Claude API, before AI drafting is switched on (after launch)
 
-AI drafting is off at launch; it may be switched on in M7. Listing texts and openly licensed paper texts would then go to the Claude API (Anthropic, outside Türkiye), after emails, phone numbers and personal names have been removed. An audit copy of what was sent is kept. PLAN assumes that Anthropic does not sign the KVKK standard contract. Is the redacted text still personal data? If so, which KVKK m.9 route (as amended in 2024) and which GDPR Chapter V basis could allow the transfer, and what must the notices then say?
+**The operator's decision of 2026-10-07 (PLAN D52):** AI drafts start in M7, before this review, in a first way that is not the API: once a week Claude Code (Anthropic's assistant, run on the operator's computer) reads the new candidates' text without names and contact details and writes draft summaries and facts, which an editor accepts or changes; nothing reaches the public site without the editor. The API itself is built but stays off until the operator sets a key and a monthly cap. Both send the same redacted text to Anthropic, the risk already accepted in PLAN §15.2 (flag 6). The question below applies to both ways.
 
-**Why it matters.** AI drafting stays off until this is answered. It is asked in the same review so that no second review is needed.
+AI drafting was planned to be off at launch; it may be switched on in M7. Listing texts and openly licensed paper texts would then go to the Claude API (Anthropic, outside Türkiye), after emails, phone numbers and personal names have been removed. An audit copy of what was sent is kept. PLAN assumes that Anthropic does not sign the KVKK standard contract. Is the redacted text still personal data? If so, which KVKK m.9 route (as amended in 2024) and which GDPR Chapter V basis could allow the transfer, and what must the notices then say?
+
+**Why it matters.** Decides what the privacy texts must say about AI drafting, and whether the weekly drafts and the API may go on as decided (D52). It is asked in the same review so that no second review is needed.
 
 Texts: `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
 
@@ -306,11 +308,11 @@ Gliagora publishes an accessibility statement of its own accord (PLAN §15.4): i
 
 Texts: `content/en/legal/accessibility.md`; possibly `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
 
-### B22. Reading sources by program (only if the operator decides to automate, C10)
+### B22. Reading sources by program (decided by the operator, C10)
 
-Today a person reads every source of positions. The sources and editorial policy says that a program may read a source only if it is an official feed or interface whose terms and `robots.txt` allow it, and never a job board (PLAN §6.1). The operator is considering letting a program check employers' own career pages for new or changed positions (M7, C10); a person would still check and approve every item, and an item would still hold only facts, our own summary and a link. If that is decided: (1) which limits does the EU database right set (Directive 96/9/EC Art. 7; CJEU C-762/19) when the pages are single employers' own and not a job board's database, and does the database maker's right in Turkish law (Law No. 5846, additional Art. 8) set others? (2) What weight do a site's terms of use and its `robots.txt` have under Turkish law, for example as unfair competition under the Turkish Commercial Code? (3) Do the privacy texts' "People named in listings and sources" (B4) need to change when a program, not a person, first reads a page that names people?
+The operator decided on 2026-10-07 (PLAN D52, C10) that a program may check employers' own career pages (universities, institutes, companies) for new positions, besides official feeds and interfaces, and never job boards: at most once a day per source, one request at a time per site, with a user agent that names Gliagora and links to an explanation on the About page; `robots.txt` checked before every run; the site's terms of use followed (a source whose terms forbid automated access stays with a person). The program reads the list page and each new posting's page, and keeps only what the review queue needs: the posting's address and title, the facts the editor checks (such as the deadline), and its text with names, email addresses and phone numbers removed, until 30 days after the editor's decision. A person still checks and approves every item, and an item still holds only facts, our own summary and a link. Built in M7. Please answer: (1) which limits does the EU database right set (Directive 96/9/EC Art. 7; CJEU C-762/19) when the pages are single employers' own and not a job board's database, and does the database maker's right in Turkish law (Law No. 5846, additional Art. 8) set others? (2) What weight do a site's terms of use and its `robots.txt` have under Turkish law, for example as unfair competition under the Turkish Commercial Code? (3) Many postings name a contact person (a name, an email address, a phone number). The program reads such a page and removes those details before anything is stored, as far as rules can find them (names after titles such as Prof. or Dr., in "X Lab" or "contact X"; a name can slip through). What is the legal basis for reading pages that name contact persons in this way (KVKK m.5, GDPR Art. 6), and do the privacy texts' "People named in listings and sources" (B4) need to change when a program, not a person, first reads such a page?
 
-**Why it matters.** Decides whether the automation rule of the sources policy may change, and what the policy must then say. It is asked in the same review so that no second review is needed.
+**Why it matters.** Decides whether the monitors may go on as decided, and what the sources policy and the privacy texts must say about them. It is asked in the same review so that no second review is needed.
 
 Texts: `content/en/about/sources.md`; possibly `content/en/legal/privacy.md`, `content/tr/legal/kvkk-aydinlatma-metni.md`
 
