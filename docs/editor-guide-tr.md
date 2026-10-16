@@ -135,3 +135,12 @@ Yeni kaynak eklerken: işvereni "Institution" alanında seçin, kullanım koşul
 - **"Source text"**: ilanın metni; kişi adları, e-posta adresleri ve telefon numaraları "[name]", "[email]", "[phone]" ile değiştirilmiş olarak. Sitede hiç görünmez ve karardan 30 gün sonra silinir. Kural tabanlıdır; bir ad gözden kaçabilir.
 - **"Suggested tags"**: başlıkta ve metinde geçen sözcüklere göre önerilen alt alan, yöntem, model sistem, pozisyon türü ve kariyer aşaması (yapay zekâ değil, sözcük eşleştirme). Aday kabul edilince taslak ilan bunlarla ve programın okuduğu son başvuru tarihiyle başlar; ilanda kontrol edip düzeltin.
 - Program, son başvuru tarihi geçmiş, sinirbilimle ilgisiz görünen ya da zaten aday veya ilan olarak kayıtlı ilanları aday yapmaz. Neden aday yapılmadığını **"Postings seen"** listesinde görebilirsiniz ("Outcome"). Sinirbilimle ilgisiz sayılmış ama ilgili bir ilan görürseniz elle aday olarak ekleyin.
+
+**Panodaki "Sources" kutusu** ("Waiting for an editor" kutusunun altında):
+
+- **"New candidates from sources"**: kaynaklardan gelen ve henüz bakılmamış ("New") adaylar, kaynağa göre.
+- **"Sources that need attention"**: dikkat gerektiren kaynaklar ve nedenleri (yukarıya bakın).
+- **"Manual sources due for a look"**: zamanı gelmiş elle kontrol edilecek kaynaklar. "open the page" sayfayı açar; baktıktan sonra kaynakta "Looked at today" kutusunu işaretleyin.
+- **"Weekly link check of published jobs"**: program her pazar, yayımlanmış her ilanın orijinal sayfasını açar. Sayfa kalkmışsa ("Page gone"), yanıt vermiyorsa ("Page not answering") ya da pozisyonun dolduğunu veya kapandığını yazıyorsa ("Page says the position is filled or closed"), ilan bu listeye girer. **Hiçbir ilan kendiliğinden kapanmaz.** İlanı ve orijinal sayfayı açın: pozisyon gerçekten kapandıysa ilanı "Withdrawn" ya da süresi dolmuş olarak kapatın; uyarı yanlışsa ilanın sağ sütunundaki **"The link check's warning is wrong"** kutusunu işaretleyip kaydedin (bir sonraki kontrol başka bir şey bulursa ilan yeniden listeye girer). Kontrolün ne bulduğu ilanın sağ sütununda, "Link check found" alanında yazar.
+
+**İlk kaynaklar**: CSV'deki 70 işveren ve alt birimleri, toplam 118 kaynak, 2026-10-16'da resmî sitelerinden incelenip eklendi. Her kaynağın "Notes" alanında incelemenin notları (platform, ilanlardaki son başvuru biçimi, `robots.txt`), elle kontrol edilenlerde nedeni yazar. İşverenin kurumu ROR kimliğiyle bağlandı; bağlanamadıysa notlarda ROR kimliği yazar, "Institution" alanından seçin.

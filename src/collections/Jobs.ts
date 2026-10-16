@@ -999,7 +999,34 @@ export const Jobs: CollectionConfig = {
       admin: {
         position: 'sidebar',
         readOnly: true,
-        description: 'Set by the weekly link check (M7).',
+        description:
+          'Set by the weekly link check of published jobs (M7): Gone (404, 410) and Broken go on the dashboard, and so does a page that says the position is filled. Nothing is closed automatically.',
+      },
+    },
+    {
+      name: 'linkSaysClosed',
+      label: 'The page says it is filled or closed',
+      type: 'checkbox',
+      defaultValue: false,
+      access: { create: () => false, update: () => false },
+      admin: { position: 'sidebar', readOnly: true },
+    },
+    {
+      name: 'linkNote',
+      label: 'Link check found',
+      type: 'text',
+      access: { create: () => false, update: () => false },
+      admin: { position: 'sidebar', readOnly: true },
+    },
+    {
+      name: 'linkWarningDismissed',
+      label: "The link check's warning is wrong",
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Tick after checking the original page yourself: the job leaves the dashboard until the check finds something else. If the position is closed, withdraw or expire the job instead.',
       },
     },
     {

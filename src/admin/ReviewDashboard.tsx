@@ -15,6 +15,9 @@ import {
   reviewSummary,
   whereQuery,
 } from '@/lib/review/dashboard'
+import { sourcesSummary } from '@/lib/sources/dashboard'
+
+import { SourcesDashboardView } from './SourcesDashboard'
 
 // The review queue at the top of the admin dashboard (PLAN §3.2, admin core): what waits for an
 // editor, reports and removal requests with the personal-rights ones due soon, data requests
@@ -149,7 +152,10 @@ export function ReviewDashboardView({
 export async function ReviewDashboard({ payload, user }: ServerProps) {
   if (!user) return null
   const now = new Date()
-  const summary = await reviewSummary(payload, user, now)
+  const [summary, sources] = await Promise.all([
+    reviewSummary(payload, user, now),
+    sourcesSummary(payload, user, now),
+  ])
   const adminRoute = payload.config.routes.admin
   const url = (path: `/${string}`) => formatAdminURL({ adminRoute, path, relative: true })
   const links: Links = {
@@ -159,5 +165,10 @@ export async function ReviewDashboard({ payload, user }: ServerProps) {
       url(`/collections/${collection}${where ? `?${whereQuery(where)}` : ''}`),
     doc: (collection, id) => url(`/collections/${collection}/${id}`),
   }
-  return <ReviewDashboardView summary={summary} links={links} now={now} />
+  return (
+    <>
+      <ReviewDashboardView summary={summary} links={links} now={now} />
+      <SourcesDashboardView summary={sources} links={links} now={now} />
+    </>
+  )
 }

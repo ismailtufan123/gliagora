@@ -23,6 +23,8 @@ import * as migration_20261002_200000_members_sync from './20261002_200000_membe
 import * as migration_20261002_210000_members_sync_constraints from './20261002_210000_members_sync_constraints';
 import * as migration_20261016_001728_m7_sources from './20261016_001728_m7_sources';
 import * as migration_20261016_004430_m7_monitor_task from './20261016_004430_m7_monitor_task';
+import * as migration_20261016_004611_m7_link_check from './20261016_004611_m7_link_check';
+import * as migration_20261016_120000_seed_sources from './20261016_120000_seed_sources';
 
 export const migrations = [
   {
@@ -148,6 +150,16 @@ export const migrations = [
   {
     up: migration_20261016_004430_m7_monitor_task.up,
     down: migration_20261016_004430_m7_monitor_task.down,
-    name: '20261016_004430_m7_monitor_task'
+    name: '20261016_004430_m7_monitor_task',
+  },
+  {
+    up: migration_20261016_004611_m7_link_check.up,
+    down: migration_20261016_004611_m7_link_check.down,
+    name: '20261016_004611_m7_link_check'
+  },
+  {
+    up: migration_20261016_120000_seed_sources.up,
+    down: migration_20261016_120000_seed_sources.down,
+    name: '20261016_120000_seed_sources',
   },
 ];
