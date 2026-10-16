@@ -2,6 +2,7 @@ import { sql } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { checkLinks } from '@/jobs/maintenance/checkLinks'
 import { monitorSources } from '@/jobs/maintenance/monitorSources'
 import { purgeSourcePostings } from '@/jobs/maintenance/purgeRetention'
 import { type Fetcher, FetchProblem } from '@/lib/monitors/http'
@@ -314,5 +315,42 @@ describe('monitorSources', () => {
       sql`SELECT canonical_url FROM source_postings WHERE source_id = ${source.id}`,
     )
     expect(left.map((r) => r.canonical_url.slice(-1))).toEqual(['2'])
+  })
+})
+
+describe('checkLinks', () => {
+  it("records each published job's page, and clears an editor's dismissal when the finding changes", async () => {
+    const host = `${unique('jobs')}.example.org`
+    const open = await job(payload, institutionId, { originalUrl: `https://${host}/jobs/open` })
+    const filled = await job(payload, institutionId, { originalUrl: `https://${host}/jobs/filled` })
+    const gone = await job(payload, institutionId, { originalUrl: `https://${host}/jobs/gone` })
+    await rows(
+      payload,
+      sql`UPDATE jobs SET link_warning_dismissed = true WHERE id = ${gone.id} RETURNING id`,
+    )
+    const { fetcher } = fakeWeb({
+      [`https://${host}/jobs/open`]: posting('Postdoc', '<p>Apply by 1 December 2026.</p>'),
+      [`https://${host}/jobs/filled`]: posting('Postdoc', '<p>This position has been filled.</p>'),
+    })
+    await checkLinks(payload, now, { fetcher })
+    const state = await rows<{
+      id: number
+      link_status: string
+      link_says_closed: boolean
+      link_warning_dismissed: boolean
+      last_checked_at: Date
+    }>(
+      payload,
+      sql`SELECT id, link_status::text, link_says_closed, link_warning_dismissed, last_checked_at FROM jobs
+        WHERE id IN (${open.id}, ${filled.id}, ${gone.id}) ORDER BY id`,
+    )
+    expect(state.map((r) => [r.link_status, r.link_says_closed, r.link_warning_dismissed])).toEqual(
+      [
+        ['ok', false, false],
+        ['ok', true, false],
+        ['gone', false, false],
+      ],
+    )
+    expect(new Date(state[0]!.last_checked_at).toISOString()).toBe(now.toISOString())
   })
 })

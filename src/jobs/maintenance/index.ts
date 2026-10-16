@@ -1,5 +1,6 @@
 import { AcknowledgeReportsTask } from './acknowledgeReports'
 import { ApplyDeletionLogTask } from './applyDeletionLog'
+import { CheckLinksTask } from './checkLinks'
 import { CleanInactiveMembersTask } from './cleanInactiveMembers'
 import { ExpireListingsTask } from './expireListings'
 import { MonitorSourcesTask } from './monitorSources'
@@ -39,4 +40,5 @@ export const MAINTENANCE_TASKS = [
  */
 export const MONITOR_TASKS = [
   MonitorSourcesTask, // 04:40
+  CheckLinksTask, // Sundays 05:30
 ]

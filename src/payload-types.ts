@@ -154,6 +154,7 @@ export interface Config {
       syncGliaNotes: TaskSyncGliaNotes;
       checkGliaNotesMembers: TaskCheckGliaNotesMembers;
       monitorSources: TaskMonitorSources;
+      checkLinks: TaskCheckLinks;
       inline: {
         input: unknown;
         output: unknown;
@@ -1429,9 +1430,15 @@ export interface Job {
   expiredAt?: string | null;
   withdrawnAt?: string | null;
   /**
-   * Set by the weekly link check (M7).
+   * Set by the weekly link check of published jobs (M7): Gone (404, 410) and Broken go on the dashboard, and so does a page that says the position is filled. Nothing is closed automatically.
    */
   linkStatus: 'unchecked' | 'ok' | 'redirect' | 'broken' | 'gone';
+  linkSaysClosed?: boolean | null;
+  linkNote?: string | null;
+  /**
+   * Tick after checking the original page yourself: the job leaves the dashboard until the check finds something else. If the position is closed, withdraw or expire the job instead.
+   */
+  linkWarningDismissed?: boolean | null;
   lastCheckedAt?: string | null;
   /**
    * The "Suggest a listing" suggestion this job came from, if any.
@@ -2058,7 +2065,8 @@ export interface PayloadJob {
           | 'sendRequestEmails'
           | 'syncGliaNotes'
           | 'checkGliaNotesMembers'
-          | 'monitorSources';
+          | 'monitorSources'
+          | 'checkLinks';
         taskID: string;
         input?:
           | {
@@ -2108,6 +2116,7 @@ export interface PayloadJob {
         | 'syncGliaNotes'
         | 'checkGliaNotesMembers'
         | 'monitorSources'
+        | 'checkLinks'
       )
     | null;
   queue?: string | null;
@@ -2459,6 +2468,9 @@ export interface JobsSelect<T extends boolean = true> {
   expiredAt?: T;
   withdrawnAt?: T;
   linkStatus?: T;
+  linkSaysClosed?: T;
+  linkNote?: T;
+  linkWarningDismissed?: T;
   lastCheckedAt?: T;
   submission?: T;
   source?: T;
@@ -3015,6 +3027,23 @@ export interface TaskMonitorSources {
     candidates?: number | null;
     read?: number | null;
     termsChanged?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskCheckLinks".
+ */
+export interface TaskCheckLinks {
+  input?: unknown;
+  output: {
+    checked?: number | null;
+    ok?: number | null;
+    redirect?: number | null;
+    broken?: number | null;
+    gone?: number | null;
+    saysClosed?: number | null;
+    unchecked?: number | null;
     skipped?: boolean | null;
   };
 }
