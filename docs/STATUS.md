@@ -34,7 +34,7 @@ Last updated: 2026-10-16, at the end of the task "M7, finding positions automati
 ## Live now
 
 - Everything runs on the production server, **behind the site-wide password**, except `/health/`. Nobody outside can see it yet.
-- **M7 on the server since 2026-10-16**: the 118 sources (each linked to its institution), the 34 candidates of the first run in the review queue, the weekly link check (no published positions yet). **The monitors are switched on** (all 57 automatic sources, 2026-10-16, the operator's decision): they read their sources every day at 04:40 UTC (07:40 Turkish time), the first time on 2026-10-16. The Claude API is off.
+- **M7 on the server since 2026-10-16**: the 118 sources (each linked to its institution), the 34 candidates of the first run in the review queue, the weekly link check (no published positions yet). **The monitors are switched on** (all 57 automatic sources, 2026-10-16, the operator's decision): they read their sources every day at 04:40 UTC (07:40 Turkish time), the first time on 2026-10-17. The Claude API is off.
 - Every merge to `main` whose CI passes is deployed by itself, about 5–10 minutes later (until M2, D43).
 - **The server check runs on the server since 2026-10-07** (`journalctl -u gliagora-monitor` shows its lines; its first: disk 39% full, 76% of the memory available, both certificates 82 days). Its emails start with the backup emails, at M2.
 - **The server has the M2 task's files since 2026-10-05**: Caddy keeps the sign-in, account, data-request and newsletter links' codes out of its logs; listmonk runs, with no subscribers; backups hold both databases.
@@ -45,7 +45,7 @@ Last updated: 2026-10-16, at the end of the task "M7, finding positions automati
 
 ## Open decisions and waiting items
 
-- **The first candidates**: 34 from the first run, and from 2026-10-16 those of the daily runs, wait in Review queue → Candidates (filter by "Source").
+- **The first candidates**: 34 from the first run, and from 2026-10-17 those of the daily runs, wait in Review queue → Candidates (filter by "Source").
 - **Five sources stay manual** because their terms restrict storing content (Radboud and the Donders Institute, ETH Zurich twice, the University of Tübingen): the operator's decision of 2026-10-16.
 - **The About page's new section** "Reading employers' pages" (the monitor's user agent links to it): the About page is approved, so its new wording waits for the operator's approval. Until M2 the page is behind the password, so a site owner who follows the link sees the password prompt.
 - **The Claude API** (AI drafts each day): off until the operator sets a key, a monthly cap and, if wanted, a cheaper model (`deploy/README.md` section 17; default `claude-opus-5-5`).
