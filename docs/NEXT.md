@@ -1,6 +1,6 @@
 # Next task
 
-Status: **open**
+Status: **done** (2026-10-16; #87–#92). Two steps wait for the operator: switching the monitors on after a look at the first run's candidates, and the rate limits on the server (the Caddy image's package is still private).
 Written: 2026-10-16, by the operator's planning chat (Claude) on the operator's behalf.
 
 ## How this file works

@@ -7,6 +7,7 @@
 // The answer goes to standard output; the exit code is 1 when the route refused or failed.
 // Plain JavaScript without dependencies: the Docker image copies this folder next to the server.
 import { hkdfSync } from 'node:crypto'
+import { request as httpRequest } from 'node:http'
 
 const [method, path] = process.argv.slice(2)
 if (
@@ -30,15 +31,35 @@ if (method === 'POST') {
   body = Buffer.concat(chunks).toString('utf8')
 }
 
-const port = process.env.PORT ?? '3000'
-const response = await fetch(`http://127.0.0.1:${port}${path}`, {
-  method,
-  headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-  body,
-  signal: AbortSignal.timeout(3 * 60 * 60 * 1000),
+// node:http rather than fetch: fetch stops waiting for the answer's headers after five minutes, and
+// a run of the monitors by hand takes longer; the route answers when it is done.
+const answer = await new Promise((resolve, reject) => {
+  const request = httpRequest(
+    {
+      host: '127.0.0.1',
+      port: Number(process.env.PORT ?? '3000'),
+      path,
+      method,
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        ...(body === undefined ? {} : { 'Content-Length': Buffer.byteLength(body) }),
+      },
+    },
+    (response) => {
+      const chunks = []
+      response.on('data', (chunk) => chunks.push(chunk))
+      response.on('end', () =>
+        resolve({ status: response.statusCode ?? 0, text: Buffer.concat(chunks).toString('utf8') }),
+      )
+      response.on('error', reject)
+    },
+  )
+  request.on('error', reject)
+  request.end(body)
 })
-process.stdout.write(await response.text())
-if (!response.ok) {
-  console.error(`${method} ${path}: ${response.status}`)
+process.stdout.write(answer.text)
+if (answer.status < 200 || answer.status >= 300) {
+  console.error(`${method} ${path}: ${answer.status}`)
   process.exit(1)
 }
