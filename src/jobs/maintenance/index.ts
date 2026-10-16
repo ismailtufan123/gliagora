@@ -2,6 +2,7 @@ import { AcknowledgeReportsTask } from './acknowledgeReports'
 import { ApplyDeletionLogTask } from './applyDeletionLog'
 import { CleanInactiveMembersTask } from './cleanInactiveMembers'
 import { ExpireListingsTask } from './expireListings'
+import { MonitorSourcesTask } from './monitorSources'
 import { NotifySubmittersTask } from './notifySubmitters'
 import { PurgeFormLimitsTask } from './purgeFormLimits'
 import { PurgeMemberAuthTask } from './purgeMemberAuth'
@@ -10,7 +11,7 @@ import { SendRequestEmailsTask } from './sendRequestEmails'
 import { CheckGliaNotesMembersTask, SyncGliaNotesTask } from './syncGliaNotes'
 import { SyncJobPlacesTask } from './syncJobPlaces'
 
-export { MAINTENANCE_QUEUE, MANUAL_QUEUE } from './task'
+export { MAINTENANCE_QUEUE, MANUAL_QUEUE, MONITOR_QUEUE } from './task'
 
 /**
  * The scheduled maintenance tasks (M4.7; the member tasks M4b; members' Glia Notes M2), in the
@@ -30,4 +31,12 @@ export const MAINTENANCE_TASKS = [
   SendRequestEmailsTask, // every 5 minutes
   SyncGliaNotesTask, // every 5 minutes, at :02, :07, …
   CheckGliaNotesMembersTask, // 06:00
+]
+
+/**
+ * The tasks that read other sites (M7, D52), in the monitors' queue of their own. `pnpm jobs:run`
+ * runs them only when named, so a run of every task on a developer's computer reads no site.
+ */
+export const MONITOR_TASKS = [
+  MonitorSourcesTask, // 04:40
 ]

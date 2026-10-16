@@ -153,6 +153,7 @@ export interface Config {
       sendRequestEmails: TaskSendRequestEmails;
       syncGliaNotes: TaskSyncGliaNotes;
       checkGliaNotesMembers: TaskCheckGliaNotesMembers;
+      monitorSources: TaskMonitorSources;
       inline: {
         input: unknown;
         output: unknown;
@@ -2056,7 +2057,8 @@ export interface PayloadJob {
           | 'cleanInactiveMembers'
           | 'sendRequestEmails'
           | 'syncGliaNotes'
-          | 'checkGliaNotesMembers';
+          | 'checkGliaNotesMembers'
+          | 'monitorSources';
         taskID: string;
         input?:
           | {
@@ -2105,6 +2107,7 @@ export interface PayloadJob {
         | 'sendRequestEmails'
         | 'syncGliaNotes'
         | 'checkGliaNotesMembers'
+        | 'monitorSources'
       )
     | null;
   queue?: string | null;
@@ -2881,6 +2884,7 @@ export interface TaskPurgeRetention {
     unconfirmedRequests?: number | null;
     deletionLog?: number | null;
     consentLog?: number | null;
+    sourcePostings?: number | null;
     skipped?: boolean | null;
   };
 }
@@ -2994,6 +2998,23 @@ export interface TaskCheckGliaNotesMembers {
     pending?: number | null;
     off?: number | null;
     failed?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskMonitorSources".
+ */
+export interface TaskMonitorSources {
+  input?: unknown;
+  output: {
+    sources?: number | null;
+    ok?: number | null;
+    failed?: number | null;
+    refused?: number | null;
+    candidates?: number | null;
+    read?: number | null;
+    termsChanged?: number | null;
     skipped?: boolean | null;
   };
 }

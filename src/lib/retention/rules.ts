@@ -25,6 +25,12 @@ export const FORM_LIMIT_MAX_AGE_HOURS = 23
 export const SNIPPET_RETENTION_DAYS = 30
 
 /**
+ * A posting a monitor saw (`source-postings`, M7) is forgotten once its source's list has not
+ * named it for this many days; by then its deadline has long passed.
+ */
+export const SOURCE_POSTING_DAYS = 180
+
+/**
  * A listing that went offline (it answers 410) is kept in full for this many months; then only
  * its address and ID stay, so the address keeps answering 410 (D34).
  */

@@ -22,6 +22,7 @@ import * as migration_20261002_190000_newsletter_constraints from './20261002_19
 import * as migration_20261002_200000_members_sync from './20261002_200000_members_sync';
 import * as migration_20261002_210000_members_sync_constraints from './20261002_210000_members_sync_constraints';
 import * as migration_20261016_001728_m7_sources from './20261016_001728_m7_sources';
+import * as migration_20261016_004430_m7_monitor_task from './20261016_004430_m7_monitor_task';
 
 export const migrations = [
   {
@@ -142,6 +143,11 @@ export const migrations = [
   {
     up: migration_20261016_001728_m7_sources.up,
     down: migration_20261016_001728_m7_sources.down,
-    name: '20261016_001728_m7_sources'
+    name: '20261016_001728_m7_sources',
+  },
+  {
+    up: migration_20261016_004430_m7_monitor_task.up,
+    down: migration_20261016_004430_m7_monitor_task.down,
+    name: '20261016_004430_m7_monitor_task'
   },
 ];

@@ -90,7 +90,7 @@ describe('Sources: what needs attention', () => {
       'its last 3 runs failed',
     ])
     expect(attentionReasons({ kind: 'page', robotsAllowed: false })).toEqual([
-      'robots.txt does not allow it',
+      'robots.txt (or the site) does not allow reading it',
     ])
     expect(
       attentionReasons({ kind: 'api', termsChangedAt: '2026-10-16T04:00:00.000Z' }),

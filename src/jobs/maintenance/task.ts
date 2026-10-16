@@ -14,6 +14,12 @@ import { errorFrames, errorSummary } from '@/lib/errors'
 export const MAINTENANCE_QUEUE = 'maintenance'
 
 /**
+ * The queue of the monitors and the link check (M7): tasks that read other sites and can take an
+ * hour, so they run in a queue of their own, whose tick never holds up the maintenance tasks'.
+ */
+export const MONITOR_QUEUE = 'monitors'
+
+/**
  * The queue `pnpm jobs:run` uses: the app's scheduler never runs it, so a manual run and a
  * scheduled one never pick up each other's jobs (the task lock keeps them apart anyway).
  */
@@ -111,10 +117,14 @@ export async function inTransaction<T>(
  * job still marked as processing while the lock is free was cut off. It is removed; the next run
  * does the work again.
  */
-export async function releaseCutOffJobs(payload: Payload, slug: string): Promise<number> {
+export async function releaseCutOffJobs(
+  payload: Payload,
+  slug: string,
+  queue: string = MAINTENANCE_QUEUE,
+): Promise<number> {
   const where: Where = {
     and: [
-      { queue: { equals: MAINTENANCE_QUEUE } },
+      { queue: { equals: queue } },
       { taskSlug: { equals: slug } },
       { processing: { equals: true } },
     ],
@@ -147,6 +157,7 @@ export function maintenanceTask<Name extends string>({
   slug,
   label,
   cron,
+  queue = MAINTENANCE_QUEUE,
   counts,
   run,
 }: {
@@ -154,6 +165,8 @@ export function maintenanceTask<Name extends string>({
   label: string
   /** When it runs, in UTC (croner syntax; minute hour day month weekday). */
   cron: string
+  /** The queue it is scheduled in: the maintenance queue, or the monitors' (M7). */
+  queue?: string
   /** The names of the counts `run` returns. */
   counts: readonly Name[]
   run: (payload: Payload, now: Date) => Promise<Record<Name, number>>
@@ -164,10 +177,10 @@ export function maintenanceTask<Name extends string>({
     schedule: [
       {
         cron,
-        queue: MAINTENANCE_QUEUE,
+        queue,
         hooks: {
           beforeSchedule: async (args) => {
-            await releaseCutOffJobs(args.req.payload, slug)
+            await releaseCutOffJobs(args.req.payload, slug, queue)
             return args.defaultBeforeSchedule(args)
           },
         },

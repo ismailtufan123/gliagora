@@ -8,7 +8,7 @@ import { COLLECTIONS } from './collections'
 import { Users } from './collections/Users'
 import { GLOBALS } from './globals'
 import { autoRunCrons } from './jobs/autorun'
-import { MAINTENANCE_TASKS } from './jobs/maintenance'
+import { MAINTENANCE_TASKS, MONITOR_TASKS } from './jobs/maintenance'
 import { RorImportTask } from './jobs/rorImport'
 import { emailAdapter } from './lib/email/adapter'
 import { migrations } from './migrations'
@@ -46,7 +46,7 @@ export default buildConfig({
   collections: COLLECTIONS,
   globals: GLOBALS,
   jobs: {
-    tasks: [RorImportTask, ...MAINTENANCE_TASKS],
+    tasks: [RorImportTask, ...MAINTENANCE_TASKS, ...MONITOR_TASKS],
     // Scheduled jobs run only where PAYLOAD_JOBS_AUTORUN is "true": on the production server
     // (deploy/compose.prod.yml), never in CI or local development (there: `pnpm jobs:run`). The
     // ticks and their queues are in src/jobs/autorun.ts.

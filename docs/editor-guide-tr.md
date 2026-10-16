@@ -111,3 +111,27 @@ Yayımlamak için beş kutunun hepsi işaretli olmalı. Her kutuyu **orijinal sa
 Bu beş kutunun yanında panel şu bilgileri de ister: kurum, başlık, pozisyon türü, en az bir alt alan, son başvuru, özet, orijinal ilan adresi, dil ve "Last verified". Bunlardan biri eksikse ilan yayımlanamaz.
 
 Sorunuz olursa ya da panel beklenmedik bir şey yaparsa ekran görüntüsüyle teknik yöneticiye yazın. Ekran görüntüsünde kişisel veri (öneren kişinin e-postası gibi) varsa önce onu kapatın.
+
+## 5. Kaynaklar ve programın bulduğu adaylar
+
+**Kaynaklar ("Sources")**: ilanların geldiği yerler; sol menüde "Sources" altında. Her kaynağın bir türü ("Kind") vardır:
+
+- **"RSS or Atom feed"**, **"Documented API"**, **"Vacancy list page (plain HTML)"**: bunları sitenin programı ("Gliagora-Monitor") her sabah (Türkiye saatiyle 07:40 civarı) kendisi okur. Yeni ve sinirbilimle ilgili ilanları "New" durumunda aday yapar. Program hiçbir şeyi yayımlamaz.
+- **"Checked by an editor"** (elle): programın okumadığı kaynaklar (sayfası yalnızca JavaScript'le açılanlar, bot denetimi olanlar, kullanım koşulları otomatik okumayı yasaklayanlar). Sayfayı "Address" alanından açın, yeni ilanları elle aday olarak ekleyin (adayın "Source" alanında bu kaynağı seçin), sonra kaynağın sağ sütunundaki **"Looked at today"** kutusunu işaretleyip kaydedin. "Schedule" ne sıklıkla bakılacağını söyler; zamanı gelen kaynaklar panoda listelenir.
+
+Program şu kurallarla okur (D52): her kaynağa günde en çok bir kez, bir siteye aynı anda tek istek, her okumadan önce `robots.txt` denetimi, kullanım koşullarına uyma. İş ilanı siteleri (job board) hiçbir zaman kaynak değildir.
+
+Bir kaynağın sağ sütununda programın kaydı durur: son okuma ("Last run", "Last success"), art arda kaç kez başarısız olduğu, son hata, bulduğu aday sayısı. **"Needs attention"** işaretliyse "Why" alanı nedenini söyler:
+
+- **art arda 3 başarısız okuma**: sayfanın adresi değişmiş olabilir. Sayfayı açın; adres değiştiyse "Address" alanını düzeltin, düzelmiyorsa "Monitor on" kutusunu kaldırın ya da türü "Checked by an editor" yapın.
+- **`robots.txt` ya da site okumaya izin vermiyor**: program bu kaynağı okumaz. Türünü "Checked by an editor" yapın.
+- **kullanım koşulları değişmiş**: "Terms of use" bağlantısını açıp koşulları yeniden okuyun. Otomatik okumayı yasaklıyorsa "Automated access" alanını "forbids" yapın (kaynak elle kontrole geçer). Okuduktan sonra "Terms checked" alanına bugünün tarihini yazıp kaydedin; uyarı kalkar.
+
+Yeni kaynak eklerken: işvereni "Institution" alanında seçin, kullanım koşullarının adresini ve ne dediğini girin. Liste sayfası türünde, ilan adreslerinin kalıbı ("Addresses of postings") gerekir; bunu teknik yönetici yazar. Bir kaynağı geçici olarak durdurmak için "Monitor on" kutusunu kaldırın.
+
+**Programın bulduğu adaylar**: "Candidates" listesinde, "Source" alanı dolu olanlardır. Elle eklenen adaylar gibi ele alınır (bölüm 3), şu farklarla:
+
+- **"Extracted facts"**: programın ilandan okuduğu bilgiler (son başvuru tarihi, yer, yayın tarihi) ve her birinin nereden okunduğu. Bunlar yalnızca başlangıçtır: her birini orijinal ilanda kontrol edin.
+- **"Source text"**: ilanın metni; kişi adları, e-posta adresleri ve telefon numaraları "[name]", "[email]", "[phone]" ile değiştirilmiş olarak. Sitede hiç görünmez ve karardan 30 gün sonra silinir. Kural tabanlıdır; bir ad gözden kaçabilir.
+- **"Suggested tags"**: başlıkta ve metinde geçen sözcüklere göre önerilen alt alan, yöntem, model sistem, pozisyon türü ve kariyer aşaması (yapay zekâ değil, sözcük eşleştirme). Aday kabul edilince taslak ilan bunlarla ve programın okuduğu son başvuru tarihiyle başlar; ilanda kontrol edip düzeltin.
+- Program, son başvuru tarihi geçmiş, sinirbilimle ilgisiz görünen ya da zaten aday veya ilan olarak kayıtlı ilanları aday yapmaz. Neden aday yapılmadığını **"Postings seen"** listesinde görebilirsiniz ("Outcome"). Sinirbilimle ilgisiz sayılmış ama ilgili bir ilan görürseniz elle aday olarak ekleyin.
