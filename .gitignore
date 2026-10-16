@@ -41,3 +41,5 @@ gliagora-deploy.pub
 
 # MapLibre GL JS, copied from node_modules at build time (src/scripts/vendor-maplibre.mjs)
 /public/map/maplibre-gl/
+# The weekly AI drafts' files on the operator's computer (tools/ai-drafts/weekly.sh)
+/ai-drafts/

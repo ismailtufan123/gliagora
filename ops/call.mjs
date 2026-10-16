@@ -9,8 +9,11 @@
 import { hkdfSync } from 'node:crypto'
 
 const [method, path] = process.argv.slice(2)
-if (!['GET', 'POST'].includes(method ?? '') || !/^\/api\/ops\/[a-z0-9/-]+\/$/.test(path ?? '')) {
-  console.error('Usage: node ops/call.mjs GET|POST /api/ops/<route>/ [< body.json]')
+if (
+  !['GET', 'POST'].includes(method ?? '') ||
+  !/^\/api\/ops\/[a-z0-9/-]+\/(?:\?[a-z0-9=&]+)?$/.test(path ?? '')
+) {
+  console.error('Usage: node ops/call.mjs GET|POST /api/ops/<route>/[?dry=1] [< body.json]')
   process.exit(2)
 }
 const secret = process.env.PAYLOAD_SECRET ?? ''

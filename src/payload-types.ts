@@ -155,6 +155,7 @@ export interface Config {
       checkGliaNotesMembers: TaskCheckGliaNotesMembers;
       monitorSources: TaskMonitorSources;
       checkLinks: TaskCheckLinks;
+      draftWithClaude: TaskDraftWithClaude;
       inline: {
         input: unknown;
         output: unknown;
@@ -2066,7 +2067,8 @@ export interface PayloadJob {
           | 'syncGliaNotes'
           | 'checkGliaNotesMembers'
           | 'monitorSources'
-          | 'checkLinks';
+          | 'checkLinks'
+          | 'draftWithClaude';
         taskID: string;
         input?:
           | {
@@ -2117,6 +2119,7 @@ export interface PayloadJob {
         | 'checkGliaNotesMembers'
         | 'monitorSources'
         | 'checkLinks'
+        | 'draftWithClaude'
       )
     | null;
   queue?: string | null;
@@ -3044,6 +3047,21 @@ export interface TaskCheckLinks {
     gone?: number | null;
     saysClosed?: number | null;
     unchecked?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskDraftWithClaude".
+ */
+export interface TaskDraftWithClaude {
+  input?: unknown;
+  output: {
+    drafted?: number | null;
+    refused?: number | null;
+    failed?: number | null;
+    capReached?: number | null;
+    spentUsdCents?: number | null;
     skipped?: boolean | null;
   };
 }

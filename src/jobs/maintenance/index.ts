@@ -2,6 +2,7 @@ import { AcknowledgeReportsTask } from './acknowledgeReports'
 import { ApplyDeletionLogTask } from './applyDeletionLog'
 import { CheckLinksTask } from './checkLinks'
 import { CleanInactiveMembersTask } from './cleanInactiveMembers'
+import { DraftWithClaudeTask } from './draftWithClaude'
 import { ExpireListingsTask } from './expireListings'
 import { MonitorSourcesTask } from './monitorSources'
 import { NotifySubmittersTask } from './notifySubmitters'
@@ -41,4 +42,5 @@ export const MAINTENANCE_TASKS = [
 export const MONITOR_TASKS = [
   MonitorSourcesTask, // 04:40
   CheckLinksTask, // Sundays 05:30
+  DraftWithClaudeTask, // 07:30, only with ANTHROPIC_API_KEY and AI_MONTHLY_CAP_USD
 ]

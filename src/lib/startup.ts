@@ -7,6 +7,7 @@ import { describeEmailCap, emailCap } from '@/lib/forms/email-cap'
 import { describeMemberAuth, memberAuthConfig } from '@/lib/members/config'
 import { describeNewsletter, newsletterConfig } from '@/lib/newsletter/config'
 import { describeSiteStage, siteStageSetting } from '@/lib/site-stage'
+import { describeClaudeApi } from '@/lib/ai/claude-api'
 
 /**
  * Connects Payload when the production server starts, which applies pending database migrations
@@ -31,6 +32,8 @@ import { describeSiteStage, siteStageSetting } from '@/lib/site-stage'
  * One line says whether the Glia Notes signup and unsubscribing are on (M2, D50: listmonk's
  * settings, a mail server and the spam check), and why not, and one line each names a setting it
  * could not use.
+ * One line says whether AI drafts through the Claude API are on (M7, D52), with the model and the
+ * monthly cap, never the key.
  */
 export async function connectOnStart(): Promise<void> {
   if (process.env.NODE_ENV !== 'production') return
@@ -51,6 +54,7 @@ export async function connectOnStart(): Promise<void> {
   const newsletter = newsletterConfig()
   console.log(describeNewsletter(newsletter))
   for (const problem of newsletter.problems) console.error(problem)
+  console.log(describeClaudeApi())
   try {
     const payload = await getPayload({ config })
     await releaseInterruptedJobs(payload)

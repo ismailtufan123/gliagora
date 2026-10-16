@@ -22,3 +22,5 @@ deploy
 # End-to-end tests are not part of the image
 tests
 playwright.config.ts
+# The weekly AI drafts' files on the operator's computer (tools/ai-drafts/weekly.sh)
+/ai-drafts/

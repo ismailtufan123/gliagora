@@ -39,6 +39,7 @@ No link changes.
 - “data-request page” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “**Where it comes from:** you, through the form on the [data-request page], by email or through your account settings.”
 - “notice and takedown page” (`/en/legal/takedown/`): **words only** (the page is not public). In: “You can also ask us to correct or remove content on the [notice and takedown page].”
 - “data-request page” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “If you confirm a deletion request on the [data-request page], we clear your email address from your problem reports and corrections at once.”
+- “sources and editorial policy” (`/en/about/sources/`): **words only** (the page is not public). In: “A program of ours also reads some employers' own vacancy pages and feeds, at most once a day (see the [sources and editorial policy]); before it stores a posting's text, it replaces names, email addresses and phone numbers with placeholders, as far as rules can find them.”
 - “notice and takedown page” (`/en/legal/takedown/`): **words only** (the page is not public). In: “If you are named and want something corrected or removed, use the [notice and takedown page].”
 - “cookies and storage page” (`/en/legal/cookies/`): **words only** (the page is not public). In: “The [cookies and storage page] lists each item and how long it is kept.”
 - “data-request page” (`/en/legal/data-requests/`): **words only** (the page is not public). In: “Write to privacy@gliagora.com or use the [data-request page].”

@@ -388,3 +388,34 @@ test.describe('Job pages', () => {
     }
   })
 })
+
+// The operations routes (M7, src/lib/ops/auth.ts) answer only inside the app's container, with the
+// key derived from PAYLOAD_SECRET: without it, or through a proxy, they are as if they did not exist.
+test.describe('operations routes', () => {
+  const routes: Array<['GET' | 'POST', string]> = [
+    ['POST', '/api/ops/monitors/run/'],
+    ['POST', '/api/ops/monitors/switch-on/'],
+    ['GET', '/api/ops/ai-drafts/export/'],
+    ['POST', '/api/ops/ai-drafts/import/'],
+  ]
+  for (const [method, path] of routes) {
+    test(`${method} ${path} answers 404 without the key, with a wrong key and through a proxy`, async ({
+      request,
+    }) => {
+      const tries: Array<Record<string, string>> = [
+        {},
+        { Authorization: `Bearer ${'0'.repeat(64)}` },
+        { Authorization: `Bearer ${'0'.repeat(64)}`, 'X-Forwarded-For': '203.0.113.9' },
+      ]
+      for (const headers of tries) {
+        const response = await request.fetch(path, {
+          method,
+          headers,
+          data: method === 'POST' ? {} : undefined,
+        })
+        expect(response.status(), JSON.stringify(headers)).toBe(404)
+        expect(await response.text()).toBe('Not Found')
+      }
+    })
+  }
+})

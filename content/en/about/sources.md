@@ -70,14 +70,11 @@ Our program names itself "Gliagora-Monitor" and links to the section "Reading em
 
 ## AI tools
 
-Today no AI tool chooses, writes or checks the items we publish. [TO DECIDE: B17 – AI drafting stays switched off until the lawyer review has answered it]
+An AI assistant helps our editor with first drafts. [TO DECIDE: B17 – transfer route for AI drafting] It works like this:
 
-If we switch AI drafting on, it will work like this:
-
-- an AI service (the Claude API, by Anthropic) may prepare a first draft of a summary, pick out facts such as the deadline, and suggest tags;
-- before any text is sent, email addresses, phone numbers and personal names are replaced with placeholders. For papers, the author lists and contact details are removed;
-- our editor checks every fact against the original page, edits the text and approves it. Nothing is published without that approval, and our editor stays responsible for what is published;
-- from that day on, this page will say that AI drafting is in use.
+- once a week, Claude Code, Anthropic's AI assistant, used by our technical administrator, prepares a first draft for each new position: a short summary, facts such as the deadline and the place, and tags, each saying what it came from. Later the Claude API, also by Anthropic, may do the same each day; it is switched off for now;
+- before any text is sent, email addresses, phone numbers and personal names are replaced with placeholders. For papers, once that section opens, the author lists and contact details are removed;
+- the drafts are never shown on the site. Our editor checks every fact against the original page, edits the text and approves it. Nothing is published without that approval, and our editor stays responsible for what is published.
 
 The [privacy policy](/en/legal/privacy/) explains what would be sent and where.
 

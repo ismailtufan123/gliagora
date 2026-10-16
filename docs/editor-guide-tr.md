@@ -1,6 +1,6 @@
 # Gliagora yönetim paneli: editör rehberi
 
-Bu rehber, Gliagora'ya iş ilanı ekleyen ve gelen önerileri inceleyen editör için yazıldı (M4 sürümü, Ekim 2026). Yönetim paneli İngilizcedir; düğme ve alan adları burada panelde göründükleri gibi, tırnak içinde İngilizce geçer. Panel değiştikçe bu rehber de güncellenir. Rehberi panelin içinde de okuyabilirsiniz: sol menünün en altındaki **"Yardım"** bağlantısı onu açar.
+Bu rehber, Gliagora'ya iş ilanı ekleyen ve gelen önerileri inceleyen editör için yazıldı (M7 sürümü, Ekim 2026). Yönetim paneli İngilizcedir; düğme ve alan adları burada panelde göründükleri gibi, tırnak içinde İngilizce geçer. Panel değiştikçe bu rehber de güncellenir. Rehberi panelin içinde de okuyabilirsiniz: sol menünün en altındaki **"Yardım"** bağlantısı onu açar.
 
 ## 1. Giriş
 
@@ -144,3 +144,11 @@ Yeni kaynak eklerken: işvereni "Institution" alanında seçin, kullanım koşul
 - **"Weekly link check of published jobs"**: program her pazar, yayımlanmış her ilanın orijinal sayfasını açar. Sayfa kalkmışsa ("Page gone"), yanıt vermiyorsa ("Page not answering") ya da pozisyonun dolduğunu veya kapandığını yazıyorsa ("Page says the position is filled or closed"), ilan bu listeye girer. **Hiçbir ilan kendiliğinden kapanmaz.** İlanı ve orijinal sayfayı açın: pozisyon gerçekten kapandıysa ilanı "Withdrawn" ya da süresi dolmuş olarak kapatın; uyarı yanlışsa ilanın sağ sütunundaki **"The link check's warning is wrong"** kutusunu işaretleyip kaydedin (bir sonraki kontrol başka bir şey bulursa ilan yeniden listeye girer). Kontrolün ne bulduğu ilanın sağ sütununda, "Link check found" alanında yazar.
 
 **İlk kaynaklar**: CSV'deki 70 işveren ve alt birimleri, toplam 118 kaynak, 2026-10-16'da resmî sitelerinden incelenip eklendi. Her kaynağın "Notes" alanında incelemenin notları (platform, ilanlardaki son başvuru biçimi, `robots.txt`), elle kontrol edilenlerde nedeni yazar. İşverenin kurumu ROR kimliğiyle bağlandı; bağlanamadıysa notlarda ROR kimliği yazar, "Institution" alanından seçin.
+
+## 6. Yapay zekâ taslakları ("AI draft")
+
+Bazı adaylarda **"AI draft"** alanı doludur: Claude'un (Anthropic) adayın kişi adları, e-posta adresleri ve telefon numaraları çıkarılmış başlığından ve metninden yazdığı bir taslak (D52). Taslakta kendi sözlerimizle en çok 280 karakterlik bir özet ("summary"), pozisyon türü, son başvuru tarihi ve saat dilimi, yer, alt alanlar ve kariyer aşaması bulunur; her biri neye dayandığını söyler ("from"). Taslak sitede hiçbir zaman görünmez.
+
+- Taslaklar şimdilik **haftada bir** gelir: teknik yönetici Claude Code'a "Do the weekly drafts" der; Claude Code bekleyen adayları sunucudan dışa aktarır, taslakları yazar ve geri yükler. İleride Claude API ile her gün de gelebilir (bir anahtar ve aylık harcama sınırı girilene kadar kapalıdır).
+- Adayı kabul ettiğinizde ("Accepted"), **"Start the job from the AI draft"** işaretliyse taslak ilan özetini, pozisyon türünü, son başvuru tarihini, alt alanları ve kariyer aşamasını taslaktan alır ve "Drafted with AI assistance" işaretlenir. Taslağı kullanmak istemiyorsanız kabul etmeden önce bu kutuyu kaldırın.
+- **Her bilgiyi orijinal ilanda kontrol edin**, özeti gerekirse yeniden yazın: yayımlanan metnin sorumluluğu sizdedir. Taslak bir kişi adı içeriyorsa ya da notunda "A name was left in the source text" yazıyorsa adı yayımlamayın ve teknik yöneticiye bildirin.
