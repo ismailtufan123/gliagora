@@ -25,6 +25,7 @@ import * as migration_20261016_001728_m7_sources from './20261016_001728_m7_sour
 import * as migration_20261016_004430_m7_monitor_task from './20261016_004430_m7_monitor_task';
 import * as migration_20261016_004611_m7_link_check from './20261016_004611_m7_link_check';
 import * as migration_20261016_120000_seed_sources from './20261016_120000_seed_sources';
+import * as migration_20261016_130000_m7_claude_task from './20261016_130000_m7_claude_task';
 
 export const migrations = [
   {
@@ -155,11 +156,16 @@ export const migrations = [
   {
     up: migration_20261016_004611_m7_link_check.up,
     down: migration_20261016_004611_m7_link_check.down,
-    name: '20261016_004611_m7_link_check'
+    name: '20261016_004611_m7_link_check',
   },
   {
     up: migration_20261016_120000_seed_sources.up,
     down: migration_20261016_120000_seed_sources.down,
-    name: '20261016_120000_seed_sources',
+    name: '20261016_120000_seed_sources'
+  },
+  {
+    up: migration_20261016_130000_m7_claude_task.up,
+    down: migration_20261016_130000_m7_claude_task.down,
+    name: '20261016_130000_m7_claude_task',
   },
 ];

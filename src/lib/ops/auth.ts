@@ -4,11 +4,14 @@ import { derivedKey } from '@/lib/keys'
 
 // The operations routes (/api/ops/…, M7, D52): the first monitor run by hand and the weekly AI
 // drafts' export and import, which the operator approved to run on the server. They answer only a
-// request made inside the app's own container (`docker compose exec app node ops/call.mjs …`):
-// one that came through Caddy carries X-Forwarded-For and is refused, and every request must
-// carry a key derived from PAYLOAD_SECRET (`gliagora/ops/token/v1`), which only someone who can
-// read the server's settings has. Caddy also keeps /api behind the second password. A refused
-// request gets the same plain 404 as an unknown address.
+// request made inside the app's own container (`docker compose exec app node ops/call.mjs …`, to
+// 127.0.0.1): its Host is a loopback address, and so is its X-Forwarded-For, which Next.js's server
+// sets to the connection's address when a request has none. A request through Caddy names the
+// site as its Host and the visitor's address in X-Forwarded-For (Caddy ignores one a visitor sends,
+// since it trusts no proxy), so it is refused. Every request must also carry a key derived from
+// PAYLOAD_SECRET (`gliagora/ops/token/v1`), which only someone who can read the server's settings
+// has, and Caddy keeps /api behind the second password. A refused request gets the same plain 404
+// as an unknown address.
 
 export const OPS_LABEL = 'gliagora/ops/token/v1'
 
@@ -17,13 +20,32 @@ export function opsToken(secret: string): string {
   return derivedKey(secret, OPS_LABEL).toString('hex')
 }
 
-/** Whether `request` may use an operations route. */
-export function opsAllowed(request: Request, secret = process.env.PAYLOAD_SECRET ?? ''): boolean {
-  if (secret === '') return false
-  // Caddy always adds X-Forwarded-For; a request from inside the container has none.
-  for (const header of ['x-forwarded-for', 'forwarded', 'x-real-ip', 'via']) {
+const LOOPBACK = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1', 'localhost', '[::1]'])
+
+/** Whether `request` was made inside the container, to its loopback address. */
+function fromInside(request: Request): boolean {
+  for (const header of ['forwarded', 'x-real-ip', 'via']) {
     if (request.headers.has(header)) return false
   }
+  const forwardedFor = request.headers.get('x-forwarded-for')
+  if (
+    forwardedFor !== null &&
+    !forwardedFor.split(',').every((part) => LOOPBACK.has(part.trim()))
+  ) {
+    return false
+  }
+  let host: string
+  try {
+    host = new URL(`http://${request.headers.get('host') ?? ''}`).hostname
+  } catch {
+    return false
+  }
+  return LOOPBACK.has(host)
+}
+
+/** Whether `request` may use an operations route. */
+export function opsAllowed(request: Request, secret = process.env.PAYLOAD_SECRET ?? ''): boolean {
+  if (secret === '' || !fromInside(request)) return false
   const match = /^Bearer ([0-9a-f]{64})$/.exec(request.headers.get('authorization') ?? '')
   if (!match) return false
   return timingSafeEqual(Buffer.from(match[1]!, 'hex'), derivedKey(secret, OPS_LABEL))

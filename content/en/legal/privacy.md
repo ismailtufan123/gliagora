@@ -244,7 +244,7 @@ This applies only to people who edit Gliagora.
 We find positions, events and funding on employers' and funders' pages, on job boards, on mailing lists, on social media and through suggestions. We always check each item on the original page. These sources sometimes name people, for example the head of a lab.
 
 - **What:** names, job titles and lab or group names as they appear on the original page. A published listing shows a person's name only where the original page shows it, for example in the original title of a position, as the organiser of an event or in the name of a lab or group. We never copy personal contact details.
-- **Where it comes from:** the public pages of employers and funders, and announcements on mailing lists and social media. We receive mailing lists in a project mailbox hosted in Türkiye.
+- **Where it comes from:** the public pages of employers and funders, and announcements on mailing lists and social media. We receive mailing lists in a project mailbox hosted in Türkiye. A program of ours also reads some employers' own vacancy pages and feeds, at most once a day (see the [sources and editorial policy](/en/about/sources/)); before it stores a posting's text, it replaces names, email addresses and phone numbers with placeholders, as far as rules can find them. [TO DECIDE: B22 – reading pages that name people by program]
 - **Why:** to publish accurate information about research opportunities. We publish facts, a short summary in our own words and a link to the original page.
 - **Legal basis:** our legitimate interest in publishing accurate information about research opportunities (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)). [TO DECIDE: B4 – legal basis for people named in listings]
 - **Who sees it:** published listings are public on gliagora.com. The map shows institutions, never individuals.
@@ -252,7 +252,7 @@ We find positions, events and funding on employers' and funders' pages, on job b
   - Published listings: a listing is taken offline 30 days after it closes, or at once if the employer withdraws it or a removal request succeeds. After that, we keep the full record in our database for 12 months, then only its web address and ID, so that the old address can keep showing that the listing has been removed.
   - Source text we keep internally while we review an item: deleted 30 days after we decide on the item.
   - Mailing-list messages in the project mailbox: deleted 30 days after they arrive.
-  - AI drafting: if it is switched on (it is currently switched off), names, email addresses and phone numbers are replaced with placeholders before any text is sent to the AI service (see "Transfers outside Türkiye"). We keep a copy of the text that was sent, so we can check later exactly what left our server, and delete it 30 days after we decide on the item.
+  - AI drafting: names, email addresses and phone numbers are replaced with placeholders before any text is sent to the AI service (see "Transfers outside Türkiye"). The text that was sent stays with the item as its source text, so we can check later exactly what left our server, and is deleted 30 days after we decide on the item.
 
 If you are named and want something corrected or removed, use the [notice and takedown page](/en/legal/takedown/).
 
@@ -325,7 +325,7 @@ Our technical administrator is a person who maintains our server and software on
 
 ### Service providers outside Türkiye
 
-- **The Claude API, by Anthropic (currently switched off):** would receive the text of listings and openly licensed papers, with names and contact details replaced or removed. See "Transfers outside Türkiye".
+- **Anthropic (Claude Code and the Claude API):** receives the text of job listings, with names and contact details replaced, to prepare drafts that our editor checks: once a week through Claude Code, Anthropic's assistant, used by our technical administrator. The Claude API, which would do the same each day, is currently switched off. See "Transfers outside Türkiye".
 
 ### Services you deal with directly
 
@@ -351,7 +351,7 @@ We choose service providers registered in Türkiye, with data centres in Türkiy
 
 ### Exception
 
-**AI help with drafting (the Claude API, by Anthropic).** This is currently switched off. When it is switched on, we send the text of job, event and funding listings after replacing email addresses, phone numbers and personal names with placeholders. We also send the text of openly licensed papers after removing author lists, affiliations, correspondence details, acknowledgements and references. We do not send anything from our subscriber, member or request records. The service runs outside Türkiye. Replacing names lowers the risk, but a name can still slip through. A person checks and approves every item before it is published. [TO DECIDE: B17 – transfer route before AI drafting is switched on]
+**AI help with drafting (Anthropic).** Once a week we send the text of job listings, after replacing email addresses, phone numbers and personal names with placeholders, to Claude Code, Anthropic's assistant, which our technical administrator uses to prepare drafts. The Claude API, by Anthropic, which would do the same each day, is currently switched off. When the events, funding and papers sections open, their listings may be drafted in the same way; for openly licensed papers we will first remove author lists, affiliations, correspondence details, acknowledgements and references. We do not send anything from our subscriber, member or request records. The service runs outside Türkiye. Replacing names lowers the risk, but a name can still slip through. A person checks and approves every item before it is published. [TO DECIDE: B17 – transfer route for AI drafting]
 
 You can ask for a copy of the safeguard we use for each transfer by writing to privacy@gliagora.com. [TO DECIDE: B12 – which safeguard applies to each transfer, if any; see also B17]
 

@@ -16,3 +16,5 @@ tests/fixtures/
 
 # MapLibre GL JS, copied from node_modules at build time
 public/map/maplibre-gl/
+# The weekly AI drafts' files on the operator's computer (tools/ai-drafts/weekly.sh)
+/ai-drafts/

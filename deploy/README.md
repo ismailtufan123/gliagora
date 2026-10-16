@@ -639,3 +639,19 @@ Every container logs to the system journal, which keeps 14 days (D34): `docker c
 - **Admin sudo:** without a password (see "Who logs in").
 
 listmonk (M2) has its own database and user in the same PostgreSQL (section 11); Umami will get its own the same way.
+
+## 17. The operations routes: the monitors' first run and the weekly AI drafts (M7)
+
+The app has a few routes for the operator's approved server steps (D52), which answer only inside its own container: a request through Caddy carries X-Forwarded-For and gets a 404, and each needs a key derived from PAYLOAD_SECRET, which `ops/call.mjs` (in the image) computes inside the container and never prints (`src/lib/ops/auth.ts`). Run them as `gliagora`, from `/opt/gliagora`:
+
+```bash
+# Run the monitors of sources 3 and 7 now (whether or not "Monitor on" is ticked); counts per source.
+echo '{"sources":[3,7]}' | docker compose -f compose.prod.yml exec -T app node ops/call.mjs POST /api/ops/monitors/run/
+# Tick "Monitor on" for every automatic source (or {"sources":[IDs]}), so the 04:40 UTC schedule reads them.
+echo '{"sources":"all"}' | docker compose -f compose.prod.yml exec -T app node ops/call.mjs POST /api/ops/monitors/switch-on/
+```
+
+The weekly AI drafts go through the same routes, from the operator's computer: `tools/ai-drafts/weekly.sh` (export, a dry run, import; `docs/weekly-drafts.md`), with the operator's standing go-ahead for exactly that.
+
+**The Claude API (off).** To switch it on, with the operator's go-ahead: set `ANTHROPIC_API_KEY` and `AI_MONTHLY_CAP_USD` (and, if wanted, `CLAUDE_MODEL`; default `claude-opus-5-5`) in `/opt/gliagora/.env`, copy the `compose.prod.yml` that passes them to the app (since M7), set the same monthly limit in the Claude Console, and restart the app (`docker compose -f compose.prod.yml up -d app`). A start line of the app then says `AI drafts by the Claude API: on (claude-opus-5-5, at most 15 US dollars a month)` (without the key); `draftWithClaude` runs daily at 07:30 UTC and logs its counts.
+

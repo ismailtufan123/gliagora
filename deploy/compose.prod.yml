@@ -97,6 +97,11 @@ services:
       # signup also needs SMTP_HOST, so it stays off until the mailbox (the start line says so).
       LISTMONK_URL: http://listmonk:9000
       LISTMONK_API_TOKEN: ${LISTMONK_API_TOKEN:-}
+      # AI drafts through the Claude API (M7, D52): off until both the key and the monthly cap in US
+      # dollars are set (src/lib/ai/claude-api.ts); CLAUDE_MODEL names another model than claude-opus-5-5.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_MONTHLY_CAP_USD: ${AI_MONTHLY_CAP_USD:-}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-}
       # Member sign-in with Google and ORCID (M4b, D49): each is off until both of its keys are
       # set. ORCID_ISSUER stays ORCID's own; the app refuses ORCID's sandbox here. Email links
       # switch on with SMTP_HOST. Nothing else about sign-in reaches the app.
