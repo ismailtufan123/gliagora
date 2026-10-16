@@ -56,15 +56,17 @@ Items sometimes name people, for example the head of a lab, as the original page
 
 ## What the site does by itself
 
-A person reads, checks, writes and approves every item. Today the site does only these things by itself:
+A person checks, writes and approves every item. The site does these things by itself:
 
 - it takes a position out of the lists when its deadline has passed;
 - it brings in the public list of research institutions from ROR;
-- it sends the emails that answer a form or a request.
+- it sends the emails that answer a form or a request;
+- it reads some employers' own vacancy pages and feeds once a day, and puts the new positions in neuroscience into our editor's queue;
+- once a week it checks that the original page of every published position still answers, and tells our editor about those that are gone or say that the position is filled.
 
-Our rule for sources: a program may read a source by itself only if the source is an official feed or interface that its owner offers for that purpose, and its terms of use and its `robots.txt` file allow it. A person reads everything else. Job boards are never read by a program or copied in bulk, whatever their terms say. Today no program reads any source of positions.
+Our rule for sources: a program may read a source by itself only if the source is an official feed or interface, or the vacancy pages of an employer (a university, institute or company), and its terms of use and its `robots.txt` file allow it. A person reads everything else. Job boards are never read by a program or copied in bulk, whatever their terms say.
 
-[TO DECIDE: C10 – whether a program may check employers' own career pages (M7). If so, this section must say which pages are checked, how often, and that a person still approves every item; see also B22]
+Our program names itself "Gliagora-Monitor" and links to the section "Reading employers' pages" on the [About page](/en/about/). It reads each source at most once a day, makes one request at a time to a site, checks `robots.txt` before every run and leaves alone any site whose terms of use forbid automated reading; for each source we note the address of its terms and when we read them and its `robots.txt`. It keeps only what our editor needs to review a position: its address, its title, the facts we check, such as the deadline, and its text with names, email addresses and phone numbers removed, until 30 days after the editor's decision. It never publishes anything: every position it finds waits for our editor, who checks it on the employer's own page. [TO DECIDE: B22 – what the law allows when a program reads employers' pages, also those that name contact persons]
 
 ## AI tools
 

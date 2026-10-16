@@ -9,16 +9,18 @@
 import config from '@payload-config'
 import { type TaskType, getPayload } from 'payload'
 
-import { MAINTENANCE_TASKS, MANUAL_QUEUE } from '@/jobs/maintenance'
+import { MAINTENANCE_TASKS, MANUAL_QUEUE, MONITOR_TASKS } from '@/jobs/maintenance'
 
-const known = MAINTENANCE_TASKS.map((task) => task.slug)
+// The monitors (M7) read other sites, so they run only when named.
+const maintenance = MAINTENANCE_TASKS.map((task) => task.slug)
+const known = [...maintenance, ...MONITOR_TASKS.map((task) => task.slug)]
 const asked = process.argv.slice(2)
 const unknown = asked.filter((name) => !known.includes(name))
 if (unknown.length > 0) {
   console.error(`Unknown task: ${unknown.join(', ')}. The tasks are: ${known.join(', ')}.`)
   process.exit(1)
 }
-const tasks = asked.length > 0 ? known.filter((slug) => asked.includes(slug)) : known
+const tasks = asked.length > 0 ? known.filter((slug) => asked.includes(slug)) : maintenance
 
 const payload = await getPayload({ config })
 let failed = 0

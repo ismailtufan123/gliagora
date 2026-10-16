@@ -611,6 +611,7 @@ describe('purgeRetention', () => {
       unconfirmedRequests: 0,
       deletionLog: 0,
       consentLog: 0,
+      sourcePostings: 0,
     })
   })
 })

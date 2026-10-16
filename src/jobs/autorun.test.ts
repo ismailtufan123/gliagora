@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import { describe, expect, it } from 'vitest'
 
 import { autoRunCrons } from './autorun'
-import { MAINTENANCE_QUEUE } from './maintenance'
+import { MAINTENANCE_QUEUE, MONITOR_QUEUE } from './maintenance'
 
 type CronJob = { nextRuns: (count: number, previous?: Date) => Date[] }
 type Croner = { Cron: new (pattern: string, options: object) => CronJob }
@@ -21,7 +21,7 @@ describe('autoRunCrons', () => {
   it('ticks only where PAYLOAD_JOBS_AUTORUN is "true"', () => {
     expect(autoRunCrons({})).toEqual([])
     expect(autoRunCrons({ PAYLOAD_JOBS_AUTORUN: 'false' })).toEqual([])
-    expect(ticks.map((tick) => tick.queue)).toEqual(['ror', MAINTENANCE_QUEUE])
+    expect(ticks.map((tick) => tick.queue)).toEqual(['ror', MAINTENANCE_QUEUE, MONITOR_QUEUE])
   })
 
   it('never ticks two queues in the same second, so neither undoes the schedule record of the other', () => {

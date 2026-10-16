@@ -35,6 +35,8 @@ ENV NODE_ENV=production \
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
+# The operations script (M7): `docker compose exec app node ops/call.mjs …` (src/lib/ops/auth.ts).
+COPY --from=build --chown=node:node /app/ops ./ops
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \

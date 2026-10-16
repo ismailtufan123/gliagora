@@ -40,7 +40,8 @@ export function attentionReasons(source: SourceData): string[] {
   if ((source.consecutiveFailures ?? 0) >= FAILURES_FLAGGED) {
     reasons.push(`its last ${source.consecutiveFailures} runs failed`)
   }
-  if (source.robotsAllowed === false) reasons.push('robots.txt does not allow it')
+  if (source.robotsAllowed === false)
+    reasons.push('robots.txt (or the site) does not allow reading it')
   if (source.termsChangedAt) reasons.push('its terms of use have changed: read them again')
   return reasons
 }
