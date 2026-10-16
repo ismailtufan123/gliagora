@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     users: User;
     candidates: Candidate;
+    sources: Source;
+    'source-postings': SourcePosting;
     submissions: Submission;
     reports: Report;
     'data-requests': DataRequest;
@@ -95,6 +97,8 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     candidates: CandidatesSelect<false> | CandidatesSelect<true>;
+    sources: SourcesSelect<false> | SourcesSelect<true>;
+    'source-postings': SourcePostingsSelect<false> | SourcePostingsSelect<true>;
     submissions: SubmissionsSelect<false> | SubmissionsSelect<true>;
     reports: ReportsSelect<false> | ReportsSelect<true>;
     'data-requests': DataRequestsSelect<false> | DataRequestsSelect<true>;
@@ -234,7 +238,7 @@ export interface Candidate {
    */
   snippet?: string | null;
   /**
-   * Facts a source monitor read from the posting (from M7), to check against the original.
+   * Facts a source monitor read from the posting, each with where it was found, to check against the original. An accepted candidate's job starts with its deadline.
    */
   extracted?:
     | {
@@ -245,6 +249,34 @@ export interface Candidate {
     | number
     | boolean
     | null;
+  /**
+   * Subfields, methods, model systems, position type and career stages whose words appear in the title or the source text (no AI, PLAN §6.3), with the words found. Suggestions only: an accepted candidate's job starts with them, and you check and change them there.
+   */
+  tagSuggestions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * A draft by Claude from the redacted title and source text (PLAN §6.6): a summary in our own words, the position type, the deadline, the place, the subfields and the career stages, each saying what it came from. It is never shown on the site. Check every fact on the original posting.
+   */
+  aiSuggestion?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * When accepted, the draft job takes its summary, position type, deadline, subfields and career stages (and is marked "Drafted with AI assistance"). Untick to start without it.
+   */
+  useAiDraft?: boolean | null;
   /**
    * The address as https, without tracking parameters and fragments, for finding the same posting twice.
    */
@@ -288,6 +320,10 @@ export interface Candidate {
    * The "Suggest a listing" suggestion it came from, with its note.
    */
   submission?: (number | null) | Submission;
+  /**
+   * The source it came from: set by the monitor, or by you for a posting found on a manual source.
+   */
+  source?: (number | null) | Source;
   fromSuggestion?: boolean | null;
   /**
    * What it becomes when accepted. Events, funding and papers follow later.
@@ -1401,6 +1437,10 @@ export interface Job {
    */
   submission?: (number | null) | Submission;
   /**
+   * The source whose monitor or editor found it (M7), if any.
+   */
+  source?: (number | null) | Source;
+  /**
    * Tick if the summary or tags started from an AI draft (PLAN §6.6).
    */
   aiAssisted?: boolean | null;
@@ -1513,6 +1553,124 @@ export interface Submission {
    * When the person was emailed the outcome. Empty while no mail server is set up, while the job is not published yet, and for spam.
    */
   notifiedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Where positions come from (PLAN §6.1). A monitor reads the feeds, APIs and vacancy list pages once a day, where robots.txt and the terms allow it, and puts new neuroscience postings into the review queue as New candidates. Manual sources are checked by an editor: open the page, add what is new as candidates, then tick "Looked at today". Job boards are never sources.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sources".
+ */
+export interface Source {
+  id: number;
+  name: string;
+  /**
+   * The employer whose positions it lists. New candidates get it; change it on a candidate whose posting is another institute's.
+   */
+  institution?: (number | null) | Institution;
+  kind: 'rss' | 'api' | 'page' | 'manual';
+  apiFormat?: ('greenhouse' | 'lever' | 'smartrecruiters') | null;
+  /**
+   * How often it is read: by the monitor (at most once a day), or by an editor.
+   */
+  schedule: 'daily' | 'weekly' | 'monthly';
+  /**
+   * The feed, the API address or the vacancy list page; for a manual source, the page an editor opens.
+   */
+  url: string;
+  /**
+   * The list's further pages, if it has several (read in this order).
+   */
+  moreUrls?:
+    | {
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * A regular expression for the addresses of the postings on the list, e.g. ^https://www\.example\.org/jobs/\d+/?$. Needed for a list page; for a feed or an API it keeps only the items whose address matches.
+   */
+  postingPattern?: string | null;
+  /**
+   * A neuroscience institute's own list: keep every posting, without checking its words for neuroscience.
+   */
+  allNeuroscience?: boolean | null;
+  /**
+   * Read by the monitor on its schedule. Untick to pause it.
+   */
+  active?: boolean | null;
+  /**
+   * The address of the terms of use (or legal notice) that apply.
+   */
+  termsUrl?: string | null;
+  termsAutomation: 'not-stated' | 'allows' | 'forbids' | 'not-found';
+  /**
+   * The day an editor last read them.
+   */
+  termsCheckedAt?: string | null;
+  /**
+   * The clause relied on, briefly.
+   */
+  termsNote?: string | null;
+  /**
+   * Checked before every run; a source that robots.txt refuses is not read.
+   */
+  robotsAllowed?: boolean | null;
+  robotsCheckedAt?: string | null;
+  /**
+   * What the monitor found in it.
+   */
+  robotsNote?: string | null;
+  /**
+   * When the monitor found the terms page changed since an editor last read it. Read them again, then set the day under "Terms checked".
+   */
+  termsChangedAt?: string | null;
+  termsHash?: string | null;
+  termsReviewedHash?: string | null;
+  termsFetchedAt?: string | null;
+  /**
+   * For editors: what to look for, where the neuroscience posts are.
+   */
+  notes?: string | null;
+  /**
+   * Tick and save after you have checked the page.
+   */
+  lookedToday?: boolean | null;
+  lookedAt?: string | null;
+  needsAttention?: boolean | null;
+  attentionReason?: string | null;
+  lastRunAt?: string | null;
+  lastSuccessAt?: string | null;
+  /**
+   * At 3, the source is flagged on the dashboard.
+   */
+  consecutiveFailures?: number | null;
+  lastError?: string | null;
+  lastRunFound?: number | null;
+  candidatesFound?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * What the monitors have seen on each source, and what became of it. Read only: a posting skipped as "not neuroscience" can still be added by hand as a candidate.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "source-postings".
+ */
+export interface SourcePosting {
+  id: number;
+  source: number | Source;
+  canonicalUrl: string;
+  url: string;
+  /**
+   * As the list or the posting gave it, with names removed.
+   */
+  title?: string | null;
+  outcome: 'candidate' | 'not-neuroscience' | 'closed' | 'duplicate';
+  candidate?: (number | null) | Candidate;
+  firstSeenAt: string;
+  lastSeenAt: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -1980,6 +2138,14 @@ export interface PayloadLockedDocument {
         value: number | Candidate;
       } | null)
     | ({
+        relationTo: 'sources';
+        value: number | Source;
+      } | null)
+    | ({
+        relationTo: 'source-postings';
+        value: number | SourcePosting;
+      } | null)
+    | ({
         relationTo: 'submissions';
         value: number | Submission;
       } | null)
@@ -2096,6 +2262,9 @@ export interface CandidatesSelect<T extends boolean = true> {
   possibleDuplicateCandidates?: T;
   snippet?: T;
   extracted?: T;
+  tagSuggestions?: T;
+  aiSuggestion?: T;
+  useAiDraft?: T;
   canonicalUrl?: T;
   fingerprint?: T;
   status?: T;
@@ -2105,8 +2274,70 @@ export interface CandidatesSelect<T extends boolean = true> {
   decidedAt?: T;
   publishedRef?: T;
   submission?: T;
+  source?: T;
   fromSuggestion?: T;
   kind?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sources_select".
+ */
+export interface SourcesSelect<T extends boolean = true> {
+  name?: T;
+  institution?: T;
+  kind?: T;
+  apiFormat?: T;
+  schedule?: T;
+  url?: T;
+  moreUrls?:
+    | T
+    | {
+        url?: T;
+        id?: T;
+      };
+  postingPattern?: T;
+  allNeuroscience?: T;
+  active?: T;
+  termsUrl?: T;
+  termsAutomation?: T;
+  termsCheckedAt?: T;
+  termsNote?: T;
+  robotsAllowed?: T;
+  robotsCheckedAt?: T;
+  robotsNote?: T;
+  termsChangedAt?: T;
+  termsHash?: T;
+  termsReviewedHash?: T;
+  termsFetchedAt?: T;
+  notes?: T;
+  lookedToday?: T;
+  lookedAt?: T;
+  needsAttention?: T;
+  attentionReason?: T;
+  lastRunAt?: T;
+  lastSuccessAt?: T;
+  consecutiveFailures?: T;
+  lastError?: T;
+  lastRunFound?: T;
+  candidatesFound?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "source-postings_select".
+ */
+export interface SourcePostingsSelect<T extends boolean = true> {
+  source?: T;
+  canonicalUrl?: T;
+  url?: T;
+  title?: T;
+  outcome?: T;
+  candidate?: T;
+  firstSeenAt?: T;
+  lastSeenAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2227,6 +2458,7 @@ export interface JobsSelect<T extends boolean = true> {
   linkStatus?: T;
   lastCheckedAt?: T;
   submission?: T;
+  source?: T;
   aiAssisted?: T;
   updatedAt?: T;
   createdAt?: T;

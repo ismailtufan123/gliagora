@@ -1,6 +1,10 @@
 import type { Field } from 'payload'
 import { describe, expect, it, vi } from 'vitest'
 
+import { compileTerms } from '@/lib/tags/match'
+import { forgetTaxonomy, termKey } from '@/lib/tags/terms'
+import { TAXONOMY_2026_09 } from '@/migrations/data/taxonomy-2026-09'
+
 import { Candidates, draftJob } from './Candidates'
 import { FAKE_DATA } from './Jobs'
 
@@ -596,5 +600,161 @@ describe('Candidates: configuration', () => {
     expect(shown('decisionReason', 'triaged')).toBe(false)
     expect(shown('duplicateOf', 'duplicate')).toBe(true)
     expect(shown('duplicateOf', 'accepted')).toBe(false)
+  })
+})
+
+describe('Candidates: source text and suggestions (M7)', () => {
+  const terms = TAXONOMY_2026_09.map((term, index) => ({ id: index + 1, ...term, isActive: true }))
+  const withTerms = {
+    find: vi.fn(async ({ collection }: { collection: string }) => ({
+      docs: collection === 'terms' ? terms : [],
+    })),
+  }
+
+  it('redacts the source text before it is stored', async () => {
+    forgetTaxonomy()
+    const data = await run({ snippet: 'Questions to jane.doe@example.org or +44 20 7946 0000.' })
+    expect(data.snippet).toBe('Questions to [email] or [phone].')
+  })
+
+  it('suggests tags from the title and the source text while the candidate waits', async () => {
+    forgetTaxonomy()
+    const data = await run(
+      { rawTitle: 'PhD position on astrocytes', snippet: 'Two-photon imaging in mice.' },
+      { payload: withTerms },
+    )
+    expect(data.tagSuggestions).toMatchObject({
+      positionType: { slug: 'phd', label: 'PhD' },
+      subfields: [{ slug: 'glia', label: 'Glial biology', words: ['astrocytes'] }],
+      methods: [{ slug: 'optical-imaging' }],
+      modelSystems: [{ slug: 'mouse' }],
+    })
+  })
+
+  it('leaves the suggestions of a decided candidate as they are', async () => {
+    forgetTaxonomy()
+    const data = await run(
+      { rawTitle: 'Postdoc in glial biology', status: 'rejected' },
+      {
+        operation: 'update',
+        originalDoc: {
+          id: 3,
+          status: 'rejected',
+          rawTitle: 'Other',
+          tagSuggestions: { kept: true },
+        },
+        payload: withTerms,
+      },
+    )
+    expect(data).not.toHaveProperty('tagSuggestions')
+  })
+})
+
+describe('Candidates: the draft job starts from what the candidate offers (M7)', () => {
+  const words = TAXONOMY_2026_09.map((term) => term)
+  const byKey = new Map(
+    TAXONOMY_2026_09.map((term, index) => [
+      termKey(term.vocabulary, term.slug),
+      { id: index + 1, label: term.label },
+    ]),
+  )
+  const taxonomy = { compiled: compileTerms(words), byKey }
+  const id = (vocabulary: string, slug: string) => byKey.get(termKey(vocabulary as never, slug))?.id
+  const draft = {
+    version: 1,
+    by: 'claude-code',
+    at: '2026-10-20T08:00:00.000Z',
+    from: "the posting's redacted title and text, exported on 2026-10-20",
+    inputHash: 'a'.repeat(64),
+    summary: 'A fully funded PhD on how astrocytes shape cortical circuits, with imaging in mice.',
+    positionType: 'phd',
+    careerStages: ['phd-candidate'],
+    subfields: ['glia', 'systems-circuits'],
+    deadline: {
+      kind: 'fixed',
+      date: '2026-12-01',
+      timeZone: null,
+      from: "the text: 'Apply by 1 December 2026'",
+    },
+    place: { city: 'Example City', country: 'DE', from: 'the text' },
+  }
+  const candidate = {
+    id: 12,
+    ...ready(),
+    source: 5,
+    aiSuggestion: draft,
+    useAiDraft: true,
+    tagSuggestions: {
+      subfields: [{ slug: 'cognitive', label: 'Cognitive', words: ['memory'] }],
+      methods: [
+        {
+          slug: 'optical-imaging',
+          label: 'Microscopy and optical imaging',
+          words: ['two-photon imaging'],
+        },
+      ],
+      modelSystems: [{ slug: 'mouse', label: 'Mouse', words: ['mice'] }],
+      positionType: { slug: 'postdoc', label: 'Postdoc', words: ['postdoc'] },
+      careerStages: [],
+    },
+    extracted: {
+      version: 1,
+      readAt: '2026-10-19T04:20:00.000Z',
+      listedOn: { kind: 'page', url: 'https://www.example.org/jobs/' },
+      page: 'read',
+      deadline: {
+        value: { date: '2026-11-15', timeZone: 'Europe/Berlin' },
+        from: 'JSON-LD validThrough',
+      },
+    },
+  }
+
+  it('takes the AI draft first, then the suggested tags', () => {
+    const job = draftJob(candidate as never, new Date('2026-10-21T09:00Z'), taxonomy)
+    expect(job).toMatchObject({
+      source: 5,
+      summary: draft.summary,
+      aiAssisted: true,
+      positionType: id('position-type', 'phd'),
+      subfields: [id('subfield', 'glia'), id('subfield', 'systems-circuits')],
+      careerStages: [id('career-stage', 'phd-candidate')],
+      methods: [id('method', 'optical-imaging')],
+      modelSystems: [id('model-system', 'mouse')],
+      deadlineKind: 'fixed',
+      deadlineDate: '2026-12-01T12:00:00.000Z',
+      internalNotes: expect.stringMatching(
+        /Started from the AI draft \(claude-code, 2026-10-20\).*Example City, DE.*check each against the original posting/,
+      ),
+    })
+    expect(job).not.toHaveProperty('deadlineTz')
+  })
+
+  it("takes the monitor's facts and the tags when the editor leaves the AI draft out", () => {
+    const job = draftJob({ ...candidate, useAiDraft: false } as never, new Date(), taxonomy)
+    expect(job).not.toHaveProperty('summary')
+    expect(job).toMatchObject({
+      positionType: id('position-type', 'postdoc'),
+      subfields: [id('subfield', 'cognitive')],
+      deadlineDate: '2026-11-15T12:00:00.000Z',
+      deadlineTz: 'Europe/Berlin',
+    })
+    expect((job as { aiAssisted?: boolean }).aiAssisted).toBeUndefined()
+  })
+
+  it('ignores an AI draft that is not of the expected shape, and terms it does not know', () => {
+    const job = draftJob(
+      {
+        ...candidate,
+        aiSuggestion: { ...draft, summary: 'x'.repeat(281) },
+        tagSuggestions: {
+          ...candidate.tagSuggestions,
+          subfields: [{ slug: 'no-such-term', label: '?', words: [] }],
+        },
+      } as never,
+      new Date(),
+      taxonomy,
+    )
+    expect(job).not.toHaveProperty('summary')
+    expect(job).not.toHaveProperty('subfields')
   })
 })
