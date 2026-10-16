@@ -11,10 +11,12 @@ import type {
 import { APIError, validations } from 'payload'
 
 import { nobody, signedIn } from '@/lib/access'
-import { calendarDay } from '@/lib/jobs/deadline'
+import { storedDraft } from '@/lib/ai/draft'
+import { calendarDay, storedDay } from '@/lib/jobs/deadline'
 import { DUPLICATE_SIMILARITY, normaliseTitle, similarity } from '@/lib/jobs/similarity'
 import type { JobStatus } from '@/lib/jobs/status'
 import { addressProblem, canonicalUrl } from '@/lib/jobs/url'
+import { redacted } from '@/lib/redaction/redact'
 import { idOf } from '@/lib/relationship'
 import {
   CANDIDATE_KINDS,
@@ -25,6 +27,15 @@ import {
   isDecided,
   transitionProblem,
 } from '@/lib/review/status'
+import { storedFacts } from '@/lib/sources/facts'
+import {
+  type StoredTagSuggestions,
+  type Taxonomy,
+  loadTaxonomy,
+  storedSuggestions,
+  termKey,
+} from '@/lib/tags/terms'
+import type { Vocabulary } from '@/lib/taxonomy'
 import type { Candidate, Job } from '@/payload-types'
 
 import { isFakeData } from './Jobs'
@@ -193,6 +204,8 @@ const prepare: CollectionBeforeValidateHook<Candidate> = async ({
 
   if (typeof data.rawUrl === 'string') data.rawUrl = data.rawUrl.trim() || null
   if (typeof data.rawTitle === 'string') data.rawTitle = data.rawTitle.trim() || null
+  // The source text is redacted before it is stored, whoever wrote it (PLAN §6.6, D52).
+  if (typeof data.snippet === 'string') data.snippet = redacted(data.snippet)
   const rawUrl = value('rawUrl')
   data.canonicalUrl = rawUrl ? canonicalUrl(rawUrl) : null
   const rawTitle = value('rawTitle')
@@ -207,6 +220,18 @@ const prepare: CollectionBeforeValidateHook<Candidate> = async ({
   }
 
   const status = (value('status') ?? 'new') as CandidateStatus
+  // Tags are suggested from the title and the source text while the candidate waits for a
+  // decision, whenever either changes (src/lib/tags/, PLAN §6.3).
+  const textChanged =
+    operation === 'create' ||
+    ('rawTitle' in data && data.rawTitle !== saved.rawTitle) ||
+    ('snippet' in data && data.snippet !== saved.snippet)
+  if (textChanged && !isDecided(status)) {
+    const title = value('rawTitle') ?? ''
+    const text = value('snippet') ?? ''
+    data.tagSuggestions =
+      title || text ? storedSuggestions({ title, text }, await loadTaxonomy(req.payload)) : null
+  }
   if (status !== 'rejected') data.decisionReason = null
   if (status !== 'duplicate') data.duplicateOf = null
   data.decidedAt = decidedAt(saved, status, new Date())
@@ -224,10 +249,88 @@ const prepare: CollectionBeforeValidateHook<Candidate> = async ({
 }
 
 /**
- * The draft job an accepted candidate becomes; the editor adds the facts and publishes it. The
- * deadline, language and link status start at the collection's defaults.
+ * What a draft job starts with besides the candidate's address and title (M7): the AI draft, when
+ * the candidate has one and the editor left "Start the job from the AI draft" ticked; the facts a
+ * monitor read; the suggested tags. Each is a starting point the editor checks on the original
+ * posting before publishing; the job's checklist asks for that.
  */
-export function draftJob(candidate: Candidate, now: Date) {
+export function prefill(
+  candidate: Candidate,
+  taxonomy: Taxonomy | null,
+): Partial<Job> & { notes: string[] } {
+  const draft = candidate.useAiDraft === false ? null : storedDraft(candidate.aiSuggestion)
+  const tags = (candidate.tagSuggestions ?? null) as StoredTagSuggestions | null
+  const facts = storedFacts(candidate.extracted)
+  const ids = (vocabulary: Vocabulary, slugs: readonly string[] | undefined) =>
+    (slugs ?? []).flatMap((slug) => {
+      const id = taxonomy?.byKey.get(termKey(vocabulary, slug))?.id
+      return id === undefined ? [] : [id]
+    })
+  const result: Partial<Job> & { notes: string[] } = { notes: [] }
+
+  const positionType = ids('position-type', [draft?.positionType ?? tags?.positionType?.slug ?? ''])
+  if (positionType[0] !== undefined) result.positionType = positionType[0]
+  const subfields = ids(
+    'subfield',
+    draft?.subfields.length ? draft.subfields : tags?.subfields.map((t) => t.slug),
+  )
+  if (subfields.length > 0) result.subfields = subfields
+  const careerStages = ids(
+    'career-stage',
+    draft?.careerStages.length ? draft.careerStages : tags?.careerStages.map((t) => t.slug),
+  )
+  if (careerStages.length > 0) result.careerStages = careerStages
+  const methods = ids(
+    'method',
+    tags?.methods.map((t) => t.slug),
+  )
+  if (methods.length > 0) result.methods = methods
+  const modelSystems = ids(
+    'model-system',
+    tags?.modelSystems.map((t) => t.slug),
+  )
+  if (modelSystems.length > 0) result.modelSystems = modelSystems
+
+  if (draft?.deadline) {
+    result.deadlineKind = draft.deadline.kind as Job['deadlineKind']
+    if (draft.deadline.date) result.deadlineDate = storedDay(draft.deadline.date)
+    if (draft.deadline.timeZone) result.deadlineTz = draft.deadline.timeZone as Job['deadlineTz']
+  } else if (facts?.deadline) {
+    result.deadlineKind = 'fixed'
+    result.deadlineDate = storedDay(facts.deadline.value.date)
+    if (facts.deadline.value.timeZone) {
+      result.deadlineTz = facts.deadline.value.timeZone as Job['deadlineTz']
+    }
+  } else if (facts?.openEnded) {
+    result.deadlineKind = facts.openEnded.value
+  }
+  if (draft) {
+    result.summary = draft.summary
+    result.aiAssisted = true
+    result.notes.push(
+      `the AI draft (${draft.by}, ${draft.at.slice(0, 10)})${draft.place ? `, which gives the place as ${[draft.place.city, draft.place.country].filter(Boolean).join(', ')}` : ''}${draft.note ? `, with the note: ${draft.note}` : ''}`,
+    )
+  }
+  if (!draft?.deadline && (facts?.deadline || facts?.openEnded)) {
+    result.notes.push("the monitor's deadline")
+  }
+  if (tags && (subfields.length > 0 || methods.length > 0 || modelSystems.length > 0)) {
+    result.notes.push('the suggested tags')
+  }
+  return result
+}
+
+/**
+ * The draft job an accepted candidate becomes; the editor adds the facts and publishes it. What
+ * the candidate offers (`prefill`) fills the job's fields; the rest start at the collection's
+ * defaults.
+ */
+export function draftJob(candidate: Candidate, now: Date, taxonomy: Taxonomy | null = null) {
+  const { notes, ...filled } = prefill(candidate, taxonomy)
+  const started =
+    notes.length > 0
+      ? ` Started from ${notes.join(', ')}: check each against the original posting.`
+      : ''
   return {
     title: candidate.rawTitle ?? '',
     institution: idOf(candidate.institution) as number,
@@ -237,7 +340,9 @@ export function draftJob(candidate: Candidate, now: Date) {
     originalLanguage: 'en',
     linkStatus: 'unchecked',
     submission: (idOf(candidate.submission) as number | undefined) ?? null,
-    internalNotes: `Made from candidate ${candidate.id} of the review queue, accepted on ${calendarDay(now)}.`,
+    source: (idOf(candidate.source) as number | undefined) ?? null,
+    ...filled,
+    internalNotes: `Made from candidate ${candidate.id} of the review queue, accepted on ${calendarDay(now)}.${started}`,
   } satisfies Partial<Job>
 }
 
@@ -258,7 +363,7 @@ const afterDecision: CollectionAfterChangeHook<Candidate> = async ({
   ) {
     const job = await req.payload.create({
       collection: 'jobs',
-      data: draftJob(doc, new Date()),
+      data: draftJob(doc, new Date(), await loadTaxonomy(req.payload)),
       depth: 0,
       req,
     })
@@ -489,8 +594,42 @@ export const Candidates: CollectionConfig = {
       label: 'Extracted facts',
       type: 'json',
       admin: {
+        readOnly: true,
         description:
-          'Facts a source monitor read from the posting (from M7), to check against the original.',
+          "Facts a source monitor read from the posting, each with where it was found, to check against the original. An accepted candidate's job starts with its deadline.",
+      },
+    },
+    {
+      name: 'tagSuggestions',
+      label: 'Suggested tags',
+      type: 'json',
+      access: { create: () => false, update: () => false },
+      admin: {
+        readOnly: true,
+        description:
+          "Subfields, methods, model systems, position type and career stages whose words appear in the title or the source text (no AI, PLAN §6.3), with the words found. Suggestions only: an accepted candidate's job starts with them, and you check and change them there.",
+      },
+    },
+    {
+      name: 'aiSuggestion',
+      label: 'AI draft',
+      type: 'json',
+      access: { create: () => false, update: () => false },
+      admin: {
+        readOnly: true,
+        description:
+          'A draft by Claude from the redacted title and source text (PLAN §6.6): a summary in our own words, the position type, the deadline, the place, the subfields and the career stages, each saying what it came from. It is never shown on the site. Check every fact on the original posting.',
+      },
+    },
+    {
+      name: 'useAiDraft',
+      label: 'Start the job from the AI draft',
+      type: 'checkbox',
+      defaultValue: true,
+      admin: {
+        condition: (data) => Boolean(data?.aiSuggestion),
+        description:
+          'When accepted, the draft job takes its summary, position type, deadline, subfields and career stages (and is marked "Drafted with AI assistance"). Untick to start without it.',
       },
     },
     {
@@ -599,6 +738,17 @@ export const Candidates: CollectionConfig = {
         position: 'sidebar',
         readOnly: true,
         description: 'The "Suggest a listing" suggestion it came from, with its note.',
+      },
+    },
+    {
+      name: 'source',
+      type: 'relationship',
+      relationTo: 'sources',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description:
+          'The source it came from: set by the monitor, or by you for a posting found on a manual source.',
       },
     },
     {

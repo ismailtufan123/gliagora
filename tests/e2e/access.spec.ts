@@ -48,6 +48,8 @@ type SignedOut = {
 const SIGNED_OUT: Record<string, SignedOut> = {
   users: { shows: 'nothing' },
   candidates: { shows: 'nothing' },
+  sources: { shows: 'nothing' },
+  'source-postings': { shows: 'nothing' },
   submissions: { shows: 'nothing' },
   reports: { shows: 'nothing' },
   'data-requests': { shows: 'nothing' },

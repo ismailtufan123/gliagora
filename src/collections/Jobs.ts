@@ -1026,6 +1026,18 @@ export const Jobs: CollectionConfig = {
       },
     },
     {
+      name: 'source',
+      type: 'relationship',
+      relationTo: 'sources',
+      // Set only when a candidate from a source is accepted (src/collections/Candidates.ts).
+      access: { create: () => false, update: () => false },
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'The source whose monitor or editor found it (M7), if any.',
+      },
+    },
+    {
       name: 'aiAssisted',
       label: 'Drafted with AI assistance',
       type: 'checkbox',

@@ -15,6 +15,8 @@ import { Members } from './members/Members'
 import { SavedItems } from './members/SavedItems'
 import { Reports } from './Reports'
 import { RetiredListings } from './RetiredListings'
+import { SourcePostings } from './SourcePostings'
+import { Sources } from './Sources'
 import { Submissions } from './Submissions'
 import { Terms } from './Terms'
 import { Users } from './Users'
@@ -25,6 +27,8 @@ import { Users } from './Users'
 export const COLLECTIONS: CollectionConfig[] = [
   Users,
   Candidates,
+  Sources,
+  SourcePostings,
   Submissions,
   Reports,
   DataRequests,
