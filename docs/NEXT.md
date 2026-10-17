@@ -1,6 +1,6 @@
 # Next task
 
-Status: **done** (2026-10-17; pull requests #96, #97, #98, #99)
+Status: **open**
 Written: 2026-10-17, by the operator's planning chat (Claude) on the operator's behalf.
 
 ## How this file works
@@ -9,107 +9,88 @@ Written: 2026-10-17, by the operator's planning chat (Claude) on the operator's 
 - `docs/STATUS.md` is your one-page handoff: what is done, what is live, open decisions and the next step. Read it before this file, and update it at the end of every task.
 - When the task below is finished, set the status above to **done**, with the date and the pull request numbers, in your last pull request. The planning chat then replaces this file with the next task.
 
-## Task: the newsletter builder (M11) and the subfield introductions
+## Task: better candidates and more sources (M7, second round)
+
+**When to start:** not before 2026-10-20. By then the monitors will have run on at least four days. If they have run on fewer, stop and tell the operator.
+
+**Why this task:** the launch gate (§3.4) needs at least 150 active verified positions in at least 25 countries. Most positions come through the monitors, and Nuray's time goes to the review queue and to the manual sources. This task makes the candidates better and more numerous, and shortens the manual list.
 
 Start by reading `CLAUDE.md`, `docs/STATUS.md` and, in `PLAN.md`:
-- §2.2 (the newsletter archive), §3.2 (the newsletter builder) and §5.1 (`NewsletterIssue`);
-- all of §13, and §4.2, §15.1 (the AI assistance row) and §16.3;
-- D3, D16, D19, D20, D39, D40, D41, D50 and D52, and the M2 and M7 notes in §20.
+- all of §6, §3.4 (the launch gate) and D52;
+- the M7 notes in §20, with "Seen on the way";
+- the M11 notes in §20 (for the approval below).
+
+Then read `docs/sources/sources-2026-10-16.csv`.
 
 ### 1. The operator's decisions (first pull request, documentation only)
 
-Record these as **D53** (decided 2026-10-17):
+- **M11 is approved:** the operator approved M11's design as built (2026-10-17), with every point for review in the M11 notes and the accepted risk of the campaigns user. Record it the way D50's approval was recorded: in D53's row, in the M11 notes and in `docs/STATUS.md`.
+- **Umami:** the operator will decide later (asked on 2026-10-17). Leave it open.
 
-1. **M11 comes forward.**
-   - **Why now:** at the operator's request, M11 (the newsletter builder) is built now, ahead of M8–M10 and behind the site-wide password, as M5, M6's home page, M4b and M2's technical parts were (D45, D48, D50). The first issue is the launch issue (D41), so the builder must be ready for it.
-   - **What an issue holds:** only the sections whose windows exist, which now means the deadlines and the selected positions. Papers, funding, news and Learn join when their milestones are built.
-   - **Nothing is sent before the launch:** pushing an issue to listmonk stays off (a setting) until the operator switches it on at the launch.
-   - **The plan:** update the milestone order in §20.
-2. **A hub introduction may start from an AI draft** (§16.3, which said "human-written", changes).
-   - **The draft:** it is kept in its own field that only editors see, and it is never shown on the site.
-   - **What the site shows:** only the introduction the editor writes from the draft. She edits and approves each one, and holds editorial responsibility for it, as for listings (D3, D52).
-   - **The policy:** the sources and editorial policy draft says so (§15.1, AI assistance).
+### 2. Look at the results (on the server, read only)
 
-Also record that the About page's section "Reading employers' pages" is approved as written (2026-10-17), in the M7 notes and in `docs/STATUS.md`.
+- **A report route:** build a read-only operations route, like M7's, and keep it for later rounds. It reports on the daily runs so far:
+  - **per source:** runs, failures and their kinds, postings seen, candidates made, and postings skipped by reason (not neuroscience, closed, duplicate, the cap of 40);
+  - **per candidate:** ID, source, redacted title, status and the editor's reason if one was given, whether a deadline and a type were found, and the suggested subfields;
+  - **per skipped posting:** its redacted title and outcome from `source-postings`, so that wrongly skipped neuroscience postings can be found.
+- **What it must never return:** the candidates' text, people's names or addresses, or anything about members.
+- **Your judgement:** after its deploy, call it on the server (the go-ahead is below) and find:
+  - which candidates are not neuroscience, and which are old or filled;
+  - which sources fail, and why;
+  - which neuroscience postings were skipped wrongly.
 
-### 2. The newsletter builder (M11)
+### 3. Better candidates
 
-- **Issues** (`NewsletterIssue`, §5.1): an admin collection for editors.
-  - One issue a month. Its date is by default the next first Tuesday, at 13:00 UTC (D16).
-  - An issue has a subject, a preheader, an opening note of 2–3 sentences that the editor writes, and sections filled from published items:
-    - **Deadlines:** the positions whose deadlines fall in the next 45 days.
-    - **Selected positions:** 10–15 positions that the builder proposes, balanced by subfield and region. The editor reorders, removes or adds them.
-- **The email** (React Email, §11.3, in the format of §13):
-  - 600px, one column, system fonts, colours that stay readable in dark mode, and alt text;
-  - a plain-text part made from the same data;
-  - HTML under 100 KB, checked by a test;
-  - links to employers' pages without tracking parameters, and UTM tags only on links to our own pages;
-  - no tracking pixel, and listmonk's own tracking switched off;
-  - the footer of §13: why you get this, one-click unsubscribe, contact and legal notice, and the privacy links;
-  - unsubscribing as M2 built it (§13), with each subscriber's own ID and UUID:
-    - the visible link leads to `/en/newsletter/unsubscribe/?id=&s=`;
-    - the `List-Unsubscribe` and `List-Unsubscribe-Post` headers point at `…/unsubscribe/use/?id=&s=`.
-  - **A known problem:** listmonk may not fill template values in a campaign's own headers, and its built-in header points at listmonk's own address, which no one can reach. Check how listmonk v6.2 behaves, choose the safe way to fill the headers, and explain your choice in the report.
-- **Preview and test send:**
-  - a preview in the admin, both HTML and plain text;
-  - a test email through the app's mail path, to the signed-in editor's own address and to §13's seed addresses (a setting). It uses Mailpit locally, and works on the server only once `SMTP_HOST` is set.
-- **listmonk:**
-  - **The campaign:** the editor pushes an issue to the Glia Notes list as a campaign, either as a draft or scheduled for the issue's date. Nothing goes out without an editor's explicit action.
-  - **What the app records:** `listmonkCampaignId`, then `sentAt` as listmonk reports it.
-  - **Permissions:** grant only the campaign permissions this needs, through a separate API user if that keeps each user narrower. Never grant `subscribers:sql_query`.
-  - **Sending rate:** derive it from settings based on the mailbox's limit, which is unknown until M2's mailbox exists. Leave room for the forms' emails (`EMAIL_CAP_*`, D50), and document how the two share the limit.
-  - **Off until the launch:** keep pushing switched off (D53), so that no issue can reach people who subscribe at M2 before the launch issue.
-- **Archive:** `/en/newsletter/archive/` and `/en/newsletter/{yyyy-mm}/` show sent issues from the same record, with nothing about any subscriber.
-  - They are indexed once public.
-  - Until the launch they stay private, like the jobs (D39), so they are not in M2's public list.
-- **The launch issue:** prepare it so the editor can make it in minutes on launch day (D41), with a draft of its opening note for her to edit.
-- **Editor guide:** add a section on making an issue to `docs/editor-guide-tr.md`.
-- **Tests:**
-  - the email's rendering, size, links and headers;
-  - the push to listmonk (CI has listmonk);
-  - the test send through Mailpit;
-  - the new collection in `tests/e2e/access.spec.ts`;
-  - the archive pages in `tests/e2e/pages.ts`.
+- **False positives:** the employer's own name or department must not satisfy the neuroscience check. Karolinska's "Clinical Neuroscience" appears in every one of its ads. Choose the way, for example leaving the employer's and the unit's names out of the text that is checked, or a setting per source.
+- **Old "open until filled" posts:** RIKEN CBS lists posts from 2025. Skip a posting that has no deadline and was published long ago, or mark it for the editor as possibly filled. Choose the age limit and say why. Show the posting's date wherever the source gives one.
+- **Failing sources:** fix what can be fixed, and flag the rest with the reason.
+- **Names in Chinese, Japanese or Korean script:** redaction cannot find them (M7 notes). A list that names people that way stays manual unless the employer has a list in English.
+- **Fast decisions for Nuray:** let her reject several candidates at once, from the list, with a reason such as "Not neuroscience". If Payload's own bulk edit already does this, document it in the editor guide; otherwise add the smallest way to do it. Count the rejections per source, so the next round has data.
+- **Tests:** test each rule with fake pages. No request may leave the computer.
 
-### 3. The subfield introductions (D53)
+### 4. Fewer manual sources, more sources
 
-- **The drafts:** write an English introduction of 170–250 words for each of the 19 subfields in §4.2. Indexing counts 150 words (D40), so the range leaves Nuray room to shorten.
-  - **Who reads them:** researchers looking for positions, events and funding in that field.
-  - **What they cover:** what the field studies, its typical questions and methods, the kinds of positions it offers, and its related subfields.
-  - **How they are written:** plain British English, in our own words, with no names of people or labs, no medical advice (D19), and no claims that would need a source.
-- **Where Nuray reviews them:** a new field on each subfield, "AI draft of the introduction".
-  - Only editors see it, and it never reaches a public page (field access, and the public queries leave it out).
-  - A migration fills it where it is empty, as M7 seeded the sources, so the drafts arrive with an ordinary deploy.
-  - The site shows, and indexing counts, only "Hub introduction". It stays empty until Nuray writes hers from the draft and saves it.
-  - Update that field's description, which says "Human-written", to match D53, and add the steps to the editor guide.
-- **A readable copy:** put the 19 drafts, each with its word count, in `docs/subfield-introductions.md`, with the same texts as the migration's data.
-- **English only:** Turkish introductions come later.
+- **Adapters:** write small adapters for the sources M7 saw could be read that way ("Seen on the way"):
+  - the Workday sites whose robots.txt names a sitemap of posting pages: HHMI, CSHL, McGill, UBC, DZNE, Helmholtz Munich and EMBL;
+  - Oxford's CoreHR lists;
+  - Janelia.
 
-### On the server
+  M7's rules apply: robots.txt and the terms of use, one request at a time, and never a headless browser. A source whose terms forbid automated reading stays manual.
+- **New employers:** research about 40–60 more from their own official sites.
+  - **Where:** above all countries that have no automatic source yet, Türkiye among them.
+  - **Which:** prefer employers whose lists can be read automatically. Add a manual one only when it is the only good source for its country.
+  - **Rules as in M7:** each source gets its terms and the reason for its kind, and job boards are never sources.
+  - **How:** add them with a migration, with "Monitor on" unticked, and update the sources CSV.
+- **The manual list:** set the manual sources whose lists rarely change to "Monthly", so the dashboard asks Nuray less often. Say which ones in the report.
 
-- **Nothing by hand:** the app's changes, and the drafts' migration, arrive with the usual deploys.
-- **listmonk's settings:** the changes to `deploy/` reach the server later, with M2's steps. Until then, pushing to listmonk stays off there anyway.
+### 5. On the server: the operator's go-ahead, for these steps only
+
+- **The report:** call the read-only route of section 2 as often as the task needs.
+- **A run by hand:** after the deploy, run the changed sources and the new ones, a few at a time, through `/api/ops/monitors/run/`. Also check from the server whether the Hebrew University's hosts answer (M7 notes).
+- **Switching on:** switch on the new automatic sources whose run by hand had no failure, through `/api/ops/monitors/switch-on/`.
+- **Nothing else:** make no other change on the server, and never print a secret.
 
 ### Not in this task
 
-- the windows of M8–M10;
-- sending any issue, and any real email;
+- a headless browser, and job boards;
 - the Claude API and its key;
-- Turkish hub introductions;
-- the UI/UX pass.
+- Umami;
+- the UI/UX pass, which is the next task;
+- M8–M10.
 
 ### Report
 
 At the end, one short report in plain language:
-- **For Nuray:** how she makes an issue, step by step, and how she turns a draft into a hub's introduction.
-- **A sample issue:** made from the fake data, in the pull request, with its size.
-- **The unsubscribe headers:** the way you chose, and why.
-- **The introductions:** their word counts, and anything Nuray should check in particular.
-- **CI minutes:** how many this task used. About 675 of October's 2,000 are left; if fewer than 150 remain before a code pull request, stop and tell the operator.
+- **False positives and old posts:** how many before and after, and which rules changed;
+- **Sources:** automatic and manual, before and after, and the countries that automatic sources now cover;
+- **New employers:** listed by country;
+- **The run by hand:** candidates per source, and any failures;
+- **Nuray's week:** how many manual sources fall due each week, and about how many candidates arrive each day;
+- **CI minutes:** how many this task used. About 600 of October's 2,000 are left; if fewer than 150 remain before a code pull request, stop and tell the operator.
 
 ### Working rules
 
 Follow `CLAUDE.md`:
 - one pull request per step, merged when its checks pass;
 - CI minutes are limited (D46), so run every check locally before pushing, and put documentation into the same push;
-- stop and ask only for rules (a) to (c).
+- stop and ask only for rules (a) to (c), apart from the server steps approved above.
