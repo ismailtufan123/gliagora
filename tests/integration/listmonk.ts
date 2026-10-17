@@ -74,6 +74,8 @@ export async function startListmonk({ smtp = {}, withoutAdmin = false }: Listmon
 
   const port = await freePort()
   const token = randomBytes(32).toString('hex')
+  // The issues' API user (M11): a token of its own.
+  const campaignsToken = randomBytes(32).toString('hex')
   const url = `http://127.0.0.1:${port}`
   const env: Record<string, string> = {
     TZ: 'Etc/UTC',
@@ -123,7 +125,12 @@ export async function startListmonk({ smtp = {}, withoutAdmin = false }: Listmon
   }
 
   const params = (overrides: Partial<ListmonkParams> = {}): ListmonkParams => ({
-    ...listmonkParams({ LISTMONK_API_TOKEN: token, LISTMONK_ROOT_URL: url, ...smtp }),
+    ...listmonkParams({
+      LISTMONK_API_TOKEN: token,
+      LISTMONK_CAMPAIGNS_TOKEN: campaignsToken,
+      LISTMONK_ROOT_URL: url,
+      ...smtp,
+    }),
     ...overrides,
   })
 
@@ -135,11 +142,27 @@ export async function startListmonk({ smtp = {}, withoutAdmin = false }: Listmon
     superuserUrl,
     /** The headers of a call as the app's API user (never a Cookie: listmonk would ignore these). */
     headers: { Authorization: `token ${LISTMONK_API_USER}:${token}` },
+    /** The token of the issues' API user (M11, `gliagora-campaigns`). */
+    campaignsToken,
+    /** The headers of a call as the issues' API user. */
+    campaignsHeaders: { Authorization: `token gliagora-campaigns:${campaignsToken}` },
     /** settings.sql's parameters for this listmonk, as `pnpm listmonk:setup` gives them. */
     params,
     /** Applies settings.sql again, as its owner; returns what changed. */
     applySettings: (overrides: Partial<ListmonkParams> = {}) =>
       applyListmonkSettings(databaseUrl, params(overrides)),
+    /** listmonk's stored settings of these keys, by key (read from its database). */
+    async settings(keys: string[]): Promise<Record<string, unknown>> {
+      const db = drizzle(databaseUrl)
+      try {
+        const { rows } = await db.execute<{ key: string; value: unknown }>(
+          sql`select key, value from settings where key in ${keys}`,
+        )
+        return Object.fromEntries(rows.map((row) => [row.key, row.value]))
+      } finally {
+        await db.$client.end()
+      }
+    },
     async stop() {
       if (stopped) return
       stopped = true

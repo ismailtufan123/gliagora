@@ -32,7 +32,12 @@ export type ListmonkParams = Record<
   | 'smtp_port'
   | 'smtp_user'
   | 'smtp_password'
-  | 'smtp_tls',
+  | 'smtp_tls'
+  | 'campaigns_token_sha256'
+  | 'mailbox_limit_hour'
+  | 'mailbox_limit_day'
+  | 'email_cap_hour'
+  | 'email_cap_day',
   string
 >
 
@@ -46,7 +51,10 @@ export const hashApiToken = (token: string) => createHash('sha256').update(token
  * unless the server is on this computer (Mailpit). deploy/listmonk/prepare.sh reads them the same
  * way on the server: src/lib/deploy-scripts.test.ts compares both runners' parameters for every
  * kind of setting, and tests/integration/listmonk.db.test.ts checks that both store the same
- * settings, the mail server included.
+ * settings, the mail server included. Also LISTMONK_CAMPAIGNS_TOKEN (the issues' API user, M11;
+ * only its hash, and empty while unset), and the mailbox's limits and the forms' email cap as
+ * written (MAILBOX_LIMIT_*, EMAIL_CAP_*), which settings.sql checks and turns into the issues'
+ * sending rate.
  */
 export function listmonkParams(env: Env = process.env): ListmonkParams {
   const token = env.LISTMONK_API_TOKEN?.trim()
@@ -60,6 +68,13 @@ export function listmonkParams(env: Env = process.env): ListmonkParams {
     smtp_user: smtp?.auth?.user ?? '',
     smtp_password: smtp?.auth?.pass ?? '',
     smtp_tls: !smtp ? '' : smtp.secure ? 'TLS' : smtp.requireTLS ? 'STARTTLS' : 'none',
+    campaigns_token_sha256: env.LISTMONK_CAMPAIGNS_TOKEN?.trim()
+      ? hashApiToken(env.LISTMONK_CAMPAIGNS_TOKEN.trim())
+      : '',
+    mailbox_limit_hour: env.MAILBOX_LIMIT_HOUR?.trim() ?? '',
+    mailbox_limit_day: env.MAILBOX_LIMIT_DAY?.trim() ?? '',
+    email_cap_hour: env.EMAIL_CAP_HOUR?.trim() ?? '',
+    email_cap_day: env.EMAIL_CAP_DAY?.trim() ?? '',
   }
 }
 

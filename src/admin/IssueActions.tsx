@@ -30,7 +30,7 @@ export function IssueActions() {
 
   const base = `/api/newsletter-issues/${encodeURIComponent(String(id))}`
 
-  async function post(action: 'test') {
+  async function post(action: 'test' | 'push', request: Record<string, string> = {}) {
     setBusy(true)
     setAnswer(null)
     try {
@@ -38,10 +38,10 @@ export function IssueActions() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: '{}',
+        body: JSON.stringify(request),
       })
-      const body = (await response.json().catch(() => null)) as Answer | null
-      setAnswer(body ?? { ok: false, message: `The site answered ${response.status}.` })
+      const answer = (await response.json().catch(() => null)) as Answer | null
+      setAnswer(answer ?? { ok: false, message: `The site answered ${response.status}.` })
       router.refresh()
     } catch {
       setAnswer({ ok: false, message: 'The site could not be reached. Try again.' })
@@ -51,6 +51,28 @@ export function IssueActions() {
   }
 
   const month = typeof data?.month === 'string' ? data.month : null
+  const status = typeof data?.status === 'string' ? data.status : 'draft'
+  const sendAt = typeof data?.sendAt === 'string' ? new Date(data.sendAt) : null
+  const locked = ['sending', 'paused', 'sent'].includes(status)
+
+  function schedule() {
+    const when = sendAt
+      ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'full', timeStyle: 'short' }).format(sendAt)
+      : 'its date'
+    // An explicit second step: scheduling sends the issue to every subscriber at its date. A
+    // cancelled campaign was cancelled while sending, so part of it may have gone out already.
+    const resend =
+      status === 'cancelled'
+        ? ' Its earlier campaign was cancelled while it was sending: some subscribers may have it already, and they get it again.'
+        : ''
+    if (
+      window.confirm(
+        `Schedule this issue in listmonk? It goes to every subscriber of Glia Notes on ${when} (your computer's time).${resend}`,
+      )
+    ) {
+      void post('push', { mode: 'schedule' })
+    }
+  }
   return (
     <div className="issue-actions">
       <h3 className="issue-actions__title">Preview and send</h3>
@@ -83,6 +105,37 @@ export function IssueActions() {
         To you and the seed addresses (GLIA_NOTES_SEED_ADDRESSES), through the site&apos;s mail
         server. Its unsubscribe links change nothing.
       </p>
+      <h4 className="issue-actions__title">listmonk</h4>
+      {locked ? (
+        <p className="issue-actions__hint">
+          listmonk is sending this issue or has sent it: it can no longer change.
+        </p>
+      ) : (
+        <>
+          <button
+            type="button"
+            className="btn btn--style-secondary btn--size-small"
+            disabled={busy}
+            onClick={() => void post('push', { mode: 'draft' })}
+          >
+            {status === 'scheduled'
+              ? 'Unschedule (back to a draft)'
+              : 'Push to listmonk as a draft'}
+          </button>
+          <button
+            type="button"
+            className="btn btn--style-primary btn--size-small"
+            disabled={busy || modified}
+            onClick={schedule}
+          >
+            {status === 'scheduled' ? 'Schedule again' : 'Schedule in listmonk'}
+          </button>
+          <p className="issue-actions__hint">
+            A draft sends nothing. Scheduling sends the issue at its date, after you confirm. Each
+            push sends the saved issue as it is now. Off until the launch (D53).
+          </p>
+        </>
+      )}
       {month && (
         <p className="issue-actions__hint">Archive address once sent: /en/newsletter/{month}/</p>
       )}

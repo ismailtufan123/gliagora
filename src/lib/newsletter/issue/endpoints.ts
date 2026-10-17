@@ -1,4 +1,4 @@
-import type { Endpoint, PayloadRequest } from 'payload'
+import { type Endpoint, type PayloadRequest, addDataAndFileToRequest } from 'payload'
 
 import { sendOne } from '@/lib/email/deliver'
 import { canSendEmail } from '@/lib/email/settings'
@@ -14,10 +14,11 @@ import { seedAddresses } from './settings'
 import { FROZEN_STATUSES } from './status'
 
 // The routes behind an issue's actions in the admin (src/admin/IssueActions.tsx), for signed-in
-// editors only: `/api/newsletter-issues/:id/preview/` (GET; `?format=text` for the plain text) and
+// editors only: `/api/newsletter-issues/:id/preview/` (GET; `?format=text` for the plain text),
 // `/api/newsletter-issues/:id/test/` (POST: a test email to the editor and the seed addresses,
-// through the app's mail server). They answer with counts and messages, never an address, and log
-// only error classes. A preview and a test carry listmonk's preview UUID in their unsubscribe
+// through the app's mail server) and `/api/newsletter-issues/:id/push/` (POST, `{"mode": "draft"}`
+// or `{"mode": "schedule"}`: to listmonk, push.ts). They answer with counts and messages, never an
+// address, and log only error classes. A preview and a test carry listmonk's preview UUID in their unsubscribe
 // links, which unsubscribes nobody.
 
 const json = (body: { ok: boolean; message: string }, status = 200) =>
@@ -159,7 +160,26 @@ async function test(req: PayloadRequest): Promise<Response> {
   }
 }
 
+async function push(req: PayloadRequest): Promise<Response> {
+  if (!sameOrigin(req.headers)) return json({ ok: false, message: 'Refused.' }, 403)
+  const issue = await issueOf(req)
+  if (!issue) return json({ ok: false, message: 'No such issue.' }, 404)
+  await addDataAndFileToRequest(req)
+  const mode = (req.data as { mode?: unknown } | undefined)?.mode
+  if (mode !== 'draft' && mode !== 'schedule') {
+    return json({ ok: false, message: 'Say how: as a draft, or scheduled.' }, 400)
+  }
+  // Loaded on first use, like the renderer.
+  const { pushIssue } = await import('./push')
+  const result = await pushIssue(req.payload, issue, mode, {
+    origin: originOf(req),
+    now: new Date(),
+  })
+  return json({ ok: result.ok, message: result.message }, result.ok ? 200 : 409)
+}
+
 export const ISSUE_ENDPOINTS: Endpoint[] = [
   { path: '/:id/preview', method: 'get', handler: preview },
   { path: '/:id/test', method: 'post', handler: test },
+  { path: '/:id/push', method: 'post', handler: push },
 ]

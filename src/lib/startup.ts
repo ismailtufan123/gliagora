@@ -6,6 +6,7 @@ import { altchaKey } from '@/lib/forms/altcha'
 import { describeEmailCap, emailCap } from '@/lib/forms/email-cap'
 import { describeMemberAuth, memberAuthConfig } from '@/lib/members/config'
 import { describeNewsletter, newsletterConfig } from '@/lib/newsletter/config'
+import { describeIssuePush } from '@/lib/newsletter/issue/settings'
 import { describeSiteStage, siteStageSetting } from '@/lib/site-stage'
 import { describeClaudeApi } from '@/lib/ai/claude-api'
 
@@ -32,6 +33,8 @@ import { describeClaudeApi } from '@/lib/ai/claude-api'
  * One line says whether the Glia Notes signup and unsubscribing are on (M2, D50: listmonk's
  * settings, a mail server and the spam check), and why not, and one line each names a setting it
  * could not use.
+ * One line says whether issues of Glia Notes can be pushed to listmonk (M11, D53: GLIA_NOTES_PUSH,
+ * the issues' listmonk user, the mailbox's limits), and at which rate.
  * One line says whether AI drafts through the Claude API are on (M7, D52), with the model and the
  * monthly cap, never the key.
  */
@@ -54,6 +57,7 @@ export async function connectOnStart(): Promise<void> {
   const newsletter = newsletterConfig()
   console.log(describeNewsletter(newsletter))
   for (const problem of newsletter.problems) console.error(problem)
+  console.log(describeIssuePush())
   console.log(describeClaudeApi())
   try {
     const payload = await getPayload({ config })

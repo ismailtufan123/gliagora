@@ -11,12 +11,14 @@ import { PurgeMemberAuthTask } from './purgeMemberAuth'
 import { PurgeRetentionTask } from './purgeRetention'
 import { SendRequestEmailsTask } from './sendRequestEmails'
 import { CheckGliaNotesMembersTask, SyncGliaNotesTask } from './syncGliaNotes'
+import { SyncGliaNotesIssuesTask } from './syncGliaNotesIssues'
 import { SyncJobPlacesTask } from './syncJobPlaces'
 
 export { MAINTENANCE_QUEUE, MANUAL_QUEUE, MONITOR_QUEUE } from './task'
 
 /**
- * The scheduled maintenance tasks (M4.7; the member tasks M4b; members' Glia Notes M2), in the
+ * The scheduled maintenance tasks (M4.7; the member tasks M4b; members' Glia Notes M2; the
+ * issues' campaigns M11), in the
  * order `pnpm jobs:run` runs them. Their times are in UTC; they run only where
  * PAYLOAD_JOBS_AUTORUN is "true" (payload.config.ts).
  */
@@ -33,6 +35,7 @@ export const MAINTENANCE_TASKS = [
   SendRequestEmailsTask, // every 5 minutes
   SyncGliaNotesTask, // every 5 minutes, at :02, :07, …
   CheckGliaNotesMembersTask, // 06:00
+  SyncGliaNotesIssuesTask, // every 10 minutes, at :04, :14, … (M11)
 ]
 
 /**

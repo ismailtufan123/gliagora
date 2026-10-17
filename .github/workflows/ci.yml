@@ -149,10 +149,11 @@ jobs:
 
       # Throwaway secrets for the app, generated once and used by both runs of it below (the smoke
       # test and the end-to-end tests), so the session and the spam-check keys stay the same; and
-      # the token of the app's API user in the end-to-end tests' listmonk (M2).
+      # the tokens of the app's two API users in the end-to-end tests' listmonk (M2; the issues'
+      # one, M11).
       - name: Generate the app's test secrets
         run: |
-          for name in PAYLOAD_SECRET ALTCHA_HMAC_KEY LISTMONK_API_TOKEN; do
+          for name in PAYLOAD_SECRET ALTCHA_HMAC_KEY LISTMONK_API_TOKEN LISTMONK_CAMPAIGNS_TOKEN; do
             value=$(openssl rand -hex 32)
             echo "::add-mask::$value"
             echo "APP_$name=$value" >> "$GITHUB_ENV"
@@ -256,12 +257,16 @@ jobs:
       # then the service with the server's hardening, on this machine's loopback. The app gets its
       # address and token (the Glia Notes signup and unsubscribe, whose start line must say they
       # are on), and a higher cap on the forms' emails than the default 50 an hour, which a whole
-      # run of the end-to-end tests would come close to.
+      # run of the end-to-end tests would come close to. The issues of Glia Notes (M11, D53): the
+      # issues' API user with its own token, a mailbox limit far above that cap, and pushing to
+      # listmonk switched on (off on the server until the launch).
       - name: Re-create the app with the test settings
         if: needs.tested.outputs.run == ''
         run: |
           set -euo pipefail
           export LISTMONK_API_TOKEN="$APP_LISTMONK_API_TOKEN"
+          export LISTMONK_CAMPAIGNS_TOKEN="$APP_LISTMONK_CAMPAIGNS_TOKEN"
+          export EMAIL_CAP_HOUR=1000 EMAIL_CAP_DAY=5000 MAILBOX_LIMIT_HOUR=10000 MAILBOX_LIMIT_DAY=50000
           mailpit_image=$(grep -oE 'axllent/mailpit[^[:space:]]+' compose.yaml | head -n 1)
           test -n "$mailpit_image"
           docker run -d --name mailpit -p 127.0.0.1:1025:1025 -p 127.0.0.1:8025:8025 \
@@ -293,7 +298,9 @@ jobs:
             -e SMTP_HOST=127.0.0.1 -e SMTP_PORT=1025 \
             -e AUTH_TEST_ISSUER=http://127.0.0.1:9400 \
             -e LISTMONK_URL=http://127.0.0.1:9000 -e LISTMONK_API_TOKEN \
-            -e EMAIL_CAP_HOUR=1000 -e EMAIL_CAP_DAY=5000 \
+            -e EMAIL_CAP_HOUR -e EMAIL_CAP_DAY \
+            -e LISTMONK_CAMPAIGNS_TOKEN -e MAILBOX_LIMIT_HOUR -e MAILBOX_LIMIT_DAY \
+            -e GLIA_NOTES_PUSH=on \
             gliagora:ci
           for i in $(seq 1 60); do curl -fsS http://localhost:3000/health/ && break; sleep 2; done
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8025/readyz && break; sleep 1; done
@@ -306,6 +313,10 @@ jobs:
           lists="$(curl -fsS -H @<(auth) http://127.0.0.1:9000/api/lists)"
           grep -qF '"name":"Glia Notes"' <<<"$lists"
           test "$(curl -s -o /dev/null -w '%{http_code}' -H @<(auth) http://127.0.0.1:9000/api/settings)" = 403
+          # The issues' API user (M11) sees campaigns, and neither subscribers nor settings.
+          campaigns() { printf 'Authorization: token gliagora-campaigns:%s\n' "$LISTMONK_CAMPAIGNS_TOKEN"; }
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H @<(campaigns) http://127.0.0.1:9000/api/campaigns)" = 200
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H @<(campaigns) http://127.0.0.1:9000/api/subscribers)" = 403
           logs="$(docker logs app 2>&1)"; grep -qF 'Member sign-in: email on, google on, orcid on' <<<"$logs"
           grep -qF 'Email cap of the forms: 1000 an hour, 5000 a day' <<<"$logs"
           grep -qF 'Glia Notes: signup on, unsubscribe on' <<<"$logs"
@@ -382,6 +393,8 @@ jobs:
           # The tests read what listmonk holds after a signup or an unsubscribe (Glia Notes, M2).
           LISTMONK_URL: http://127.0.0.1:9000
           LISTMONK_API_TOKEN: ${{ env.APP_LISTMONK_API_TOKEN }}
+          # And the campaigns an issue's push made (M11).
+          LISTMONK_CAMPAIGNS_TOKEN: ${{ env.APP_LISTMONK_CAMPAIGNS_TOKEN }}
 
       # Records that this tree passed every check and test, for the push to main that merges it
       # (job `tested`). Only a pull request run that got this far uploads it. A failure here only

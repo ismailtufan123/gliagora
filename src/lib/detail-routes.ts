@@ -3,7 +3,8 @@ import { type ListingDates, listingState } from '@/lib/jobs/deadline'
 import { SHORT_ID_CHAR } from '@/lib/short-id'
 
 // Pages whose URL names a database record: institutions (`/en/institutions/{slug}-{id}/`),
-// subfield hubs (`/en/subfields/{slug}/`) and jobs (`/en/jobs/{slug}-{shortId}/`). The proxy
+// subfield hubs (`/en/subfields/{slug}/`), jobs (`/en/jobs/{slug}-{shortId}/`) and the issues of
+// Glia Notes in its archive (`/en/newsletter/{yyyy-mm}/`, M11). The proxy
 // resolves them before rendering, because a page cannot answer 404 on the server by itself
 // (Next.js 16.3 renders `notFound()` in a page only with JavaScript) and a permanent redirect or a
 // 410 must be sent before the page starts streaming.
@@ -21,10 +22,30 @@ const JOB_SEGMENT = new RegExp(`^(?:([a-z0-9]+(?:-[a-z0-9]+)*)-)?(${SHORT_ID_CHA
  */
 export const JOBS_RESERVED_SEGMENTS: ReadonlySet<string> = new Set<string>(['feed.xml'])
 
+/**
+ * Names under /en/newsletter/ that are pages of their own: the signup's pages (M2) and the archive
+ * (M11). Any other name is an issue's month (`2026-11`) or answers 404; a name of two segments
+ * (`confirm/use/`) is never a detail route.
+ */
+export const NEWSLETTER_RESERVED_SEGMENTS: ReadonlySet<string> = new Set<string>([
+  'check-your-inbox',
+  'resend',
+  'confirm',
+  'confirmed',
+  'unsubscribe',
+  'unsubscribed',
+  'archive',
+])
+
+/** An issue's month in its address (`2026-11`). */
+const ISSUE_MONTH = /^\d{4}-(?:0[1-9]|1[0-2])$/
+
 export type DetailRoute =
   | { kind: 'institution'; slug: string | null; id: string }
   | { kind: 'subfield'; slug: string }
   | { kind: 'job'; slug: string | null; shortId: string }
+  /** An issue of Glia Notes, by its month. */
+  | { kind: 'issue'; month: string }
   /** A URL under a detail route that cannot name any record. */
   | { kind: 'invalid' }
 
@@ -43,9 +64,13 @@ export const SUBFIELDS_PATH = `/${siteLocale}/subfields/`
  * and those must get the 404 as well.
  */
 export function matchDetailRoute(pathname: string): DetailRoute | null {
-  const match = /^\/en\/(institutions|subfields|jobs)\/([^/]+)\/?$/.exec(pathname)
+  const match = /^\/en\/(institutions|subfields|jobs|newsletter)\/([^/]+)\/?$/.exec(pathname)
   if (!match) return null
   const [, section, segment = ''] = match
+  if (section === 'newsletter') {
+    if (NEWSLETTER_RESERVED_SEGMENTS.has(segment)) return null
+    return ISSUE_MONTH.test(segment) ? { kind: 'issue', month: segment } : { kind: 'invalid' }
+  }
   if (section === 'subfields')
     return SLUG.test(segment) ? { kind: 'subfield', slug: segment } : { kind: 'invalid' }
   if (section === 'jobs') {
@@ -74,6 +99,8 @@ export type DetailLookup = {
   subfield: (slug: string) => Promise<{ isActive: boolean } | null>
   /** The job with this short ID, in any status. */
   job: (shortId: string) => Promise<JobRecord | null>
+  /** Whether an issue of Glia Notes was sent in this month (only sent issues have a page). */
+  sentIssue: (month: string) => Promise<boolean>
   /**
    * Whether a job with this short ID was retired: deleted 12 months after it went offline, with
    * only its address and ID kept (D34, `retired-listings`). Asked only when no job has the ID.
@@ -104,6 +131,9 @@ export async function resolveDetailRoute(
   now: Date = new Date(),
 ): Promise<Resolution> {
   if (route.kind === 'invalid') return { action: 'notFound' }
+  if (route.kind === 'issue') {
+    return (await lookup.sentIssue(route.month)) ? { action: 'render' } : { action: 'notFound' }
+  }
   if (route.kind === 'subfield') {
     const subfield = await lookup.subfield(route.slug)
     if (!subfield) return { action: 'notFound' }

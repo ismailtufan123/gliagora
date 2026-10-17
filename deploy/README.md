@@ -655,3 +655,45 @@ The weekly AI drafts go through the same routes, from the operator's computer: `
 
 **The Claude API (off).** To switch it on, with the operator's go-ahead: set `ANTHROPIC_API_KEY` and `AI_MONTHLY_CAP_USD` (and, if wanted, `CLAUDE_MODEL`; default `claude-opus-5-5`) in `/opt/gliagora/.env`, copy the `compose.prod.yml` that passes them to the app (since M7), set the same monthly limit in the Claude Console, and restart the app (`docker compose -f compose.prod.yml up -d app`). A start line of the app then says `AI drafts by the Claude API: on (claude-opus-5-5, at most 15 US dollars a month)` (without the key); `draftWithClaude` runs daily at 07:30 UTC and logs its counts.
 
+## 18. Glia Notes issues on the server (M11, D53)
+
+The newsletter builder reaches the server with the app's deploys: the issues in the admin (Glia Notes → Glia Notes issues), the preview, the archive pages (behind the password until the launch, D39) and the launch issue, saved as a draft by a migration. The test email needs the mailbox (`SMTP_HOST`) and `GLIA_NOTES_SEED_ADDRESSES`; **pushing an issue to listmonk stays off** until the launch (D53): `GLIA_NOTES_PUSH` is `off` unless `.env` says `on`. The start line says which: `Glia Notes issues: push off (GLIA_NOTES_PUSH, until the launch)`.
+
+**With M2's steps** (section 12 and the mailbox), with the operator's go-ahead:
+
+1. **Copy the files** that give listmonk the issues' user, template and sending rate, and the app its settings (from the commit of the running image; `deploy/caddy` with `compose.prod.yml`, section 13):
+
+   ```sh
+   scp deploy/compose.prod.yml gliagora@<server-ip>:/opt/gliagora/
+   scp deploy/listmonk/settings.sql deploy/listmonk/prepare.sh gliagora@<server-ip>:/opt/gliagora/listmonk/
+   ```
+
+2. **Set in `/opt/gliagora/.env`** (as `gliagora`, with `sudo`; never print the token):
+   - `LISTMONK_CAMPAIGNS_TOKEN`: `openssl rand -hex 32`, written straight into the file (another value than `LISTMONK_API_TOKEN`; settings.sql refuses the same one);
+   - `MAILBOX_LIMIT_HOUR` and/or `MAILBOX_LIMIT_DAY`: the mailbox's sending limits from its provider; and the forms' cap `EMAIL_CAP_HOUR`/`EMAIL_CAP_DAY` (section 12). Of each mailbox limit, a tenth stays for the scheduled emails and anything sent by hand, and twice the forms' cap (their links, and as many welcome emails again) is kept for the forms; the rest is the issues' share. listmonk then sends one message a second, at most that share in an hour (or, with a daily limit, in a window of up to 24 hours, so a day stays within its share). A limit that leaves no share stops `prepare.sh` with a message, and nothing changes;
+   - `GLIA_NOTES_PUSH=off` (as it is).
+3. **Apply:** `cd /opt/gliagora && sudo ./update.sh --no-pull`. `prepare.sh` names what changed (`created the template Glia Notes issue (site)`, `API user gliagora-campaigns`, `setting app.message_sliding_window_rate`, …) and restarts listmonk.
+4. **Check:** the app's start line `Glia Notes issues: push off (GLIA_NOTES_PUSH, until the launch)`; listmonk's admin (section 11) shows the template "Glia Notes issue (site)" and, under Settings → Performance, the sliding window; the issues' user may read campaigns and nothing about subscribers (on the server, the token going to curl only as a header file, never in a command line:
+
+   ```bash
+   cd /opt/gliagora
+   auth() { printf 'Authorization: token gliagora-campaigns:%s\n' "$(sudo grep -oP '^LISTMONK_CAMPAIGNS_TOKEN=\K.*' .env | tr -d "'")"; }
+   curl -s -o /dev/null -w '%{http_code}\n' -H @<(auth) http://127.0.0.1:9000/api/campaigns     # 200
+   curl -s -o /dev/null -w '%{http_code}\n' -H @<(auth) http://127.0.0.1:9000/api/subscribers   # 403
+   ```
+
+   ); a test email from an issue reaches the editor and the seed addresses.
+
+**At the launch** (D41, D53), with the operator's go-ahead: set `GLIA_NOTES_PUSH=on` in `.env` and recreate the app (`docker compose -f compose.prod.yml up -d app`); the start line then says `Glia Notes issues: push on, at most … an hour`. The editor then makes the launch issue (`docs/editor-guide-tr.md`, section 8), pushes it as a draft, checks it, and schedules it. The site checks the campaign every 10 minutes (`syncGliaNotesIssues`): the issue says `Sending`, then `Sent`, and its archive page appears.
+
+While listmonk is sending an issue (a campaign running or paused), `prepare.sh` does not restart it for changed settings: listmonk keeps its sending window's count in memory, and a restart would start a fresh window. The restart then waits for the next update (`/opt/gliagora/.listmonk-restart-pending`, removed once done); a new listmonk image starts it all the same, so do not upgrade listmonk while an issue is sending.
+
+If an issue's campaign is gone from listmonk (deleted in its admin), the push says that listmonk does not show it, and the issue can be neither pushed nor deleted. After checking in listmonk's admin that the campaign is gone, the technical administrator resets the issue on the server, with the operator's go-ahead (`<ID>` from the issue's address in the admin):
+
+```bash
+docker compose -f compose.prod.yml exec -T db psql -U postgres -d gliagora -c \
+  "update newsletter_issues set listmonk_campaign_id = null, status = 'draft', snapshot = null, pushed_at = null where id = <ID> and status <> 'sent'"
+```
+
+Never send or edit an issue's campaign in listmonk's admin: the site pushes the content, and a campaign changed there no longer matches the issue and its archive page. To stop a scheduled issue, the editor pushes it as a draft again ("Unschedule"); a campaign that is already sending can be paused or cancelled in listmonk's admin (the site then shows `Paused` or `Cancelled`; a cancelled issue can be pushed again as a new campaign).
+

@@ -1,9 +1,14 @@
+import { readdirSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 import { describe, expect, it, vi } from 'vitest'
 
 import {
   type DetailLookup,
   type JobRecord,
   JOBS_RESERVED_SEGMENTS,
+  NEWSLETTER_RESERVED_SEGMENTS,
   matchDetailRoute,
   resolveDetailRoute,
 } from './detail-routes'
@@ -77,6 +82,38 @@ describe('matchDetailRoute', () => {
     expect(matchDetailRoute('/en/jobs/feed.xml')).toBeNull()
     expect(matchDetailRoute('/en/jobs/feed.xml/')).toBeNull()
   })
+  it('reserves exactly the page folders under /en/newsletter/, besides the issues’ [month]', () => {
+    // A new page there must be added to NEWSLETTER_RESERVED_SEGMENTS, or the proxy answers 404.
+    const folder = path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      '../app/(frontend)/en/newsletter',
+    )
+    const pages = readdirSync(folder, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && entry.name !== '[month]')
+      .map((entry) => entry.name)
+      .sort()
+    expect([...NEWSLETTER_RESERVED_SEGMENTS].sort()).toEqual(pages)
+  })
+
+  it("reads a month under /en/newsletter/ as an issue, and leaves the signup's pages alone (M11)", () => {
+    expect(matchDetailRoute('/en/newsletter/2026-11/')).toEqual({ kind: 'issue', month: '2026-11' })
+    for (const page of [
+      'archive',
+      'confirm',
+      'confirmed',
+      'check-your-inbox',
+      'resend',
+      'unsubscribe',
+      'unsubscribed',
+    ]) {
+      expect(matchDetailRoute(`/en/newsletter/${page}/`), page).toBeNull()
+    }
+    expect(matchDetailRoute('/en/newsletter/')).toBeNull()
+    expect(matchDetailRoute('/en/newsletter/confirm/use/')).toBeNull()
+    for (const wrong of ['2026-13', '2026-1', 'november', '2026-11-03', 'wp-login.php']) {
+      expect(matchDetailRoute(`/en/newsletter/${wrong}/`), wrong).toEqual({ kind: 'invalid' })
+    }
+  })
 })
 
 describe('resolveDetailRoute', () => {
@@ -91,6 +128,7 @@ describe('resolveDetailRoute', () => {
     subfield: async (slug) =>
       ({ glia: { isActive: true }, retired: { isActive: false } })[slug] ?? null,
     job: async () => null,
+    sentIssue: async (month) => month === '2026-11',
     retiredJob: async () => false,
   }
   const resolve = (path: string) => {
@@ -128,6 +166,12 @@ describe('resolveDetailRoute', () => {
     expect(await resolve('/en/institutions/Caltech-05dxps055/')).toEqual({ action: 'notFound' })
   })
 
+  it('renders a sent issue of Glia Notes, 404 for any other month', async () => {
+    expect(await resolve('/en/newsletter/2026-11/')).toEqual({ action: 'render' })
+    expect(await resolve('/en/newsletter/2026-12/')).toEqual({ action: 'notFound' })
+    expect(await resolve('/en/newsletter/2026-13/')).toEqual({ action: 'notFound' })
+  })
+
   it('renders an active subfield, 410 for a retired one and 404 for an unknown one', async () => {
     expect(await resolve('/en/subfields/glia/')).toEqual({ action: 'render' })
     expect(await resolve('/en/subfields/retired/')).toEqual({ action: 'gone' })
@@ -153,6 +197,7 @@ describe('resolveDetailRoute for jobs (PLAN §2.5)', () => {
     const lookup: DetailLookup = {
       institution: async () => null,
       subfield: async () => null,
+      sentIssue: async () => false,
       retiredJob,
       job: async (shortId) =>
         job && shortId === 'k3f9a'
@@ -205,6 +250,7 @@ describe('resolveDetailRoute for jobs (PLAN §2.5)', () => {
         status: 'published',
         deadlineKind: 'rolling',
       }),
+      sentIssue: async () => false,
       retiredJob: vi.fn(async () => true),
     }
     const route = matchDetailRoute(PATH)

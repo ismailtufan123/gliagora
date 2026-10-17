@@ -1,21 +1,29 @@
-import { expect, test } from '@playwright/test'
+import { type APIRequestContext, expect, test } from '@playwright/test'
 
 import { PREVIEW_UUID } from '../../src/lib/newsletter/consent'
 import { E2E_EDITOR_EMAIL } from '../../src/scripts/e2e-editor-account'
+import { E2E_ISSUE_SUBJECT } from '../../src/scripts/fake-issue'
 
 import { editorHeaders, editorPassword } from './editor'
 import { emailHeaders, mailpitUrl } from './mailpit'
 
 // The newsletter builder (M11, D53; PLAN §3.2, §13): an issue created in the admin's API gets its
-// selected positions proposed, its preview renders as HTML and as plain text, and its test email
+// selected positions proposed, its preview renders as HTML and as plain text, its test email
 // reaches the editor through the app's mail server (Mailpit here) with RFC 8058's headers naming
-// listmonk's preview UUID, which unsubscribes nobody. Signed out, the routes give nothing.
+// listmonk's preview UUID, which unsubscribes nobody, and pushing it makes a campaign in listmonk,
+// as a draft or scheduled. Signed out, the routes give nothing.
 //
-// As the test editor (tests/e2e/editor.ts); the test email also needs Mailpit (MAILPIT_URL), which
-// CI always has. The issue is dated in a month no other issue has, and removed again.
+// As the test editor (tests/e2e/editor.ts); the test email also needs Mailpit (MAILPIT_URL), and
+// the push an app with GLIA_NOTES_PUSH=on and the issues' listmonk user, whose token the test
+// reads too (LISTMONK_URL, LISTMONK_CAMPAIGNS_TOKEN), all of which CI has. The issue is dated in a
+// far month of its own (an issue pushed to listmonk can no longer be deleted; `pnpm fake:jobs`
+// removes those of earlier runs).
 
-const MONTH = '2030-03'
-const SEND_AT = '2030-03-05T13:00:00.000Z'
+const YEAR = 2040 + Math.floor(Math.random() * 50)
+const MONTH = `${YEAR}-03`
+const SEND_AT = `${YEAR}-03-06T13:00:00.000Z`
+const listmonkUrl = process.env.LISTMONK_URL?.replace(/\/+$/, '')
+const campaignsToken = process.env.LISTMONK_CAMPAIGNS_TOKEN
 
 test.describe('Glia Notes issues', () => {
   test.describe.configure({ mode: 'serial' })
@@ -52,7 +60,7 @@ test.describe('Glia Notes issues', () => {
       headers: editorHeaders(),
       data: {
         sendAt: SEND_AT,
-        subject: 'Glia Notes test issue',
+        subject: E2E_ISSUE_SUBJECT,
         preheader: 'A test of the newsletter builder.',
         intro: 'This is the opening note of a test issue.\n\nIt has two paragraphs.',
       },
@@ -77,8 +85,8 @@ test.describe('Glia Notes issues', () => {
     expect(html.headers()['content-type']).toContain('text/html')
     expect(html.headers()['cache-control']).toContain('no-store')
     const body = await html.text()
-    expect(body).toContain('<title>Glia Notes test issue</title>')
-    expect(body).toContain('Glia Notes, March 2030')
+    expect(body).toContain(`<title>${E2E_ISSUE_SUBJECT}</title>`)
+    expect(body).toContain(`Glia Notes, March ${YEAR}`)
     expect(body).toContain('Selected positions')
     expect(body).toContain(`/en/newsletter/unsubscribe/?id=0&amp;s=${PREVIEW_UUID}`)
 
@@ -110,7 +118,7 @@ test.describe('Glia Notes issues', () => {
       .poll(
         async () => {
           const query = encodeURIComponent(
-            `to:"${E2E_EDITOR_EMAIL}" subject:"[Test] Glia Notes test issue"`,
+            `to:"${E2E_EDITOR_EMAIL}" subject:"[Test] ${E2E_ISSUE_SUBJECT}"`,
           )
           const found = await fetch(`${mailpitUrl}/api/v1/search?query=${query}&limit=5`)
           const { messages } = (await found.json()) as { messages: Message[] }
@@ -146,6 +154,95 @@ test.describe('Glia Notes issues', () => {
     await expect(page.locator('#field-selected .rs__multi-value').first()).toBeVisible()
   })
 
+  /** The campaign in listmonk, as the issues' API user reads it. */
+  async function campaign(campaignId: number) {
+    const response = await fetch(`${listmonkUrl}/api/campaigns/${campaignId}`, {
+      headers: { Authorization: `token gliagora-campaigns:${campaignsToken}` },
+    })
+    expect(response.status).toBe(200)
+    return ((await response.json()) as { data: Record<string, unknown> }).data
+  }
+
+  async function issue(request: APIRequestContext) {
+    const response = await request.get(`/api/newsletter-issues/${id}/?depth=0`, {
+      headers: editorHeaders(),
+    })
+    return (await response.json()) as {
+      status: string
+      subject: string
+      listmonkCampaignId: number | null
+      snapshot: { subject: string } | null
+    }
+  }
+
+  const push = (request: APIRequestContext, baseURL: string, mode: 'draft' | 'schedule') =>
+    request.post(`/api/newsletter-issues/${id}/push/`, {
+      headers: { ...editorHeaders(), Origin: baseURL },
+      data: { mode },
+    })
+
+  test.describe('in listmonk', () => {
+    test.skip(
+      !(listmonkUrl && campaignsToken) && !process.env.CI,
+      "needs listmonk with the issues' user: LISTMONK_URL, LISTMONK_CAMPAIGNS_TOKEN",
+    )
+
+    test('pushed as a draft, it becomes a campaign of Glia Notes that sends nothing', async ({
+      request,
+      baseURL,
+    }) => {
+      const response = await push(request, baseURL!, 'draft')
+      const answer = (await response.json()) as { ok: boolean; message: string }
+      expect(answer.message).toContain('Pushed to listmonk as a draft')
+      expect(response.status()).toBe(200)
+      const saved = await issue(request)
+      expect(saved.status).toBe('pushed')
+      expect(saved.snapshot?.subject).toBe(E2E_ISSUE_SUBJECT)
+      const there = await campaign(saved.listmonkCampaignId!)
+      expect(there.status).toBe('draft')
+      expect(there.name).toBe(`Glia Notes ${MONTH}`)
+      expect(there.content_type).toBe('html')
+      expect(String(there.body)).toContain('?id={{ .Subscriber.ID }}&amp;s={{ .Subscriber.UUID }}')
+      expect(there.headers).toEqual([
+        {
+          'List-Unsubscribe': expect.stringMatching(
+            /\/en\/newsletter\/unsubscribe\/use\/\?id=\{\{ \.Subscriber\.ID \}\}&s=\{\{ \.Subscriber\.UUID \}\}>$/,
+          ),
+        },
+        { 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
+      ])
+      // Once in listmonk, the issue is part of the record: it cannot be deleted.
+      const deleted = await request.delete(`/api/newsletter-issues/${id}/`, {
+        headers: editorHeaders(),
+      })
+      expect(deleted.ok()).toBe(false)
+      expect((await issue(request)).status).toBe('pushed')
+    })
+
+    test('scheduled, it is locked; pushed as a draft again, listmonk unschedules it', async ({
+      request,
+      baseURL,
+    }) => {
+      const scheduled = await push(request, baseURL!, 'schedule')
+      expect(((await scheduled.json()) as { message: string }).message).toContain(
+        'Scheduled in listmonk',
+      )
+      const saved = await issue(request)
+      expect(saved.status).toBe('scheduled')
+      expect((await campaign(saved.listmonkCampaignId!)).status).toBe('scheduled')
+      // The editor's fields are locked while listmonk has it scheduled.
+      await request.patch(`/api/newsletter-issues/${id}/`, {
+        headers: editorHeaders(),
+        data: { subject: 'Changed while scheduled' },
+      })
+      expect((await issue(request)).subject).toBe(E2E_ISSUE_SUBJECT)
+      const back = await push(request, baseURL!, 'draft')
+      expect(back.status()).toBe(200)
+      expect((await issue(request)).status).toBe('pushed')
+      expect((await campaign(saved.listmonkCampaignId!)).status).toBe('draft')
+    })
+  })
+
   test('signed out, its routes give nothing', async ({ playwright, baseURL }) => {
     const context = await playwright.request.newContext({ baseURL })
     try {
@@ -155,6 +252,11 @@ test.describe('Glia Notes issues', () => {
         data: {},
       })
       expect(sent.status()).toBe(404)
+      const pushed = await context.post(`/api/newsletter-issues/${id}/push/`, {
+        headers: { Origin: baseURL! },
+        data: { mode: 'schedule' },
+      })
+      expect(pushed.status()).toBe(404)
       expect((await context.get(`/api/newsletter-issues/${id}/`)).status()).toBe(403)
     } finally {
       await context.dispose()
