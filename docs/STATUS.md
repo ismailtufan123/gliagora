@@ -47,7 +47,7 @@ Last updated: 2026-10-16, at the end of the task "M7, finding positions automati
 
 - **The first candidates**: 34 from the first run, and from 2026-10-17 those of the daily runs, wait in Review queue → Candidates (filter by "Source").
 - **Five sources stay manual** because their terms restrict storing content (Radboud and the Donders Institute, ETH Zurich twice, the University of Tübingen): the operator's decision of 2026-10-16.
-- **The About page's new section** "Reading employers' pages" (the monitor's user agent links to it): the About page is approved, so its new wording waits for the operator's approval. Until M2 the page is behind the password, so a site owner who follows the link sees the password prompt.
+- **The About page's new section** "Reading employers' pages" (the monitor's user agent links to it): **approved as written** by the operator on 2026-10-17. Until M2 the page is behind the password, so a site owner who follows the link sees the password prompt.
 - **The Claude API** (AI drafts each day): off until the operator sets a key, a monthly cap and, if wanted, a cheaper model (`deploy/README.md` section 17; default `claude-opus-5-5`).
 - **61 manual sources**, all to be looked at weekly: the dashboard lists them as due. Setting some to "Monthly" in the admin makes the list shorter.
 - **The weekly drafts' SSH**: the operator's go-ahead is standing, but Claude Code's permission check may still ask each time; an allow rule for `tools/ai-drafts/weekly.sh` would stop that.
@@ -64,5 +64,7 @@ Last updated: 2026-10-16, at the end of the task "M7, finding positions automati
 - **The poster's anatomy**: Nuray checks it later; nothing to do until she comments.
 
 ## Next step
+
+**In progress (from 2026-10-17, `docs/NEXT.md`, D53):** M11, the newsletter builder, built ahead of M8–M10 behind the password (pushing an issue to listmonk stays off until the launch), and AI drafts of the 19 subfield introductions for Nuray to rewrite. D53 is recorded in PLAN §22.3.
 
 The operator's look at the first candidates. After that: the one-time lawyer review (with B17 and B22), then M2 (the mailbox, the approvals and the switch). Nothing starts before the operator says so.
