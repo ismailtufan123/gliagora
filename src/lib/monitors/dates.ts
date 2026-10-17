@@ -292,8 +292,10 @@ export function hasClosed(date: string, now: Date): boolean {
 // long after they were filled (RIKEN CBS listed posts from 2025). Academic posts without a fixed
 // deadline are mostly filled within two to four months, so from 60 days the editor is told to
 // check that the post is still open, and after 180 days (the monitor's memory of a posting too) it
-// is skipped: by then it is more likely filled than open. A posting with a fixed deadline is judged
-// by its deadline alone.
+// is skipped: by then it is more likely filled than open. Only a day the source gives as data (the
+// posting's JSON-LD, the feed or API, a dated address) skips a posting; a day read from its text
+// only marks it, since text can name other days. A posting with a fixed deadline is judged by its
+// deadline alone.
 
 /** From this age (days since published), a posting without a fixed deadline may be filled. */
 export const POSSIBLY_FILLED_DAYS = 60
@@ -307,6 +309,7 @@ const PUBLISHED_LABELS = [
   'posted on',
   'posted',
   'posting date',
+  'posting start date',
   'date of posting',
   'published on',
   'published',
@@ -376,6 +379,12 @@ export function publishedFromText(
   )
   for (const label of labels) {
     const start = label.index + label[0].length
+    // A field of the posting ("Posted: …", a line "Date posted 2025-03-12"), not a sentence that
+    // mentions a publication ("whose work was published 3 May 2019 in …").
+    const atLineStart = /(?:^|\n)[^\S\n]*$/.test(
+      folded.slice(Math.max(0, label.index - 40), label.index),
+    )
+    if (!atLineStart && !/^[^\S\n]*:/.test(folded.slice(start, start + 5))) continue
     const window = folded.slice(start, start + PUBLISHED_NEAR)
     const found = firstDate(window, country === 'US')
     if (!found || !pastDay(found.date, now)) continue
@@ -401,8 +410,11 @@ export function publishedFromAddress(
   } catch {
     return null
   }
+  // Only forms that are clearly a day: RIKEN's 20250512_1, a CMS's t20260115_…, a path
+  // /2026/03/15/; never a bare eight-digit number, which may be an ID.
   const patterns = [
-    /(?:^|\/)t?(20\d{2})(\d{2})(\d{2})(?:_\d+)?(?:\.s?html?)?(?=\/|$)/,
+    /\/(20\d{2})(\d{2})(\d{2})_\d+(?:\.s?html?)?(?=\/|$)/,
+    /\/t(20\d{2})(\d{2})(\d{2})(?:_\d+)?(?:\.s?html?)?(?=\/|$)/,
     /\/(20\d{2})\/(\d{2})\/(\d{2})(?=\/)/,
   ]
   for (const pattern of patterns) {

@@ -402,7 +402,8 @@ describe('the record of each run and the report (M7, second round)', () => {
       kind: 'page',
       runs: { total: 2, ok: 1, failed: 1, byHand: 2 },
       failures: { 'the list: status 503': 1 },
-      found: { listed: 3, new: 3, read: 3, candidates: 2, notNeuroscience: 1, capped: 0 },
+      found: { read: 3, candidates: 2, notNeuroscience: 1 },
+      lastRun: { listed: 3, new: 3, capped: 0 },
       postings: { candidate: 2, notNeuroscience: 1 },
       candidates: { new: 1, rejected: 1 },
       rejections: { 'not-neuroscience': 1 },
@@ -435,6 +436,15 @@ describe('the record of each run and the report (M7, second round)', () => {
     ])
     const text = JSON.stringify(report)
     expect(text).not.toMatch(/jane|doe|roe|example\.org|visual cortex|budgets/i)
+
+    // A title that fell back to an address is never shown.
+    const byHand = await payload.create({
+      collection: 'candidates',
+      data: { kind: 'job', status: 'new', source: source.id, rawTitle: at(9), rawUrl: at(9) },
+      depth: 0,
+    })
+    const again = await monitorReport(payload, now, { source: source.id, parts: ['candidates'] })
+    expect(again.candidates?.find((c) => c.id === byHand.id)?.title).toBeNull()
 
     const onlySkipped = await monitorReport(payload, now, { source: source.id, parts: ['skipped'] })
     expect(Object.keys(onlySkipped).sort()).toEqual(['generatedAt', 'skipped'])

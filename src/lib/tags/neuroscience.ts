@@ -74,6 +74,17 @@ const STEMS = [
   'hjerne',
   'aivotutki',
   'beyin',
+  // Spanish and Portuguese (neurociencia and cerebro are found by neuro and cerebr above)
+  'psiquiatr',
+  'demenc',
+  'esquizofren',
+  'cognic',
+  'sinap',
+  'sistema nervios',
+  'sistema nervos',
+  'medula espinal',
+  'electrofisiolog',
+  'eletrofisiolog',
   'sinir bilim',
   'sinirbilim',
   'norobilim',
@@ -170,7 +181,9 @@ const LOWER_HEADS = ['Institutionen', 'Institutt', 'Avdelningen', 'Avdelingen']
 const SP = String.raw`[^\S\n]+`
 const CAP = String.raw`(?:\p{Lu}[\p{L}\p{M}'’-]*)`
 const JOIN = String.raw`(?:and|&|of|for|the|und|et|y|e|en|och|og|ve|de|du|des|di|del|della|la|le|der|die|das|für|voor|van|för)`
-const CAPS = String.raw`${CAP}(?:${SP}(?:${JOIN}${SP})*${CAP})*`
+// At most seven capitalised words, two small words between two of them: bounded, so that a long
+// run of capitalised words costs linear time, never quadratic (a monitor reads untrusted pages).
+const CAPS = String.raw`${CAP}(?:${SP}(?:${JOIN}${SP}){0,2}${CAP}){0,6}`
 // After "of": a name of capitalised words; in German up to two lower-case adjectives before a noun
 // ("für klinische Neurobiologie").
 const NAME = String.raw`(?:\p{Ll}[\p{L}\p{M}-]*${SP}){0,2}${CAPS}`
@@ -210,13 +223,40 @@ export function unitSpans(text: string, names: readonly string[] = []): Span[] {
   return spans
 }
 
+/** The most characters of a posting's text the check reads: a posting says what it is early. */
+export const TEXT_CHECKED = 30_000
+
+/** Whether [start, end) overlaps one of `spans`, sorted by start and not overlapping each other. */
+function overlaps(spans: readonly Span[], start: number, end: number): boolean {
+  let low = 0
+  let high = spans.length
+  while (low < high) {
+    const mid = (low + high) >> 1
+    if (spans[mid]![1] <= start) low = mid + 1
+    else high = mid
+  }
+  return low < spans.length && spans[low]![0] < end
+}
+
+/** `spans` sorted, overlapping ones merged. */
+function merged(spans: readonly Span[]): Span[] {
+  const sorted = [...spans].sort((a, b) => a[0] - b[0])
+  const result: Array<[number, number]> = []
+  for (const [start, end] of sorted) {
+    const last = result[result.length - 1]
+    if (last && start < last[1]) last[1] = Math.max(last[1], end)
+    else result.push([start, end])
+  }
+  return result
+}
+
 /** How many neuroscience words `text` holds, outside the spans in `ignored`. */
 function count(text: string, compiled: CompiledTerms, ignored: readonly Span[] = []): number {
   const folded = fold(text)
-  const spans: Array<[number, number]> = []
+  const skipped = merged(ignored)
+  const found: Array<[number, number]> = []
   const add = (start: number, end: number) => {
-    if (ignored.some(([a, b]) => start < b && a < end)) return
-    if (!spans.some(([a, b]) => start < b && a < end)) spans.push([start, end])
+    if (!overlaps(skipped, start, end)) found.push([start, end])
   }
   for (const match of folded.matchAll(STEM)) add(match.index, match.index + match[0].length)
   for (const match of text.matchAll(ACRONYM)) add(match.index, match.index + match[0].length)
@@ -231,7 +271,7 @@ function count(text: string, compiled: CompiledTerms, ignored: readonly Span[] =
       add(match.start, match.end)
     }
   }
-  return spans.length
+  return merged(found).length
 }
 
 export type NeuroscienceCheck = { matches: boolean; title: number; text: number }
@@ -246,7 +286,8 @@ export function neuroscienceCheck(
   compiled: CompiledTerms,
   ignoredNames: readonly string[] = [],
 ): NeuroscienceCheck {
-  const inTitle = count(title, compiled)
-  const inText = count(text, compiled, unitSpans(text, ignoredNames))
+  const inTitle = count(title.slice(0, 1000), compiled)
+  const checked = text.slice(0, TEXT_CHECKED)
+  const inText = count(checked, compiled, unitSpans(checked, ignoredNames))
   return { matches: inTitle >= 1 || inText >= 2, title: inTitle, text: inText }
 }

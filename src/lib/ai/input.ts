@@ -39,16 +39,52 @@ export type DraftInput = {
 
 const one = (value: string | null | undefined) => (value ? (redacted(value) ?? '') : '')
 
-/** Chinese, Japanese and Korean script, where redaction cannot find names (PLAN §6.6). */
-const CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u
+/**
+ * Scripts without capital letters, where redaction cannot find names (it finds them by their
+ * capitals and the words around them, PLAN §6.6): Chinese, Japanese, Korean, Arabic, Hebrew, Thai,
+ * the Indic scripts and others.
+ */
+const CASELESS = new RegExp(
+  `[${[
+    'Han',
+    'Hiragana',
+    'Katakana',
+    'Hangul',
+    'Arabic',
+    'Hebrew',
+    'Syriac',
+    'Thaana',
+    'Thai',
+    'Lao',
+    'Khmer',
+    'Myanmar',
+    'Tibetan',
+    'Devanagari',
+    'Bengali',
+    'Gurmukhi',
+    'Gujarati',
+    'Oriya',
+    'Tamil',
+    'Telugu',
+    'Kannada',
+    'Malayalam',
+    'Sinhala',
+    'Ethiopic',
+    'Georgian',
+  ]
+    .map((script) => `\\p{Script=${script}}`)
+    .join('')}]`,
+  'u',
+)
 
 /**
- * Whether redaction cannot vouch for `input`: its title, text or facts are written partly in
- * Chinese, Japanese or Korean script, whose names the rules cannot find (M7 notes). Such a
- * candidate is drafted by hand, as §6.6 says for text redaction cannot read, and never sent.
+ * Whether redaction cannot vouch for `input`: its title, text or facts are written partly in a
+ * script without capital letters, whose names the rules cannot find (M7 notes: Chinese, Japanese
+ * and Korean; Arabic, Hebrew, Thai and the Indic scripts alike). Such a candidate is drafted by
+ * hand, as §6.6 says for text redaction cannot read, and never sent.
  */
 export function cannotRedact(input: DraftInput): boolean {
-  return CJK.test(
+  return CASELESS.test(
     [
       input.title,
       input.text,

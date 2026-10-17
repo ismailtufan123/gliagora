@@ -9,11 +9,9 @@ import {
   recordSpend,
   requestDraft,
 } from '@/lib/ai/claude-api'
-import { cannotRedact, draftInput } from '@/lib/ai/input'
-import { applyDraft } from '@/lib/ai/weekly'
+import { applyDraft, waitingForDrafts } from '@/lib/ai/weekly'
 import { errorSummary } from '@/lib/errors'
 import { loadTaxonomy } from '@/lib/tags/terms'
-import type { Institution } from '@/payload-types'
 
 import { MONITOR_QUEUE, logCounts, maintenanceTask } from './task'
 
@@ -53,32 +51,10 @@ export async function draftWithClaude(
   if (!settings) return counts
   const client = options.client ?? newClient(settings)
   const taxonomy = await loadTaxonomy(payload)
-  const { docs } = await payload.find({
-    collection: 'candidates',
-    where: {
-      and: [
-        { status: { in: ['new', 'triaged'] } },
-        { kind: { equals: 'job' } },
-        { aiSuggestion: { exists: false } },
-        { snippet: { exists: true } },
-      ],
-    },
-    sort: 'createdAt',
-    depth: 1,
-    limit: PER_RUN,
-    pagination: false,
-  })
+  const { waiting, leftForEditors } = await waitingForDrafts(payload, PER_RUN)
+  counts.notRedactable = leftForEditors
   let spent = await monthSpend(payload, now)
-  for (const candidate of docs) {
-    const institution =
-      candidate.institution && typeof candidate.institution === 'object'
-        ? (candidate.institution as Institution)
-        : null
-    const input = draftInput(candidate, institution)
-    if (cannotRedact(input)) {
-      counts.notRedactable++
-      continue
-    }
+  for (const { candidate, input } of waiting) {
     if (spent + estimateUsd(settings.model, input) > settings.capUsd) {
       counts.capReached = 1
       break

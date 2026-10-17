@@ -175,7 +175,7 @@ async function remember(
       source,
       canonicalUrl: posting.canonicalUrl,
       url: posting.url,
-      title: redacted(title || posting.title)?.slice(0, 300) ?? null,
+      title: redacted(title || posting.title)?.slice(0, 300) || null,
       outcome,
       candidate: candidate ?? null,
       firstSeenAt: now.toISOString(),
@@ -306,7 +306,8 @@ async function handlePosting(
     await remember(payload, source.id, posting, 'closed', now)
     return
   }
-  const title = (read.title || posting.title || posting.url).slice(0, 300)
+  // Never the address as a title: the report on the monitors shows titles, never addresses.
+  const title = (read.title || posting.title || '').slice(0, 300)
   if (!source.allNeuroscience) {
     const check = neuroscienceCheck(
       { title, text: read.text },
@@ -326,16 +327,20 @@ async function handlePosting(
     await remember(payload, source.id, posting, 'closed', now, undefined, title)
     return
   }
-  // When it was published, wherever the source says: its data, the list, its text, its address.
-  const fromText =
-    publishedFromText(read.text, country, now) ?? publishedFromAddress(posting.url, now)
+  // When it was published, wherever the source says: its data, the list, its address, its text.
+  // Only a day given as data may skip a posting as old; one read from the text only marks it.
+  const fromAddress = publishedFromAddress(posting.url, now)
+  const fromText = publishedFromText(read.text, country, now)
   const published: Fact<string> | undefined =
     read.published ??
-    (fromText
-      ? { value: fromText.date, from: redacted(fromText.from) ?? fromText.from }
-      : undefined)
+    (fromAddress
+      ? { value: fromAddress.date, from: fromAddress.from }
+      : fromText
+        ? { value: fromText.date, from: redacted(fromText.from) ?? fromText.from }
+        : undefined)
+  const asData = Boolean(read.published ?? fromAddress)
   const age = published && !deadline ? ageInDays(published.value, now) : null
-  if (age !== null && age > OPEN_ENDED_MAX_DAYS) {
+  if (age !== null && asData && age > OPEN_ENDED_MAX_DAYS) {
     counts.old++
     await remember(payload, source.id, posting, 'old', now, undefined, title)
     return
@@ -378,7 +383,7 @@ async function handlePosting(
       source: source.id,
       institution: (idOf(source.institution) as number | undefined) ?? null,
       rawUrl: posting.url,
-      rawTitle: title,
+      rawTitle: title || null,
       snippet,
       extracted: facts,
     },

@@ -288,8 +288,9 @@ export async function readList(
   allow: (url: URL) => Promise<boolean>,
 ): Promise<List> {
   const pattern = source.postingPattern ? new RegExp(source.postingPattern, 'u') : null
+  // Only a list page builds addresses from IDs (the fields are the page kind's).
   const byId =
-    source.postingIdPattern && source.postingUrlTemplate
+    source.kind === 'page' && source.postingIdPattern && source.postingUrlTemplate
       ? { idPattern: new RegExp(source.postingIdPattern, 'u'), template: source.postingUrlTemplate }
       : null
   let postings: ListedPosting[] = []

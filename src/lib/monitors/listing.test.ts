@@ -338,6 +338,24 @@ describe('readList: a list that names its postings by an ID (M7, second round)',
       'https://hr.example.org/pls/recruit/jobspec?p_company=10&p_recruitment_id={id}',
   }
 
+  it('builds addresses from IDs only for a list page, whatever other fields hold', async () => {
+    const fetcher = fakeFetcher(
+      { 'https://hr.example.org/feed': '<rss><channel></channel></rss>' },
+      'application/rss+xml',
+    )
+    const { postings } = await readList(
+      {
+        kind: 'rss',
+        url: 'https://hr.example.org/feed',
+        postingIdPattern: 'viewJob(\\d+',
+        postingUrlTemplate: 'https://hr.example.org/view?id={id}',
+      },
+      fetcher,
+      allowAll,
+    )
+    expect(postings).toEqual([])
+  })
+
   it('builds each posting address from the ID in its links', async () => {
     const fetcher = fakeFetcher({ [source.url]: list })
     const { postings } = await readList(source, fetcher, allowAll)

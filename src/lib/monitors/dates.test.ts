@@ -121,6 +121,7 @@ describe('when a posting was published', () => {
   it('reads a day right after a "posted" or "published" word, in several languages', () => {
     expect(published('Posted: 12 March 2025')).toBe('2025-03-12')
     expect(published('Date posted 2025-03-12 | Reference 123')).toBe('2025-03-12')
+    expect(published('Posting Start Date: 24/04/2026', 'SG')).toBe('2026-04-24')
     expect(published('Veröffentlicht am 12.03.2025', 'DE')).toBe('2025-03-12')
     expect(published('Date de publication : 12 mars 2025', 'FR')).toBe('2025-03-12')
     expect(published('İlan tarihi: 12.03.2025', 'TR')).toBe('2025-03-12')
@@ -131,6 +132,9 @@ describe('when a posting was published', () => {
     expect(
       published('Our results were published in a journal of the society on 12 March 2025'),
     ).toBeNull()
+    // A label inside a sentence is not a field of the posting.
+    expect(published('a lab whose work was published 3 May 2019 in Neuron')).toBeNull()
+    expect(published('About us\nPublished: 3 May 2025\nApply now')).toBe('2025-05-03')
   })
 
   it("reads a day in the posting's address", () => {
@@ -141,6 +145,8 @@ describe('when a posting was published', () => {
     expect(at('https://cebsit.cas.cn/zpxxi/bsh/202601/t20260115_123456.html')).toBe('2026-01-15')
     expect(at('https://example.org/2025/11/03/postdoc-in-neuroscience/')).toBe('2025-11-03')
     expect(at('https://example.org/jobs/20251399/')).toBeNull()
+    // A bare eight-digit segment may be an ID.
+    expect(at('https://example.org/vacancy/20190312/')).toBeNull()
     expect(at('https://example.org/jobs/12345678/')).toBeNull()
   })
 

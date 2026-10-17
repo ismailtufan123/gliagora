@@ -111,6 +111,11 @@ describe('neuroscienceCheck', () => {
     expect(check('Sinirbilim Anabilim Dalı araştırma görevlisi')).toBe(true)
     expect(check('Nörolojik Bilimler Enstitüsü proje bursiyeri')).toBe(true)
     expect(check('Norovirus vaccine research assistant')).toBe(false)
+    expect(check('Profesor asistente de Psiquiatría')).toBe(true)
+    expect(check('Pesquisador', 'Estudamos a cognição e a demência em modelos animais.')).toBe(true)
+    expect(check('Investigador postdoctoral', 'Plasticidad sináptica en la médula espinal.')).toBe(
+      true,
+    )
     expect(check('Research assistant, Brain Imaging Unit')).toBe(true)
     expect(check('Postdoc – basal ganglia and movement')).toBe(true)
   })
@@ -181,6 +186,17 @@ describe('neuroscienceCheck', () => {
     expect(named('a departmental budget')).toEqual([])
     // Labs and groups say what they study: not units here.
     expect(named('the Neural Circuits Lab and the Brain Imaging Group')).toEqual([])
+  })
+
+  it('takes linear time on long runs of capitalised words and of unit names', () => {
+    const words = 'Aa '.repeat(40_000)
+    const units = 'Department of Neuroscience\n'.repeat(20_000)
+    for (const text of [words, units]) {
+      const started = performance.now()
+      unitSpans(text)
+      neuroscienceCheck({ title: 'x', text }, compiled)
+      expect(performance.now() - started).toBeLessThan(1500)
+    }
   })
 
   it("leaves out the names a source lists, and the employer's own, in any case", () => {
