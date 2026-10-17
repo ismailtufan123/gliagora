@@ -56,6 +56,7 @@ describe('the maintenance tasks', () => {
       cleanInactiveMembers: ['30 5 * * *'],
       sendRequestEmails: ['*/5 * * * *'],
       syncGliaNotes: ['2-57/5 * * * *'],
+      syncGliaNotesIssues: ['4-54/10 * * * *'],
       checkGliaNotesMembers: ['0 6 * * *'],
     })
     for (const task of MAINTENANCE_TASKS) {

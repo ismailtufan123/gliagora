@@ -184,4 +184,14 @@ Bir sayı hazırlamak:
 5. Sağ sütundaki **"Preview and send"** kutusunda **"Preview the email"** e-postayı yeni bir sekmede gösterir, **"Preview the plain text"** düz metin hâlini. Önizleme kaydedilmiş sayıyı gösterir: önce kaydedin.
 6. **"Send a test email"** sayının bir denemesini size ve deneme adreslerine (Gmail, Outlook, Yahoo ve bir Türk sağlayıcısındaki kendi hesaplarımız) gönderir; konusunun başında "[Test]" yazar. Her birinde e-postanın nasıl göründüğüne, bağlantılara ve karanlık moda bakın. Denemedeki abonelikten çıkma bağlantıları hiçbir şeyi değiştirmez. Deneme e-postaları posta sunucusu kurulunca (M2) gider; o zamana kadar önizlemeyi kullanın.
 
-Bir sayı kapanmış bir pozisyonu göstermez: seçtiğiniz bir pozisyon sayı gönderilmeden kapanırsa sayıdan çıkar. Sayılarda hiçbir aboneye ait bilgi yoktur.
+7. **"Push to listmonk as a draft"** sayıyı bülten sistemine (listmonk) taslak olarak gönderir: **hiçbir e-posta gitmez**. Her gönderim kaydedilmiş sayıyı o anki hâliyle gönderir; sonra değiştirirseniz kaydedip yeniden gönderin.
+8. **"Schedule in listmonk"** sayıyı tarihine planlar; onaylamanız istenir. O tarihte Glia Notes'un bütün abonelerine gider. Planlanmış bir sayının alanları kilitlenir: değiştirmek için **"Unschedule (back to a draft)"** ile taslağa geri alın, değiştirin, kaydedin ve yeniden planlayın.
+9. Site listmonk'u her 10 dakikada bir sorar: sayının durumu ("status") önce "Sending", sonra **"Sent"** olur; "Sent" alanında gönderimin başladığı an yazar. Gönderilen sayı arşivde görünür: `/en/newsletter/archive/` ve `/en/newsletter/{ay}/` (site herkese açılana kadar genel parolanın arkasında).
+
+**Sayıyı listmonk'a göndermek açılışa kadar kapalıdır** (D53): o zamana kadar düğmeler "switched off until the launch" der. Önizleme ve deneme e-postası her zaman çalışır.
+
+Gönderilen bir sayı değişmez ve silinemez; listmonk'a gönderilmiş bir sayı da silinemez. Sayıları listmonk'un kendi yönetim panelinde düzenlemeyin.
+
+**Açılış günü** (D41): Glia Notes issues listesinde hazır bekleyen açılış sayısını açın; tarihini açılış gününe ve saatine ayarlayın, **"Propose the selected positions again when I save"** kutusunu işaretleyip kaydedin, açılış notunu düzenleyin ve kaydedin; önizleyin, kendinize bir deneme gönderin, sonra planlayın (adım 7–8).
+
+Bir sayı kapanmış bir pozisyonu göstermez: seçtiğiniz bir pozisyon sayının tarihinden önce kapanırsa sayıdan çıkar. Sayılarda hiçbir aboneye ait bilgi yoktur.

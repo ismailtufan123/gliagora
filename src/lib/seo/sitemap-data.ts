@@ -62,9 +62,22 @@ export function sitemapSource(
     return docs as SitemapJob[]
   })
   const subfields = once(() => subfieldsForIndexing())
+  // The sent issues of Glia Notes (M11), for the archive's entries.
+  const issues = once(async () => {
+    const payload = await getPayload({ config })
+    const { docs } = await payload.find({
+      collection: 'newsletter-issues',
+      where: { status: { equals: 'sent' } },
+      select: { month: true, sentAt: true },
+      sort: '-sentAt',
+      depth: 0,
+      pagination: false,
+    })
+    return docs.flatMap((doc) => (doc.month ? [{ month: doc.month, sentAt: doc.sentAt }] : []))
+  })
 
   return {
-    pages: async () => pageEntries(await subfields()),
+    pages: async () => pageEntries(await subfields(), await issues()),
     jobs: async () => jobEntries(await openJobs(), now),
     institutions: async () => {
       const perInstitution = openJobsPer(await openJobs(), now, (job) => [job.institution])

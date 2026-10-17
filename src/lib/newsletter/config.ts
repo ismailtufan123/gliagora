@@ -93,6 +93,49 @@ export function listmonkSettings(env: Env = process.env, problems: string[] = []
   return { url: listmonkUrl(url)!, user, token } satisfies ListmonkSettings
 }
 
+/** The issues' API user in listmonk (M11, D53), as deploy/listmonk/settings.sql names it. */
+export const DEFAULT_LISTMONK_CAMPAIGNS_USER = 'gliagora-campaigns'
+
+/**
+ * How the app reaches listmonk's campaigns (M11, D53): LISTMONK_URL with the token of the issues'
+ * own API user, LISTMONK_CAMPAIGNS_TOKEN (LISTMONK_CAMPAIGNS_USER names another user), or null
+ * while either is missing or unusable (a problem names the variable, never its value).
+ */
+export function campaignsSettings(
+  env: Env = process.env,
+  problems: string[] = [],
+): ListmonkSettings | null {
+  const token = setting(env, 'LISTMONK_CAMPAIGNS_TOKEN')
+  const url = setting(env, 'LISTMONK_URL')
+  const user = setting(env, 'LISTMONK_CAMPAIGNS_USER') ?? DEFAULT_LISTMONK_CAMPAIGNS_USER
+  if (!token) return null
+  if (!url || !listmonkUrl(url)) {
+    problems.push(
+      'Glia Notes issues cannot be pushed: LISTMONK_URL is not an http or https address.',
+    )
+    return null
+  }
+  if (!API_TOKEN.test(token)) {
+    problems.push(
+      'Glia Notes issues cannot be pushed: LISTMONK_CAMPAIGNS_TOKEN must be 16 to 256 letters, digits or ._~- (openssl rand -hex 32).',
+    )
+    return null
+  }
+  if (!API_USER.test(user)) {
+    problems.push(
+      'Glia Notes issues cannot be pushed: LISTMONK_CAMPAIGNS_USER is not a listmonk user name.',
+    )
+    return null
+  }
+  if (token === setting(env, 'LISTMONK_API_TOKEN')) {
+    problems.push(
+      'Glia Notes issues cannot be pushed: LISTMONK_CAMPAIGNS_TOKEN must differ from LISTMONK_API_TOKEN.',
+    )
+    return null
+  }
+  return { url: listmonkUrl(url)!, user, token }
+}
+
 /** Which parts of Glia Notes are on, from the environment. */
 export function newsletterConfig(env: Env = process.env): NewsletterConfig {
   const problems: string[] = []

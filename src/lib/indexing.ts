@@ -40,6 +40,14 @@ export const newsletterSignupIndexed = (): boolean => true
  */
 export const newsletterPageIndexed = (): boolean => false
 
+/**
+ * The archive of Glia Notes (M11, PLAN §2.2, §13): its list once it has an issue, and the page of
+ * every sent issue. Like the jobs, both stay private until the launch (D39): they are not in M2's
+ * list of public pages (src/lib/public-pages.ts), so they are indexed once public.
+ */
+export const newsletterArchiveIndexed = (sentIssues: number): boolean => sentIssues > 0
+export const newsletterIssueIndexed = (): boolean => true
+
 /** The world map (PLAN §2.2): indexed, like the unfiltered jobs list it shows on a map. */
 export const mapPageIndexed = (): boolean => true
 

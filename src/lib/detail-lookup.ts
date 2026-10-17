@@ -62,6 +62,13 @@ export async function detailLookup(): Promise<DetailLookup> {
         withdrawnAt: doc.withdrawnAt,
       }
     },
+    sentIssue: async (month) => {
+      const { totalDocs } = await payload.count({
+        collection: 'newsletter-issues',
+        where: { month: { equals: month }, status: { equals: 'sent' } },
+      })
+      return totalDocs > 0
+    },
     retiredJob: async (shortId) => {
       const { totalDocs } = await payload.count({
         collection: 'retired-listings',

@@ -41,6 +41,8 @@ describe('sitemapSource', () => {
   it('in the private stage lists the full site’s pages, as before', async () => {
     vi.stubEnv('SITE_STAGE', 'private')
     subfieldsForIndexing.mockResolvedValue([])
+    // No sent issue of Glia Notes yet: no archive.
+    getPayload.mockResolvedValue({ find: async () => ({ docs: [] }) })
     const pages = await sitemapSource(NOW).pages()
     expect(pages.map((entry) => entry.path)).toEqual([
       '/en/',
@@ -52,5 +54,23 @@ describe('sitemapSource', () => {
         .filter((page) => !page.draft)
         .map((page) => page.path),
     ])
+  })
+
+  it('lists the archive of Glia Notes and each sent issue, once one is sent (M11)', async () => {
+    vi.stubEnv('SITE_STAGE', 'private')
+    subfieldsForIndexing.mockResolvedValue([])
+    const find = vi.fn(async () => ({
+      docs: [{ month: '2026-11', sentAt: '2026-11-03T13:00:05.000Z' }],
+    }))
+    getPayload.mockResolvedValue({ find })
+    const pages = await sitemapSource(NOW).pages()
+    expect(pages.filter((entry) => entry.path.startsWith('/en/newsletter/'))).toEqual([
+      { path: '/en/newsletter/' },
+      { path: '/en/newsletter/archive/' },
+      { path: '/en/newsletter/2026-11/', lastmod: '2026-11-03T13:00:05.000Z' },
+    ])
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: { equals: 'sent' } } }),
+    )
   })
 })

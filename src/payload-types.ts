@@ -155,6 +155,7 @@ export interface Config {
       sendRequestEmails: TaskSendRequestEmails;
       syncGliaNotes: TaskSyncGliaNotes;
       checkGliaNotesMembers: TaskCheckGliaNotesMembers;
+      syncGliaNotesIssues: TaskSyncGliaNotesIssues;
       monitorSources: TaskMonitorSources;
       checkLinks: TaskCheckLinks;
       draftWithClaude: TaskDraftWithClaude;
@@ -2130,6 +2131,7 @@ export interface PayloadJob {
           | 'sendRequestEmails'
           | 'syncGliaNotes'
           | 'checkGliaNotesMembers'
+          | 'syncGliaNotesIssues'
           | 'monitorSources'
           | 'checkLinks'
           | 'draftWithClaude';
@@ -2181,6 +2183,7 @@ export interface PayloadJob {
         | 'sendRequestEmails'
         | 'syncGliaNotes'
         | 'checkGliaNotesMembers'
+        | 'syncGliaNotesIssues'
         | 'monitorSources'
         | 'checkLinks'
         | 'draftWithClaude'
@@ -3101,6 +3104,19 @@ export interface TaskCheckGliaNotesMembers {
     checked?: number | null;
     pending?: number | null;
     off?: number | null;
+    failed?: number | null;
+    skipped?: boolean | null;
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskSyncGliaNotesIssues".
+ */
+export interface TaskSyncGliaNotesIssues {
+  input?: unknown;
+  output: {
+    checked?: number | null;
+    changed?: number | null;
     failed?: number | null;
     skipped?: boolean | null;
   };

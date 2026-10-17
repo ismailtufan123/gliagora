@@ -58,6 +58,7 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
           NODE_ENV: 'test',
           PATH: process.env.PATH,
           LISTMONK_API_TOKEN: listmonk.token,
+          LISTMONK_CAMPAIGNS_TOKEN: listmonk.campaignsToken,
           LISTMONK_ROOT_URL: listmonk.url,
           ...smtp,
         },
@@ -95,7 +96,7 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
 
     expect(
       await query(`select type, name, parent_id is null as top, permissions from roles
-        where name like 'gliagora-app%' or parent_id is not null order by id`),
+        where name like 'gliagora-%' or parent_id is not null order by id`),
     ).toEqual([
       {
         type: 'user',
@@ -106,7 +107,27 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
       },
       { type: 'list', name: 'gliagora-app-lists', top: true, permissions: [] },
       { type: 'list', name: null, top: false, permissions: ['list:get', 'list:manage'] },
+      // The issues' API user (M11): campaigns and templates only; Glia Notes to read, not manage.
+      {
+        type: 'user',
+        name: 'gliagora-campaigns',
+        top: true,
+        permissions: ['campaigns:get', 'campaigns:manage', 'campaigns:send', 'templates:get'],
+      },
+      { type: 'list', name: 'gliagora-campaigns-lists', top: true, permissions: [] },
+      { type: 'list', name: null, top: false, permissions: ['list:get'] },
     ])
+    // The site's campaign template adds nothing to an issue, and is never the default.
+    expect(
+      await query(`select body, is_default from templates where name = 'Glia Notes issue (site)'`),
+    ).toEqual([{ body: '{{ template "content" . }}', is_default: false }])
+    const [campaignsUser] = await query<Record<string, unknown>>(
+      `select status, password from users where username = 'gliagora-campaigns'`,
+    )
+    expect(campaignsUser).toEqual({
+      status: 'enabled',
+      password: createHash('sha256').update(listmonk.campaignsToken).digest('hex'),
+    })
     const [user] = await query<Record<string, unknown>>(
       `select u.username, u.type, u.password_login, u.password, u.status, l.name as list
        from users u, roles r, lists l
@@ -137,6 +158,14 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
       'privacy.allow_wipe': false,
       'privacy.allow_export': false,
       'bounce.enabled': false,
+      // The issues' sending (M11): one at a time, within the sliding window (50 an hour without
+      // the mailbox's limits).
+      'app.concurrency': 1,
+      'app.message_rate': 1,
+      'app.max_send_errors': 25,
+      'app.message_sliding_window': true,
+      'app.message_sliding_window_rate': 50,
+      'app.message_sliding_window_duration': '1h',
     })) {
       expect(await setting(key), key).toEqual(value)
     }
@@ -368,6 +397,7 @@ describe.skipIf(!canStartListmonk)('listmonk with the server’s settings', () =
       // left to change, so both runners store exactly the same.
       const params = listmonkParams({
         LISTMONK_API_TOKEN: listmonk.token,
+        LISTMONK_CAMPAIGNS_TOKEN: listmonk.campaignsToken,
         LISTMONK_ROOT_URL: listmonk.url,
         ...smtp,
       })

@@ -1,3 +1,4 @@
+import { fakeIssueMonth } from '../../src/scripts/fake-issue'
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
 
 // Public templates covered by the end-to-end tests. Add every new page template here (PLAN §17.2).
@@ -48,6 +49,10 @@ export const PAGES = [
     name: 'newsletter: unsubscribe (incomplete link)',
   },
   { path: '/en/newsletter/unsubscribed/', name: 'newsletter: unsubscribed' },
+  // The archive of Glia Notes (M11) and an issue's page: the fake sent issue of `pnpm fake:jobs`
+  // (src/scripts/fake-issue.ts).
+  { path: '/en/newsletter/archive/', name: 'newsletter archive' },
+  { path: `/en/newsletter/${fakeIssueMonth(new Date())}/`, name: 'newsletter issue' },
   { path: '/en/events/', name: 'placeholder (window)' },
   { path: '/en/suggest/', name: 'suggest a listing' },
   { path: '/en/suggest/sent/', name: 'suggestion sent' },

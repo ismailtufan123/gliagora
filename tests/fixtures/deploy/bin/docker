@@ -8,7 +8,8 @@
 # listmonk/prepare.sh: FAKE_INSTALLED (t: listmonk is installed), FAKE_LISTMONK_RUNNING (set: it
 # runs), FAKE_LISTMONK_IMAGE (the image compose.prod.yml names) and FAKE_LISTMONK_RUNNING_IMAGE
 # (the running container's; both default listmonk/listmonk:v1), FAKE_CHANGED (what settings.sql
-# answers; its input is kept in $FAKE_LOG/psql.stdin), FAKE_PSQL_EXIT; `compose run … listmonk
+# answers; its input is kept in $FAKE_LOG/psql.stdin), FAKE_PSQL_EXIT, FAKE_SENDING (how many of
+# listmonk's campaigns are running or paused; default 0); `compose run … listmonk
 # CMD` runs CMD in ../listmonk, whose ./listmonk is a stand-in, with this call's stdin.
 # deploy-remote.sh: the app's container answers FAKE_APP_IMAGE and FAKE_APP_HEALTH, and
 # `compose ps --all --format` the lines of FAKE_PS (separated by ;).
@@ -52,6 +53,7 @@ if [[ "${1:-}" == compose ]]; then
   case "$query" in
     *pg_database*) printf '%s\n' ${FAKE_DATABASES:-} ;;
     *public.settings*) echo "${FAKE_INSTALLED:-f}" ;;
+    *"from campaigns"*) echo "${FAKE_SENDING:-0}" ;;
     *to_regclass*) echo f ;;
   esac
   exit 0

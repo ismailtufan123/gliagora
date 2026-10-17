@@ -81,9 +81,9 @@ describe('Glia Notes issues (M11, D53)', () => {
     expect(importMap).toContain(`"${actions.admin.components.Field}"`)
   })
 
-  it('offer a preview and a test send, and nothing else, as routes', () => {
+  it('offer a preview, a test send and the push, and nothing else, as routes', () => {
     expect(NewsletterIssues.endpoints).not.toBe(false)
     const routes = (NewsletterIssues.endpoints || []).map(({ method, path }) => `${method} ${path}`)
-    expect(routes).toEqual(['get /:id/preview', 'post /:id/test'])
+    expect(routes).toEqual(['get /:id/preview', 'post /:id/test', 'post /:id/push'])
   })
 })

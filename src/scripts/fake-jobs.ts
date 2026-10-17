@@ -2,7 +2,8 @@
 // About 60 generated jobs over the test institutions, plus the fixed jobs the end-to-end tests
 // rely on (src/scripts/fake-jobs-fixed.ts), an institution added by hand and the address of one
 // retired job, then a handful of suggestions, candidates, reports and data requests for the review
-// queue (src/scripts/fake-queue-data.ts).
+// queue (src/scripts/fake-queue-data.ts) and a sent issue of Glia Notes made from them
+// (src/scripts/fake-issue.ts).
 // Earlier fake data is removed first, so the script can run again at any time. Needs the test
 // institutions: pnpm ror:import tests/fixtures/ror/…-sample.zip
 import config from '@payload-config'
@@ -12,6 +13,7 @@ import { FAKE_DATA } from '@/collections/Jobs'
 import { slugify } from '@/lib/slug'
 
 import { FAKE_INSTITUTIONS, FAKE_NOTE, fakeJobs } from './fake-jobs-data'
+import { replaceFakeIssue } from './fake-issue'
 import { FIXED_JOBS, MANUAL_INSTITUTION, RETIRED_JOB } from './fake-jobs-fixed'
 import { addFakeQueue, removeFakeQueue } from './fake-queue'
 import { FAKE_QUEUE_INSTITUTIONS } from './fake-queue-data'
@@ -165,6 +167,8 @@ try {
   payload.logger.info(
     `Removed ${removedQueue.dataRequests} and added ${queue.dataRequests} fake data requests`,
   )
+  const issueMonth = await replaceFakeIssue(payload, new Date())
+  payload.logger.info(`Replaced the fake sent issue of Glia Notes (${issueMonth})`)
   process.exit(0)
 } catch (error) {
   payload.logger.error(error instanceof Error ? error.message : String(error))

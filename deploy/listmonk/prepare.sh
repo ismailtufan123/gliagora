@@ -15,11 +15,17 @@
 #      names (an upgrade), it is stopped first: the old program must not keep working on a
 #      database the new one migrates;
 #   3. applies settings.sql: the list Glia Notes, the app's API user (from LISTMONK_API_TOKEN in
-#      .env; only its SHA-256 reaches the database) and the settings, with the app's SMTP_*
-#      settings (empty until M2: listmonk can then send nothing);
+#      .env; only its SHA-256 reaches the database), the issues' API user (LISTMONK_CAMPAIGNS_TOKEN,
+#      M11; disabled while it is empty) and the settings, with the app's SMTP_* settings (empty
+#      until M2: listmonk can then send nothing) and the issues' sending rate from MAILBOX_LIMIT_*
+#      and EMAIL_CAP_*;
 #   4. if listmonk was running and anything changed (or it was just installed, or stopped for a
 #      new image), starts it again, recreated on the image compose.prod.yml names: it reads its
 #      settings and API users only when it starts (a plain restart would keep the old image).
+#      While it is sending an issue of Glia Notes (a campaign running or paused, M11), a restart
+#      for changed settings waits for the next update (a file notes it): listmonk keeps the count
+#      of its sending window in memory, so a restart would start a fresh window and could send
+#      more in a day than the mailbox's share. A new image or a new install starts it all the same.
 # src/lib/deploy-scripts.test.ts runs it against a stand-in for docker, with a password file of
 # its own (LISTMONK_ADMIN_PASSWORD_FILE, for the tests only).
 set -euo pipefail
@@ -29,6 +35,8 @@ COMPOSE_DIR="${COMPOSE_DIR:-$(dirname "$SCRIPT_DIR")}"
 ENV_FILE="${ENV_FILE:-$COMPOSE_DIR/.env}"
 ADMIN_PASSWORD_FILE="${LISTMONK_ADMIN_PASSWORD_FILE:-/root/listmonk-admin-password}"
 ADMIN_USER=gliagora-admin
+# A restart that waited while listmonk was sending (step 4).
+RESTART_PENDING="$COMPOSE_DIR/.listmonk-restart-pending"
 # listmonk's own address, for the links in its admin: the SSH tunnel's (deploy/README.md).
 TUNNEL_URL=http://localhost:9001
 
@@ -74,10 +82,13 @@ sql_text() { printf "'%s'" "${1//\'/\'\'}"; }
 # except on this computer (Mailpit). Every value is written by printf, a bash builtin, so none
 # appears in a command line; the session never logs a failed statement.
 settings_input() {
-  local token token_hash host port user pass tls secure default_port
+  local token token_hash campaigns campaigns_hash host port user pass tls secure default_port
   token=$(trim "${LISTMONK_API_TOKEN:-}")
   [[ -n "$token" ]] || { echo "LISTMONK_API_TOKEN is not set" >&2; return 1; }
   token_hash=$(printf '%s' "$token" | sha256sum | cut -d' ' -f1)
+  campaigns=$(trim "${LISTMONK_CAMPAIGNS_TOKEN:-}")
+  campaigns_hash=''
+  [[ -z "$campaigns" ]] || campaigns_hash=$(printf '%s' "$campaigns" | sha256sum | cut -d' ' -f1)
   host=$(trim "${SMTP_HOST:-}")
   secure=false
   [[ "$(trim "${SMTP_SECURE:-}" | tr '[:upper:]' '[:lower:]')" == true ]] && secure=true
@@ -106,7 +117,8 @@ settings_input() {
   printf 'set log_min_error_statement = panic;\nbegin;\n'
   printf 'create temp table gliagora_params (key text primary key, value text not null) on commit drop;\n'
   local key value
-  for key in api_token_sha256 root_url smtp_host smtp_port smtp_user smtp_password smtp_tls; do
+  for key in api_token_sha256 root_url smtp_host smtp_port smtp_user smtp_password smtp_tls \
+    campaigns_token_sha256 mailbox_limit_hour mailbox_limit_day email_cap_hour email_cap_day; do
     case $key in
       api_token_sha256) value=$token_hash ;;
       root_url) value=${LISTMONK_ROOT_URL:-$TUNNEL_URL} ;;
@@ -115,6 +127,11 @@ settings_input() {
       smtp_user) value=$user ;;
       smtp_password) value=$pass ;;
       smtp_tls) value=$tls ;;
+      campaigns_token_sha256) value=$campaigns_hash ;;
+      mailbox_limit_hour) value=$(trim "${MAILBOX_LIMIT_HOUR:-}") ;;
+      mailbox_limit_day) value=$(trim "${MAILBOX_LIMIT_DAY:-}") ;;
+      email_cap_hour) value=$(trim "${EMAIL_CAP_HOUR:-}") ;;
+      email_cap_day) value=$(trim "${EMAIL_CAP_DAY:-}") ;;
     esac
     printf 'insert into gliagora_params (key, value) values (%s, %s);\n' "$(sql_text "$key")" "$(sql_text "$value")"
   done
@@ -130,7 +147,8 @@ settings_input() {
 [[ -r "$ENV_FILE" ]] || fail "$ENV_FILE not found."
 # Each value into the variable of its name (never shown); a line Compose would read differently
 # stops here, before anything changes, so listmonk never gets another password than the app.
-for name in LISTMONK_API_TOKEN SMTP_HOST SMTP_PORT SMTP_SECURE SMTP_USER SMTP_PASS; do
+for name in LISTMONK_API_TOKEN SMTP_HOST SMTP_PORT SMTP_SECURE SMTP_USER SMTP_PASS \
+  LISTMONK_CAMPAIGNS_TOKEN MAILBOX_LIMIT_HOUR MAILBOX_LIMIT_DAY EMAIL_CAP_HOUR EMAIL_CAP_DAY; do
   value=$(env_value "$name") || fail "Nothing was changed: correct $name in $ENV_FILE (see above)."
   printf -v "$name" '%s' "$value"
 done
@@ -182,10 +200,22 @@ changed=$(trim "$changed")
 if [[ -n "$changed" ]]; then log "Changed: $changed"; else log "Nothing to change."; fi
 
 log "listmonk 4/4: restart if needed"
-if [[ -n "$running" ]] && [[ -n "$changed" || "$fresh" == true || "$new_image" == true ]]; then
-  # Recreated, so it runs the image compose.prod.yml names (`restart` would keep the old one).
-  compose up -d --no-deps --force-recreate listmonk
-  log "Started listmonk again (it reads its settings only when it starts)."
+if [[ -n "$running" ]] && [[ -n "$changed" || "$fresh" == true || "$new_image" == true || -e "$RESTART_PENDING" ]]; then
+  sending=0
+  if [[ "$fresh" != true && "$new_image" != true ]]; then
+    sending=$(compose exec -T db psql -U postgres -d listmonk -X -tAc \
+      "select count(*) from campaigns where status in ('running', 'paused')")
+    sending=$(trim "${sending:-0}")
+  fi
+  if [[ "$sending" =~ ^[1-9] ]]; then
+    : >"$RESTART_PENDING"
+    log "listmonk is sending an issue: its restart waits for the next update ($RESTART_PENDING)."
+  else
+    # Recreated, so it runs the image compose.prod.yml names (`restart` would keep the old one).
+    compose up -d --no-deps --force-recreate listmonk
+    rm -f "$RESTART_PENDING"
+    log "Started listmonk again (it reads its settings only when it starts)."
+  fi
 else
   log "No restart needed."
 fi

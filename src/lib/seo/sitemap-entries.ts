@@ -8,11 +8,14 @@ import {
   jobIndexed,
   jobsListIndexed,
   mapPageIndexed,
+  newsletterArchiveIndexed,
+  newsletterIssueIndexed,
   newsletterSignupIndexed,
   subfieldIndexIndexed,
 } from '@/lib/indexing'
 import { type ListingDates, isOpen, listingState } from '@/lib/jobs/deadline'
 import { alternatesFor } from '@/lib/metadata'
+import { ARCHIVE_PATH, issuePath } from '@/lib/newsletter/issue/links'
 import { NEWSLETTER_PATHS } from '@/lib/newsletter/paths'
 import { type PublicPage, indexedPublicPages } from '@/lib/public-pages'
 import { paths } from '@/lib/site'
@@ -47,6 +50,9 @@ export type SitemapInstitution = {
   shortId?: string | null
 }
 
+/** A sent issue of Glia Notes, as the sitemaps read it. */
+export type SitemapIssue = { month: string; sentAt?: string | null }
+
 export type SitemapSubfield = {
   slug: string
   hubIntro?: string | null
@@ -64,12 +70,15 @@ function entry(path: string, lastmod?: DateValue | null): SitemapEntry {
 
 /**
  * Pages that are not records: the home page, the content pages that are no longer drafts (D28),
- * the unfiltered jobs list, the map, Suggest a listing, the Glia Notes signup (M2) and, once one of
- * its hubs is indexed, the subfield index. `lastmod`
- * only where the date of the last change is known: the content pages record it; the home page
- * and the lists change with the listings and have none.
+ * the unfiltered jobs list, the map, Suggest a listing, the Glia Notes signup (M2), its archive
+ * and its sent issues (M11) and, once one of its hubs is indexed, the subfield index. `lastmod`
+ * only where the date of the last change is known: the content pages record it, an issue its
+ * sending; the home page and the lists change with the listings and have none.
  */
-export function pageEntries(subfields: readonly SitemapSubfield[]): SitemapEntry[] {
+export function pageEntries(
+  subfields: readonly SitemapSubfield[],
+  issues: readonly SitemapIssue[] = [],
+): SitemapEntry[] {
   return [
     entry(paths.home()),
     ...(jobsListIndexed(new URLSearchParams()) ? [entry(JOB_FILTERS.path)] : []),
@@ -78,6 +87,10 @@ export function pageEntries(subfields: readonly SitemapSubfield[]): SitemapEntry
     entry(paths.section('suggest')),
     // The Glia Notes signup is indexed (M2, D50); the pages after it are not.
     ...(newsletterSignupIndexed() ? [entry(NEWSLETTER_PATHS.signup)] : []),
+    ...(newsletterArchiveIndexed(issues.length) ? [entry(ARCHIVE_PATH)] : []),
+    ...(newsletterIssueIndexed()
+      ? issues.map((issue) => entry(issuePath(issue.month), issue.sentAt))
+      : []),
     ...(subfieldIndexIndexed(subfields) ? [entry(SUBFIELDS_PATH)] : []),
     ...Object.values(CONTENT_PAGES)
       .filter(contentPageIndexed)

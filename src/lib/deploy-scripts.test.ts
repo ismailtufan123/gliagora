@@ -836,6 +836,16 @@ describe('listmonk/prepare.sh', () => {
       expect(param(sqlText, key)).toBe('')
     }
     expect(param(sqlText, 'root_url')).toBe('http://localhost:9001')
+    // Without LISTMONK_CAMPAIGNS_TOKEN, no hash: the issues' API user stays disabled (M11).
+    expect(param(sqlText, 'campaigns_token_sha256')).toBe('')
+    const withCampaigns = input({
+      LISTMONK_API_TOKEN: 'the-token',
+      LISTMONK_CAMPAIGNS_TOKEN: 'the-campaigns-token',
+    })
+    expect(withCampaigns).not.toContain('the-campaigns-token')
+    expect(param(withCampaigns, 'campaigns_token_sha256')).toBe(
+      createHash('sha256').update('the-campaigns-token').digest('hex'),
+    )
   })
 
   it('reads SMTP as the app does: STARTTLS required, TLS with SMTP_SECURE, none on this computer', () => {
@@ -881,7 +891,7 @@ describe('listmonk/prepare.sh', () => {
     // reads SMTP as the app does): the same mail server, login, TLS and token, for every kind of
     // setting. tests/integration/listmonk.db.test.ts checks that both store the same.
     const keys = Object.keys(listmonkParams({ LISTMONK_API_TOKEN: 't' }))
-    expect(keys).toHaveLength(7)
+    expect(keys).toHaveLength(12)
     const cases: Record<string, string>[] = [
       {},
       { SMTP_HOST: 'smtp.example.org' },
@@ -897,6 +907,15 @@ describe('listmonk/prepare.sh', () => {
       { SMTP_HOST: 'localhost', SMTP_PORT: '1025', SMTP_USER: 'u', SMTP_PASS: 'x' },
       { SMTP_HOST: '127.0.0.1', SMTP_PASS: 'without a user' },
       { SMTP_HOST: '[::1]', SMTP_PORT: '025' },
+      // The issues' API user and sending rate (M11), as written.
+      {
+        LISTMONK_CAMPAIGNS_TOKEN: ' the-campaigns-token ',
+        MAILBOX_LIMIT_HOUR: ' 500 ',
+        MAILBOX_LIMIT_DAY: '2000',
+        EMAIL_CAP_HOUR: '40',
+        EMAIL_CAP_DAY: ' 150',
+      },
+      { MAILBOX_LIMIT_DAY: '1000', EMAIL_CAP_HOUR: 'x' },
     ]
     const quiet = vi.spyOn(console, 'warn').mockImplementation(() => {})
     try {
@@ -923,8 +942,14 @@ describe('listmonk/prepare.sh, run as on the server', () => {
   const PREPARE = join(ROOT, PREPARE_FILE)
 
   /** Runs prepare.sh against the docker stand-in, with its own .env and admin password file. */
-  function prepare(env: Record<string, string> = {}, dotenv = "LISTMONK_API_TOKEN='the-token'\n") {
-    const dir = folder()
+  function prepare(
+    env: Record<string, string> = {},
+    dotenv = "LISTMONK_API_TOKEN='the-token'\n",
+    /** The folder of an earlier run, as the next update finds it (its calls start afresh). */
+    again?: string,
+  ) {
+    const dir = again ?? folder()
+    if (again) writeFileSync(join(dir, 'docker.log'), '')
     writeFileSync(join(dir, 'compose.prod.yml'), 'name: gliagora\n')
     writeFileSync(join(dir, '.env'), dotenv)
     const passwordFile = join(dir, 'admin-password')
@@ -945,7 +970,7 @@ describe('listmonk/prepare.sh, run as on the server', () => {
       .split('\n')
       .filter(Boolean)
       .map((line) => line.replace(/--project-directory \S+ -f \S+ /, ''))
-    return { ...run, calls, file, passwordFile }
+    return { ...run, calls, file, passwordFile, dir }
   }
 
   const INIT = 'docker compose exec -T db bash /docker-entrypoint-initdb.d/20-listmonk-database.sh'
@@ -1035,6 +1060,22 @@ describe('listmonk/prepare.sh, run as on the server', () => {
       expect(run.calls.some((call) => call.includes(' restart '))).toBe(false)
       if (again) expect(run.calls.at(-1)).toBe(RECREATE)
     }
+  })
+
+  it('waits with a restart for changed settings while listmonk is sending an issue (M11)', () => {
+    const env = { FAKE_INSTALLED: 't', FAKE_CHANGED: 'setting smtp', FAKE_LISTMONK_RUNNING: '1' }
+    const waiting = prepare({ ...env, FAKE_SENDING: '1' })
+    expect(waiting.status, waiting.output).toBe(0)
+    expect(waiting.calls).not.toContain(RECREATE)
+    expect(waiting.output).toContain('listmonk is sending an issue: its restart waits')
+    // The next update, with nothing sending and nothing new to change, restarts it then.
+    const later = prepare(
+      { FAKE_INSTALLED: 't', FAKE_LISTMONK_RUNNING: '1' },
+      undefined,
+      waiting.dir,
+    )
+    expect(later.status, later.output).toBe(0)
+    expect(later.calls.at(-1)).toBe(RECREATE)
   })
 
   it('stops a listmonk on another image before the new one migrates its database', () => {

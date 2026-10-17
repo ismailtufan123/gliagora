@@ -3,6 +3,7 @@ import { type APIRequestContext, type Page, expect, test } from '@playwright/tes
 import { CONTENT_PAGES } from '../../src/lib/content'
 import { disallowRules, isDisallowed } from '../../src/lib/seo/robots'
 import { FIXED_JOBS, jobPath } from '../../src/scripts/fake-jobs-fixed'
+import { fakeIssueMonth } from '../../src/scripts/fake-issue'
 
 // Sitemaps, the jobs feed and robots.txt (PLAN §2.2, §2.5, §16.1) on the running app with the fake
 // data (pnpm fake:jobs) and the ROR test institutions. The central check: every URL the sitemaps
@@ -80,7 +81,7 @@ test.describe('sitemaps', () => {
     expect(await (await request.get('/sitemap.xml')).text()).not.toContain('subfields.xml')
   })
 
-  test('the pages sitemap lists the home page, the jobs list, the map, the forms and the approved texts, and no draft', async ({
+  test('the pages sitemap lists the home page, the jobs list, the map, the forms, the archive of Glia Notes and the approved texts, and no draft', async ({
     request,
   }) => {
     const paths = locs(await getXml(request, '/sitemaps/pages.xml')).map(pathOf)
@@ -95,6 +96,9 @@ test.describe('sitemaps', () => {
       '/en/map/',
       '/en/suggest/',
       '/en/newsletter/',
+      // The archive and the fake sent issue of `pnpm fake:jobs` (M11; src/scripts/fake-issue.ts).
+      '/en/newsletter/archive/',
+      `/en/newsletter/${fakeIssueMonth(new Date())}/`,
       ...approved,
     ])
   })
