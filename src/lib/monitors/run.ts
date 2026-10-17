@@ -15,10 +15,16 @@ import type { Source } from '@/payload-types'
 
 import {
   type FoundDeadline,
+  OPEN_ENDED_MAX_DAYS,
+  POSSIBLY_FILLED_DAYS,
+  ageInDays,
+  dayOf,
   deadlineFromText,
   deadlineFromValidThrough,
   hasClosed,
   openEndedFromText,
+  publishedFromAddress,
+  publishedFromText,
 } from './dates'
 import { type Fetcher, FetchProblem } from './http'
 import { comparableText, readPostingPage } from './html'
@@ -49,6 +55,8 @@ export type SourceCounts = {
   notNeuroscience: number
   closed: number
   duplicates: number
+  /** Skipped: no fixed deadline, and published over OPEN_ENDED_MAX_DAYS ago. */
+  old: number
   /** New postings over the cap of one run (`maxReads`); read on the next run. */
   capped: number
   /** Postings whose page failed this time; read again on the next run. */
@@ -82,6 +90,7 @@ export const emptyCounts = (): SourceCounts => ({
   notNeuroscience: 0,
   closed: 0,
   duplicates: 0,
+  old: 0,
   capped: 0,
   failedPages: 0,
 })
@@ -186,6 +195,28 @@ type Posting = {
   published?: Fact<string>
 }
 
+/** A day the list or the posting's data gives as published, with where it came from. */
+function listedDay(value: string | undefined, from: string, now: Date): Fact<string> | undefined {
+  const day = dayOf(value, now)
+  return day ? { value: day, from: `${from}: ${value}` } : undefined
+}
+
+/**
+ * The names whose words do not count as neuroscience in a posting's text (src/lib/tags/
+ * neuroscience.ts): the source's own list (one a line) and its employer's names.
+ */
+export function ignoredNamesOf(source: Source): string[] {
+  const names = (source.ignoredNames ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const institution = source.institution
+  if (institution && typeof institution === 'object') {
+    names.push(institution.name, ...(institution.aliases ?? []))
+  }
+  return names
+}
+
 /** Reads what the monitor needs of one posting; null when its page is gone (a 404 or 410). */
 async function readPosting(deps: MonitorDeps, posting: ListedPosting): Promise<Posting | null> {
   const listed: Posting = {
@@ -194,7 +225,7 @@ async function readPosting(deps: MonitorDeps, posting: ListedPosting): Promise<P
     text: posting.text ?? '',
     page: 'from-api',
     location: posting.location ? { value: posting.location, from: 'the list' } : undefined,
-    published: posting.published ? { value: posting.published, from: 'the list' } : undefined,
+    published: listedDay(posting.published, 'the list', deps.now),
   }
   if (posting.complete) return listed
   const allow = (url: URL) => deps.robots.allows(url)
@@ -232,18 +263,21 @@ async function readPosting(deps: MonitorDeps, posting: ListedPosting): Promise<P
   if (type && !type.includes('html')) return { ...listed, page: 'not-html' }
   const page = readPostingPage(fetched.text)
   if (fetched.tdmReserved || page.tdmReserved) return { ...listed, page: 'robots' }
+  // A page whose only title is its <title> element names the posting less well than the list.
+  const pageTitle =
+    page.titleFrom === 'title' && posting.title && !posting.provisionalTitle ? null : page.title
   return {
-    title: page.title ?? posting.title,
-    titleFrom: page.title ? "the posting's page" : 'the list',
+    title: pageTitle ?? posting.title,
+    titleFrom: pageTitle ? "the posting's page" : 'the list',
     text: page.text || listed.text,
     page: 'read',
     validThrough: page.jobPosting?.validThrough,
     location: page.jobPosting?.location
       ? { value: page.jobPosting.location, from: "the posting's JobPosting data" }
       : listed.location,
-    published: page.jobPosting?.datePosted
-      ? { value: page.jobPosting.datePosted, from: "the posting's JobPosting data" }
-      : listed.published,
+    published:
+      listedDay(page.jobPosting?.datePosted, "the posting's JobPosting data", deps.now) ??
+      listed.published,
   }
 }
 
@@ -274,7 +308,11 @@ async function handlePosting(
   }
   const title = (read.title || posting.title || posting.url).slice(0, 300)
   if (!source.allNeuroscience) {
-    const check = neuroscienceCheck({ title, text: read.text }, deps.taxonomy.compiled)
+    const check = neuroscienceCheck(
+      { title, text: read.text },
+      deps.taxonomy.compiled,
+      ignoredNamesOf(source),
+    )
     if (!check.matches) {
       counts.notNeuroscience++
       await remember(payload, source.id, posting, 'not-neuroscience', now, undefined, title)
@@ -286,6 +324,20 @@ async function handlePosting(
   if (deadline && hasClosed(deadline.date, now)) {
     counts.closed++
     await remember(payload, source.id, posting, 'closed', now, undefined, title)
+    return
+  }
+  // When it was published, wherever the source says: its data, the list, its text, its address.
+  const fromText =
+    publishedFromText(read.text, country, now) ?? publishedFromAddress(posting.url, now)
+  const published: Fact<string> | undefined =
+    read.published ??
+    (fromText
+      ? { value: fromText.date, from: redacted(fromText.from) ?? fromText.from }
+      : undefined)
+  const age = published && !deadline ? ageInDays(published.value, now) : null
+  if (age !== null && age > OPEN_ENDED_MAX_DAYS) {
+    counts.old++
+    await remember(payload, source.id, posting, 'old', now, undefined, title)
     return
   }
   const openEnded = deadline ? null : openEndedFromText(read.text)
@@ -307,7 +359,15 @@ async function handlePosting(
       ? { openEnded: { value: openEnded.value, from: redacted(openEnded.from) ?? '' } }
       : {}),
     ...(read.location ? { location: read.location } : {}),
-    ...(read.published ? { published: read.published } : {}),
+    ...(published ? { published } : {}),
+    ...(published && age !== null && age >= POSSIBLY_FILLED_DAYS
+      ? {
+          possiblyFilled: {
+            value: { published: published.value, days: age },
+            from: `no fixed deadline, and published ${age} days ago: check first that it is still open`,
+          },
+        }
+      : {}),
   }
   const snippet = redacted(read.text)?.slice(0, SNIPPET_MAX) ?? null
   const candidate = await payload.create({
@@ -368,6 +428,8 @@ export async function runSource(deps: MonitorDeps, source: Source): Promise<Sour
         moreUrls: (source.moreUrls ?? []).map((row) => row.url),
         apiFormat: source.apiFormat,
         postingPattern: source.postingPattern,
+        postingIdPattern: source.postingIdPattern,
+        postingUrlTemplate: source.postingUrlTemplate,
       },
       deps.fetcher,
       (url) => deps.robots.allows(url),

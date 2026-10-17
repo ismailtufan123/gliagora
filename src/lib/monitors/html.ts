@@ -135,6 +135,29 @@ export function linksOf(doc: Doc, pageUrl: string): Array<{ url: string; text: s
   return result
 }
 
+/**
+ * The postings of a list whose links name them by an ID instead of an address
+ * (`javascript:viewTheJobSpec('188371')`, Oxford's CoreHR): each link whose `href` matches
+ * `idPattern` (the ID in its one group) gives the address `template` names with the ID, and its
+ * text.
+ */
+export function idLinksOf(
+  doc: Doc,
+  idPattern: RegExp,
+  template: string,
+): Array<{ url: string; text: string }> {
+  const result: Array<{ url: string; text: string }> = []
+  for (const anchor of all(doc, (el) => el.name === 'a' && Boolean(attr(el, 'href')))) {
+    const id = idPattern.exec(attr(anchor, 'href')!)?.[1]
+    if (!id) continue
+    const text = textOf(anchor.children as Node[], { skipChrome: false })
+      .replace(/\s+/g, ' ')
+      .trim()
+    result.push({ url: template.replace('{id}', encodeURIComponent(id)), text })
+  }
+  return result
+}
+
 /** A `<meta>` value by its name or property. */
 export function metaOf(doc: Doc, key: string): string | null {
   const lower = key.toLowerCase()
@@ -232,6 +255,11 @@ function contentOf(doc: Doc): readonly Node[] {
 
 export type PostingPage = {
   title: string | null
+  /**
+   * Where the title came from. A page whose only title is its `<title>` element ("Job Details" on
+   * Oxford's CoreHR) names the posting less well than the list's link.
+   */
+  titleFrom: 'json-ld' | 'og:title' | 'h1' | 'title' | null
   text: string
   jobPosting: JobPostingData | null
   /** Whether the page reserves text and data mining (`<meta name="tdm-reservation" content="1">`). */
@@ -244,16 +272,19 @@ export function readPostingPage(html: string): PostingPage {
   const jobPosting = jobPostingsOf(doc)[0] ?? null
   const h1 = all(doc, (el) => el.name === 'h1')[0]
   const titleElement = all(doc, (el) => el.name === 'title')[0]
-  const title =
-    jobPosting?.title ??
-    metaOf(doc, 'og:title') ??
-    (h1 ? textOf(h1.children as Node[], { skipChrome: false }).replace(/\s+/g, ' ') : null) ??
-    (titleElement ? DomUtils.textContent(titleElement).replace(/\s+/g, ' ').trim() : null)
+  const found: Array<[PostingPage['titleFrom'], string | null | undefined]> = [
+    ['json-ld', jobPosting?.title],
+    ['og:title', metaOf(doc, 'og:title')],
+    ['h1', h1 ? textOf(h1.children as Node[], { skipChrome: false }).replace(/\s+/g, ' ') : null],
+    ['title', titleElement ? DomUtils.textContent(titleElement).replace(/\s+/g, ' ') : null],
+  ]
+  const [titleFrom, title] = found.find(([, value]) => value?.trim()) ?? [null, null]
   let text = textOf(contentOf(doc))
   // A page that holds the posting only in its JSON-LD (built by script) still has its description.
   if (text.length < 200 && jobPosting?.description) text = htmlToText(jobPosting.description)
   return {
     title: title?.trim() || null,
+    titleFrom,
     text,
     jobPosting,
     tdmReserved: metaOf(doc, 'tdm-reservation') === '1',

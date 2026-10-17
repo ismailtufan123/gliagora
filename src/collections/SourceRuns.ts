@@ -30,6 +30,7 @@ export const SourceRuns: CollectionConfig = {
       'candidates',
       'notNeuroscience',
       'closed',
+      'old',
       'capped',
     ],
     description:
@@ -83,6 +84,7 @@ export const SourceRuns: CollectionConfig = {
     count('notNeuroscience', 'Not neuroscience', 'Skipped: no neuroscience words.'),
     count('closed', 'Closed', 'Skipped: the deadline has passed, or the page is gone.'),
     count('duplicates', 'Duplicates', 'Skipped: already a candidate or a job.'),
+    count('old', 'Old', 'Skipped: no fixed deadline, and published over 6 months ago.'),
     count('capped', 'Left for later', 'New postings over the cap of one run (read next time).'),
     count('failedPages', 'Pages failed', 'New postings whose page failed (read next time).'),
   ],

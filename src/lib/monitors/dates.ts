@@ -125,10 +125,11 @@ const PATTERNS: Array<{
     regexp: /(20\d{2})\s*[年년]\s*(\d{1,2})\s*[月월]\s*(\d{1,2})\s*[日일]?/u,
     parts: (m) => [Number(m[1]), Number(m[2]), Number(m[3])],
   },
-  // 3 November 2026, 3rd of November 2026, 3. November 2026, 03 Nov. 2026, 3 de noviembre de 2026
+  // 3 November 2026, 3rd of November 2026, 3. November 2026, 03 Nov. 2026, 3 de noviembre de 2026,
+  // 19-Oct-2026
   {
     regexp: new RegExp(
-      String.raw`(?<!\d)${DAY}\s*(?:of\s+|de\s+)?(${MONTH})\.?,?\s*(?:de\s+)?${YEAR}(?!\d)`,
+      String.raw`(?<!\d)${DAY}[\s-]*(?:of\s+|de\s+)?(${MONTH})\.?,?[\s-]*(?:de\s+)?${YEAR}(?!\d)`,
       'u',
     ),
     parts: (m) => [Number(m[3]), MONTHS[m[2]!]!, Number(m[1])],
@@ -285,4 +286,135 @@ export function openEndedFromText(
 export function hasClosed(date: string, now: Date): boolean {
   const end = Date.parse(`${date}T00:00:00Z`) + 2 * 86_400_000
   return end <= now.getTime()
+}
+
+// When a posting was published (M7, second round): "open until filled" posts can stay on a list
+// long after they were filled (RIKEN CBS listed posts from 2025). Academic posts without a fixed
+// deadline are mostly filled within two to four months, so from 60 days the editor is told to
+// check that the post is still open, and after 180 days (the monitor's memory of a posting too) it
+// is skipped: by then it is more likely filled than open. A posting with a fixed deadline is judged
+// by its deadline alone.
+
+/** From this age (days since published), a posting without a fixed deadline may be filled. */
+export const POSSIBLY_FILLED_DAYS = 60
+
+/** Over this age, a posting without a fixed deadline is skipped as old. */
+export const OPEN_ENDED_MAX_DAYS = 180
+
+/** Words that introduce the day a posting was published, folded. */
+const PUBLISHED_LABELS = [
+  'date posted',
+  'posted on',
+  'posted',
+  'posting date',
+  'date of posting',
+  'published on',
+  'published',
+  'publication date',
+  'date of publication',
+  'date advertised',
+  'advertised on',
+  'advertised',
+  'veroffentlicht am',
+  'veroffentlicht',
+  'veroffentlichungsdatum',
+  'ausschreibungsdatum',
+  'date de publication',
+  'publie le',
+  'fecha de publicacion',
+  'publicado el',
+  'publicado em',
+  'data de publicacao',
+  'data di pubblicazione',
+  'pubblicato il',
+  'publicatiedatum',
+  'gepubliceerd op',
+  'publiceringsdatum',
+  'publicerad',
+  'ilan tarihi',
+  'yayin tarihi',
+  'yayinlanma tarihi',
+]
+const PUBLISHED_LABEL = new RegExp(
+  String.raw`(?<![\p{L}])(?:${PUBLISHED_LABELS.map((label) => label.replace(/ /g, String.raw`\s+`)).join('|')})(?![\p{L}])`,
+  'gu',
+)
+const PUBLISHED_LABEL_CJK =
+  /掲載日|公開日|登録日|発表日|发布时间|发布日期|发布于|게시일|등록일|작성일/gu
+
+/** How far after a "published" label its date may stand: right after it ("Posted: 12 March 2025"). */
+const PUBLISHED_NEAR = 25
+
+/** Whether `date` (YYYY-MM-DD) is a day a current posting could have been published on. */
+const pastDay = (date: string, now: Date) => {
+  const at = Date.parse(`${date}T00:00:00Z`)
+  return at <= now.getTime() + 86_400_000 && at >= now.getTime() - 10 * 366 * 86_400_000
+}
+
+/** The calendar day of an ISO date or date-time, or of a date a feed or an API gives. */
+export function dayOf(value: string | undefined | null, now: Date): string | null {
+  if (!value) return null
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim())
+  let date: string | null = null
+  if (iso) date = validDay(Number(iso[1]), Number(iso[2]), Number(iso[3]))
+  else {
+    const parsed = new Date(value)
+    if (!Number.isNaN(parsed.getTime())) date = parsed.toISOString().slice(0, 10)
+  }
+  return date && pastDay(date, now) ? date : null
+}
+
+/** The day a posting's text says it was published ("Posted: 12 March 2025"). */
+export function publishedFromText(
+  text: string,
+  country: string | null,
+  now: Date,
+): { date: string; from: string } | null {
+  const folded = fold(text)
+  const labels = [...folded.matchAll(PUBLISHED_LABEL), ...text.matchAll(PUBLISHED_LABEL_CJK)].sort(
+    (a, b) => a.index - b.index,
+  )
+  for (const label of labels) {
+    const start = label.index + label[0].length
+    const window = folded.slice(start, start + PUBLISHED_NEAR)
+    const found = firstDate(window, country === 'US')
+    if (!found || !pastDay(found.date, now)) continue
+    return {
+      date: found.date,
+      from: `the text: "${quote(text.slice(label.index, start + found.end))}"`,
+    }
+  }
+  return null
+}
+
+/**
+ * The day in a posting's address, where a site names its postings by it: RIKEN's
+ * /careers/researchers/20250512_1/, a CMS's /202601/t20260115_123.html, a blog's /2026/03/15/.
+ */
+export function publishedFromAddress(
+  address: string,
+  now: Date,
+): { date: string; from: string } | null {
+  let path: string
+  try {
+    path = new URL(address).pathname
+  } catch {
+    return null
+  }
+  const patterns = [
+    /(?:^|\/)t?(20\d{2})(\d{2})(\d{2})(?:_\d+)?(?:\.s?html?)?(?=\/|$)/,
+    /\/(20\d{2})\/(\d{2})\/(\d{2})(?=\/)/,
+  ]
+  for (const pattern of patterns) {
+    const match = pattern.exec(path)
+    if (!match) continue
+    const date = validDay(Number(match[1]), Number(match[2]), Number(match[3]))
+    if (date && pastDay(date, now)) return { date, from: `the posting's address: ${quote(path)}` }
+  }
+  return null
+}
+
+/** Whole days from `date` (YYYY-MM-DD) to `now`. */
+export function ageInDays(date: string, now: Date): number {
+  return Math.floor((now.getTime() - Date.parse(`${date}T00:00:00Z`)) / 86_400_000)
 }

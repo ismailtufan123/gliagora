@@ -9,7 +9,7 @@ import {
   recordSpend,
   requestDraft,
 } from '@/lib/ai/claude-api'
-import { draftInput } from '@/lib/ai/input'
+import { cannotRedact, draftInput } from '@/lib/ai/input'
 import { applyDraft } from '@/lib/ai/weekly'
 import { errorSummary } from '@/lib/errors'
 import { loadTaxonomy } from '@/lib/tags/terms'
@@ -30,6 +30,8 @@ export type ClaudeCounts = {
   drafted: number
   refused: number
   failed: number
+  /** Left for an editor: text in a script redaction cannot read (`cannotRedact`). */
+  notRedactable: number
   capReached: number
   spentUsdCents: number
 }
@@ -43,6 +45,7 @@ export async function draftWithClaude(
     drafted: 0,
     refused: 0,
     failed: 0,
+    notRedactable: 0,
     capReached: 0,
     spentUsdCents: 0,
   }
@@ -72,6 +75,10 @@ export async function draftWithClaude(
         ? (candidate.institution as Institution)
         : null
     const input = draftInput(candidate, institution)
+    if (cannotRedact(input)) {
+      counts.notRedactable++
+      continue
+    }
     if (spent + estimateUsd(settings.model, input) > settings.capUsd) {
       counts.capReached = 1
       break
@@ -107,6 +114,6 @@ export const DraftWithClaudeTask = maintenanceTask({
   // Daily at 07:30 UTC, after the monitors (04:40), in their queue.
   cron: '30 7 * * *',
   queue: MONITOR_QUEUE,
-  counts: ['drafted', 'refused', 'failed', 'capReached', 'spentUsdCents'],
+  counts: ['drafted', 'refused', 'failed', 'notRedactable', 'capReached', 'spentUsdCents'],
   run: (payload, now) => draftWithClaude(payload, now),
 })

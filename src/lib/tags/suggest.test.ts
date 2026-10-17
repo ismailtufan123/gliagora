@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { TAXONOMY_2026_09 } from '@/migrations/data/taxonomy-2026-09'
 
 import { compileTerms, findMatches, fold } from './match'
-import { neuroscienceCheck } from './neuroscience'
+import { neuroscienceCheck, unitSpans } from './neuroscience'
 import { noSuggestions, suggestTags } from './suggest'
 
 // The seeded taxonomy (M3) stands in for the database's terms.
@@ -108,6 +108,9 @@ describe('neuroscienceCheck', () => {
     expect(check('PhD position: glial cells in ageing')).toBe(true)
     expect(check('Postdoc in Neurowissenschaften (m/w/d)')).toBe(true)
     expect(check('Doctorant(e) en neurosciences')).toBe(true)
+    expect(check('Sinirbilim Anabilim Dalı araştırma görevlisi')).toBe(true)
+    expect(check('Nörolojik Bilimler Enstitüsü proje bursiyeri')).toBe(true)
+    expect(check('Norovirus vaccine research assistant')).toBe(false)
     expect(check('Research assistant, Brain Imaging Unit')).toBe(true)
     expect(check('Postdoc – basal ganglia and movement')).toBe(true)
   })
@@ -135,5 +138,62 @@ describe('neuroscienceCheck', () => {
   it('reads Japanese, Chinese and Korean', () => {
     expect(check('脳科学研究センター 研究員')).toBe(true)
     expect(check('神经科学研究所 博士后')).toBe(true)
+  })
+
+  it("does not count the words of the employing unit's name in the text", () => {
+    // M7's first run: a department's name kept posts in other fields.
+    const ad = [
+      'The Department of Clinical Neuroscience at the university is one of the largest departments.',
+      'Our research group in pharmacoepidemiology at the Department of Clinical Neuroscience studies drug use in pregnancy.',
+      'Dept. of Clinical Neurosciences, Queen Square Institute of Neurology, Queensland Brain Institute.',
+    ].join('\n')
+    expect(check('Research assistant in pharmacoepidemiology', ad)).toBe(false)
+    // Without the rule the same text would count.
+    expect(neuroscienceCheck({ title: 'x', text: ad }, compiled).text).toBe(0)
+    // A neuroscience post at such a department still has its own words.
+    expect(
+      check(
+        'Postdoctoral researcher',
+        `${ad}\nWe record from hippocampal neurons to study synaptic plasticity.`,
+      ),
+    ).toBe(true)
+    // The title keeps every word.
+    expect(check('Postdoc at the Department of Neuroscience', 'Budgets.')).toBe(true)
+  })
+
+  it('finds unit names in the languages of the sources, and stops at a line break', () => {
+    const named = (text: string) => unitSpans(text).map(([a, b]) => text.slice(a, b))
+    // A capitalised word before the head joins the name: harmless, it is not about the post.
+    expect(named('Die Klinik für Neurologie sucht eine Doktorandin.')).toEqual([
+      'Die Klinik für Neurologie',
+    ])
+    expect(named('am Institut für klinische Neurobiologie und Hirnforschung.')).toEqual([
+      'Institut für klinische Neurobiologie und Hirnforschung',
+    ])
+    expect(named('Institutionen för klinisk neurovetenskap söker en forskningsassistent')).toEqual([
+      'Institutionen för klinisk neurovetenskap söker',
+    ])
+    expect(named("au sein de l'Institut du Cerveau à Paris")).toEqual(['Institut du Cerveau'])
+    expect(named('Hacettepe Üniversitesi Nörolojik Bilimler ve Psikiyatri Enstitüsü')).toEqual([
+      'Hacettepe Üniversitesi Nörolojik Bilimler ve Psikiyatri Enstitüsü',
+    ])
+    expect(named('Neuroscience\nDepartment of Biology')).toEqual(['Department of Biology'])
+    expect(named('a departmental budget')).toEqual([])
+    // Labs and groups say what they study: not units here.
+    expect(named('the Neural Circuits Lab and the Brain Imaging Group')).toEqual([])
+  })
+
+  it("leaves out the names a source lists, and the employer's own, in any case", () => {
+    const text =
+      'Join the clinical neuroscience department; we study drug use in neurology clinics.'
+    expect(neuroscienceCheck({ title: 'x', text }, compiled).text).toBe(2)
+    expect(neuroscienceCheck({ title: 'x', text }, compiled, ['Clinical Neuroscience']).text).toBe(
+      1,
+    )
+    expect(check('Research assistant', text)).toBe(true)
+    expect(
+      neuroscienceCheck({ title: 'Research assistant', text }, compiled, ['clinical neuroscience'])
+        .matches,
+    ).toBe(false)
   })
 })

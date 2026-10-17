@@ -7,7 +7,7 @@ import type { Vocabulary } from '@/lib/taxonomy'
 import type { Candidate, Institution } from '@/payload-types'
 
 import { type AiDraft, SUMMARY_MAX, aiDraftSchema } from './draft'
-import { type DraftInput, draftInput, inputHash } from './input'
+import { type DraftInput, cannotRedact, draftInput, inputHash } from './input'
 
 // The weekly AI drafts by Claude Code (PLAN §6.6, D52), the first way in: the operator says "Do the
 // weekly drafts" and Claude Code, on the operator's computer, exports the candidates that wait for
@@ -28,6 +28,11 @@ export type DraftExport = {
   format: typeof EXPORT_FORMAT
   exportedAt: string
   candidates: ExportedCandidate[]
+  /**
+   * Waiting candidates left out: their text is partly in Chinese, Japanese or Korean script, where
+   * redaction cannot find names; an editor drafts them by hand.
+   */
+  leftForEditors: number
   /** The terms a draft may name, by vocabulary: slug and label. */
   vocabularies: Record<
     'positionType' | 'subfields' | 'careerStages',
@@ -83,14 +88,16 @@ export async function exportForDrafts(
     [...taxonomy.byKey]
       .filter(([key]) => key.startsWith(`${vocabulary}/`))
       .map(([key, term]) => ({ slug: key.slice(vocabulary.length + 1), label: term.label }))
-  const candidates = (await waiting(payload, limit)).map((candidate) => {
+  const inputs = (await waiting(payload, limit)).map((candidate) => {
     const input = draftInput(candidate, institutionOf(candidate))
     return { id: candidate.id, inputHash: inputHash(input), input }
   })
+  const candidates = inputs.filter((exported) => !cannotRedact(exported.input))
   return {
     format: EXPORT_FORMAT,
     exportedAt: now.toISOString(),
     candidates,
+    leftForEditors: inputs.length - candidates.length,
     vocabularies: {
       positionType: terms('position-type'),
       subfields: terms('subfield'),

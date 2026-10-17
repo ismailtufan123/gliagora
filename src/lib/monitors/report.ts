@@ -75,6 +75,8 @@ export type CandidateRow = {
   openEnded: string | null
   /** When the employer published it, where the source says. */
   published: string | null
+  /** Days since it was published, when it has no fixed deadline and may be filled. */
+  possiblyFilled: number | null
   /** Whether the monitor read the posting's own page, and if not, why. */
   page: string | null
   /** The suggested position type (slug), or null. */
@@ -116,6 +118,7 @@ const RUN_COUNTS = [
   'not_neuroscience',
   'closed',
   'duplicates',
+  'old',
   'failed_pages',
 ] as const
 
@@ -232,6 +235,7 @@ async function candidateRows(payload: Payload, only?: number): Promise<Candidate
       deadline: facts?.deadline?.value.date ?? null,
       openEnded: facts?.openEnded?.value ?? null,
       published: facts?.published?.value ?? null,
+      possiblyFilled: facts?.possiblyFilled?.value.days ?? null,
       page: facts?.page ?? null,
       type: tags?.positionType?.slug ?? null,
       subfields: (tags?.subfields ?? []).map((suggestion) => suggestion.label),

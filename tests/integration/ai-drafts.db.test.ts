@@ -148,6 +148,41 @@ describe('the weekly drafts', () => {
   })
 })
 
+describe('text in a script redaction cannot read', () => {
+  it('is left out of the weekly export and out of the Claude API, for an editor', async () => {
+    const chinese = await candidate({
+      rawTitle: '神经环路研究组招聘博士后',
+      snippet: '联系人：张老师。申请截止：2026年12月1日。',
+    })
+    const english = await candidate()
+    const exported = await exportForDrafts(payload, new Date('2026-10-20T07:00:00Z'))
+    const ids = exported.candidates.map((c) => c.id)
+    expect(ids).toContain(english.id)
+    expect(ids).not.toContain(chinese.id)
+    expect(exported.leftForEditors).toBeGreaterThanOrEqual(1)
+    expect(JSON.stringify(exported)).not.toMatch(/张|神经/)
+
+    const asked: string[] = []
+    const counts = await draftWithClaude(payload, new Date('2026-12-03T07:30:00Z'), {
+      env: { ANTHROPIC_API_KEY: 'sk-test-not-a-key', AI_MONTHLY_CAP_USD: '5' },
+      client: {
+        beta: {
+          messages: {
+            parse: async (params: { messages: Array<{ content: string }> }) => {
+              asked.push(params.messages[0]!.content)
+              throw new Error('not needed here')
+            },
+          },
+        },
+      } as never,
+    })
+    expect(counts.notRedactable).toBeGreaterThanOrEqual(1)
+    for (const content of asked) expect(content).not.toMatch(/张|神经/)
+    const stored = await payload.findByID({ collection: 'candidates', id: chinese.id, depth: 0 })
+    expect(stored.aiSuggestion).toBeFalsy()
+  })
+})
+
 describe('draftWithClaude', () => {
   const env = {
     ANTHROPIC_API_KEY: 'sk-test-not-a-key',

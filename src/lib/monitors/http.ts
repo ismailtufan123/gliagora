@@ -1,3 +1,5 @@
+import { gunzipSync } from 'node:zlib'
+
 // How the monitors read other sites (D52): politely, and only what they need. One request at a
 // time (a run reads its sources one after another), at least a few seconds between two requests
 // to the same host (longer if its robots.txt asks for it), a user agent that names Gliagora and
@@ -50,6 +52,8 @@ export type FetchOptions = {
   maxBytes: number
   /** Whether a redirect target may be requested (robots.txt); the first address is checked too. */
   allow?: (url: URL) => Promise<boolean>
+  /** Unpack an answer that is a gzip file (a sitemap named …xml.gz), within `maxBytes`. */
+  gunzip?: boolean
 }
 
 export type Fetcher = {
@@ -178,6 +182,17 @@ export function politeFetcher({
         throw new FetchProblem(
           name === 'TimeoutError' || name === 'AbortError' ? 'timeout' : 'network',
         )
+      }
+      if (options.gunzip && bytes[0] === 0x1f && bytes[1] === 0x8b) {
+        try {
+          bytes = gunzipSync(bytes, { maxOutputLength: options.maxBytes })
+        } catch (error) {
+          throw new FetchProblem(
+            (error as { code?: string } | null)?.code === 'ERR_BUFFER_TOO_LARGE'
+              ? 'too-large'
+              : 'network',
+          )
+        }
       }
       return {
         url: url.toString(),

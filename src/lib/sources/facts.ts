@@ -22,8 +22,10 @@ export type ExtractedFacts = {
   openEnded?: Fact<'rolling' | 'until-filled'>
   /** The place the posting names. */
   location?: Fact<string>
-  /** When the employer published it. */
+  /** When the employer published it: a day (YYYY-MM-DD), or as the source gave it (before M7's second round). */
   published?: Fact<string>
+  /** No fixed deadline and published long ago: the editor checks first that it is still open. */
+  possiblyFilled?: Fact<{ published: string; days: number }>
 }
 
 /** The facts stored on a candidate, if they are a monitor's. */

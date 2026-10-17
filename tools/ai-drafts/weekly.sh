@@ -24,7 +24,7 @@ case "${1:-}" in
     mkdir -p "$dir"
     chmod 700 ai-drafts "$dir"
     "${SSH[@]}" "$CALL GET /api/ops/ai-drafts/export/" > "$dir/export.json"
-    node -e 'const e = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); console.log(`${e.candidates.length} candidates in ${process.argv[1]}`)' "$dir/export.json"
+    node -e 'const e = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); console.log(`${e.candidates.length} candidates in ${process.argv[1]}${e.leftForEditors ? ` (${e.leftForEditors} left for an editor: text in a script redaction cannot read)` : ""}`)' "$dir/export.json"
     ;;
   check | import)
     file=${2:?Name the drafts file.}

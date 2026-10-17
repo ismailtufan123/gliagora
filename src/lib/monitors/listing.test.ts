@@ -1,8 +1,10 @@
+import { gzipSync } from 'node:zlib'
+
 import { describe, expect, it } from 'vitest'
 
 import { type Fetcher, FetchProblem, politeFetcher } from './http'
 import { comparableText, readPostingPage } from './html'
-import { readList, withoutSession } from './listing'
+import { readList, titleFromAddress, withoutSession } from './listing'
 
 // Invented employers and postings only.
 
@@ -250,6 +252,108 @@ describe('readPostingPage', () => {
   })
 })
 
+describe('readList: a sitemap of posting pages (M7, second round)', () => {
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/TR/xhtml11/xhtml11_schema.html">
+      <url><loc>https://example.wd1.myworkdayjobs.com/External/job/Main-Campus/Postdoctoral-Researcher-in-Neuroscience_R-4673</loc>
+        <xhtml:link rel="alternate" hreflang="en-US" href="https://example.wd1.myworkdayjobs.com/en-US/External/job/Main-Campus/Postdoctoral-Researcher-in-Neuroscience_R-4673"/></url>
+      <url><loc>https://example.wd1.myworkdayjobs.com/External/job/Main-Campus/Senior-Accountant_JR324-1</loc></url>
+      <url><loc>https://example.wd1.myworkdayjobs.com/External/about-us</loc></url>
+    </urlset>`
+  const source = {
+    kind: 'sitemap' as const,
+    url: 'https://example.wd1.myworkdayjobs.com/External/siteMap.xml',
+    postingPattern: '^https://example\\.wd1\\.myworkdayjobs\\.com/External/job/[^/]+/[^/]+$',
+  }
+
+  it("takes the pattern's posting pages, with a title from each address", async () => {
+    const fetcher = fakeFetcher({ [source.url]: sitemap }, 'application/xml')
+    const { postings } = await readList(source, fetcher, allowAll)
+    expect(postings.map((p) => [p.url.split('/').pop(), p.title])).toEqual([
+      ['Postdoctoral-Researcher-in-Neuroscience_R-4673', 'Postdoctoral Researcher in Neuroscience'],
+      ['Senior-Accountant_JR324-1', 'Senior Accountant'],
+    ])
+  })
+
+  it('follows a sitemap index to its sitemaps, each checked by robots.txt', async () => {
+    const index = `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      <sitemap><loc>https://example.wd1.myworkdayjobs.com/External/jobs-1.xml</loc></sitemap>
+      <sitemap><loc>https://example.wd1.myworkdayjobs.com/private/jobs-2.xml</loc></sitemap>
+    </sitemapindex>`
+    const fetcher = fakeFetcher(
+      {
+        [source.url]: index,
+        'https://example.wd1.myworkdayjobs.com/External/jobs-1.xml': sitemap,
+      },
+      'application/xml',
+    )
+    const allow = async (url: URL) => !url.pathname.startsWith('/private/')
+    await expect(readList(source, fetcher, allow)).rejects.toMatchObject({ kind: 'refused' })
+    const open = fakeFetcher(
+      {
+        [source.url]: index.replace('/private/jobs-2.xml', '/External/jobs-1.xml'),
+        'https://example.wd1.myworkdayjobs.com/External/jobs-1.xml': sitemap,
+      },
+      'application/xml',
+    )
+    const { postings } = await readList(source, open, allowAll)
+    expect(postings).toHaveLength(2)
+  })
+
+  it('refuses an answer that is not a sitemap', async () => {
+    const fetcher = fakeFetcher({ [source.url]: '<html><body>Jobs</body></html>' })
+    await expect(readList(source, fetcher, allowAll)).rejects.toMatchObject({
+      kind: 'not-a-sitemap',
+    })
+  })
+
+  it('names nothing from an address that is only an ID or a hash', () => {
+    expect(
+      titleFromAddress(
+        'https://jobs.example.org/jobposting/b81b8738522c80716f442f9e9a235f88667fcfba',
+      ),
+    ).toBe('')
+    expect(
+      titleFromAddress(
+        'https://jobs.example.org/en/jobs/101667/postdoctoral-researcher-fmx-laminar-fmri-406920269',
+      ),
+    ).toBe('postdoctoral researcher fmx laminar fmri')
+    expect(titleFromAddress('https://jobs.example.org/jobs/12345')).toBe('')
+  })
+})
+
+describe('readList: a list that names its postings by an ID (M7, second round)', () => {
+  const list = `<html><body><table>
+    <tr><td><a class="big" href="javascript:viewTheJobSpec('188838')">Postdoctoral Research Assistant in Retinal Gene Therapy</a></td></tr>
+    <tr><td><a href="javascript:viewTheJobSpec('188838')">show more details -></a></td></tr>
+    <tr><td><a href="javascript:viewTheJobSpec('188882')">Technician</a></td></tr>
+    <tr><td><a href="javascript:applyForJob('188882', 'N')">Apply</a></td></tr>
+    <tr><td><a href="/pls/recruit/help">Help</a></td></tr>
+  </table></body></html>`
+  const source = {
+    kind: 'page' as const,
+    url: 'https://hr.example.org/pls/recruit/search',
+    postingIdPattern: "^javascript:viewTheJobSpec\\('(\\d+)'\\)$",
+    postingUrlTemplate:
+      'https://hr.example.org/pls/recruit/jobspec?p_company=10&p_recruitment_id={id}',
+  }
+
+  it('builds each posting address from the ID in its links', async () => {
+    const fetcher = fakeFetcher({ [source.url]: list })
+    const { postings } = await readList(source, fetcher, allowAll)
+    expect(postings.map((p) => [p.url, p.title])).toEqual([
+      [
+        'https://hr.example.org/pls/recruit/jobspec?p_company=10&p_recruitment_id=188838',
+        'Postdoctoral Research Assistant in Retinal Gene Therapy',
+      ],
+      [
+        'https://hr.example.org/pls/recruit/jobspec?p_company=10&p_recruitment_id=188882',
+        'Technician',
+      ],
+    ])
+  })
+})
+
 describe('politeFetcher', () => {
   const clock = () => {
     let now = 0
@@ -334,5 +438,34 @@ describe('withoutSession', () => {
       'https://www.example.org/jobs/?id=4',
     )
     expect(withoutSession('https://www.example.org/jobs/4')).toBe('https://www.example.org/jobs/4')
+  })
+})
+
+describe('politeFetcher: a gzipped sitemap', () => {
+  it('unpacks it when asked, within the size limit', async () => {
+    const xml = `<urlset>${'<url><loc>https://jobs.example.org/1</loc></url>'.repeat(40)}</urlset>`
+    const fetcher = politeFetcher({
+      hostDelayMs: 0,
+      fetchImpl: (async () =>
+        new Response(gzipSync(xml), {
+          status: 200,
+          headers: { 'content-type': 'application/x-gzip' },
+        })) as never,
+    })
+    const fetched = await fetcher.get('https://jobs.example.org/sitemap.xml.gz', {
+      accept: 'application/xml',
+      maxBytes: 4000,
+      gunzip: true,
+    })
+    expect(fetched.text).toBe(xml)
+    // Small packed, too large unpacked.
+    expect(gzipSync(xml).byteLength).toBeLessThan(500)
+    await expect(
+      fetcher.get('https://jobs.example.org/sitemap.xml.gz', {
+        accept: 'application/xml',
+        maxBytes: 500,
+        gunzip: true,
+      }),
+    ).rejects.toMatchObject({ kind: 'too-large' })
   })
 })
