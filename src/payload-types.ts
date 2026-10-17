@@ -1508,9 +1508,13 @@ export interface Term {
     openalexTopics?: string[] | null;
   };
   /**
-   * Human-written introduction for the subfield hub page, 150–300 words (PLAN §16.3). Separate paragraphs with a blank line. Search engines list the hub only once its English introduction has at least 150 words; until then its page stays noindex (D40).
+   * The introduction on the subfield hub page, 150–300 words, written by the editor (PLAN §16.3). You may start from the AI draft below (D53), but only this text is shown on the site and counted by search engines. Separate paragraphs with a blank line. Search engines list the hub only once its English introduction has at least 150 words; until then its page stays noindex (D40).
    */
   hubIntro?: string | null;
+  /**
+   * A first draft written with an AI assistant (D53), for editors only: it is never shown on the site and search engines never see it. Check it, write your own introduction from it in "Hub introduction" above, and save. You may leave this draft as it is, or empty it.
+   */
+  hubIntroDraft?: string | null;
   /**
    * Inactive terms stay on existing items but cannot be chosen for new ones.
    */
@@ -2512,6 +2516,7 @@ export interface TermsSelect<T extends boolean = true> {
         openalexTopics?: T;
       };
   hubIntro?: T;
+  hubIntroDraft?: T;
   isActive?: T;
   sortOrder?: T;
   updatedAt?: T;

@@ -76,6 +76,8 @@ An AI assistant helps our editor with first drafts. [TO DECIDE: B17 – transfer
 - before any text is sent, email addresses, phone numbers and personal names are replaced with placeholders. For papers, once that section opens, the author lists and contact details are removed;
 - the drafts are never shown on the site. Our editor checks every fact against the original page, edits the text and approves it. Nothing is published without that approval, and our editor stays responsible for what is published.
 
+The introduction at the top of each subfield page may also start from a first draft written with the same AI assistant, from the names and descriptions of our subfields alone. That draft is never shown on the site either: our editor writes the introduction you read, checks it and approves it, and is responsible for it, as for every item.
+
 The [privacy policy](/en/legal/privacy/) explains what would be sent and where.
 
 [TO DECIDE: C11 – whether this page should also say that the site's software and the first drafts of some of its own pages, such as the legal texts, were prepared with an AI assistant and checked by the people who run Gliagora]

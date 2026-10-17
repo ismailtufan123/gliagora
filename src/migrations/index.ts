@@ -26,6 +26,8 @@ import * as migration_20261016_004430_m7_monitor_task from './20261016_004430_m7
 import * as migration_20261016_004611_m7_link_check from './20261016_004611_m7_link_check';
 import * as migration_20261016_120000_seed_sources from './20261016_120000_seed_sources';
 import * as migration_20261016_130000_m7_claude_task from './20261016_130000_m7_claude_task';
+import * as migration_20261017_113022_subfield_intro_drafts from './20261017_113022_subfield_intro_drafts';
+import * as migration_20261017_120000_seed_subfield_intro_drafts from './20261017_120000_seed_subfield_intro_drafts';
 
 export const migrations = [
   {
@@ -161,11 +163,21 @@ export const migrations = [
   {
     up: migration_20261016_120000_seed_sources.up,
     down: migration_20261016_120000_seed_sources.down,
-    name: '20261016_120000_seed_sources'
+    name: '20261016_120000_seed_sources',
   },
   {
     up: migration_20261016_130000_m7_claude_task.up,
     down: migration_20261016_130000_m7_claude_task.down,
     name: '20261016_130000_m7_claude_task',
+  },
+  {
+    up: migration_20261017_113022_subfield_intro_drafts.up,
+    down: migration_20261017_113022_subfield_intro_drafts.down,
+    name: '20261017_113022_subfield_intro_drafts',
+  },
+  {
+    up: migration_20261017_120000_seed_subfield_intro_drafts.up,
+    down: migration_20261017_120000_seed_subfield_intro_drafts.down,
+    name: '20261017_120000_seed_subfield_intro_drafts',
   },
 ];

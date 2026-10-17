@@ -152,3 +152,19 @@ Bazı adaylarda **"AI draft"** alanı doludur: Claude'un (Anthropic) adayın ki�
 - Taslaklar şimdilik **haftada bir** gelir: teknik yönetici Claude Code'a "Do the weekly drafts" der; Claude Code bekleyen adayları sunucudan dışa aktarır, taslakları yazar ve geri yükler. İleride Claude API ile her gün de gelebilir (bir anahtar ve aylık harcama sınırı girilene kadar kapalıdır).
 - Adayı kabul ettiğinizde ("Accepted"), **"Start the job from the AI draft"** işaretliyse taslak ilan özetini, pozisyon türünü, son başvuru tarihini, alt alanları ve kariyer aşamasını taslaktan alır ve "Drafted with AI assistance" işaretlenir. Taslağı kullanmak istemiyorsanız kabul etmeden önce bu kutuyu kaldırın.
 - **Her bilgiyi orijinal ilanda kontrol edin**, özeti gerekirse yeniden yazın: yayımlanan metnin sorumluluğu sizdedir. Taslak bir kişi adı içeriyorsa ya da notunda "A name was left in the source text" yazıyorsa adı yayımlamayın ve teknik yöneticiye bildirin.
+
+## 7. Alt alan sayfalarının giriş metinleri
+
+Her alt alanın (ör. "Glial biology") sitede kendi sayfası vardır, ör. `/en/subfields/glia/`. Sayfanın üstünde, o alt alanın **"Hub introduction"** alanına yazdığınız giriş metni görünür. Arama motorları bir alt alan sayfasını İngilizce giriş metni en az 150 sözcük olduğunda listeler; o zamana kadar sayfa `noindex` kalır (D40). Alanın altındaki sayaç sözcükleri sitenin saydığı gibi sayar.
+
+Her alt alanda bir de **"AI draft of the introduction"** alanı vardır: bir yapay zekâ asistanıyla (Claude Code) yalnızca alt alanların adlarından ve tanımlarından yazılmış, 170–250 sözcüklük İngilizce bir ilk taslak (D53). Taslağı yalnızca editörler görür; sitede hiçbir zaman gösterilmez ve arama motorları onu görmez. Sitede yalnızca sizin yazdığınız "Hub introduction" görünür ve onun sorumluluğu sizdedir, ilanlarda olduğu gibi.
+
+Bir taslaktan giriş metni yazmak:
+
+1. Soldaki menüden **Taxonomy → Terms**'e girin ve "Vocabulary" sütununda "Subfield" yazan bir terimi açın. Sayfanın üstündeki dil seçicisi **English** olmalı: Türkçe giriş metinleri sonra gelecek.
+2. **"AI draft of the introduction"** alanını okuyun ve her cümleyi kendi bilginizle karşılaştırın: alanın neyi incelediği, tipik soruları ve yöntemleri, sunduğu pozisyonlar, ilişkili alt alanlar ("Related hubs"). Yanlış, abartılı ya da kaynak gerektiren bir cümleyi çıkarın.
+3. Kendi metninizi **"Hub introduction"** alanına yazın; taslaktan kopyalayıp düzenleyebilirsiniz. Paragrafları bir boş satırla ayırın; 150–300 sözcük olsun.
+4. Kişi ya da laboratuvar adı, tıbbi tavsiye ve kaynak isteyen bir iddia (sayılar, "en büyük", "en hızlı büyüyen" gibi) eklemeyin (D19).
+5. **Save**'e basın. Sayaç 150'yi geçtiyse sayfa arama motorlarına açılır (site genel parolanın arkasındayken kimse göremez). Taslak alanını olduğu gibi bırakabilir ya da boşaltabilirsiniz; bu sitede hiçbir şeyi değiştirmez.
+
+Taslakların hepsi sözcük sayılarıyla birlikte `docs/subfield-introductions.md` dosyasında da okunabilir.

@@ -4,7 +4,7 @@ import type {
   TextFieldManyValidation,
 } from 'payload'
 
-import { nobody, signedIn } from '@/lib/access'
+import { nobody, signedIn, signedInField } from '@/lib/access'
 import { fixedFieldHooks } from '@/lib/fixed-fields'
 import { HUB_INTRO_MIN_WORDS } from '@/lib/indexing'
 import { requiredInEnglish } from '@/lib/localized'
@@ -196,11 +196,27 @@ export const Terms: CollectionConfig = {
       localized: true,
       admin: {
         condition: (data) => data?.vocabulary === 'subfield',
-        description: `Human-written introduction for the subfield hub page, 150–300 words (PLAN §16.3). Separate paragraphs with a blank line. Search engines list the hub only once its English introduction has at least ${HUB_INTRO_MIN_WORDS} words; until then its page stays noindex (D40).`,
+        description: `The introduction on the subfield hub page, 150–300 words, written by the editor (PLAN §16.3). You may start from the AI draft below (D53), but only this text is shown on the site and counted by search engines. Separate paragraphs with a blank line. Search engines list the hub only once its English introduction has at least ${HUB_INTRO_MIN_WORDS} words; until then its page stays noindex (D40).`,
         components: {
           // The number of words so far, counted as src/lib/indexing.ts counts them.
           afterInput: ['/admin/HubIntroWordCount#HubIntroWordCount'],
         },
+      },
+    },
+    {
+      // A first draft of the introduction written with an AI assistant (D53), for the editor to
+      // rewrite into "Hub introduction". Never shown on the site: the public pages read subfields
+      // with their own `select`, which leaves it out (src/lib/records.ts), and signed out the API
+      // gives nothing. Filled where empty by the migration 20261017_120000_seed_subfield_intro_drafts.
+      name: 'hubIntroDraft',
+      label: 'AI draft of the introduction',
+      type: 'textarea',
+      localized: true,
+      access: { read: signedInField, create: signedInField, update: signedInField },
+      admin: {
+        condition: (data) => data?.vocabulary === 'subfield',
+        description:
+          'A first draft written with an AI assistant (D53), for editors only: it is never shown on the site and search engines never see it. Check it, write your own introduction from it in "Hub introduction" above, and save. You may leave this draft as it is, or empty it.',
       },
     },
     {

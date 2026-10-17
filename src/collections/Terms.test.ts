@@ -1,7 +1,11 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { Field } from 'payload'
 import { describe, expect, it } from 'vitest'
+
+import { signedInField } from '@/lib/access'
 
 import { Terms } from './Terms'
 
@@ -39,8 +43,8 @@ describe('Terms (taxonomy)', () => {
     expect(Terms.disableDuplicate).toBe(true)
   })
 
-  it('localizes the label, description and hub introduction (PLAN §12)', () => {
-    for (const name of ['label', 'description', 'hubIntro']) {
+  it('localizes the label, description, hub introduction and its draft (PLAN §12)', () => {
+    for (const name of ['label', 'description', 'hubIntro', 'hubIntroDraft']) {
       expect(field(name)).toMatchObject({ localized: true })
     }
     expect(field('slug')).not.toHaveProperty('localized')
@@ -88,6 +92,49 @@ describe('Terms (taxonomy)', () => {
     for (const component of admin.components.afterInput) {
       expect(importMap).toContain(`"${component}"`)
     }
+  })
+
+  it('keeps the AI draft of the introduction for editors only (D53)', () => {
+    const draft = field('hubIntroDraft') as {
+      access: Record<string, unknown>
+      admin: { description: string; condition: (data: unknown) => boolean }
+    }
+    expect(draft.access).toEqual({
+      read: signedInField,
+      create: signedInField,
+      update: signedInField,
+    })
+    expect(draft.admin.condition({ vocabulary: 'subfield' })).toBe(true)
+    expect(draft.admin.condition({ vocabulary: 'method' })).toBe(false)
+    expect(draft.admin.description).toContain('never shown on the site')
+    // The introduction's own description no longer calls it human-written: it may start from the
+    // draft, but only it is shown and counted.
+    const intro = (field('hubIntro') as { admin: { description: string } }).admin.description
+    expect(intro).not.toMatch(/human-written/i)
+    expect(intro).toContain('only this text is shown on the site')
+  })
+
+  it('reads the AI draft nowhere but in the admin (D53)', () => {
+    // The public pages read subfields with their own `select` and raw SQL with named columns, so a
+    // new field stays out of them; this keeps it so. Allowed: this collection, the generated types,
+    // the migrations and their data, and tests.
+    const src = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+    const allowed = [
+      path.join(src, 'collections', 'Terms.ts'),
+      path.join(src, 'payload-types.ts'),
+      path.join(src, 'migrations'),
+    ]
+    const files = (dir: string): string[] =>
+      readdirSync(dir).flatMap((name) => {
+        const full = path.join(dir, name)
+        if (allowed.some((skip) => full === skip || full.startsWith(skip + path.sep))) return []
+        if (statSync(full).isDirectory()) return files(full)
+        return /\.(tsx?|mjs|js)$/.test(name) && !/\.test\.tsx?$/.test(name) ? [full] : []
+      })
+    const readers = files(src).filter((file) =>
+      /hubIntroDraft|hub_intro_draft/.test(readFileSync(file, 'utf8')),
+    )
+    expect(readers.map((file) => path.relative(src, file))).toEqual([])
   })
 
   it('keeps every change as a version (the changelog in PLAN §4.1)', () => {
