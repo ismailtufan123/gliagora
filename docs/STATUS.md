@@ -2,7 +2,7 @@
 
 One page for whoever picks up the work next: what is done, what is live, what is open and what comes next. Updated at the end of every task (CLAUDE.md, "Session handoff"). The details are in `PLAN.md` (the milestone notes in §20, the decisions in §22.3).
 
-Last updated: 2026-10-17, at the end of the task "The newsletter builder (M11) and the subfield introductions" (`docs/NEXT.md`, D53; pull requests #96–#99): **done**. Pushing an issue to listmonk stays switched off until the launch (D53). Still waiting from earlier: the rate limits on the server (D51) need the Caddy image's package to be public.
+Last updated: 2026-10-17, during the task "Better candidates and more sources (M7, second round)" (`docs/NEXT.md`): the operator approved M11 as built (#101); the operator asked for the parts that need no data from the daily runs to start now, ahead of the task's start date of 2026-10-20, and the report on the runs, the runs by hand and switching sources on to wait until then. Still waiting from earlier: the rate limits on the server (D51) need the Caddy image's package to be public.
 
 ## Done
 
@@ -38,6 +38,7 @@ Last updated: 2026-10-17, at the end of the task "The newsletter builder (M11) a
   - **listmonk**: pushing an issue as a draft or scheduling it, through a second listmonk user that may only handle campaigns; the sending rate is derived from the mailbox's limit, with room for the forms' emails. **Switched off until the launch** (`GLIA_NOTES_PUSH`, D53). Every 10 minutes the site reads the campaign's status, then when it was sent.
   - **Archive**: `/en/newsletter/archive/` and `/en/newsletter/{month}/` show sent issues, from what was sent; private until the launch, like the jobs.
   - **The launch issue** waits in the admin as a draft, with a draft opening note for Nuray to edit (editor guide, section 8).
+  - **Approved by the operator on 2026-10-17, as built** (D53), with every point for review in the M11 notes and the accepted risk of the campaigns user.
 - **Two more legal drafts** (2026-10-07): the accessibility statement (`/en/legal/accessibility/`) and the sources and editorial policy (`/en/about/sources/`), in English, linked in the footer. Both are drafts; their open points are C6–C12 (the operator's) and B21–B22 (the lawyer's) in `docs/legal-open-questions.md`.
 
 ## Live now
@@ -59,7 +60,7 @@ Last updated: 2026-10-17, at the end of the task "The newsletter builder (M11) a
 - **Five sources stay manual** because their terms restrict storing content (Radboud and the Donders Institute, ETH Zurich twice, the University of Tübingen): the operator's decision of 2026-10-16.
 - **The About page's new section** "Reading employers' pages" (the monitor's user agent links to it): **approved as written** by the operator on 2026-10-17. Until M2 the page is behind the password, so a site owner who follows the link sees the password prompt.
 - **For Nuray**: the 19 hub introductions, written from their AI drafts (editor guide, section 7: check every sentence, especially the related hubs and the kinds of positions); and, before the launch, the launch issue's opening note (section 8).
-- **M11's points for review** (PLAN §20, M11 notes): the launch issue as a seeded draft, the proposal's rule, at most 40 deadlines, the sending-rate rule and its reserve, no images in the email (no logo), the archive private until the launch.
+- **Umami**, the cookieless analytics: the operator decides later (asked on 2026-10-17).
 - **Glia Notes issues on the server, with M2's steps** (`deploy/README.md` section 18, with the operator's go-ahead): copy `compose.prod.yml` and `listmonk/settings.sql` and `prepare.sh`; set `LISTMONK_CAMPAIGNS_TOKEN`, the mailbox's `MAILBOX_LIMIT_HOUR`/`MAILBOX_LIMIT_DAY` with `EMAIL_CAP_*`, and `GLIA_NOTES_SEED_ADDRESSES` (the operator's test accounts at Gmail, Outlook, Yahoo and a Turkish provider). **At the launch**: `GLIA_NOTES_PUSH=on`.
 - **The Claude API** (AI drafts each day): off until the operator sets a key, a monthly cap and, if wanted, a cheaper model (`deploy/README.md` section 17; default `claude-opus-5-5`).
 - **61 manual sources**, all to be looked at weekly: the dashboard lists them as due. Setting some to "Monthly" in the admin makes the list shorter.
@@ -78,4 +79,4 @@ Last updated: 2026-10-17, at the end of the task "The newsletter builder (M11) a
 
 ## Next step
 
-The operator's look at the first candidates and at M11's points for review, and Nuray's hub introductions from their drafts. After that: the one-time lawyer review (with B17 and B22), then M2 (the mailbox, the approvals and the switch, with the issues' listmonk settings of `deploy/README.md` section 18); pushing Glia Notes switches on at the launch. Nothing starts before the operator says so.
+The rest of the task in `docs/NEXT.md` (better candidates and more sources): the parts that need no data from the daily runs now, the report on the runs, the runs by hand and switching sources on from 2026-10-20. Then the operator's look at the candidates, and Nuray's hub introductions from their drafts. After that: the one-time lawyer review (with B17 and B22), then M2 (the mailbox, the approvals and the switch, with the issues' listmonk settings of `deploy/README.md` section 18); pushing Glia Notes switches on at the launch. Nothing starts before the operator says so.
