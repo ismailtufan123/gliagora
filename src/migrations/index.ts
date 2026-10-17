@@ -35,6 +35,7 @@ import * as migration_20261017_191618_source_runs from './20261017_191618_source
 import * as migration_20261017_193416_candidate_rules from './20261017_193416_candidate_rules';
 import * as migration_20261017_194500_source_adapters from './20261017_194500_source_adapters';
 import * as migration_20261017_195000_sources_by_adapters from './20261017_195000_sources_by_adapters';
+import * as migration_20261017_210000_sources_round_2 from './20261017_210000_sources_round_2';
 import * as migration_20261017_193500_chinese_lists_manual from './20261017_193500_chinese_lists_manual';
 
 export const migrations = [
@@ -222,6 +223,11 @@ export const migrations = [
     up: migration_20261017_195000_sources_by_adapters.up,
     down: migration_20261017_195000_sources_by_adapters.down,
     name: '20261017_195000_sources_by_adapters',
+  },
+  {
+    up: migration_20261017_210000_sources_round_2.up,
+    down: migration_20261017_210000_sources_round_2.down,
+    name: '20261017_210000_sources_round_2',
   },
   {
     up: migration_20261017_193500_chinese_lists_manual.up,

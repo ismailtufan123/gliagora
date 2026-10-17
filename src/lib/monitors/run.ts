@@ -320,8 +320,12 @@ async function handlePosting(
       return
     }
   }
+  // The posting's own words win over an earlier validThrough, which some systems fill with the
+  // first review date (UC Recruit: "Next review date" in the data, "Final date: …" in the text).
+  const fromData = deadlineFromValidThrough(read.validThrough, now)
+  const fromText = deadlineFromText(read.text, country, now)
   const deadline: FoundDeadline | null =
-    deadlineFromValidThrough(read.validThrough, now) ?? deadlineFromText(read.text, country, now)
+    fromData && fromText && fromText.date > fromData.date ? fromText : (fromData ?? fromText)
   if (deadline && hasClosed(deadline.date, now)) {
     counts.closed++
     await remember(payload, source.id, posting, 'closed', now, undefined, title)
@@ -330,13 +334,13 @@ async function handlePosting(
   // When it was published, wherever the source says: its data, the list, its address, its text.
   // Only a day given as data may skip a posting as old; one read from the text only marks it.
   const fromAddress = publishedFromAddress(posting.url, now)
-  const fromText = publishedFromText(read.text, country, now)
+  const postedInText = publishedFromText(read.text, country, now)
   const published: Fact<string> | undefined =
     read.published ??
     (fromAddress
       ? { value: fromAddress.date, from: fromAddress.from }
-      : fromText
-        ? { value: fromText.date, from: redacted(fromText.from) ?? fromText.from }
+      : postedInText
+        ? { value: postedInText.date, from: redacted(postedInText.from) ?? postedInText.from }
         : undefined)
   const asData = Boolean(read.published ?? fromAddress)
   const age = published && !deadline ? ageInDays(published.value, now) : null

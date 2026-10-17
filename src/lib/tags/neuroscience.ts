@@ -72,6 +72,8 @@ const STEMS = [
   'hersen',
   'hjarn',
   'hjerne',
+  'psykiatr',
+  'nevro',
   'aivotutki',
   'beyin',
   // Spanish and Portuguese (neurociencia and cerebro are found by neuro and cerebr above)
