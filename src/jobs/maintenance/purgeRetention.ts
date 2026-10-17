@@ -14,6 +14,7 @@ import {
   isRetirable,
   retireSearchCutoff,
   SOURCE_POSTING_DAYS,
+  SOURCE_RUN_DAYS,
   snippetCutoff,
   suggestionLinkCutoff,
   unconfirmedRequestCutoff,
@@ -422,6 +423,21 @@ export async function purgeSourcePostings(payload: Payload, now: Date): Promise<
   return deleted
 }
 
+/** (j) Records of monitor runs older than a year (M7). Returns how many were deleted. */
+export async function purgeSourceRuns(payload: Payload, now: Date): Promise<number> {
+  const cutoff = new Date(now.getTime() - SOURCE_RUN_DAYS * 86_400_000).toISOString()
+  let deleted = 0
+  for (let batch = 0; batch < MAX_BATCHES; batch++) {
+    const { rows } = await drizzle(payload).execute<{ id: number }>(sql`
+      DELETE FROM source_runs WHERE id IN (
+        SELECT id FROM source_runs WHERE ran_at <= ${cutoff} ORDER BY id LIMIT ${BATCH})
+      RETURNING id`)
+    deleted += rows.length
+    if (rows.length < BATCH) break
+  }
+  return deleted
+}
+
 /** (h) Consent records whose 3 years are up. Returns how many were deleted. */
 export async function purgeConsentRecords(payload: Payload, now: Date): Promise<number> {
   let deleted = 0
@@ -442,6 +458,7 @@ export async function purgeRetention(payload: Payload, now: Date) {
   const deletionLog = await purgeDeletionLog(payload, now)
   const consentLog = await purgeConsentRecords(payload, now)
   const sourcePostings = await purgeSourcePostings(payload, now)
+  const sourceRuns = await purgeSourceRuns(payload, now)
   const counts = {
     snippets,
     suggestions: suggestions.suggestions,
@@ -454,6 +471,7 @@ export async function purgeRetention(payload: Payload, now: Date) {
     deletionLog,
     consentLog,
     sourcePostings,
+    sourceRuns,
   }
   logCounts(payload, 'purgeRetention', counts)
   return counts
@@ -476,6 +494,7 @@ export const PurgeRetentionTask = maintenanceTask({
     'deletionLog',
     'consentLog',
     'sourcePostings',
+    'sourceRuns',
   ],
   run: purgeRetention,
 })

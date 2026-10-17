@@ -70,6 +70,8 @@ Girişten sonra açılan panonun en üstünde **"Waiting for an editor"** kutusu
 
    Adaylar hiç silinmez; her kararın kaydıdır. "Decision note" yalnızca editörler içindir.
 
+**Birkaç adayı birden reddetmek**: "Candidates" listesinde önce süzün ("Filters": örneğin "Source" ya da "Status" "New"), sonra reddedeceğiniz adayların solundaki kutuları işaretleyin (başlık satırındaki kutu sayfadakilerin hepsini seçer). Listenin üstündeki **"Edit"** düğmesine basın. Açılan pencerede "Select fields to edit" alanından **"Status"** seçip "Rejected" yapın; aynı alandan **"Reason"** ekleyip gerekçeyi seçin (örneğin "Not neuroscience"); sonra "Save". Gerekçesiz reddetme kaydedilmez; "Other" seçerseniz "Decision note" da gerekir. Kabul ("Accepted") topluca yapılamaz: adaylar tek tek kabul edilir. Seçime zaten reddedilmiş ya da çift kayıt sayılmış bir aday girerse yalnızca o kaydedilmez (önce "Triaged" yapılması gerekir). Toplu düzenleme yalnızca karar alanlarını, kurumu ve kaynağı değiştirir; ilanın adresi, başlığı ve metni her adayda ayrı kalır. Reddedilen adayların gerekçeleri kaynağa göre sayılır ve kaynakları iyileştirmek için kullanılır; bu yüzden gerekçeyi doğru seçin.
+
 **Öneriler ("Submissions")**: formdan gelen her öneri.
 
 - İş önerileri kendi adaylarını izler; kararı adayda verirsiniz, öneri kendiliğinden güncellenir.
@@ -135,6 +137,7 @@ Yeni kaynak eklerken: işvereni "Institution" alanında seçin, kullanım koşul
 - **"Source text"**: ilanın metni; kişi adları, e-posta adresleri ve telefon numaraları "[name]", "[email]", "[phone]" ile değiştirilmiş olarak. Sitede hiç görünmez ve karardan 30 gün sonra silinir. Kural tabanlıdır; bir ad gözden kaçabilir.
 - **"Suggested tags"**: başlıkta ve metinde geçen sözcüklere göre önerilen alt alan, yöntem, model sistem, pozisyon türü ve kariyer aşaması (yapay zekâ değil, sözcük eşleştirme). Aday kabul edilince taslak ilan bunlarla ve programın okuduğu son başvuru tarihiyle başlar; ilanda kontrol edip düzeltin.
 - Program, son başvuru tarihi geçmiş, sinirbilimle ilgisiz görünen ya da zaten aday veya ilan olarak kayıtlı ilanları aday yapmaz. Neden aday yapılmadığını **"Postings seen"** listesinde görebilirsiniz ("Outcome"). Sinirbilimle ilgisiz sayılmış ama ilgili bir ilan görürseniz elle aday olarak ekleyin.
+- **"Monitor runs"**: programın her kaynağı her okuyuşunun kaydı (Sources altında): listede kaç ilan vardı ("Listed"), kaçı yeniydi ("New"), kaç aday yapıldı ("Candidates") ve kaçı neden atlandı: "Not neuroscience", "Closed" (son başvuru geçmiş ya da sayfa kalkmış), "Duplicates" ve "Left for later" (bir okumada en çok 40 yeni ilan okunur, kalanı ertesi gün). Başarısız bir okumada "Error" nedenini söyler. Bir kaynağın kayıtları için "Source" ile süzün. Kayıtlar bir yıl saklanır; ilan metni ya da adresi içermez.
 
 **Panodaki "Sources" kutusu** ("Waiting for an editor" kutusunun altında):
 

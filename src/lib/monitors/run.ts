@@ -49,6 +49,8 @@ export type SourceCounts = {
   notNeuroscience: number
   closed: number
   duplicates: number
+  /** New postings over the cap of one run (`maxReads`); read on the next run. */
+  capped: number
   /** Postings whose page failed this time; read again on the next run. */
   failedPages: number
 }
@@ -72,7 +74,7 @@ const MAX_POSTING_BYTES = 4 * 1024 * 1024
 /** The terms page is read again after this many days. */
 const TERMS_EVERY_DAYS = 7
 
-const emptyCounts = (): SourceCounts => ({
+export const emptyCounts = (): SourceCounts => ({
   listed: 0,
   new: 0,
   read: 0,
@@ -80,6 +82,7 @@ const emptyCounts = (): SourceCounts => ({
   notNeuroscience: 0,
   closed: 0,
   duplicates: 0,
+  capped: 0,
   failedPages: 0,
 })
 
@@ -154,6 +157,8 @@ async function remember(
   outcome: PostingOutcome,
   now: Date,
   candidate?: number,
+  /** The title as its own page gives it, when the page was read. */
+  title?: string,
 ) {
   await payload.create({
     collection: 'source-postings',
@@ -161,7 +166,7 @@ async function remember(
       source,
       canonicalUrl: posting.canonicalUrl,
       url: posting.url,
-      title: redacted(posting.title)?.slice(0, 300) ?? null,
+      title: redacted(title || posting.title)?.slice(0, 300) ?? null,
       outcome,
       candidate: candidate ?? null,
       firstSeenAt: now.toISOString(),
@@ -272,7 +277,7 @@ async function handlePosting(
     const check = neuroscienceCheck({ title, text: read.text }, deps.taxonomy.compiled)
     if (!check.matches) {
       counts.notNeuroscience++
-      await remember(payload, source.id, posting, 'not-neuroscience', now)
+      await remember(payload, source.id, posting, 'not-neuroscience', now, undefined, title)
       return
     }
   }
@@ -280,7 +285,7 @@ async function handlePosting(
     deadlineFromValidThrough(read.validThrough, now) ?? deadlineFromText(read.text, country, now)
   if (deadline && hasClosed(deadline.date, now)) {
     counts.closed++
-    await remember(payload, source.id, posting, 'closed', now)
+    await remember(payload, source.id, posting, 'closed', now, undefined, title)
     return
   }
   const openEnded = deadline ? null : openEndedFromText(read.text)
@@ -321,7 +326,7 @@ async function handlePosting(
     context: { monitor: true },
   })
   counts.candidates++
-  await remember(payload, source.id, posting, 'candidate', now, Number(candidate.id))
+  await remember(payload, source.id, posting, 'candidate', now, Number(candidate.id), title)
 }
 
 /** The note on the source about its robots.txt. */
@@ -405,6 +410,7 @@ export async function runSource(deps: MonitorDeps, source: Source): Promise<Sour
   const fresh = list.postings.filter((posting) => !seen.has(posting.canonicalUrl))
   counts.new = fresh.length
   const batch = fresh.slice(0, deps.maxReads ?? MAX_READS)
+  counts.capped = fresh.length - batch.length
   const known = await alreadyKnown(
     payload,
     batch.map((posting) => posting.canonicalUrl),

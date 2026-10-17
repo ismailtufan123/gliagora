@@ -31,6 +31,7 @@ import * as migration_20261017_120000_seed_subfield_intro_drafts from './2026101
 import * as migration_20261017_130000_newsletter_issues from './20261017_130000_newsletter_issues';
 import * as migration_20261017_130500_seed_launch_issue from './20261017_130500_seed_launch_issue';
 import * as migration_20261017_140000_glia_notes_issues_task from './20261017_140000_glia_notes_issues_task';
+import * as migration_20261017_191618_source_runs from './20261017_191618_source_runs';
 
 export const migrations = [
   {
@@ -197,5 +198,10 @@ export const migrations = [
     up: migration_20261017_140000_glia_notes_issues_task.up,
     down: migration_20261017_140000_glia_notes_issues_task.down,
     name: '20261017_140000_glia_notes_issues_task',
+  },
+  {
+    up: migration_20261017_191618_source_runs.up,
+    down: migration_20261017_191618_source_runs.down,
+    name: '20261017_191618_source_runs'
   },
 ];

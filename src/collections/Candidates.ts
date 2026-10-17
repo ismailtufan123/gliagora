@@ -410,6 +410,10 @@ const keepCandidates: CollectionBeforeDeleteHook = ({ context }) => {
   )
 }
 
+// "Edit many" in the admin rejects several candidates at once (Status and Reason; editor guide,
+// section 3). It offers only the decision's fields, the institution and the source: the posting's
+// own fields (`disableBulkEdit`) belong to one candidate each.
+//
 // Bulk updates ("Edit many" in the admin, or an update by `where`) save every document in
 // parallel, so the same-address check in validateStatus cannot see a job that another candidate
 // in the same batch is about to make. Candidates are accepted one at a time.
@@ -530,6 +534,7 @@ export const Candidates: CollectionConfig = {
         return addressProblem(value) ?? validations.text(value, options as never)
       },
       admin: {
+        disableBulkEdit: true,
         description:
           "Open it and check it: accept only postings on the employer's own website, never on a job board or an agency's site (PLAN §6.1).",
       },
@@ -543,7 +548,10 @@ export const Candidates: CollectionConfig = {
         !value && (await accepting(options))
           ? 'Accepting needs the title as the employer posted it.'
           : validations.text(value, options as never),
-      admin: { description: 'The title exactly as the employer posted it, in its language.' },
+      admin: {
+        disableBulkEdit: true,
+        description: 'The title exactly as the employer posted it, in its language.',
+      },
     },
     {
       name: 'institution',
@@ -585,6 +593,7 @@ export const Candidates: CollectionConfig = {
       label: 'Source text',
       type: 'textarea',
       admin: {
+        disableBulkEdit: true,
         description:
           'Text from the source, such as a mailing-list announcement, for editors only. Never shown on the site or copied into a job; deleted 30 days after the decision (PLAN §5.1).',
       },
@@ -595,6 +604,7 @@ export const Candidates: CollectionConfig = {
       type: 'json',
       admin: {
         readOnly: true,
+        disableBulkEdit: true,
         description:
           "Facts a source monitor read from the posting, each with where it was found, to check against the original. An accepted candidate's job starts with its deadline.",
       },
@@ -627,6 +637,7 @@ export const Candidates: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       admin: {
+        disableBulkEdit: true,
         condition: (data) => Boolean(data?.aiSuggestion),
         description:
           'When accepted, the draft job takes its summary, position type, deadline, subfields and career stages (and is marked "Drafted with AI assistance"). Untick to start without it.',
@@ -644,6 +655,7 @@ export const Candidates: CollectionConfig = {
           index: true,
           admin: {
             readOnly: true,
+            disableBulkEdit: true,
             description:
               'The address as https, without tracking parameters and fragments, for finding the same posting twice.',
           },
@@ -654,6 +666,7 @@ export const Candidates: CollectionConfig = {
           type: 'text',
           admin: {
             readOnly: true,
+            disableBulkEdit: true,
             description:
               'The title in lower case without accents or punctuation, for comparing titles.',
           },
@@ -768,6 +781,7 @@ export const Candidates: CollectionConfig = {
       options: CANDIDATE_KINDS.map(({ value, label }) => ({ value, label })),
       admin: {
         position: 'sidebar',
+        disableBulkEdit: true,
         description: 'What it becomes when accepted. Events, funding and papers follow later.',
       },
     },
