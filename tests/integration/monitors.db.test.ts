@@ -4,8 +4,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { checkLinks } from '@/jobs/maintenance/checkLinks'
 import { monitorSources } from '@/jobs/maintenance/monitorSources'
-import { purgeSourcePostings } from '@/jobs/maintenance/purgeRetention'
+import { purgeSourcePostings, purgeSourceRuns } from '@/jobs/maintenance/purgeRetention'
 import { type Fetcher, FetchProblem } from '@/lib/monitors/http'
+import { monitorReport } from '@/lib/monitors/report'
 import { forgetTaxonomy } from '@/lib/tags/terms'
 
 import { institution, job, rows, testPayload, unique } from './helpers'
@@ -315,6 +316,212 @@ describe('monitorSources', () => {
       sql`SELECT canonical_url FROM source_postings WHERE source_id = ${source.id}`,
     )
     expect(left.map((r) => r.canonical_url.slice(-1))).toEqual(['2'])
+  })
+})
+
+describe('the record of each run and the report (M7, second round)', () => {
+  it('records each run with its counts, also the postings left for the next run', async () => {
+    const host = `${unique('jobs')}.example.org`
+    const list = `<html><body>${[1, 2, 3, 4, 5]
+      .map((n) => `<a href="/jobs/${n}">Posting ${n}</a>`)
+      .join('')}</body></html>`
+    const pages: Record<string, string | number> = { [`https://${host}/jobs/`]: list }
+    for (const n of [1, 2, 3, 4, 5]) {
+      pages[`https://${host}/jobs/${n}`] = posting(
+        `Postdoc ${n} in neuroscience`,
+        '<p>Neurons.</p>',
+      )
+    }
+    const source = await pageSource(host)
+    const { results } = await monitorSources(payload, now, {
+      only: [source.id],
+      fetcher: fakeWeb(pages).fetcher,
+      maxReads: 2,
+    })
+    expect(results[0]?.counts).toMatchObject({ listed: 5, new: 5, read: 2, capped: 3 })
+    const { docs } = await payload.find({
+      collection: 'source-runs',
+      where: { source: { equals: source.id } },
+      depth: 0,
+    })
+    expect(docs).toHaveLength(1)
+    expect(docs[0]).toMatchObject({
+      ranAt: now.toISOString(),
+      byHand: true,
+      outcome: 'ok',
+      listed: 5,
+      new: 5,
+      read: 2,
+      candidates: 2,
+      capped: 3,
+    })
+  })
+
+  it('reports runs, failures, postings and candidates without their text or addresses', async () => {
+    const host = `${unique('jobs')}.example.org`
+    const at = (n: number) => `https://${host}/jobs/${n}`
+    const list = `<html><body>${[1, 2, 3]
+      .map((n) => `<a href="/jobs/${n}">Posting ${n}</a>`)
+      .join('')}</body></html>`
+    const first = fakeWeb({
+      [`https://${host}/jobs/`]: list,
+      [at(1)]: posting(
+        'Postdoc in the Jane Doe Lab: cortical circuits',
+        '<p>We record neurons in the visual cortex. Closing date: 1 December 2026.</p><p>Contact Dr. John Roe, john.roe@example.org.</p>',
+      ),
+      [at(2)]: posting('Finance officer', '<p>Budgets and invoices.</p>'),
+      [at(3)]: posting(
+        'Research assistant in Clinical Neuroscience',
+        '<p>Open until filled. Electrophysiology of the hippocampus.</p>',
+      ),
+    })
+    const source = await pageSource(host)
+    await monitorSources(payload, now, { only: [source.id], fetcher: first.fetcher })
+    const failing = fakeWeb({ [`https://${host}/jobs/`]: 503 })
+    await monitorSources(payload, new Date(now.getTime() + 86_400_000), {
+      only: [source.id],
+      fetcher: failing.fetcher,
+    })
+    const { docs } = await payload.find({
+      collection: 'candidates',
+      where: { source: { equals: source.id } },
+      sort: 'id',
+      depth: 0,
+    })
+    await payload.update({
+      collection: 'candidates',
+      id: docs[1]!.id,
+      data: { status: 'rejected', decisionReason: 'not-neuroscience' },
+      depth: 0,
+    })
+
+    const report = await monitorReport(payload, now, { source: source.id })
+    expect(report.sources).toHaveLength(1)
+    expect(report.sources?.[0]).toMatchObject({
+      id: source.id,
+      kind: 'page',
+      runs: { total: 2, ok: 1, failed: 1, byHand: 2 },
+      failures: { 'the list: status 503': 1 },
+      found: { listed: 3, new: 3, read: 3, candidates: 2, notNeuroscience: 1, capped: 0 },
+      postings: { candidate: 2, notNeuroscience: 1 },
+      candidates: { new: 1, rejected: 1 },
+      rejections: { 'not-neuroscience': 1 },
+    })
+    expect(report.candidates).toEqual([
+      expect.objectContaining({
+        id: docs[0]!.id,
+        source: source.id,
+        title: 'Postdoc in the [name] Lab: cortical circuits',
+        status: 'new',
+        reason: null,
+        deadline: '2026-12-01',
+        openEnded: null,
+        type: 'postdoc',
+      }),
+      expect.objectContaining({
+        id: docs[1]!.id,
+        status: 'rejected',
+        reason: 'not-neuroscience',
+        deadline: null,
+        openEnded: 'until-filled',
+      }),
+    ])
+    expect(report.skipped).toEqual([
+      expect.objectContaining({
+        source: source.id,
+        title: 'Finance officer',
+        outcome: 'not-neuroscience',
+      }),
+    ])
+    const text = JSON.stringify(report)
+    expect(text).not.toMatch(/jane|doe|roe|example\.org|visual cortex|budgets/i)
+
+    const onlySkipped = await monitorReport(payload, now, { source: source.id, parts: ['skipped'] })
+    expect(Object.keys(onlySkipped).sort()).toEqual(['generatedAt', 'skipped'])
+  })
+
+  it('rejects several candidates at once with one reason, as "Edit many" in the admin does', async () => {
+    const host = `${unique('jobs')}.example.org`
+    const pages: Record<string, string> = {
+      [`https://${host}/jobs/`]: [1, 2, 3]
+        .map((n) => `<a href="/jobs/${n}">Posting ${n}</a>`)
+        .join(''),
+    }
+    for (const n of [1, 2, 3]) {
+      pages[`https://${host}/jobs/${n}`] = posting(
+        `Postdoc ${n} in neuroscience`,
+        '<p>Neurons.</p>',
+      )
+    }
+    const source = await pageSource(host)
+    await monitorSources(payload, now, { only: [source.id], fetcher: fakeWeb(pages).fetcher })
+    const { docs } = await payload.find({
+      collection: 'candidates',
+      where: { source: { equals: source.id } },
+      sort: 'id',
+      depth: 0,
+    })
+    await payload.update({
+      collection: 'candidates',
+      id: docs[2]!.id,
+      data: { status: 'triaged' },
+      depth: 0,
+    })
+    const bulk = await payload.update({
+      collection: 'candidates',
+      where: { id: { in: docs.map((doc) => doc.id) } },
+      data: { status: 'rejected', decisionReason: 'not-neuroscience' },
+      depth: 0,
+    })
+    expect(bulk.errors).toEqual([])
+    expect(
+      bulk.docs.map((doc) => [doc.status, doc.decisionReason, Boolean(doc.decidedAt)]),
+    ).toEqual([
+      ['rejected', 'not-neuroscience', true],
+      ['rejected', 'not-neuroscience', true],
+      ['rejected', 'not-neuroscience', true],
+    ])
+    // Without a reason, every one is refused and none changes.
+    const reopened = await payload.update({
+      collection: 'candidates',
+      where: { id: { in: docs.map((doc) => doc.id) } },
+      data: { status: 'triaged' },
+      depth: 0,
+    })
+    expect(reopened.errors).toEqual([])
+    const refused = await payload.update({
+      collection: 'candidates',
+      where: { id: { in: docs.map((doc) => doc.id) } },
+      data: { status: 'rejected' },
+      depth: 0,
+    })
+    expect(refused.docs).toEqual([])
+    expect(refused.errors).toHaveLength(3)
+    const report = await monitorReport(payload, now, { source: source.id, parts: ['sources'] })
+    expect(report.sources?.[0]?.candidates).toEqual({ triaged: 3 })
+  })
+
+  it('forgets the records of runs after a year, and with their source', async () => {
+    const host = `${unique('jobs')}.example.org`
+    const source = await pageSource(host)
+    const web = fakeWeb({ [`https://${host}/jobs/`]: '<p>None</p>' })
+    await monitorSources(payload, now, { only: [source.id], fetcher: web.fetcher })
+    const later = new Date(now.getTime() + 2 * 86_400_000)
+    await monitorSources(payload, later, { only: [source.id], fetcher: web.fetcher })
+    const count = async () =>
+      (
+        await rows<{ n: number }>(
+          payload,
+          sql`SELECT count(*)::int AS n FROM source_runs WHERE source_id = ${source.id}`,
+        )
+      )[0]!.n
+    expect(await count()).toBe(2)
+    expect(
+      await purgeSourceRuns(payload, new Date(now.getTime() + 366 * 86_400_000)),
+    ).toBeGreaterThanOrEqual(1)
+    expect(await count()).toBe(1)
+    await payload.delete({ collection: 'sources', id: source.id })
+    expect(await count()).toBe(0)
   })
 })
 

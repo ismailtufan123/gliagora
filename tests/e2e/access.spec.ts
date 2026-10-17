@@ -50,6 +50,7 @@ const SIGNED_OUT: Record<string, SignedOut> = {
   candidates: { shows: 'nothing' },
   sources: { shows: 'nothing' },
   'source-postings': { shows: 'nothing' },
+  'source-runs': { shows: 'nothing' },
   submissions: { shows: 'nothing' },
   reports: { shows: 'nothing' },
   'data-requests': { shows: 'nothing' },

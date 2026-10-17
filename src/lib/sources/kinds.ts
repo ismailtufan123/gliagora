@@ -60,6 +60,15 @@ export const POSTING_OUTCOMES = [
 
 export type PostingOutcome = (typeof POSTING_OUTCOMES)[number]['value']
 
+/** How a monitor run of one source ended (`source-runs`). */
+export const RUN_OUTCOMES = [
+  { value: 'ok', label: 'Read' },
+  { value: 'failed', label: 'Failed' },
+  { value: 'refused', label: 'Refused by robots.txt or the site' },
+] as const
+
+export type RunOutcome = (typeof RUN_OUTCOMES)[number]['value']
+
 /**
  * Why `pattern` cannot be the regular expression of a source's posting addresses, or null. It
  * must compile, start with `^` and end with `$`, so that it names whole addresses.

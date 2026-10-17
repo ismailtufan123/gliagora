@@ -71,6 +71,7 @@ export interface Config {
     candidates: Candidate;
     sources: Source;
     'source-postings': SourcePosting;
+    'source-runs': SourceRun;
     submissions: Submission;
     reports: Report;
     'data-requests': DataRequest;
@@ -100,6 +101,7 @@ export interface Config {
     candidates: CandidatesSelect<false> | CandidatesSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
     'source-postings': SourcePostingsSelect<false> | SourcePostingsSelect<true>;
+    'source-runs': SourceRunsSelect<false> | SourceRunsSelect<true>;
     submissions: SubmissionsSelect<false> | SubmissionsSelect<true>;
     reports: ReportsSelect<false> | ReportsSelect<true>;
     'data-requests': DataRequestsSelect<false> | DataRequestsSelect<true>;
@@ -1691,6 +1693,64 @@ export interface SourcePosting {
   createdAt: string;
 }
 /**
+ * Each run of a source's monitor, with what it found: the postings listed and new, the candidates made, and the postings skipped and why. Read only. Filter by "Source" to see one source's runs.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "source-runs".
+ */
+export interface SourceRun {
+  id: number;
+  source: number | Source;
+  ranAt: string;
+  /**
+   * Started by the operator (/api/ops/monitors/run/), not the schedule.
+   */
+  byHand?: boolean | null;
+  outcome: 'ok' | 'failed' | 'refused';
+  /**
+   * The failure's kind and HTTP status, never a page's text.
+   */
+  error?: string | null;
+  /**
+   * Postings on the list.
+   */
+  listed: number;
+  /**
+   * Postings not seen on earlier runs.
+   */
+  new: number;
+  /**
+   * New postings whose page was read (or that the API gave whole).
+   */
+  read: number;
+  /**
+   * Candidates made.
+   */
+  candidates: number;
+  /**
+   * Skipped: no neuroscience words.
+   */
+  notNeuroscience: number;
+  /**
+   * Skipped: the deadline has passed, or the page is gone.
+   */
+  closed: number;
+  /**
+   * Skipped: already a candidate or a job.
+   */
+  duplicates: number;
+  /**
+   * New postings over the cap of one run (read next time).
+   */
+  capped: number;
+  /**
+   * New postings whose page failed (read next time).
+   */
+  failedPages: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Reports from the "Report a problem" form, newest first. Requests about personal rights (Law 5651 Art. 9) are answered within 24 hours and usually decided within 72 hours (the notice and takedown page); other reports within 30 days. Set a report to In progress once you have answered the person or started checking (a personal-rights request only once you have answered the person: until then the dashboard counts it as waiting for its 24-hour answer), and close it with what you did: to remove a listing, withdraw the job itself. The email address and details are deleted with the report 2 years after it is closed, by the nightly retention task. A report sent with an email address gets an automatic acknowledgement within minutes, once email is set up (M2). To answer a data request, filter by Email, then delete.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2228,6 +2288,10 @@ export interface PayloadLockedDocument {
         value: number | SourcePosting;
       } | null)
     | ({
+        relationTo: 'source-runs';
+        value: number | SourceRun;
+      } | null)
+    | ({
         relationTo: 'submissions';
         value: number | Submission;
       } | null)
@@ -2424,6 +2488,28 @@ export interface SourcePostingsSelect<T extends boolean = true> {
   candidate?: T;
   firstSeenAt?: T;
   lastSeenAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "source-runs_select".
+ */
+export interface SourceRunsSelect<T extends boolean = true> {
+  source?: T;
+  ranAt?: T;
+  byHand?: T;
+  outcome?: T;
+  error?: T;
+  listed?: T;
+  new?: T;
+  read?: T;
+  candidates?: T;
+  notNeuroscience?: T;
+  closed?: T;
+  duplicates?: T;
+  capped?: T;
+  failedPages?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2992,6 +3078,7 @@ export interface TaskPurgeRetention {
     deletionLog?: number | null;
     consentLog?: number | null;
     sourcePostings?: number | null;
+    sourceRuns?: number | null;
     skipped?: boolean | null;
   };
 }

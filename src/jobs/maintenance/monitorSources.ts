@@ -3,7 +3,13 @@ import type { Payload } from 'payload'
 import { errorSummary } from '@/lib/errors'
 import { type Fetcher, politeFetcher } from '@/lib/monitors/http'
 import { RobotsCache } from '@/lib/monitors/robots'
-import { type MonitorDeps, type SourceResult, checkTerms, runSource } from '@/lib/monitors/run'
+import {
+  type MonitorDeps,
+  type SourceResult,
+  checkTerms,
+  emptyCounts,
+  runSource,
+} from '@/lib/monitors/run'
 import { AUTOMATIC_KINDS, scheduleDays } from '@/lib/sources/kinds'
 import { loadTaxonomy } from '@/lib/tags/terms'
 import type { Source } from '@/payload-types'
@@ -28,6 +34,32 @@ export function isDue(source: Pick<Source, 'lastRunAt' | 'schedule'>, now: Date)
     now.getTime() - Date.parse(source.lastRunAt) >=
     scheduleDays(source.schedule) * 86_400_000 - SLACK_MS
   )
+}
+
+/**
+ * Keeps the record of one source's run (`source-runs`): its counts and the failure's kind. A record
+ * that cannot be saved is logged and the run goes on.
+ */
+async function recordRun(payload: Payload, result: SourceResult, now: Date, byHand: boolean) {
+  if (result.outcome === 'skipped') return
+  try {
+    await payload.create({
+      collection: 'source-runs',
+      data: {
+        source: result.id,
+        ranAt: now.toISOString(),
+        byHand,
+        outcome: result.outcome,
+        error: result.error?.slice(0, 300) ?? null,
+        ...result.counts,
+      },
+      depth: 0,
+    })
+  } catch (error) {
+    payload.logger.warn(
+      `monitorSources: source ${result.id}: its run could not be recorded (${errorSummary(error)})`,
+    )
+  }
 }
 
 export type MonitorCounts = {
@@ -103,27 +135,19 @@ export async function monitorSources(
       result = {
         id: source.id,
         outcome: 'failed',
-        counts: {
-          listed: 0,
-          new: 0,
-          read: 0,
-          candidates: 0,
-          notNeuroscience: 0,
-          closed: 0,
-          duplicates: 0,
-          failedPages: 0,
-        },
+        counts: emptyCounts(),
         error: errorSummary(error),
       }
     }
     results.push(result)
+    await recordRun(payload, result, now, options.only !== undefined)
     if (result.outcome === 'ok') counts.ok++
     if (result.outcome === 'failed') counts.failed++
     if (result.outcome === 'refused') counts.refused++
     counts.candidates += result.counts.candidates
     counts.read += result.counts.read
     payload.logger.info(
-      `monitorSources: source ${source.id} ${result.outcome}: ${result.counts.listed} listed, ${result.counts.new} new, ${result.counts.candidates} candidates, ${result.counts.notNeuroscience} not neuroscience, ${result.counts.closed} closed, ${result.counts.duplicates} duplicates${result.counts.failedPages ? `, ${result.counts.failedPages} pages failed` : ''}${result.error ? ` (${result.error})` : ''}`,
+      `monitorSources: source ${source.id} ${result.outcome}: ${result.counts.listed} listed, ${result.counts.new} new, ${result.counts.candidates} candidates, ${result.counts.notNeuroscience} not neuroscience, ${result.counts.closed} closed, ${result.counts.duplicates} duplicates${result.counts.capped ? `, ${result.counts.capped} left for later` : ''}${result.counts.failedPages ? `, ${result.counts.failedPages} pages failed` : ''}${result.error ? ` (${result.error})` : ''}`,
     )
     if (result.outcome !== 'skipped' && (await checkTerms(deps, source)) === 'changed') {
       counts.termsChanged++

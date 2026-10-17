@@ -31,6 +31,12 @@ export const SNIPPET_RETENTION_DAYS = 30
 export const SOURCE_POSTING_DAYS = 180
 
 /**
+ * The record of a monitor's run (`source-runs`: counts only, no personal data) is kept this long,
+ * so that a source's year can be compared.
+ */
+export const SOURCE_RUN_DAYS = 365
+
+/**
  * A listing that went offline (it answers 410) is kept in full for this many months; then only
  * its address and ID stay, so the address keeps answering 410 (D34).
  */

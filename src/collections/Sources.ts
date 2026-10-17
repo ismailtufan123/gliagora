@@ -76,15 +76,12 @@ const settle: CollectionBeforeChangeHook<Source> = ({ data, originalDoc, operati
   return data
 }
 
-// The postings a source's monitor saw belong to it (the candidates it made keep their decisions and
-// lose only the link, which the database clears).
+// The postings a source's monitor saw and the records of its runs belong to it (the candidates it
+// made keep their decisions and lose only the link, which the database clears).
 const deletePostings: CollectionBeforeDeleteHook = async ({ id, req }) => {
-  await req.payload.delete({
-    collection: 'source-postings',
-    where: { source: { equals: id } },
-    depth: 0,
-    req,
-  })
+  for (const collection of ['source-postings', 'source-runs'] as const) {
+    await req.payload.delete({ collection, where: { source: { equals: id } }, depth: 0, req })
+  }
 }
 
 const readOnlyDate = (name: string, label: string, description?: string): Field => ({

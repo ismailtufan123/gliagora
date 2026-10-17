@@ -17,6 +17,7 @@ import { NewsletterIssues } from './NewsletterIssues'
 import { Reports } from './Reports'
 import { RetiredListings } from './RetiredListings'
 import { SourcePostings } from './SourcePostings'
+import { SourceRuns } from './SourceRuns'
 import { Sources } from './Sources'
 import { Submissions } from './Submissions'
 import { Terms } from './Terms'
@@ -31,6 +32,7 @@ export const COLLECTIONS: CollectionConfig[] = [
   Candidates,
   Sources,
   SourcePostings,
+  SourceRuns,
   Submissions,
   Reports,
   DataRequests,
