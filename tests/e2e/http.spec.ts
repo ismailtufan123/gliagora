@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 
 import { CONTENT_PAGES } from '../../src/lib/content'
 
+import { SUBFIELD_INTRODUCTIONS_2026_10 } from '../../src/migrations/data/subfield-introductions-2026-10'
 import { FIXED_JOBS, RETIRED_JOB, jobPath } from '../../src/scripts/fake-jobs-fixed'
 
 // PLAN §2.1 and §2.5: locale prefix, trailing slashes, redirects and status codes.
@@ -238,6 +239,19 @@ test.describe('Record pages', () => {
     expect(html).toContain('<h1>Glial biology</h1>')
     expect(html).toContain('href="/en/subfields/systems-circuits/"')
     expect(html).toContain('<meta name="robots" content="noindex"')
+  })
+
+  test('a subfield hub never shows the AI draft of its introduction (D53)', async ({ request }) => {
+    // The migration 20261017_120000_seed_subfield_intro_drafts filled every subfield's draft; the
+    // hub shows only "Hub introduction", which is empty in the test data, so it stays noindex.
+    for (const { slug, text } of SUBFIELD_INTRODUCTIONS_2026_10) {
+      const html = await (await request.get(`/en/subfields/${slug}/`)).text()
+      // The opening words, which HTML writes as they are (no character it would escape).
+      const opening = text.split(' ').slice(0, 8).join(' ')
+      expect(opening, slug).not.toMatch(/[&<>"']/)
+      expect(html, slug).not.toContain(opening)
+      expect(html, slug).toContain('<meta name="robots" content="noindex"')
+    }
   })
 
   test('a subfield hub lists its open positions, and no closed ones', async ({ request }) => {
