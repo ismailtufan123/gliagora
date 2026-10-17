@@ -16,7 +16,9 @@ import {
   SOURCE_SCHEDULES,
   TERMS_AUTOMATION,
   isAutomatic,
+  postingIdProblem,
   postingPatternProblem,
+  postingTemplateProblem,
 } from '@/lib/sources/kinds'
 import type { Source } from '@/payload-types'
 
@@ -54,6 +56,10 @@ const prepare: CollectionBeforeValidateHook<Source> = ({ data }) => {
   if (typeof data.url === 'string') data.url = data.url.trim()
   if (typeof data.postingPattern === 'string')
     data.postingPattern = data.postingPattern.trim() || null
+  if (typeof data.ignoredNames === 'string') data.ignoredNames = data.ignoredNames.trim() || null
+  for (const key of ['postingIdPattern', 'postingUrlTemplate'] as const) {
+    if (typeof data[key] === 'string') data[key] = data[key].trim() || null
+  }
   return data
 }
 
@@ -129,7 +135,7 @@ export const Sources: CollectionConfig = {
     ],
     listSearchableFields: ['name', 'url'],
     description:
-      'Where positions come from (PLAN §6.1). A monitor reads the feeds, APIs and vacancy list pages once a day, where robots.txt and the terms allow it, and puts new neuroscience postings into the review queue as New candidates. Manual sources are checked by an editor: open the page, add what is new as candidates, then tick "Looked at today". Job boards are never sources.',
+      'Where positions come from (PLAN §6.1). A monitor reads the feeds, APIs, vacancy list pages and sitemaps once a day, where robots.txt and the terms allow it, and puts new neuroscience postings into the review queue as New candidates. Manual sources are checked by an editor: open the page, add what is new as candidates, then tick "Looked at today". Job boards are never sources.',
     pagination: { defaultLimit: 50 },
   },
   defaultSort: 'name',
@@ -197,7 +203,7 @@ export const Sources: CollectionConfig = {
         httpUrl(value) === true ? validations.text(value, options as never) : httpUrl(value),
       admin: {
         description:
-          'The feed, the API address or the vacancy list page; for a manual source, the page an editor opens.',
+          'The feed, the API address, the vacancy list page or the sitemap; for a manual source, the page an editor opens.',
       },
     },
     {
@@ -226,17 +232,55 @@ export const Sources: CollectionConfig = {
       type: 'text',
       maxLength: 500,
       validate: (value: string | null | undefined, options: Options) => {
-        if (!value)
-          return options.data.kind === 'page'
+        if (!value) {
+          if (options.data.kind === 'sitemap') return 'A sitemap needs the pattern of its postings.'
+          return options.data.kind === 'page' && !options.data.postingUrlTemplate
             ? 'A list page needs the pattern of its postings.'
             : true
+        }
         return postingPatternProblem(value) ?? true
       },
       admin: {
-        condition: isKind('page', 'rss', 'api'),
+        condition: isKind('page', 'rss', 'api', 'sitemap'),
         description:
-          'A regular expression for the addresses of the postings on the list, e.g. ^https://www\\.example\\.org/jobs/\\d+/?$. Needed for a list page; for a feed or an API it keeps only the items whose address matches.',
+          'A regular expression for the addresses of the postings on the list, e.g. ^https://www\\.example\\.org/jobs/\\d+/?$. Needed for a list page (unless its postings are built from IDs, below) and a sitemap; for a feed or an API it keeps only the items whose address matches.',
       },
+    },
+    {
+      type: 'row',
+      admin: { condition: isKind('page') },
+      fields: [
+        {
+          name: 'postingIdPattern',
+          label: "IDs in the list's links",
+          type: 'text',
+          maxLength: 300,
+          validate: (value: string | null | undefined, options: Options) => {
+            if (!value)
+              return options.data.postingUrlTemplate ? 'Give the pattern of the IDs too.' : true
+            return postingIdProblem(value) ?? true
+          },
+          admin: {
+            description:
+              "For a list whose links are not addresses (javascript:viewTheJobSpec('188371')): a regular expression with the ID in one group, e.g. viewTheJobSpec\\('(\\d+)'\\).",
+          },
+        },
+        {
+          name: 'postingUrlTemplate',
+          label: 'Address of a posting from its ID',
+          type: 'text',
+          maxLength: 1000,
+          validate: (value: string | null | undefined, options: Options) => {
+            if (!value)
+              return options.data.postingIdPattern ? 'Give the address with {id} too.' : true
+            return postingTemplateProblem(value) ?? true
+          },
+          admin: {
+            description:
+              'The address that shows a posting by GET, with {id} where its ID goes. Check it in a browser first.',
+          },
+        },
+      ],
     },
     {
       name: 'allNeuroscience',
@@ -244,9 +288,20 @@ export const Sources: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       admin: {
-        condition: isKind('page', 'rss', 'api'),
+        condition: isKind('page', 'rss', 'api', 'sitemap'),
         description:
           "A neuroscience institute's own list: keep every posting, without checking its words for neuroscience.",
+      },
+    },
+    {
+      name: 'ignoredNames',
+      label: 'Names that do not count as neuroscience',
+      type: 'textarea',
+      maxLength: 2000,
+      admin: {
+        condition: isKind('page', 'rss', 'api', 'sitemap'),
+        description:
+          "One a line, e.g. Department of Clinical Neuroscience: names of the employer's units that its ads repeat whatever their field. The monitor leaves them out of a posting's text (not its title) before it looks for neuroscience words. Names written with capitals (Department of …, … Institute) and the institution's own names are left out without being listed here.",
       },
     },
     {
@@ -255,7 +310,7 @@ export const Sources: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
       admin: {
-        condition: isKind('page', 'rss', 'api'),
+        condition: isKind('page', 'rss', 'api', 'sitemap'),
         description: 'Read by the monitor on its schedule. Untick to pause it.',
       },
     },

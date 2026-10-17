@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { draftWithClaude } from '@/jobs/maintenance/draftWithClaude'
 import { monthSpend } from '@/lib/ai/claude-api'
-import { IMPORT_FORMAT, exportForDrafts, importDrafts } from '@/lib/ai/weekly'
+import { IMPORT_FORMAT, exportForDrafts, importDrafts, waitingForDrafts } from '@/lib/ai/weekly'
 import { forgetTaxonomy } from '@/lib/tags/terms'
 
 import { institution, testPayload, unique } from './helpers'
@@ -145,6 +145,60 @@ describe('the weekly drafts', () => {
       [decided.id, 'decided'],
     ])
     expect(JSON.stringify(result)).not.toMatch(/astrocytes|Doe/)
+  })
+})
+
+describe('text in a script redaction cannot read', () => {
+  it('is left out of the weekly export and out of the Claude API, and never holds up the others', async () => {
+    // Only this test's candidates wait: the others are decided first.
+    await payload.update({
+      collection: 'candidates',
+      where: { status: { in: ['new', 'triaged'] } },
+      data: { status: 'rejected', decisionReason: 'spam' },
+      depth: 0,
+    })
+    const chinese = await candidate({
+      rawTitle: '神经环路研究组招聘博士后',
+      snippet: '联系人：张老师。申请截止：2026年12月1日。',
+    })
+    const hebrew = await candidate({
+      rawTitle: 'Postdoc in neuroscience',
+      snippet: 'לפרטים: ד״ר ישראלי. Apply by 1 December 2026.',
+    })
+    const korean = await candidate({ snippet: '문의: 김 박사. Apply by 1 December 2026.' })
+    const english = await candidate()
+
+    const found = await waitingForDrafts(payload, 1)
+    expect(found.waiting.map((w) => w.candidate.id)).toEqual([english.id])
+    expect(found.leftForEditors).toBe(3)
+
+    const exported = await exportForDrafts(payload, new Date('2026-10-20T07:00:00Z'))
+    const ids = exported.candidates.map((c) => c.id)
+    expect(ids).toEqual([english.id])
+    expect(exported.leftForEditors).toBe(3)
+    expect(JSON.stringify(exported)).not.toMatch(/张|神经|ישראלי|김/)
+
+    const asked: string[] = []
+    const counts = await draftWithClaude(payload, new Date('2026-12-03T07:30:00Z'), {
+      env: { ANTHROPIC_API_KEY: 'sk-test-not-a-key', AI_MONTHLY_CAP_USD: '5' },
+      client: {
+        beta: {
+          messages: {
+            parse: async (params: { messages: Array<{ content: string }> }) => {
+              asked.push(params.messages[0]!.content)
+              throw new Error('not needed here')
+            },
+          },
+        },
+      } as never,
+    })
+    expect(counts.notRedactable).toBe(3)
+    expect(asked).toHaveLength(1)
+    for (const content of asked) expect(content).not.toMatch(/张|神经|ישראלי|김/)
+    for (const id of [chinese.id, hebrew.id, korean.id]) {
+      const stored = await payload.findByID({ collection: 'candidates', id, depth: 0 })
+      expect(stored.aiSuggestion).toBeFalsy()
+    }
   })
 })
 

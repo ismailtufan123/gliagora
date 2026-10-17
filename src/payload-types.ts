@@ -1575,7 +1575,7 @@ export interface Submission {
   createdAt: string;
 }
 /**
- * Where positions come from (PLAN §6.1). A monitor reads the feeds, APIs and vacancy list pages once a day, where robots.txt and the terms allow it, and puts new neuroscience postings into the review queue as New candidates. Manual sources are checked by an editor: open the page, add what is new as candidates, then tick "Looked at today". Job boards are never sources.
+ * Where positions come from (PLAN §6.1). A monitor reads the feeds, APIs, vacancy list pages and sitemaps once a day, where robots.txt and the terms allow it, and puts new neuroscience postings into the review queue as New candidates. Manual sources are checked by an editor: open the page, add what is new as candidates, then tick "Looked at today". Job boards are never sources.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sources".
@@ -1587,14 +1587,14 @@ export interface Source {
    * The employer whose positions it lists. New candidates get it; change it on a candidate whose posting is another institute's.
    */
   institution?: (number | null) | Institution;
-  kind: 'rss' | 'api' | 'page' | 'manual';
+  kind: 'rss' | 'api' | 'page' | 'sitemap' | 'manual';
   apiFormat?: ('greenhouse' | 'lever' | 'smartrecruiters') | null;
   /**
    * How often it is read: by the monitor (at most once a day), or by an editor.
    */
   schedule: 'daily' | 'weekly' | 'monthly';
   /**
-   * The feed, the API address or the vacancy list page; for a manual source, the page an editor opens.
+   * The feed, the API address, the vacancy list page or the sitemap; for a manual source, the page an editor opens.
    */
   url: string;
   /**
@@ -1607,13 +1607,25 @@ export interface Source {
       }[]
     | null;
   /**
-   * A regular expression for the addresses of the postings on the list, e.g. ^https://www\.example\.org/jobs/\d+/?$. Needed for a list page; for a feed or an API it keeps only the items whose address matches.
+   * A regular expression for the addresses of the postings on the list, e.g. ^https://www\.example\.org/jobs/\d+/?$. Needed for a list page (unless its postings are built from IDs, below) and a sitemap; for a feed or an API it keeps only the items whose address matches.
    */
   postingPattern?: string | null;
+  /**
+   * For a list whose links are not addresses (javascript:viewTheJobSpec('188371')): a regular expression with the ID in one group, e.g. viewTheJobSpec\('(\d+)'\).
+   */
+  postingIdPattern?: string | null;
+  /**
+   * The address that shows a posting by GET, with {id} where its ID goes. Check it in a browser first.
+   */
+  postingUrlTemplate?: string | null;
   /**
    * A neuroscience institute's own list: keep every posting, without checking its words for neuroscience.
    */
   allNeuroscience?: boolean | null;
+  /**
+   * One a line, e.g. Department of Clinical Neuroscience: names of the employer's units that its ads repeat whatever their field. The monitor leaves them out of a posting's text (not its title) before it looks for neuroscience words. Names written with capitals (Department of …, … Institute) and the institution's own names are left out without being listed here.
+   */
+  ignoredNames?: string | null;
   /**
    * Read by the monitor on its schedule. Untick to pause it.
    */
@@ -1685,7 +1697,7 @@ export interface SourcePosting {
    * As the list or the posting gave it, with names removed.
    */
   title?: string | null;
-  outcome: 'candidate' | 'not-neuroscience' | 'closed' | 'duplicate';
+  outcome: 'candidate' | 'not-neuroscience' | 'closed' | 'duplicate' | 'old';
   candidate?: (number | null) | Candidate;
   firstSeenAt: string;
   lastSeenAt: string;
@@ -1739,6 +1751,10 @@ export interface SourceRun {
    * Skipped: already a candidate or a job.
    */
   duplicates: number;
+  /**
+   * Skipped: no fixed deadline, and published over 6 months ago.
+   */
+  old: number;
   /**
    * New postings over the cap of one run (read next time).
    */
@@ -2448,7 +2464,10 @@ export interface SourcesSelect<T extends boolean = true> {
         id?: T;
       };
   postingPattern?: T;
+  postingIdPattern?: T;
+  postingUrlTemplate?: T;
   allNeuroscience?: T;
+  ignoredNames?: T;
   active?: T;
   termsUrl?: T;
   termsAutomation?: T;
@@ -2508,6 +2527,7 @@ export interface SourceRunsSelect<T extends boolean = true> {
   notNeuroscience?: T;
   closed?: T;
   duplicates?: T;
+  old?: T;
   capped?: T;
   failedPages?: T;
   updatedAt?: T;
@@ -3252,6 +3272,7 @@ export interface TaskDraftWithClaude {
     drafted?: number | null;
     refused?: number | null;
     failed?: number | null;
+    notRedactable?: number | null;
     capReached?: number | null;
     spentUsdCents?: number | null;
     skipped?: boolean | null;

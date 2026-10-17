@@ -9,11 +9,9 @@ import {
   recordSpend,
   requestDraft,
 } from '@/lib/ai/claude-api'
-import { draftInput } from '@/lib/ai/input'
-import { applyDraft } from '@/lib/ai/weekly'
+import { applyDraft, waitingForDrafts } from '@/lib/ai/weekly'
 import { errorSummary } from '@/lib/errors'
 import { loadTaxonomy } from '@/lib/tags/terms'
-import type { Institution } from '@/payload-types'
 
 import { MONITOR_QUEUE, logCounts, maintenanceTask } from './task'
 
@@ -30,6 +28,8 @@ export type ClaudeCounts = {
   drafted: number
   refused: number
   failed: number
+  /** Left for an editor: text in a script redaction cannot read (`cannotRedact`). */
+  notRedactable: number
   capReached: number
   spentUsdCents: number
 }
@@ -43,6 +43,7 @@ export async function draftWithClaude(
     drafted: 0,
     refused: 0,
     failed: 0,
+    notRedactable: 0,
     capReached: 0,
     spentUsdCents: 0,
   }
@@ -50,28 +51,10 @@ export async function draftWithClaude(
   if (!settings) return counts
   const client = options.client ?? newClient(settings)
   const taxonomy = await loadTaxonomy(payload)
-  const { docs } = await payload.find({
-    collection: 'candidates',
-    where: {
-      and: [
-        { status: { in: ['new', 'triaged'] } },
-        { kind: { equals: 'job' } },
-        { aiSuggestion: { exists: false } },
-        { snippet: { exists: true } },
-      ],
-    },
-    sort: 'createdAt',
-    depth: 1,
-    limit: PER_RUN,
-    pagination: false,
-  })
+  const { waiting, leftForEditors } = await waitingForDrafts(payload, PER_RUN)
+  counts.notRedactable = leftForEditors
   let spent = await monthSpend(payload, now)
-  for (const candidate of docs) {
-    const institution =
-      candidate.institution && typeof candidate.institution === 'object'
-        ? (candidate.institution as Institution)
-        : null
-    const input = draftInput(candidate, institution)
+  for (const { candidate, input } of waiting) {
     if (spent + estimateUsd(settings.model, input) > settings.capUsd) {
       counts.capReached = 1
       break
@@ -107,6 +90,6 @@ export const DraftWithClaudeTask = maintenanceTask({
   // Daily at 07:30 UTC, after the monitors (04:40), in their queue.
   cron: '30 7 * * *',
   queue: MONITOR_QUEUE,
-  counts: ['drafted', 'refused', 'failed', 'capReached', 'spentUsdCents'],
+  counts: ['drafted', 'refused', 'failed', 'notRedactable', 'capReached', 'spentUsdCents'],
   run: (payload, now) => draftWithClaude(payload, now),
 })

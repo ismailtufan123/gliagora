@@ -52,8 +52,13 @@ export type SourceReport = {
   }
   /** The failed runs by the failure's kind ("the list: status 403"). */
   failures: Counts
-  /** What the runs found, added up over the runs recorded (`capped`: the last run's). */
+  /**
+   * What the runs did with the postings they read, added up over the runs recorded (each posting
+   * is decided once; `read` and `failedPages` count a page read again after a failure again).
+   */
   found: Counts
+  /** The last run's list: postings listed, new ones, and those left for the next run (the cap). */
+  lastRun: { listed: number; new: number; capped: number } | null
   /** The postings the monitor remembers (`source-postings`), by outcome. */
   postings: Counts
   /** Its candidates by status, and the rejected ones by the editor's reason. */
@@ -75,6 +80,8 @@ export type CandidateRow = {
   openEnded: string | null
   /** When the employer published it, where the source says. */
   published: string | null
+  /** Days since it was published, when it has no fixed deadline and may be filled. */
+  possiblyFilled: number | null
   /** Whether the monitor read the posting's own page, and if not, why. */
   page: string | null
   /** The suggested position type (slug), or null. */
@@ -100,6 +107,10 @@ export type MonitorReport = {
 
 const db = (payload: Payload) => (payload.db as unknown as PostgresAdapter).drizzle
 
+/** A title with names removed, or null; never an address (a title may have fallen back to one). */
+const titleOf = (value: string | null | undefined): string | null =>
+  value && !/^\s*(?:https?:)?\/\//i.test(value) ? redacted(value) : null
+
 const iso = (value: unknown): string | null =>
   value === null || value === undefined ? null : new Date(value as string).toISOString()
 
@@ -109,13 +120,12 @@ const add = (counts: Counts, key: string, n: number) => {
 }
 
 const RUN_COUNTS = [
-  'listed',
-  'new',
   'read',
   'candidates',
   'not_neuroscience',
   'closed',
   'duplicates',
+  'old',
   'failed_pages',
 ] as const
 
@@ -148,6 +158,7 @@ async function sourceReports(payload: Payload, only?: number): Promise<SourceRep
       runs: { total: 0, ok: 0, failed: 0, refused: 0, byHand: 0, first: null, last: null },
       failures: {},
       found: {},
+      lastRun: null,
       postings: {},
       candidates: {},
       rejections: {},
@@ -157,7 +168,7 @@ async function sourceReports(payload: Payload, only?: number): Promise<SourceRep
     only === undefined ? sql`` : sql`WHERE ${sql.raw(column)} = ${only}`
 
   const { rows: runs } = await db(payload).execute<Record<string, unknown>>(sql`
-    SELECT source_id, outcome::text AS outcome, error, by_hand, ran_at, capped,
+    SELECT source_id, outcome::text AS outcome, error, by_hand, ran_at, listed, new, capped,
       ${sql.raw(RUN_COUNTS.join(', '))}
     FROM source_runs ${sourceFilter('source_id')} ORDER BY ran_at, id`)
   for (const run of runs) {
@@ -172,7 +183,13 @@ async function sourceReports(payload: Payload, only?: number): Promise<SourceRep
     report.runs.last = at
     if (run.outcome === 'failed') add(report.failures, String(run.error ?? 'unknown'), 1)
     for (const name of RUN_COUNTS) add(report.found, camel(name), Number(run[name] ?? 0))
-    report.found.capped = Number(run.capped ?? 0)
+    if (run.outcome === 'ok') {
+      report.lastRun = {
+        listed: Number(run.listed ?? 0),
+        new: Number(run.new ?? 0),
+        capped: Number(run.capped ?? 0),
+      }
+    }
   }
 
   const { rows: postings } = await db(payload).execute<Record<string, unknown>>(sql`
@@ -224,7 +241,7 @@ async function candidateRows(payload: Payload, only?: number): Promise<Candidate
     return {
       id: Number(doc.id),
       source: Number(doc.source),
-      title: redacted(doc.rawTitle),
+      title: titleOf(doc.rawTitle),
       status: doc.status,
       reason: doc.decisionReason ?? null,
       createdAt: doc.createdAt,
@@ -232,6 +249,7 @@ async function candidateRows(payload: Payload, only?: number): Promise<Candidate
       deadline: facts?.deadline?.value.date ?? null,
       openEnded: facts?.openEnded?.value ?? null,
       published: facts?.published?.value ?? null,
+      possiblyFilled: facts?.possiblyFilled?.value.days ?? null,
       page: facts?.page ?? null,
       type: tags?.positionType?.slug ?? null,
       subfields: (tags?.subfields ?? []).map((suggestion) => suggestion.label),
@@ -247,7 +265,7 @@ async function skippedRows(payload: Payload, only?: number): Promise<SkippedRow[
     ORDER BY source_id, outcome, first_seen_at, id`)
   return rows.map((row) => ({
     source: Number(row.source_id),
-    title: redacted(row.title as string | null),
+    title: titleOf(row.title as string | null),
     outcome: String(row.outcome),
     firstSeenAt: iso(row.first_seen_at)!,
     lastSeenAt: iso(row.last_seen_at)!,

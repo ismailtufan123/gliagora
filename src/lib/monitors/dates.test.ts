@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { deadlineFromText, deadlineFromValidThrough, hasClosed, openEndedFromText } from './dates'
+import {
+  ageInDays,
+  dayOf,
+  deadlineFromText,
+  deadlineFromValidThrough,
+  hasClosed,
+  openEndedFromText,
+  publishedFromAddress,
+  publishedFromText,
+} from './dates'
 
 const now = new Date('2026-10-16T10:00:00Z')
 const day = (text: string, country: string | null = 'GB') =>
@@ -14,6 +23,7 @@ describe('deadlineFromText', () => {
     expect(day('Apply by the 21st of December 2026')).toBe('2026-12-21')
     expect(day('Deadline 2026-11-30')).toBe('2026-11-30')
     expect(day('Last application date 16.Oct.2026', 'SE')).toBe('2026-10-16')
+    expect(day('Closing Date & Time : 19-Oct-2026 12:00')).toBe('2026-10-19')
   })
 
   it('reads other languages', () => {
@@ -91,5 +101,58 @@ describe('hasClosed', () => {
     expect(hasClosed('2026-10-14', now)).toBe(true)
     expect(hasClosed('2026-10-15', now)).toBe(false)
     expect(hasClosed('2026-10-16', now)).toBe(false)
+  })
+})
+
+describe('when a posting was published', () => {
+  const published = (text: string, country: string | null = 'GB') =>
+    publishedFromText(text, country, now)?.date ?? null
+
+  it('reads the day a feed, an API or JSON-LD gives', () => {
+    expect(dayOf('2025-03-12', now)).toBe('2025-03-12')
+    expect(dayOf('2025-03-12T09:30:00+09:00', now)).toBe('2025-03-12')
+    expect(dayOf('Wed, 12 Mar 2025 09:30:00 GMT', now)).toBe('2025-03-12')
+    expect(dayOf('not a date', now)).toBeNull()
+    // Not in the future, nor more than ten years back.
+    expect(dayOf('2027-01-01', now)).toBeNull()
+    expect(dayOf('2001-01-01', now)).toBeNull()
+  })
+
+  it('reads a day right after a "posted" or "published" word, in several languages', () => {
+    expect(published('Posted: 12 March 2025')).toBe('2025-03-12')
+    expect(published('Date posted 2025-03-12 | Reference 123')).toBe('2025-03-12')
+    expect(published('Posting Start Date: 24/04/2026', 'SG')).toBe('2026-04-24')
+    expect(published('Veröffentlicht am 12.03.2025', 'DE')).toBe('2025-03-12')
+    expect(published('Date de publication : 12 mars 2025', 'FR')).toBe('2025-03-12')
+    expect(published('İlan tarihi: 12.03.2025', 'TR')).toBe('2025-03-12')
+    expect(published('掲載日：2025年3月12日', 'JP')).toBe('2025-03-12')
+    expect(published('发布时间：2025-03-12 10:00', 'CN')).toBe('2025-03-12')
+    // A deadline is not a publication day, and a day far after the word is not taken.
+    expect(published('Posted until 30 November 2026')).toBeNull()
+    expect(
+      published('Our results were published in a journal of the society on 12 March 2025'),
+    ).toBeNull()
+    // A label inside a sentence is not a field of the posting.
+    expect(published('a lab whose work was published 3 May 2019 in Neuron')).toBeNull()
+    expect(published('About us\nPublished: 3 May 2025\nApply now')).toBe('2025-05-03')
+  })
+
+  it("reads a day in the posting's address", () => {
+    const at = (address: string) => publishedFromAddress(address, now)?.date ?? null
+    expect(at('https://www.riken.jp/en/careers/researchers/20250512_1/index.html')).toBe(
+      '2025-05-12',
+    )
+    expect(at('https://cebsit.cas.cn/zpxxi/bsh/202601/t20260115_123456.html')).toBe('2026-01-15')
+    expect(at('https://example.org/2025/11/03/postdoc-in-neuroscience/')).toBe('2025-11-03')
+    expect(at('https://example.org/jobs/20251399/')).toBeNull()
+    // A bare eight-digit segment may be an ID.
+    expect(at('https://example.org/vacancy/20190312/')).toBeNull()
+    expect(at('https://example.org/jobs/12345678/')).toBeNull()
+  })
+
+  it('counts whole days', () => {
+    expect(ageInDays('2026-10-16', now)).toBe(0)
+    expect(ageInDays('2026-08-17', now)).toBe(60)
+    expect(ageInDays('2025-10-16', now)).toBe(365)
   })
 })

@@ -1,18 +1,21 @@
 // The source register (PLAN §5.1 `Source`, §6.1, D52): where positions come from, and how. A
-// monitor reads `rss`, `api` and `page` sources by itself, at most once a day; an editor checks
-// `manual` ones, which the dashboard shows when they are due for a look.
+// monitor reads `rss`, `api`, `page` and `sitemap` sources by itself, at most once a day; an editor
+// checks `manual` ones, which the dashboard shows when they are due for a look. A sitemap (M7's
+// second round) is the XML list of posting pages a site names in its robots.txt: Workday career
+// sites, whose lists need JavaScript, name one, and their posting pages carry JobPosting data.
 
 export const SOURCE_KINDS = [
   { value: 'rss', label: 'RSS or Atom feed' },
   { value: 'api', label: 'Documented API' },
   { value: 'page', label: 'Vacancy list page (plain HTML)' },
+  { value: 'sitemap', label: 'Sitemap of posting pages (XML)' },
   { value: 'manual', label: 'Checked by an editor' },
 ] as const
 
 export type SourceKind = (typeof SOURCE_KINDS)[number]['value']
 
 /** The kinds a monitor reads by itself. */
-export const AUTOMATIC_KINDS: readonly SourceKind[] = ['rss', 'api', 'page']
+export const AUTOMATIC_KINDS: readonly SourceKind[] = ['rss', 'api', 'page', 'sitemap']
 
 export const isAutomatic = (kind: unknown) => AUTOMATIC_KINDS.includes(kind as SourceKind)
 
@@ -56,6 +59,7 @@ export const POSTING_OUTCOMES = [
   { value: 'not-neuroscience', label: 'Skipped: not neuroscience' },
   { value: 'closed', label: 'Skipped: its deadline has passed' },
   { value: 'duplicate', label: 'Skipped: already a candidate or a job' },
+  { value: 'old', label: 'Skipped: no deadline, and published over 6 months ago' },
 ] as const
 
 export type PostingOutcome = (typeof POSTING_OUTCOMES)[number]['value']
@@ -82,6 +86,30 @@ export function postingPatternProblem(pattern: string): string | null {
     new RegExp(trimmed, 'u')
   } catch {
     return 'This is not a valid regular expression.'
+  }
+  return null
+}
+
+/**
+ * Why `pattern` cannot find the IDs of postings in a list's links (`javascript:viewTheJobSpec('…')`),
+ * or null. It must compile and hold one group, the ID.
+ */
+export function postingIdProblem(pattern: string): string | null {
+  let compiled: RegExp
+  try {
+    compiled = new RegExp(pattern.trim(), 'u')
+  } catch {
+    return 'This is not a valid regular expression.'
+  }
+  const groups = new RegExp(`${compiled.source}|`, 'u').exec('')!.length - 1
+  return groups === 1 ? null : 'Put the ID, and only the ID, in one group: (\\d+).'
+}
+
+/** Why `template` cannot be the address of a posting built from its ID, or null. */
+export function postingTemplateProblem(template: string): string | null {
+  const trimmed = template.trim()
+  if (!/^https?:\/\/[^/\s]+\/\S*\{id\}\S*$/.test(trimmed) || trimmed.split('{id}').length !== 2) {
+    return 'Enter a full address with {id} once where the ID goes, e.g. https://jobs.example.org/view?id={id}.'
   }
   return null
 }

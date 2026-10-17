@@ -402,7 +402,8 @@ describe('the record of each run and the report (M7, second round)', () => {
       kind: 'page',
       runs: { total: 2, ok: 1, failed: 1, byHand: 2 },
       failures: { 'the list: status 503': 1 },
-      found: { listed: 3, new: 3, read: 3, candidates: 2, notNeuroscience: 1, capped: 0 },
+      found: { read: 3, candidates: 2, notNeuroscience: 1 },
+      lastRun: { listed: 3, new: 3, capped: 0 },
       postings: { candidate: 2, notNeuroscience: 1 },
       candidates: { new: 1, rejected: 1 },
       rejections: { 'not-neuroscience': 1 },
@@ -435,6 +436,15 @@ describe('the record of each run and the report (M7, second round)', () => {
     ])
     const text = JSON.stringify(report)
     expect(text).not.toMatch(/jane|doe|roe|example\.org|visual cortex|budgets/i)
+
+    // A title that fell back to an address is never shown.
+    const byHand = await payload.create({
+      collection: 'candidates',
+      data: { kind: 'job', status: 'new', source: source.id, rawTitle: at(9), rawUrl: at(9) },
+      depth: 0,
+    })
+    const again = await monitorReport(payload, now, { source: source.id, parts: ['candidates'] })
+    expect(again.candidates?.find((c) => c.id === byHand.id)?.title).toBeNull()
 
     const onlySkipped = await monitorReport(payload, now, { source: source.id, parts: ['skipped'] })
     expect(Object.keys(onlySkipped).sort()).toEqual(['generatedAt', 'skipped'])
@@ -522,6 +532,253 @@ describe('the record of each run and the report (M7, second round)', () => {
     expect(await count()).toBe(1)
     await payload.delete({ collection: 'sources', id: source.id })
     expect(await count()).toBe(0)
+  })
+})
+
+describe('better candidates (M7, second round)', () => {
+  it("does not keep a posting for its employer's or unit's name alone", async () => {
+    const employer = await institution(payload, { country: 'SE', aliases: ['Fake Brain Academy'] })
+    const host = `${unique('jobs')}.example.org`
+    const at = (n: number) => `https://${host}/jobs/${n}`
+    const pages: Record<string, string> = {
+      [`https://${host}/jobs/`]: [1, 2, 3, 4]
+        .map((n) => `<a href="/jobs/${n}">Post ${n}</a>`)
+        .join(''),
+      [at(1)]: posting(
+        'Research assistant in pharmacoepidemiology',
+        '<p>The Department of Clinical Neuroscience at Fake Brain Academy is hiring.</p><p>Our group at the Department of Clinical Neuroscience studies drug use in pregnancy.</p>',
+      ),
+      [at(2)]: posting(
+        'Research assistant',
+        '<p>Our group in clinical neuroscience studies drug use in neurology clinics.</p>',
+      ),
+      [at(3)]: posting('Postdoc in synaptic plasticity', '<p>Department of Biology.</p>'),
+      [at(4)]: posting(
+        'Research assistant',
+        '<p>At the Department of Clinical Neuroscience we record hippocampal neurons.</p>',
+      ),
+    }
+    const source = await pageSource(host, {
+      institution: employer.id,
+      ignoredNames: '  clinical neuroscience \n',
+    })
+    const { results } = await monitorSources(payload, now, {
+      only: [source.id],
+      fetcher: fakeWeb(pages).fetcher,
+    })
+    expect(results[0]?.counts).toMatchObject({ candidates: 2, notNeuroscience: 2 })
+    const kept = await rows<{ canonical_url: string; outcome: string }>(
+      payload,
+      sql`SELECT canonical_url, outcome::text FROM source_postings WHERE source_id = ${source.id} ORDER BY canonical_url`,
+    )
+    expect(kept.map((r) => r.outcome)).toEqual([
+      'not-neuroscience',
+      'not-neuroscience',
+      'candidate',
+      'candidate',
+    ])
+  })
+
+  it('skips a posting without a deadline published over six months ago, and marks one from two months', async () => {
+    const host = `${unique('jobs')}.example.org`
+    const at = (n: string) => `https://${host}/jobs/${n}`
+    const pages: Record<string, string> = {
+      [`https://${host}/jobs/`]: ['1', '2', '3', '20250512_1']
+        .map((n) => `<a href="/jobs/${n}">Post ${n}</a>`)
+        .join(''),
+      [at('1')]: posting('Postdoc in neuroscience', '<p>Open until filled.</p>', {
+        '@type': 'JobPosting',
+        title: 'Postdoc in neuroscience',
+        datePosted: '2026-03-01',
+      }),
+      [at('2')]: posting(
+        'PhD student in neuroscience',
+        '<p>Posted: 1 August 2026.</p><p>Open until the position is filled.</p>',
+      ),
+      [at('3')]: posting(
+        'Research scientist in neuroscience',
+        '<p>Closing date: 30 November 2026.</p>',
+        {
+          '@type': 'JobPosting',
+          title: 'Research scientist in neuroscience',
+          datePosted: '2025-12-01',
+        },
+      ),
+      [at('20250512_1')]: posting('Technician in neuroscience', '<p>Open until filled.</p>'),
+    }
+    const source = await pageSource(host, {
+      postingPattern: `^https://${host.replace(/\./g, '\\.')}/jobs/[\\d_]+$`,
+    })
+    const { results } = await monitorSources(payload, now, {
+      only: [source.id],
+      fetcher: fakeWeb(pages).fetcher,
+    })
+    expect(results[0]?.counts).toMatchObject({ listed: 4, candidates: 2, old: 2 })
+
+    const { docs } = await payload.find({
+      collection: 'candidates',
+      where: { source: { equals: source.id } },
+      sort: 'id',
+      depth: 0,
+    })
+    expect(docs.map((doc) => doc.rawUrl)).toEqual([at('2'), at('3')])
+    expect(docs[0]?.extracted).toMatchObject({
+      published: { value: '2026-08-01', from: expect.stringContaining('Posted: 1 August 2026') },
+      possiblyFilled: { value: { published: '2026-08-01', days: 76 } },
+      openEnded: { value: 'until-filled' },
+    })
+    expect(docs[1]?.extracted).toMatchObject({
+      published: { value: '2025-12-01', from: expect.stringContaining('JobPosting') },
+      deadline: { value: { date: '2026-11-30' } },
+    })
+    expect(docs[1]?.extracted).not.toHaveProperty('possiblyFilled')
+
+    const seen = await rows<{ canonical_url: string; outcome: string }>(
+      payload,
+      sql`SELECT canonical_url, outcome::text FROM source_postings WHERE source_id = ${source.id} AND outcome = 'old' ORDER BY canonical_url`,
+    )
+    expect(seen.map((r) => r.canonical_url.split('/').pop())).toEqual(['1', '20250512_1'])
+
+    const report = await monitorReport(payload, now, { source: source.id })
+    expect(report.sources?.[0]).toMatchObject({ found: { old: 2 }, postings: { old: 2 } })
+    expect(report.candidates?.map((c) => [c.published, c.possiblyFilled])).toEqual([
+      ['2026-08-01', 76],
+      ['2025-12-01', null],
+    ])
+  })
+})
+
+describe('adapters (M7, second round)', () => {
+  it('reads a Workday-style sitemap and the JobPosting data of its posting pages', async () => {
+    const host = `${unique('wd')}.example.org`
+    const sitemap = `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      <url><loc>https://${host}/External/job/Main-Campus/Postdoc-in-Systems-Neuroscience_R-100</loc></url>
+      <url><loc>https://${host}/External/job/Main-Campus/Senior-Accountant_R-101</loc></url>
+    </urlset>`
+    // The page itself is a script shell; its JobPosting data has the posting.
+    const shell = (title: string, description: string, posted: string) =>
+      `<html><head><script type="application/ld+json">${JSON.stringify({
+        '@type': 'JobPosting',
+        title,
+        description,
+        datePosted: posted,
+      })}</script></head><body><div id="root"></div></body></html>`
+    const web = fakeWeb({
+      [`https://${host}/External/siteMap.xml`]: sitemap,
+      [`https://${host}/External/job/Main-Campus/Postdoc-in-Systems-Neuroscience_R-100`]: shell(
+        'Postdoc in Systems Neuroscience',
+        '<p>We record cortical neurons in behaving mice. Apply by 30 November 2026.</p>',
+        '2026-10-10',
+      ),
+      [`https://${host}/External/job/Main-Campus/Senior-Accountant_R-101`]: shell(
+        'Senior Accountant',
+        '<p>Budgets and audits.</p>',
+        '2026-10-11',
+      ),
+    })
+    const source = await payload.create({
+      collection: 'sources',
+      data: {
+        name: unique('Fake Workday'),
+        kind: 'sitemap',
+        institution: institutionId,
+        url: `https://${host}/External/siteMap.xml`,
+        postingPattern: `^https://${host.replace(/\./g, '\\.')}/External/job/[^/]+/[^/]+$`,
+        termsAutomation: 'not-found',
+        schedule: 'daily',
+      } as never,
+      depth: 0,
+    })
+    const { results } = await monitorSources(payload, now, {
+      only: [source.id],
+      fetcher: web.fetcher,
+    })
+    expect(results[0]).toMatchObject({
+      outcome: 'ok',
+      counts: { listed: 2, candidates: 1, notNeuroscience: 1 },
+    })
+    const { docs } = await payload.find({
+      collection: 'candidates',
+      where: { source: { equals: source.id } },
+      depth: 0,
+    })
+    expect(docs[0]).toMatchObject({ rawTitle: 'Postdoc in Systems Neuroscience' })
+    expect(docs[0]?.extracted).toMatchObject({
+      deadline: { value: { date: '2026-11-30' } },
+      published: { value: '2026-10-10' },
+    })
+  })
+
+  it("reads a list that names postings by an ID, through the posting's address from it", async () => {
+    const host = `${unique('hr')}.example.org`
+    const list = `<table><tr><td><a href="javascript:viewTheJobSpec('501')">Postdoctoral Research Assistant in Neuroimaging</a></td></tr>
+      <tr><td><a href="javascript:viewTheJobSpec('502')">Finance Officer</a></td></tr></table>`
+    const spec = (id: string) =>
+      `https://${host}/pls/recruit/jobspec?p_company=10&p_recruitment_id=${id}`
+    const web = fakeWeb({
+      [`https://${host}/pls/recruit/search`]: list,
+      [spec('501')]: posting(
+        'Postdoctoral Research Assistant in Neuroimaging',
+        '<p>fMRI of the human brain. Closing Date & Time : 16-Nov-2026 12:00</p>',
+      ),
+      [spec('502')]: posting('Finance Officer', '<p>Budgets.</p>'),
+    })
+    const source = await payload.create({
+      collection: 'sources',
+      data: {
+        name: unique('Fake CoreHR'),
+        kind: 'page',
+        institution: institutionId,
+        url: `https://${host}/pls/recruit/search`,
+        postingIdPattern: "^javascript:viewTheJobSpec\\('(\\d+)'\\)$",
+        postingUrlTemplate: `https://${host}/pls/recruit/jobspec?p_company=10&p_recruitment_id={id}`,
+        termsAutomation: 'not-stated',
+        schedule: 'daily',
+      } as never,
+      depth: 0,
+    })
+    const { results } = await monitorSources(payload, now, {
+      only: [source.id],
+      fetcher: web.fetcher,
+    })
+    expect(results[0]).toMatchObject({
+      outcome: 'ok',
+      counts: { candidates: 1, notNeuroscience: 1 },
+    })
+    const { docs } = await payload.find({
+      collection: 'candidates',
+      where: { source: { equals: source.id } },
+      depth: 0,
+    })
+    expect(docs.map((doc) => doc.rawUrl)).toEqual([spec('501')])
+  })
+
+  it('refuses a template without its ID pattern, and a sitemap without its pattern', async () => {
+    await expect(
+      payload.create({
+        collection: 'sources',
+        data: {
+          name: unique('Half'),
+          kind: 'page',
+          url: 'https://hr.example.org/list',
+          postingUrlTemplate: 'https://hr.example.org/view?id={id}',
+          termsAutomation: 'not-stated',
+          schedule: 'daily',
+        } as never,
+      }),
+    ).rejects.toThrow(/IDs/)
+    await expect(
+      payload.create({
+        collection: 'sources',
+        data: {
+          name: unique('No pattern'),
+          kind: 'sitemap',
+          url: 'https://hr.example.org/sitemap.xml',
+          termsAutomation: 'not-stated',
+          schedule: 'daily',
+        } as never,
+      }),
+    ).rejects.toThrow(/Addresses of postings/)
   })
 })
 

@@ -7,7 +7,7 @@ import type { Vocabulary } from '@/lib/taxonomy'
 import type { Candidate, Institution } from '@/payload-types'
 
 import { type AiDraft, SUMMARY_MAX, aiDraftSchema } from './draft'
-import { type DraftInput, draftInput, inputHash } from './input'
+import { type DraftInput, cannotRedact, draftInput, inputHash } from './input'
 
 // The weekly AI drafts by Claude Code (PLAN §6.6, D52), the first way in: the operator says "Do the
 // weekly drafts" and Claude Code, on the operator's computer, exports the candidates that wait for
@@ -28,6 +28,12 @@ export type DraftExport = {
   format: typeof EXPORT_FORMAT
   exportedAt: string
   candidates: ExportedCandidate[]
+  /**
+   * Waiting candidates left out: their text is partly in a script without capital letters (Chinese,
+   * Japanese, Korean, Arabic, Hebrew, Thai, Indic scripts…), where redaction cannot find names; an
+   * editor drafts them by hand.
+   */
+  leftForEditors: number
   /** The terms a draft may name, by vocabulary: slug and label. */
   vocabularies: Record<
     'positionType' | 'subfields' | 'careerStages',
@@ -47,30 +53,54 @@ export const DRAFT_RULES = [
   'Write only from the input. If the input is not a position in neuroscience, still draft it and say so in the note.',
 ]
 
-/** Candidates that wait for an AI draft: new or triaged positions with a source text and no draft. */
-async function waiting(payload: Payload, limit: number): Promise<Candidate[]> {
-  const { docs } = await payload.find({
-    collection: 'candidates',
-    where: {
-      and: [
-        { status: { in: ['new', 'triaged'] } },
-        { kind: { equals: 'job' } },
-        { aiSuggestion: { exists: false } },
-        { snippet: { exists: true } },
-      ],
-    },
-    sort: 'createdAt',
-    depth: 1,
-    limit,
-    pagination: false,
-  })
-  return docs
-}
-
 const institutionOf = (candidate: Candidate) =>
   candidate.institution && typeof candidate.institution === 'object'
     ? (candidate.institution as Institution)
     : null
+
+/** The most pages of waiting candidates read to find `limit` that can be drafted. */
+const MAX_WAITING_PAGES = 20
+
+/**
+ * The oldest `limit` candidates that wait for an AI draft (new or triaged positions with a source
+ * text and no draft) and can be sent, with their input; those whose input `cannotRedact` (text in
+ * a script without capital letters) are left for an editor and counted, and the search goes on
+ * past them, so that they never hold up the others. Both ways in use it (weekly, Claude API).
+ */
+export async function waitingForDrafts(
+  payload: Payload,
+  limit: number,
+): Promise<{
+  waiting: Array<{ candidate: Candidate; input: DraftInput }>
+  leftForEditors: number
+}> {
+  const waiting: Array<{ candidate: Candidate; input: DraftInput }> = []
+  let leftForEditors = 0
+  for (let page = 1; page <= MAX_WAITING_PAGES && waiting.length < limit; page++) {
+    const { docs, hasNextPage } = await payload.find({
+      collection: 'candidates',
+      where: {
+        and: [
+          { status: { in: ['new', 'triaged'] } },
+          { kind: { equals: 'job' } },
+          { aiSuggestion: { exists: false } },
+          { snippet: { exists: true } },
+        ],
+      },
+      sort: ['createdAt', 'id'],
+      depth: 1,
+      limit,
+      page,
+    })
+    for (const candidate of docs) {
+      const input = draftInput(candidate, institutionOf(candidate))
+      if (cannotRedact(input)) leftForEditors++
+      else if (waiting.length < limit) waiting.push({ candidate, input })
+    }
+    if (!hasNextPage) break
+  }
+  return { waiting, leftForEditors }
+}
 
 /** The export for the weekly drafts: only redacted text, never an address or a note. */
 export async function exportForDrafts(
@@ -83,14 +113,17 @@ export async function exportForDrafts(
     [...taxonomy.byKey]
       .filter(([key]) => key.startsWith(`${vocabulary}/`))
       .map(([key, term]) => ({ slug: key.slice(vocabulary.length + 1), label: term.label }))
-  const candidates = (await waiting(payload, limit)).map((candidate) => {
-    const input = draftInput(candidate, institutionOf(candidate))
-    return { id: candidate.id, inputHash: inputHash(input), input }
-  })
+  const { waiting, leftForEditors } = await waitingForDrafts(payload, limit)
+  const candidates = waiting.map(({ candidate, input }) => ({
+    id: candidate.id,
+    inputHash: inputHash(input),
+    input,
+  }))
   return {
     format: EXPORT_FORMAT,
     exportedAt: now.toISOString(),
     candidates,
+    leftForEditors,
     vocabularies: {
       positionType: terms('position-type'),
       subfields: terms('subfield'),
