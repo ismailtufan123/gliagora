@@ -94,7 +94,8 @@ function replyOf(value: unknown): SmtpReply | undefined {
 
 /**
  * Sends `message` to `to` through Payload's email adapter (payload.config.ts) and says what
- * happened: plain text, from EMAIL_FROM, replies to hello@gliagora.com, marked as automatic so
+ * happened: plain text (with an HTML part where the message has one: the test emails of a Glia
+ * Notes issue, M11), from EMAIL_FROM, replies to hello@gliagora.com, marked as automatic so
  * that out-of-office replies are not sent back. A message with an `unsubscribeUrl` (Glia Notes,
  * M2) also gets `List-Unsubscribe` and `List-Unsubscribe-Post` (RFC 8058, one click), so mail
  * programs can offer their own unsubscribe button. `unavailable` without a mail server (SMTP_HOST)
@@ -113,6 +114,7 @@ export async function sendOne(
       replyTo: CONTACT_EMAIL,
       subject: message.subject,
       text: message.text,
+      ...(message.html ? { html: message.html } : {}),
       headers: {
         'Auto-Submitted': 'auto-generated',
         'X-Auto-Response-Suppress': 'All',

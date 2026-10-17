@@ -19,6 +19,7 @@ import {
   openJobsWhere,
   termIds,
 } from '@/lib/jobs/query'
+import { JOB_CARD_SELECT, JOB_DETAIL_SELECT, JOB_POPULATE } from '@/lib/jobs/select'
 import { type JobCard, type JobDoc, toJobCard, toJobDetail } from '@/lib/jobs/view'
 import type { ItemLookup } from '@/lib/reports/item'
 import type { FeedJob } from '@/lib/seo/feed'
@@ -106,45 +107,6 @@ export const institutionByUrlId = cache(async (id: string, locale: Locale) => {
  * deadlines, days left, robots) and its metadata agree.
  */
 export const requestTime = cache(() => new Date())
-
-// What job pages and job rows read: public facts only, never internal notes, the checklist or
-// the duplicate check. Relationships are read one level deep, with only the fields shown.
-const JOB_CARD_SELECT = {
-  title: true,
-  slug: true,
-  shortId: true,
-  status: true,
-  originalLanguage: true,
-  institution: true,
-  city: true,
-  country: true,
-  positionType: true,
-  subfields: true,
-  methods: true,
-  modelSystems: true,
-  deadlineKind: true,
-  deadlineDate: true,
-  deadlineTz: true,
-  deadlineAt: true,
-  expiredAt: true,
-  withdrawnAt: true,
-  originalUrl: true,
-} as const
-
-const JOB_DETAIL_SELECT = {
-  ...JOB_CARD_SELECT,
-  careerStages: true,
-  startText: true,
-  summary: true,
-  verifiedAt: true,
-} as const
-
-const JOB_POPULATE = {
-  institutions: { name: true, slug: true, rorId: true, shortId: true },
-  // `isActive`: a retired subfield stays on its jobs, but its hub answers 410, so it gets no link.
-  terms: { slug: true, label: true, isActive: true },
-  countries: { name: true },
-} as const
 
 /** The job at the end of a job URL, in any status (the page decides what to show). */
 export const jobByShortId = cache(async (shortId: string, locale: Locale) => {

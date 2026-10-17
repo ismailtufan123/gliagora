@@ -25,6 +25,11 @@ export type EmailText = {
   subject: string
   text: string
   /**
+   * An HTML part besides the text: only the test emails of a Glia Notes issue have one (M11); the
+   * automatic emails are plain text.
+   */
+  html?: string
+  /**
    * Where a mail program's one-click unsubscribe posts (RFC 8058; `List-Unsubscribe`): only the
    * emails of Glia Notes have one (M2).
    */
