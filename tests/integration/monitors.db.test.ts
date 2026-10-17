@@ -579,6 +579,36 @@ describe('better candidates (M7, second round)', () => {
     ])
   })
 
+  it("takes the text's final date over an earlier validThrough (a review date)", async () => {
+    const host = `${unique('jobs')}.example.org`
+    const web = fakeWeb({
+      [`https://${host}/jobs/`]: '<a href="/jobs/1">Assistant Professor of Neuroscience</a>',
+      [`https://${host}/jobs/1`]: posting(
+        'Assistant Professor of Neuroscience',
+        '<p>Open date: August 1, 2026</p><p>Next review date: October 1, 2026</p><p>Final date: December 31, 2026</p>',
+        {
+          '@type': 'JobPosting',
+          title: 'Assistant Professor of Neuroscience',
+          validThrough: '2026-10-01',
+        },
+      ),
+    })
+    const source = await pageSource(host)
+    const { results } = await monitorSources(payload, now, {
+      only: [source.id],
+      fetcher: web.fetcher,
+    })
+    expect(results[0]?.counts).toMatchObject({ candidates: 1, closed: 0 })
+    const { docs } = await payload.find({
+      collection: 'candidates',
+      where: { source: { equals: source.id } },
+      depth: 0,
+    })
+    expect(docs[0]?.extracted).toMatchObject({
+      deadline: { value: { date: '2026-12-31' }, from: expect.stringContaining('Final date') },
+    })
+  })
+
   it('skips a posting without a deadline published over six months ago, and marks one from two months', async () => {
     const host = `${unique('jobs')}.example.org`
     const at = (n: string) => `https://${host}/jobs/${n}`

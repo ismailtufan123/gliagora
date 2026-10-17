@@ -112,6 +112,8 @@ describe('neuroscienceCheck', () => {
     expect(check('Nörolojik Bilimler Enstitüsü proje bursiyeri')).toBe(true)
     expect(check('Norovirus vaccine research assistant')).toBe(false)
     expect(check('Profesor asistente de Psiquiatría')).toBe(true)
+    expect(check('Forskningsassistent i psykiatri')).toBe(true)
+    expect(check('Stipendiat i nevrovitenskap')).toBe(true)
     expect(check('Pesquisador', 'Estudamos a cognição e a demência em modelos animais.')).toBe(true)
     expect(check('Investigador postdoctoral', 'Plasticidad sináptica en la médula espinal.')).toBe(
       true,

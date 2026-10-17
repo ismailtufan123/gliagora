@@ -150,6 +150,8 @@ Yeni kaynak eklerken: işvereni "Institution" alanında seçin, kullanım koşul
 
 **İlk kaynaklar**: CSV'deki 70 işveren ve alt birimleri, toplam 118 kaynak, 2026-10-16'da resmî sitelerinden incelenip eklendi. Her kaynağın "Notes" alanında incelemenin notları (platform, ilanlardaki son başvuru biçimi, `robots.txt`), elle kontrol edilenlerde nedeni yazar. İşverenin kurumu ROR kimliğiyle bağlandı; bağlanamadıysa notlarda ROR kimliği yazar, "Institution" alanından seçin.
 
+**İkinci tur** (2026-10-17): 51 yeni kaynak eklendi, çoğu daha önce otomatik kaynağı olmayan ülkelerden (Brezilya, Şili, Meksika, Uruguay, İsrail, Katar, Pakistan, Singapur, Hong Kong, Estonya, Hırvatistan, Slovenya, Norveç) ve ABD ile Avrupa'nın büyük sinirbilim işverenlerinden. Bazı elle kontrol edilen kaynaklar artık program tarafından okunuyor (Janelia, CSHL, McGill, EMBL, DZNE, Helmholtz Munich, Oxford, Duke-NUS). Elle kontrol edilen ve nadiren değişen 27 kaynak **"Monthly"** yapıldı: panoda ayda bir görünürler. Yeni otomatik kaynaklar, teknik yönetici her birini bir kez elle çalıştırana kadar kapalıdır ("Monitor on" işaretsiz). NUS ve Duke-NUS, NUS'un hukuki metni bir tarayıcıda okunana kadar kapalı kalır. Bütün liste: `docs/sources/sources-2026-10-17.csv`.
+
 ## 6. Yapay zekâ taslakları ("AI draft")
 
 Bazı adaylarda **"AI draft"** alanı doludur: Claude'un (Anthropic) adayın kişi adları, e-posta adresleri ve telefon numaraları çıkarılmış başlığından ve metninden yazdığı bir taslak (D52). Taslakta kendi sözlerimizle en çok 280 karakterlik bir özet ("summary"), pozisyon türü, son başvuru tarihi ve saat dilimi, yer, alt alanlar ve kariyer aşaması bulunur; her biri neye dayandığını söyler ("from"). Taslak sitede hiçbir zaman görünmez.

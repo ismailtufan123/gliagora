@@ -237,6 +237,23 @@ describe('readPostingPage', () => {
     )
   })
 
+  it("prefers a JobPosting description longer than the page's own text, unescaped twice if needed", () => {
+    // More than 200 characters of navigation, the limit before this round.
+    const chrome = 'Skip to content. Search jobs. Sign in. Saved jobs. Job alerts. '.repeat(4)
+    const description =
+      '&lt;p&gt;We record &lt;b&gt;cortical neurons&lt;/b&gt; in behaving mice and study how circuits learn. The position is funded for three years and includes training in two-photon imaging, electrophysiology and the analysis of large recordings, with a mentoring programme. Applications from all backgrounds are welcome.&lt;/p&gt;'
+    const page = readPostingPage(
+      `<html><head><script type="application/ld+json">${JSON.stringify({
+        '@type': 'JobPosting',
+        title: 'Postdoc',
+        description,
+      })}</script></head><body><main><p>${chrome}</p></main></body></html>`,
+    )
+    expect(page.text).toBe(
+      'We record cortical neurons in behaving mice and study how circuits learn. The position is funded for three years and includes training in two-photon imaging, electrophysiology and the analysis of large recordings, with a mentoring programme. Applications from all backgrounds are welcome.',
+    )
+  })
+
   it('falls back to the h1, and notes a text-and-data-mining reservation', () => {
     const page = readPostingPage(
       '<html><head><meta name="tdm-reservation" content="1"></head><body><h1>PhD position</h1><p>Text</p></body></html>',

@@ -62,6 +62,7 @@ const LABELS = [
   'apply by',
   'apply before',
   'last application date',
+  'final date',
   'last date for applications',
   'last day for applications',
   'last day to apply',

@@ -280,8 +280,14 @@ export function readPostingPage(html: string): PostingPage {
   ]
   const [titleFrom, title] = found.find(([, value]) => value?.trim()) ?? [null, null]
   let text = textOf(contentOf(doc))
-  // A page that holds the posting only in its JSON-LD (built by script) still has its description.
-  if (text.length < 200 && jobPosting?.description) text = htmlToText(jobPosting.description)
+  // A page that holds the posting only in its JSON-LD (built by script, with some navigation text
+  // around it) still has its description: the longer of the two is the posting. Some sites escape
+  // the description's HTML twice.
+  if (jobPosting?.description) {
+    let description = htmlToText(jobPosting.description)
+    if (/<\/?[a-z][a-z0-9]*[\s>/]/i.test(description)) description = htmlToText(description)
+    if (description.length > text.length) text = description
+  }
   return {
     title: title?.trim() || null,
     titleFrom,
