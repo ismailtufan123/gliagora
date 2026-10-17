@@ -7,11 +7,14 @@ import { describe, expect, it } from 'vitest'
 const here = path.dirname(fileURLToPath(import.meta.url))
 const src = path.resolve(here, '../..')
 const tokensFile = path.join(here, 'tokens.css')
-// The browser theme colour must be a literal in the page metadata; the last test below checks it
-// equals the --bg tokens. It is the only allowed exception, in this one file.
+// The browser theme colour must be a literal in the page metadata; a test below checks it equals
+// the --bg tokens. The other exception is the email of Glia Notes, whose mail programs cannot read
+// CSS variables: its colours file names a token on each line, and a test checks each value.
 const metadataFile = path.join(src, 'lib', 'metadata.ts')
 const THEME_COLOUR =
   /^\s*\{ media: '\(prefers-color-scheme: (light|dark)\)', color: '#[0-9a-f]{6}' \},$/i
+const emailColoursFile = path.join(src, 'lib', 'newsletter', 'issue', 'colours.ts')
+const EMAIL_COLOUR = /^\s*[a-z]+: '(#[0-9a-f]{6})', \/\/ --([a-z-]+)$/
 
 const RAW_COLOUR = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\(/i
 const SKIP = [
@@ -47,9 +50,24 @@ describe('raw colour values', () => {
         .map((line, i) => ({ line, at: `${path.relative(src, file)}:${i + 1}` }))
         .filter(({ line }) => RAW_COLOUR.test(line))
         .filter(({ line }) => !(file === metadataFile && THEME_COLOUR.test(line)))
+        .filter(({ line }) => !(file === emailColoursFile && EMAIL_COLOUR.test(line)))
         .map(({ at, line }) => `${at}: ${line.trim()}`),
     )
     expect(offenders).toEqual([])
+  })
+
+  it('gives the email of Glia Notes the tokens it names, light then dark', () => {
+    const lines = readFileSync(emailColoursFile, 'utf8').split('\n')
+    const darkFrom = lines.findIndex((line) => /^\s*dark: \{$/.test(line))
+    expect(darkFrom).toBeGreaterThan(0)
+    const colours = lines.flatMap((line, i) => {
+      const match = EMAIL_COLOUR.exec(line)
+      return match ? [{ value: match[1]!, token: match[2]!, dark: i > darkFrom }] : []
+    })
+    expect(colours.length).toBeGreaterThanOrEqual(10)
+    for (const { value, token, dark } of colours) {
+      expect(value, `--${token}${dark ? ' (dark)' : ''}`).toBe(tokenValue(token, dark))
+    }
   })
 
   it('uses the --bg tokens as the browser theme colour', () => {

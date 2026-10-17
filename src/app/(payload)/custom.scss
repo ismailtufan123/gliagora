@@ -111,3 +111,47 @@
     }
   }
 }
+
+// The actions of a Glia Notes issue, in its sidebar (src/admin/IssueActions.tsx).
+.issue-actions {
+  margin-bottom: calc(var(--base) * 1.5);
+  padding: var(--base);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-m);
+  background: var(--theme-elevation-50);
+
+  &__title {
+    margin: 0 0 calc(var(--base) * 0.5);
+  }
+
+  &__list {
+    margin: 0 0 calc(var(--base) * 0.5);
+    padding-left: calc(var(--base) * 1.25);
+  }
+
+  p {
+    margin: calc(var(--base) * 0.5) 0 0;
+  }
+
+  &__hint {
+    color: var(--theme-elevation-650);
+  }
+
+  &__warning,
+  &__error {
+    color: var(--theme-error-650);
+  }
+
+  &__ok {
+    color: var(--theme-success-650);
+  }
+
+  a {
+    text-decoration: underline;
+
+    &:focus-visible {
+      outline: var(--accessibility-outline);
+      outline-offset: var(--accessibility-outline-offset);
+    }
+  }
+}

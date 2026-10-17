@@ -93,3 +93,35 @@ export function canonicalUrl(value: string): string | null {
     '/'
   return url.href
 }
+
+/** A query parameter's name as the server reads it (`utm%5Fsource` is `utm_source`). */
+function parameterName(pair: string): string {
+  const name = pair.split('=', 1)[0] ?? ''
+  try {
+    return decodeURIComponent(name.replace(/\+/g, ' '))
+  } catch {
+    return name
+  }
+}
+
+/**
+ * A posting's address as Glia Notes links to it (PLAN §13: direct links to employers, without
+ * tracking parameters): the address exactly as entered, with only the tracking parameters (those
+ * `canonicalUrl` removes) taken out of its query; every other part, the other parameters'
+ * spelling and order and the fragment included, stays byte for byte, since some application
+ * systems read their addresses literally. An address that is not http(s) is returned unchanged
+ * (a published job always has one that is).
+ */
+export function withoutTracking(value: string): string {
+  if (!isHttpUrl(value)) return value
+  const hashAt = value.indexOf('#')
+  const beforeHash = hashAt === -1 ? value : value.slice(0, hashAt)
+  const hash = hashAt === -1 ? '' : value.slice(hashAt)
+  const queryAt = beforeHash.indexOf('?')
+  if (queryAt === -1) return value
+  const pairs = beforeHash.slice(queryAt + 1).split('&')
+  const kept = pairs.filter((pair) => pair === '' || !isTracking(parameterName(pair)))
+  if (kept.length === pairs.length) return value
+  const query = kept.filter((pair) => pair !== '').join('&')
+  return `${beforeHash.slice(0, queryAt)}${query ? `?${query}` : ''}${hash}`
+}

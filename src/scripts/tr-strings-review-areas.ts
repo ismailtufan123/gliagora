@@ -1076,6 +1076,68 @@ export const AREAS: Area[] = [
     },
   },
   {
+    title: 'Glia Notes issues and their archive',
+    shown: false,
+    note: 'The issues of Glia Notes and their archive pages (M11) are English only, like the windows; the archive is private until the launch. The Turkish texts are drafts for a Turkish issue later.',
+    places: {
+      'newsletter.archive.title': 'Glia Notes archive page - title and heading',
+      'newsletter.archive.description':
+        'Glia Notes archive page - description for search engines and link previews',
+      'newsletter.archive.intro': 'Glia Notes archive page - paragraph under the heading',
+      'newsletter.archive.empty':
+        'Glia Notes archive page - paragraph instead of the list while no issue has been sent',
+      'newsletter.archive.sentOn':
+        'Glia Notes archive page and an issue’s page - the day it was sent ({date}, such as 3 Kas 2026)',
+      'newsletter.archive.issueDescription':
+        'An issue’s archive page - description for search engines and link previews ({month}, such as Kasım 2026)',
+      'newsletter.archive.all': 'An issue’s archive page - link back to the list of issues',
+      'newsletter.archive.subscribe': 'Glia Notes archive pages - link to the signup page',
+      'gliaNotes.name':
+        'Every issue (email and archive page) - the newsletter’s name above the title',
+      'gliaNotes.subtitle': 'Every issue - line under the title',
+      'gliaNotes.issueTitle': 'Every issue - title ({month}, such as Kasım 2026)',
+      'gliaNotes.readOnline': 'Every issue’s email - link to the issue’s archive page',
+      'gliaNotes.deadlines.heading': 'Every issue - heading of the deadlines section',
+      'gliaNotes.deadlines.intro':
+        'Every issue - line under that heading ({from} and {to}: the first and last day)',
+      'gliaNotes.deadlines.more':
+        'Every issue - link to the jobs list when more deadlines fall in the 45 days than the issue lists ({count}: how many more)',
+      'gliaNotes.deadlines.none': 'Every issue - line instead of the deadlines when there are none',
+      'gliaNotes.selected.heading': 'Every issue - heading of the selected positions',
+      'gliaNotes.selected.intro': 'Every issue - line under that heading',
+      'gliaNotes.selected.none':
+        'Every issue - line instead of the selected positions when there are none',
+      'gliaNotes.job.deadline': 'Every issue - a position’s deadline ({day}, such as 20 Kas 2026)',
+      'gliaNotes.job.deadlineZone':
+        'Every issue - a position’s deadline with the time zone its day ends in ({zone}, such as Orta Avrupa Saati (UTC+1))',
+      'gliaNotes.job.deadlineAoe':
+        'Every issue - a position’s deadline when the posting names no time zone',
+      'gliaNotes.job.rolling':
+        'Every issue - a position without a fixed deadline: applications read as they arrive',
+      'gliaNotes.job.untilFilled': 'Every issue - a position open until it is filled',
+      'gliaNotes.job.original': 'Every issue - link to the posting on the employer’s website',
+      'gliaNotes.job.originalHint': 'Every issue - words after that link',
+      'gliaNotes.more.heading': 'Every issue - heading of the last section, before the footer',
+      'gliaNotes.more.jobs': 'Every issue - link to the jobs list',
+      'gliaNotes.more.map': 'Every issue - link to the map',
+      'gliaNotes.more.suggest':
+        'Every issue - line asking for positions we missed ({email}: hello@gliagora.com)',
+      'gliaNotes.footer.why': 'Every issue’s email - footer: why the reader gets it',
+      'gliaNotes.footer.unsubscribe': 'Every issue’s email - footer: the unsubscribe link',
+      'gliaNotes.footer.unsubscribeText':
+        'Every issue’s email - footer: line before the unsubscribe link',
+      'gliaNotes.footer.contact':
+        'Every issue’s email - footer: link to the contact and legal notice',
+      'gliaNotes.footer.privacy': 'Every issue’s email - footer: link to the privacy policy',
+      'gliaNotes.footer.kvkk': 'Every issue’s email - footer: link to the KVKK notice',
+      'gliaNotes.footer.sender':
+        'Every issue’s email - footer: the sender’s name and address ({email})',
+      'gliaNotes.test.subject':
+        'A test email of an issue, sent to the editor - subject ({subject}: the issue’s own)',
+      'gliaNotes.test.note': 'A test email of an issue - line at the top',
+    },
+  },
+  {
     title: 'Sign-in and account pages',
     shown: false,
     note: `Sign-in, sign-out and the account pages exist only in English (/en/sign-in/, /en/account/), ${ENGLISH_ONLY}; Turkish pages link to them from the header and the mobile menu.`,

@@ -13,6 +13,7 @@ import { EmailTokens } from './members/EmailTokens'
 import { MemberSessions } from './members/MemberSessions'
 import { Members } from './members/Members'
 import { SavedItems } from './members/SavedItems'
+import { NewsletterIssues } from './NewsletterIssues'
 import { Reports } from './Reports'
 import { RetiredListings } from './RetiredListings'
 import { SourcePostings } from './SourcePostings'
@@ -23,7 +24,8 @@ import { Users } from './Users'
 
 // Every collection of payload.config.ts, in the order of the admin menu: the daily work first
 // (PLAN §6.5). FormLimits, the member collections and the deletion log are hidden (M4b, D49), and
-// so is the consent log of Glia Notes (M2, D50).
+// so is the consent log of Glia Notes (M2, D50). The issues of Glia Notes (M11, D53) come after the
+// jobs they are made from.
 export const COLLECTIONS: CollectionConfig[] = [
   Users,
   Candidates,
@@ -34,6 +36,7 @@ export const COLLECTIONS: CollectionConfig[] = [
   DataRequests,
   Jobs,
   RetiredListings,
+  NewsletterIssues,
   Terms,
   Countries,
   CountrySets,

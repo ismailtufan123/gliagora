@@ -76,6 +76,7 @@ export interface Config {
     'data-requests': DataRequest;
     jobs: Job;
     'retired-listings': RetiredListing;
+    'newsletter-issues': NewsletterIssue;
     terms: Term;
     countries: Country;
     'country-sets': CountrySet;
@@ -104,6 +105,7 @@ export interface Config {
     'data-requests': DataRequestsSelect<false> | DataRequestsSelect<true>;
     jobs: JobsSelect<false> | JobsSelect<true>;
     'retired-listings': RetiredListingsSelect<false> | RetiredListingsSelect<true>;
+    'newsletter-issues': NewsletterIssuesSelect<false> | NewsletterIssuesSelect<true>;
     terms: TermsSelect<false> | TermsSelect<true>;
     countries: CountriesSelect<false> | CountriesSelect<true>;
     'country-sets': CountrySetsSelect<false> | CountrySetsSelect<true>;
@@ -1850,6 +1852,64 @@ export interface RetiredListing {
   createdAt: string;
 }
 /**
+ * One issue a month, sent on the first Tuesday at 13:00 UTC (16:00 in Türkiye). Write the subject, the preheader and the opening note, check the selected positions, save, then preview, send a test and push it to listmonk (the sidebar). The editor guide (Yardım), section 8, has the steps.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-issues".
+ */
+export interface NewsletterIssue {
+  id: number;
+  /**
+   * Shown in your computer's time zone. By default the next first Tuesday at 13:00 UTC, which is 16:00 in Türkiye (D16). The launch issue goes out on launch day (D41).
+   */
+  sendAt: string;
+  /**
+   * From the date: one issue a month. Its archive address is /en/newsletter/{month}/.
+   */
+  month?: string | null;
+  /**
+   * The email’s subject, e.g. “Glia Notes, November 2026: 14 deadlines in neuroscience”. Under about 60 characters reads best on phones.
+   */
+  subject: string;
+  /**
+   * The line mail programs show after the subject in the inbox, e.g. “Selected positions in Europe, Asia and the Americas”. About 40–100 characters.
+   */
+  preheader?: string | null;
+  /**
+   * Two or three sentences in your words, at the top of the issue (PLAN §13). Separate paragraphs with a blank line.
+   */
+  intro: string;
+  /**
+   * Ten to fifteen open positions, balanced by subfield and region (PLAN §13). The builder proposes twelve when the issue is created; reorder (drag), remove or add them. A position that has closed by the time the issue is pushed is left out.
+   */
+  selected?: (number | Job)[] | null;
+  /**
+   * Replaces the selected positions with a new proposal: the newest open positions, one region after another, each with a subfield not chosen yet, leaving out the previous issue’s.
+   */
+  proposeAgain?: boolean | null;
+  /**
+   * Set by the site: by a push to listmonk, and by its check of the campaign every 10 minutes.
+   */
+  status: 'draft' | 'pushed' | 'scheduled' | 'sending' | 'paused' | 'cancelled' | 'sent';
+  listmonkCampaignId?: number | null;
+  pushedAt?: string | null;
+  /**
+   * When listmonk started sending it, as listmonk reports it.
+   */
+  sentAt?: string | null;
+  snapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Groups of countries used in funding eligibility (PLAN §4.6). When you change a list, update the source, the date you checked it and the note.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2185,6 +2245,10 @@ export interface PayloadLockedDocument {
         value: number | RetiredListing;
       } | null)
     | ({
+        relationTo: 'newsletter-issues';
+        value: number | NewsletterIssue;
+      } | null)
+    | ({
         relationTo: 'terms';
         value: number | Term;
       } | null)
@@ -2494,6 +2558,26 @@ export interface RetiredListingsSelect<T extends boolean = true> {
   shortId?: T;
   slug?: T;
   retiredAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "newsletter-issues_select".
+ */
+export interface NewsletterIssuesSelect<T extends boolean = true> {
+  sendAt?: T;
+  month?: T;
+  subject?: T;
+  preheader?: T;
+  intro?: T;
+  selected?: T;
+  proposeAgain?: T;
+  status?: T;
+  listmonkCampaignId?: T;
+  pushedAt?: T;
+  sentAt?: T;
+  snapshot?: T;
   updatedAt?: T;
   createdAt?: T;
 }

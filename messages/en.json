@@ -839,6 +839,16 @@
       "kept": "We keep only the record of your consent and of this unsubscribe, without your address, for 3 years.",
       "again": "Changed your mind? You can <link>subscribe again</link>.",
       "home": "Go to the home page"
+    },
+    "archive": {
+      "title": "Glia Notes archive",
+      "description": "Every issue of Glia Notes, the monthly Gliagora newsletter: deadlines and selected positions in neuroscience.",
+      "intro": "Every issue of Glia Notes that has been sent, the newest first.",
+      "empty": "No issue has been sent yet. The first one arrives with the public launch of Gliagora.",
+      "sentOn": "Sent on {date}",
+      "issueDescription": "Glia Notes for {month}: deadlines in the next 45 days and selected positions in neuroscience.",
+      "all": "All issues",
+      "subscribe": "Get Glia Notes by email"
     }
   },
   "signIn": {
@@ -1277,6 +1287,51 @@
         "after": "If you do not sign in before then, we will delete the account on that day or soon after, with your saved positions and your settings. Glia Notes is not part of this: if you receive it, it continues, and every issue has a link to unsubscribe. If you no longer need the account, you need not do anything.",
         "why": "We delete accounts that have not been used for 2 years, so that we keep no data we no longer need. How we handle your data: {privacyUrl}"
       }
+    }
+  },
+  "gliaNotes": {
+    "name": "Glia Notes",
+    "subtitle": "the monthly Gliagora newsletter",
+    "issueTitle": "Glia Notes, {month}",
+    "readOnline": "Read this issue on the web",
+    "deadlines": {
+      "heading": "Deadlines in the next 45 days",
+      "intro": "Open positions whose application deadline falls between {from} and {to}, the nearest first.",
+      "more": "{count, plural, one {# more deadline} other {# more deadlines}} in these 45 days on the jobs list",
+      "none": "No deadline of an open position falls in these 45 days."
+    },
+    "selected": {
+      "heading": "Selected positions",
+      "intro": "Open positions across subfields and regions, chosen by our editor.",
+      "none": "No position is selected in this issue."
+    },
+    "job": {
+      "deadline": "Deadline: {day}",
+      "deadlineZone": "Deadline: {day}, end of the day in {zone}",
+      "deadlineAoe": "Deadline: {day}, Anywhere on Earth",
+      "rolling": "Rolling deadline",
+      "untilFilled": "Open until filled",
+      "original": "View the original posting",
+      "originalHint": "(on the employer's website)"
+    },
+    "more": {
+      "heading": "More on Gliagora",
+      "jobs": "All open positions",
+      "map": "The world map of positions",
+      "suggest": "Know a position we missed? Write to {email}."
+    },
+    "footer": {
+      "why": "You get Glia Notes because you subscribed at gliagora.com and confirmed your email address.",
+      "unsubscribe": "Unsubscribe",
+      "unsubscribeText": "To unsubscribe, open this link and press the button; your address is deleted at once:",
+      "contact": "Contact and legal notice",
+      "privacy": "Privacy policy",
+      "kvkk": "KVKK notice (in Turkish)",
+      "sender": "Gliagora | Neuroscience, {email}"
+    },
+    "test": {
+      "subject": "[Test] {subject}",
+      "note": "This is a test of an issue that has not been sent. Its unsubscribe links change nothing."
     }
   }
 }

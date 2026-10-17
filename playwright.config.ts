@@ -24,10 +24,15 @@ const testIssuer = process.env.AUTH_TEST_ISSUER?.replace(/\/+$/, '')
 
 /**
  * Tests that delete data others may be reading (a confirmed data request's deletion, deleting an
- * account): they run in a project of their own, after every other test has finished, so a test that
- * counts or samples records (access.spec.ts) never sees them change midway.
+ * account, the Glia Notes issue its test makes and removes): they run in a project of their own,
+ * after every other test has finished, so a test that counts or samples records (access.spec.ts)
+ * never sees them change midway.
  */
-const DESTRUCTIVE = [/\/data-requests\.spec\.ts$/, /\/account-delete\.spec\.ts$/]
+const DESTRUCTIVE = [
+  /\/data-requests\.spec\.ts$/,
+  /\/account-delete\.spec\.ts$/,
+  /\/newsletter-issues\.spec\.ts$/,
+]
 
 const baseURL = process.env.BASE_URL ?? 'http://localhost:3000'
 

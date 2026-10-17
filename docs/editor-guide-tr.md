@@ -168,3 +168,20 @@ Bir taslaktan giriş metni yazmak:
 5. **Save**'e basın. Sayaç 150'yi geçtiyse sayfa arama motorlarına açılır (site genel parolanın arkasındayken kimse göremez). Taslak alanını olduğu gibi bırakabilir ya da boşaltabilirsiniz; bu sitede hiçbir şeyi değiştirmez.
 
 Taslakların hepsi sözcük sayılarıyla birlikte `docs/subfield-introductions.md` dosyasında da okunabilir.
+
+## 8. Glia Notes sayısı hazırlamak
+
+Glia Notes ayda bir gönderilir: her ayın ilk salı günü, 13:00 UTC'de (Türkiye saatiyle 16:00; D16). İlk sayı, sitenin herkese açıldığı gün gönderilen **açılış sayısıdır** (D41). Bir sayıda şimdilik iki bölüm vardır: önümüzdeki 45 gündeki son başvuru tarihleri ve seçilmiş pozisyonlar; makaleler, fonlar, haberler ve Learn kendi bölümleri yapıldıkça eklenir. Sayılar yalnızca İngilizcedir.
+
+Soldaki menüde **Glia Notes → Glia Notes issues** bölümü vardır. Açılış sayısı orada taslak olarak hazır bekler ("Gliagora is open: …").
+
+Bir sayı hazırlamak:
+
+1. Yeni bir sayı için **Create New**'a basın (açılış sayısında taslağı açın). **"Date and time"** kendiliğinden bir sonraki ayın ilk salısı, 13:00 UTC olur; tarih bilgisayarınızın saatiyle gösterilir (Türkiye'de 16:00). Açılış sayısında tarihi açılış gününe ayarlayın. Ay ("month") tarihten gelir: her ay için tek sayı olur, arşiv adresi `/en/newsletter/{ay}/` olur.
+2. **"Subject"** (konu), **"Preheader"** (gelen kutusunda konunun yanında görünen kısa satır) ve **"Opening note"** (açılış notu: kendi sözlerinizle iki üç cümle) alanlarını yazın. Açılış sayısında bu alanlar için bir taslak hazırdır; düzenleyin.
+3. **"Selected positions"**: yeni sayı kaydedilince program on iki açık pozisyon önerir: en yenilerden, bölgeler sırayla, her birinde henüz seçilmemiş bir alt alandan, bir önceki sayıdakiler dışında. Sürükleyerek sıralayın, çıkarın ya da ekleyin (10–15 pozisyon). Açılış sayısında, ya da öneriyi yenilemek istediğinizde, **"Propose the selected positions again when I save"** kutusunu işaretleyip kaydedin.
+4. **Save**'e basın. Son başvuru tarihleri bölümü kendiliğinden dolar: sayının tarihinden sonraki 45 gün içinde son başvurusu olan açık pozisyonlar, en yakını önce (en çok 40; fazlası listeye bağlantıyla).
+5. Sağ sütundaki **"Preview and send"** kutusunda **"Preview the email"** e-postayı yeni bir sekmede gösterir, **"Preview the plain text"** düz metin hâlini. Önizleme kaydedilmiş sayıyı gösterir: önce kaydedin.
+6. **"Send a test email"** sayının bir denemesini size ve deneme adreslerine (Gmail, Outlook, Yahoo ve bir Türk sağlayıcısındaki kendi hesaplarımız) gönderir; konusunun başında "[Test]" yazar. Her birinde e-postanın nasıl göründüğüne, bağlantılara ve karanlık moda bakın. Denemedeki abonelikten çıkma bağlantıları hiçbir şeyi değiştirmez. Deneme e-postaları posta sunucusu kurulunca (M2) gider; o zamana kadar önizlemeyi kullanın.
+
+Bir sayı kapanmış bir pozisyonu göstermez: seçtiğiniz bir pozisyon sayı gönderilmeden kapanırsa sayıdan çıkar. Sayılarda hiçbir aboneye ait bilgi yoktur.

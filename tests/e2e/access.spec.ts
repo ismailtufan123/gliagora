@@ -55,6 +55,7 @@ const SIGNED_OUT: Record<string, SignedOut> = {
   'data-requests': { shows: 'nothing' },
   jobs: { shows: 'nothing' },
   'retired-listings': { shows: 'nothing' },
+  'newsletter-issues': { shows: 'nothing' },
   terms: { shows: 'nothing' },
   countries: { shows: 'nothing' },
   'country-sets': { shows: 'nothing' },

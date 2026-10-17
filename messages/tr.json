@@ -839,6 +839,16 @@
       "kept": "Yalnızca açık rızanızın ve bu abonelikten çıkmanın kaydını, adresiniz olmadan, 3 yıl saklarız.",
       "again": "Fikrinizi mi değiştirdiniz? <link>Yeniden abone olabilirsiniz</link>.",
       "home": "Ana sayfaya git"
+    },
+    "archive": {
+      "title": "Glia Notes arşivi",
+      "description": "Gliagora'nın aylık bülteni Glia Notes'un tüm sayıları: sinirbilimde son başvuru tarihleri ve seçilmiş pozisyonlar.",
+      "intro": "Gönderilmiş tüm Glia Notes sayıları, en yenisi önce.",
+      "empty": "Henüz hiçbir sayı gönderilmedi. İlk sayı, Gliagora'nın herkese açılmasıyla gelir.",
+      "sentOn": "Gönderildi: {date}",
+      "issueDescription": "Glia Notes, {month}: önümüzdeki 45 gündeki son başvuru tarihleri ve sinirbilimde seçilmiş pozisyonlar.",
+      "all": "Tüm sayılar",
+      "subscribe": "Glia Notes'u e-postayla alın"
     }
   },
   "signIn": {
@@ -1277,6 +1287,51 @@
         "after": "O tarihten önce oturum açmazsanız hesabınızı, kaydettiğiniz pozisyonlar ve ayarlarınızla birlikte o gün ya da kısa süre sonra sileriz. Glia Notes bunun parçası değildir: alıyorsanız gelmeye devam eder ve her sayısında abonelikten çıkma bağlantısı bulunur. Hesaba artık ihtiyacınız yoksa hiçbir şey yapmanız gerekmez.",
         "why": "Artık ihtiyaç duymadığımız verileri saklamamak için 2 yıldır kullanılmayan hesapları sileriz. Verilerinizi nasıl işlediğimiz: {privacyUrl}"
       }
+    }
+  },
+  "gliaNotes": {
+    "name": "Glia Notes",
+    "subtitle": "Gliagora'nın aylık bülteni",
+    "issueTitle": "Glia Notes, {month}",
+    "readOnline": "Bu sayıyı web'de okuyun",
+    "deadlines": {
+      "heading": "Önümüzdeki 45 gündeki son başvuru tarihleri",
+      "intro": "Son başvuru tarihi {from} ile {to} arasında olan açık pozisyonlar, en yakını önce.",
+      "more": "Bu 45 günde {count, plural, one {# son başvuru tarihi daha} other {# son başvuru tarihi daha}} pozisyonlar listesinde",
+      "none": "Bu 45 günde açık bir pozisyonun son başvuru tarihi yok."
+    },
+    "selected": {
+      "heading": "Seçilmiş pozisyonlar",
+      "intro": "Editörümüzün alt alanlardan ve bölgelerden seçtiği açık pozisyonlar.",
+      "none": "Bu sayıda seçilmiş pozisyon yok."
+    },
+    "job": {
+      "deadline": "Son başvuru: {day}",
+      "deadlineZone": "Son başvuru: {day}, {zone} saatiyle gün sonu",
+      "deadlineAoe": "Son başvuru: {day}, Dünya'nın her yerinde (AoE)",
+      "rolling": "Sürekli başvuru",
+      "untilFilled": "Dolana kadar açık",
+      "original": "Orijinal ilanı görün",
+      "originalHint": "(işverenin web sitesinde)"
+    },
+    "more": {
+      "heading": "Gliagora'da daha fazlası",
+      "jobs": "Tüm açık pozisyonlar",
+      "map": "Pozisyonların dünya haritası",
+      "suggest": "Kaçırdığımız bir pozisyon mu biliyorsunuz? {email} adresine yazın."
+    },
+    "footer": {
+      "why": "Glia Notes'u gliagora.com'da abone olup e-posta adresinizi onayladığınız için alıyorsunuz.",
+      "unsubscribe": "Abonelikten çık",
+      "unsubscribeText": "Abonelikten çıkmak için bu bağlantıyı açıp düğmeye basın; adresiniz o anda silinir:",
+      "contact": "İletişim ve yasal bilgiler",
+      "privacy": "Gizlilik politikası",
+      "kvkk": "KVKK aydınlatma metni",
+      "sender": "Gliagora | Neuroscience, {email}"
+    },
+    "test": {
+      "subject": "[Deneme] {subject}",
+      "note": "Bu, henüz gönderilmemiş bir sayının denemesidir. Abonelikten çıkma bağlantıları hiçbir şeyi değiştirmez."
     }
   }
 }
