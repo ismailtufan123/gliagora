@@ -13,6 +13,11 @@ Written: 2026-10-17, by the operator's planning chat (Claude) on the operator's 
 
 **When to start:** not before 2026-10-20. By then the monitors will have run on at least four days. If they have run on fewer, stop and tell the operator.
 
+**Progress:** the parts that need no run data were done on 2026-10-17 (#101–#104), at the operator's request: section 1, sections 3 and 4, and the report route of section 2. What remains, from 2026-10-20:
+- section 2's findings;
+- section 5's steps on the server;
+- the operator's decisions in section 6.
+
 **Why this task:** the launch gate (§3.4) needs at least 150 active verified positions in at least 25 countries. Most positions come through the monitors, and Nuray's time goes to the review queue and to the manual sources. This task makes the candidates better and more numerous, and shortens the manual list.
 
 Start by reading `CLAUDE.md`, `docs/STATUS.md` and, in `PLAN.md`:
@@ -69,6 +74,32 @@ Then read `docs/sources/sources-2026-10-16.csv`.
 - **A run by hand:** after the deploy, run the changed sources and the new ones, a few at a time, through `/api/ops/monitors/run/`. Also check from the server whether the Hebrew University's hosts answer (M7 notes).
 - **Switching on:** switch on the new automatic sources whose run by hand had no failure, through `/api/ops/monitors/switch-on/`.
 - **Nothing else:** make no other change on the server, and never print a secret.
+
+### 6. The operator's decisions on terms (2026-10-18)
+
+These settle open points 2 and 3 of the second round's notes (PLAN §20). Record them there, in `docs/STATUS.md` and in the sources CSV.
+
+- **NUS and Duke-NUS are left out.** The planning chat read NUS's legal notice on 2026-10-18 (`https://www.nus.edu.sg/legal-information-notices`).
+  - **What it says:** "Deep linking to NUS web pages is prohibited". It allows a copy only for one's own information, research or study, unmodified.
+  - **Why this rules them out:** our listings link to the posting's own page, which the notice forbids, as with LIH and KEMRI-Wellcome. Both sources live on careers.nus.edu.sg.
+  - **Their records:** keep them with this reason, so that no one adds them again, and never switch them on.
+- **UCSF and UC San Diego become manual.** The University of California's shared wording allows only "one copy for personal use", which restricts storing content. The operator decided the same for Radboud, ETH Zurich and Tübingen on 2026-10-16.
+  - **UCSF:** its automatic source has been on since 2026-10-16. Switch it off and make it manual. A migration is enough, so this needs no step on the server.
+  - **UC San Diego:** add it as a manual source.
+  - **Later:** look at both again once the lawyer has answered B22.
+- **These may be read automatically:** the operator reads their terms as allowing our use, since we keep only facts and a redacted text for the editor, and publish our own summary with a link.
+  - Baylor and NTU, whose terms hold only general reservations, as RIKEN's did;
+  - Aga Khan University (downloads for information only, which is our use);
+  - Cinvestav (information only by the means it offers: we read its own feeds);
+  - Glasgow, Basel and Gothenburg (internal or non-commercial copying: the site is non-commercial, so look again before any sponsorship, Phase 4).
+
+  They are switched on like the other new sources, once their run by hand has no failure.
+- **UBC stays manual.**
+- **Three manual sources to add, on the monthly schedule:**
+  - Hacettepe University's Institute of Neurological Sciences and Psychiatry (its ads are PDFs);
+  - Üsküdar University and Sabancı University (their terms forbid automated reading, but an editor may read them).
+
+  Check that their terms allow a link to a posting's own page. If one's terms do not, leave that source out and say so in the report.
 
 ### Not in this task
 
