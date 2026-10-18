@@ -1,7 +1,7 @@
 # Next task
 
 Status: **open**
-Written: 2026-10-17, by the operator's planning chat (Claude) on the operator's behalf.
+Written: 2026-10-18, by the operator's planning chat (Claude) on the operator's behalf.
 
 ## How this file works
 
@@ -9,119 +9,106 @@ Written: 2026-10-17, by the operator's planning chat (Claude) on the operator's 
 - `docs/STATUS.md` is your one-page handoff: what is done, what is live, open decisions and the next step. Read it before this file, and update it at the end of every task.
 - When the task below is finished, set the status above to **done**, with the date and the pull request numbers, in your last pull request. The planning chat then replaces this file with the next task.
 
-## Task: better candidates and more sources (M7, second round)
+## Task: the UI/UX pass
 
-**When to start:** not before 2026-10-20. By then the monitors will have run on at least four days. If they have run on fewer, stop and tell the operator.
+**When:** now, at the operator's request (2026-10-18). Finish by the end of 2026-10-19 if you can.
 
-**Progress:** the parts that need no run data were done on 2026-10-17 (#101–#104), at the operator's request: section 1, sections 3 and 4, and the report route of section 2. What remains, from 2026-10-20:
-- section 2's findings;
-- section 5's steps on the server;
-- the operator's decisions in section 6.
+**Parked:** the rest of M7's second round, which starts on 2026-10-20, is parked. Its text is this file as of #105. Do not start it: the planning chat puts it back here after this task. Say so in `docs/STATUS.md`.
 
-**Why this task:** the launch gate (§3.4) needs at least 150 active verified positions in at least 25 countries. Most positions come through the monitors, and Nuray's time goes to the review queue and to the manual sources. This task makes the candidates better and more numerous, and shortens the manual list.
+**Why:** the site goes public in two steps: M2, then the launch. It is built and tested, but no one has yet looked at it as a whole, the way a visitor would. The operator wants it to look and work as well as it can before then.
 
 Start by reading `CLAUDE.md`, `docs/STATUS.md` and, in `PLAN.md`:
-- all of §6, §3.4 (the launch gate) and D52;
-- the M7 notes in §20, with "Seen on the way";
-- the M11 notes in §20 (for the approval below).
+- §7, the design system, especially 7.1 (the principles) and 7.6 (the template habits to avoid);
+- §8 (the references) and §9 (the wireframes);
+- §17 (accessibility and performance, with §17.3's budgets);
+- D45 and D47.
 
-Then read `docs/sources/sources-2026-10-16.csv`.
+### 1. Look at the site as a visitor would
 
-### 1. The operator's decisions (first pull request, documentation only)
+- **Run it locally with the fake data** (`pnpm fake:jobs`), in two forms: the full site, and the M2 state (`SITE_STAGE=m2`).
+- **Screenshots:** take each one on a phone (390 px wide) and on a desktop (1440 px), in light mode and in dark mode. Cover:
+  - the home page;
+  - the jobs list: with the filters open, with chips, and with no results;
+  - a job page: open, closing soon, and closed;
+  - the map, an institution page, a subfield hub and search;
+  - the suggest and report forms, also with their errors;
+  - sign-in and the account pages;
+  - the newsletter pages;
+  - About and one legal page;
+  - the 404 and 410 pages;
+  - the M2 state: the coming-soon page, the newsletter signup and About, with the reduced header and footer and their phone menu;
+  - the Glia Notes sample issue (`docs/glia-notes-sample/`).
+- **Five tasks:** walk through each on a phone and on a desktop, and note every friction:
+  1. A first-time visitor understands what Gliagora is and finds positions in their field.
+  2. Find PhD positions in one subfield in Europe whose deadline is within a month.
+  3. Read a job page, then go on to the employer's posting.
+  4. Save a position, then find it again in the account.
+  5. Sign up for Glia Notes.
+- **The admin:** look at the editor's two most frequent flows, deciding a candidate and publishing the job made from it. Count the clicks and the fields in each.
+- **A fresh eye:** before you add your own findings, have an independent reviewer that has not read the code look at the screenshots and walk through the five tasks.
 
-- **M11 is approved:** the operator approved M11's design as built (2026-10-17), with every point for review in the M11 notes and the accepted risk of the campaigns user. Record it the way D50's approval was recorded: in D53's row, in the M11 notes and in `docs/STATUS.md`.
-- **Umami:** the operator will decide later (asked on 2026-10-17). Leave it open.
+### 2. The review
 
-### 2. Look at the results (on the server, read only)
+- **Where:** `docs/ui-review/2026-10/review.md`.
+- **Each finding gets:**
+  - its screenshot;
+  - the principle it touches: hierarchy, spacing, contrast, consistency, affordance, feedback, mobile ergonomics or wording, or §7.1 and §7.6;
+  - a priority:
+    - **P1:** a visitor gets something wrong or cannot do it, or something looks broken;
+    - **P2:** a clear gain in clarity or polish;
+    - **P3:** nice to have.
+- **Screenshots in the repository:** keep only those the findings need, each under 150 KB (PNG or JPEG), in `docs/ui-review/2026-10/`.
 
-- **A report route:** build a read-only operations route, like M7's, and keep it for later rounds. It reports on the daily runs so far:
-  - **per source:** runs, failures and their kinds, postings seen, candidates made, and postings skipped by reason (not neuroscience, closed, duplicate, the cap of 40);
-  - **per candidate:** ID, source, redacted title, status and the editor's reason if one was given, whether a deadline and a type were found, and the suggested subfields;
-  - **per skipped posting:** its redacted title and outcome from `source-postings`, so that wrongly skipped neuroscience postings can be found.
-- **What it must never return:** the candidates' text, people's names or addresses, or anything about members.
-- **Your judgement:** after its deploy, call it on the server (the go-ahead is below) and find:
-  - which candidates are not neuroscience, and which are old or filled;
-  - which sources fail, and why;
-  - which neuroscience postings were skipped wrongly.
+### 3. Fix
 
-### 3. Better candidates
+- **What:** every P1 and P2 finding that stays within the design system and the budgets. Group related fixes into a few pull requests, to save CI minutes, and add an "after" screenshot for each fix.
+- **Within the design system means:**
+  - the tokens (colours, type sizes, spacing and radii);
+  - the two typefaces;
+  - the logo files as given;
+  - §7.6's list of template habits to avoid.
+- **Budgets:**
+  - **The jobs list:** it has about 0.26 KB of its 137 KB JavaScript cap left (D47), so fix it with CSS and server-rendered markup.
+  - **Every page:** keeps its §17.3 budget and Core Web Vitals "good" (`pnpm lighthouse:local`).
+  - **Tests:** all existing tests pass, among them axe, the layout at 200% and 320 px, and the pseudo-locale.
+- **Wording:** English interface text lives in `messages/en.json`. Keep the Turkish keys in step, and run `pnpm tr:review` so the native speaker can review the new Turkish strings.
 
-- **False positives:** the employer's own name or department must not satisfy the neuroscience check. Karolinska's "Clinical Neuroscience" appears in every one of its ads. Choose the way, for example leaving the employer's and the unit's names out of the text that is checked, or a setting per source.
-- **Old "open until filled" posts:** RIKEN CBS lists posts from 2025. Skip a posting that has no deadline and was published long ago, or mark it for the editor as possibly filled. Choose the age limit and say why. Show the posting's date wherever the source gives one.
-- **Failing sources:** fix what can be fixed, and flag the rest with the reason.
-- **Names in Chinese, Japanese or Korean script:** redaction cannot find them (M7 notes). A list that names people that way stays manual unless the employer has a list in English.
-- **Fast decisions for Nuray:** let her reject several candidates at once, from the list, with a reason such as "Not neuroscience". If Payload's own bulk edit already does this, document it in the editor guide; otherwise add the smallest way to do it. Count the rejections per source, so the next round has data.
-- **Tests:** test each rule with fake pages. No request may leave the computer.
+### 4. Proposals for the operator
 
-### 4. Fewer manual sources, more sources
+- **What counts as bigger:**
+  - a change of layout or of visual direction;
+  - a new component;
+  - a change to a §7 token, to the §9 wireframes, or to the home page's structure.
+- **How to propose it:** write each one in the review, with:
+  - a mock-up: a screenshot from a local branch, or a sketch;
+  - what it costs in time, budget and CI minutes;
+  - your recommendation.
+- **The operator decides:** ask in the session which ones to build, then build those the operator approves. Record each design decision as D54 onwards.
 
-- **Adapters:** write small adapters for the sources M7 saw could be read that way ("Seen on the way"):
-  - the Workday sites whose robots.txt names a sitemap of posting pages: HHMI, CSHL, McGill, UBC, DZNE, Helmholtz Munich and EMBL;
-  - Oxford's CoreHR lists;
-  - Janelia.
+### On the server
 
-  M7's rules apply: robots.txt and the terms of use, one request at a time, and never a headless browser. A source whose terms forbid automated reading stays manual.
-- **New employers:** research about 40–60 more from their own official sites.
-  - **Where:** above all countries that have no automatic source yet, Türkiye among them.
-  - **Which:** prefer employers whose lists can be read automatically. Add a manual one only when it is the only good source for its country.
-  - **Rules as in M7:** each source gets its terms and the reason for its kind, and job boards are never sources.
-  - **How:** add them with a migration, with "Monitor on" unticked, and update the sources CSV.
-- **The manual list:** set the manual sources whose lists rarely change to "Monthly", so the dashboard asks Nuray less often. Say which ones in the report.
-
-### 5. On the server: the operator's go-ahead, for these steps only
-
-- **The report:** call the read-only route of section 2 as often as the task needs.
-- **A run by hand:** after the deploy, run the changed sources and the new ones, a few at a time, through `/api/ops/monitors/run/`. Also check from the server whether the Hebrew University's hosts answer (M7 notes).
-- **Switching on:** switch on the new automatic sources whose run by hand had no failure, through `/api/ops/monitors/switch-on/`.
-- **Nothing else:** make no other change on the server, and never print a secret.
-
-### 6. The operator's decisions on terms (2026-10-18)
-
-These settle open points 2 and 3 of the second round's notes (PLAN §20). Record them there, in `docs/STATUS.md` and in the sources CSV.
-
-- **NUS and Duke-NUS are left out.** The planning chat read NUS's legal notice on 2026-10-18 (`https://www.nus.edu.sg/legal-information-notices`).
-  - **What it says:** "Deep linking to NUS web pages is prohibited". It allows a copy only for one's own information, research or study, unmodified.
-  - **Why this rules them out:** our listings link to the posting's own page, which the notice forbids, as with LIH and KEMRI-Wellcome. Both sources live on careers.nus.edu.sg.
-  - **Their records:** keep them with this reason, so that no one adds them again, and never switch them on.
-- **UCSF and UC San Diego become manual.** The University of California's shared wording allows only "one copy for personal use", which restricts storing content. The operator decided the same for Radboud, ETH Zurich and Tübingen on 2026-10-16.
-  - **UCSF:** its automatic source has been on since 2026-10-16. Switch it off and make it manual. A migration is enough, so this needs no step on the server.
-  - **UC San Diego:** add it as a manual source.
-  - **Later:** look at both again once the lawyer has answered B22.
-- **These may be read automatically:** the operator reads their terms as allowing our use, since we keep only facts and a redacted text for the editor, and publish our own summary with a link.
-  - Baylor and NTU, whose terms hold only general reservations, as RIKEN's did;
-  - Aga Khan University (downloads for information only, which is our use);
-  - Cinvestav (information only by the means it offers: we read its own feeds);
-  - Glasgow, Basel and Gothenburg (internal or non-commercial copying: the site is non-commercial, so look again before any sponsorship, Phase 4).
-
-  They are switched on like the other new sources, once their run by hand has no failure.
-- **UBC stays manual.**
-- **Three manual sources to add, on the monthly schedule:**
-  - Hacettepe University's Institute of Neurological Sciences and Psychiatry (its ads are PDFs);
-  - Üsküdar University and Sabancı University (their terms forbid automated reading, but an editor may read them).
-
-  Check that their terms allow a link to a posting's own page. If one's terms do not, leave that source out and say so in the report.
+- **Nothing by hand:** the fixes arrive with the usual deploys, behind the password.
 
 ### Not in this task
 
-- a headless browser, and job boards;
-- the Claude API and its key;
-- Umami;
-- the UI/UX pass, which is the next task;
-- M8–M10.
+- the rest of M7's second round (parked, see above);
+- the signature hero (M13) and the poster's art (`tools/poster`), though proposals are welcome;
+- new windows (M8–M10), and Umami;
+- any change to an approved legal text.
 
 ### Report
 
 At the end, one short report in plain language:
-- **False positives and old posts:** how many before and after, and which rules changed;
-- **Sources:** automatic and manual, before and after, and the countries that automatic sources now cover;
-- **New employers:** listed by country;
-- **The run by hand:** candidates per source, and any failures;
-- **Nuray's week:** how many manual sources fall due each week, and about how many candidates arrive each day;
-- **CI minutes:** how many this task used. About 600 of October's 2,000 are left; if fewer than 150 remain before a code pull request, stop and tell the operator.
+- **The five tasks:** what was hard before, and what changed;
+- **The findings by priority:** which were fixed, which are proposed and which are left;
+- **Before and after:** the screenshots of the main changes, with their paths in the repository;
+- **The operator's decisions:** if any were made;
+- **Budgets:** the jobs list's JavaScript and the Lighthouse scores, before and after;
+- **CI minutes:** how many this task used. About 515 of October's 2,000 are left; if fewer than 150 remain before a code pull request, stop and tell the operator.
 
 ### Working rules
 
 Follow `CLAUDE.md`:
 - one pull request per step, merged when its checks pass;
 - CI minutes are limited (D46), so run every check locally before pushing, and put documentation into the same push;
-- stop and ask only for rules (a) to (c), apart from the server steps approved above.
+- stop and ask only for rules (a) to (c), and for the proposals of section 4.
