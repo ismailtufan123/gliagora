@@ -7,14 +7,12 @@ import { LIVE_WINDOWS, paths } from '@/lib/site'
 // The windows overview (PLAN §9.1): each window that is built (LIVE_WINDOWS) with a short
 // description, a few live ways in and its link; Jobs takes the full width. Each window gets its
 // card here in the milestone that builds it; until M8, Jobs is the only one, with its position
-// types as the ways in.
-
-/** Position types shown, the most positions first. */
-const TYPES = 3
+// types as the ways in: every type with open positions, in the taxonomy's order (MSc to industry),
+// so a reader looking for a PhD finds one whatever the counts.
 
 export async function HomeWindows({ data }: { data: HomeData }) {
   const t = await getTranslations({ locale: 'en' })
-  const types = [...data.types].sort((a, b) => b.jobs - a.jobs).slice(0, TYPES)
+  const { types } = data
   return (
     <section className="home-windows page-frame" aria-labelledby="home-windows-title">
       <h2 id="home-windows-title" className="text-h2">

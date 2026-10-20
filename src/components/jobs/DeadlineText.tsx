@@ -35,13 +35,17 @@ export async function DeadlineText({ view, locale, detail = false }: Props) {
   }
 
   const date = formatDay(view.day, locale)
+  // A position that closed before its day (filled or withdrawn) shows "Closed" alone in lists.
+  const day = detail || !view.closedEarly
   return (
     <span className="deadline">
-      <span className={detail ? 'basis-full font-bold' : undefined}>
-        {detail || !view.open ? date : t('closes', { date })}
-      </span>
+      {day && (
+        <span className={detail ? 'basis-full font-bold' : undefined}>
+          {detail || !view.open ? date : t('closes', { date })}
+        </span>
+      )}
       {!detail && view.open && <DeadlineGauge filled={view.gauge} soon={view.closingSoon} />}
-      <span className="sr-only">,</span>
+      {day && <span className="sr-only">,</span>}
       <span>{leftText(view.left)}</span>
       {view.closingSoon && (
         <>

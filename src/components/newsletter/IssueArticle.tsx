@@ -5,7 +5,7 @@ import {
   dayText,
   deadlineText,
   issueText,
-  jobFacts,
+  jobFactParts,
   jobPlace,
   paragraphsOf,
 } from '@/lib/newsletter/issue/words'
@@ -34,7 +34,12 @@ function SelectedItem({ job, t }: { job: IssueJob; t: IssueText }) {
         <a href={job.path}>{job.title}</a>
       </h3>
       {place && <p className="text-text-muted">{place}</p>}
-      <p>{jobFacts(job, t)}</p>
+      {/* Separate elements, not one line joined by dots as in the email (PLAN §7.6). */}
+      <p className="flex flex-wrap gap-x-4">
+        {jobFactParts(job, t).map((part) => (
+          <span key={part}>{part}</span>
+        ))}
+      </p>
       {job.summary && <p>{job.summary}</p>}
       {job.originalUrl && (
         <p>

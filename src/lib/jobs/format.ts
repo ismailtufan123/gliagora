@@ -81,6 +81,11 @@ export type DeadlineView =
       day: string
       left: DaysLeft
       closingSoon: boolean
+      /**
+       * Closed before its deadline day ended (filled or withdrawn): the day, still to come or just
+       * past, is then left out next to "Closed", where it read as a deadline still open.
+       */
+      closedEarly: boolean
       /** Segments of the decorative gauge (1–5). */
       gauge: 1 | 2 | 3 | 4 | 5
       /**
@@ -121,6 +126,7 @@ export function deadlineView(
     day,
     left: open ? daysLeftText(end, now) : { key: 'closed' },
     closingSoon: open && isClosingSoon(end, now),
+    closedEarly: !open && daysLeft(end, now) > 0,
     gauge: deadlineGauge(open ? daysLeft(end, now) : 0),
     // The offset of the deadline day's last moment.
     zone: timeZone ? timeZoneLabel(timeZone, end.getTime() - 1, locale) : null,

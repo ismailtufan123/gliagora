@@ -4,8 +4,8 @@ import { getTranslations } from 'next-intl/server'
 import { Lockup } from '@/components/Lockup'
 import type { Locale } from '@/i18n/routing'
 import { MEMBER_PATHS } from '@/lib/members/paths'
-import { MEGA_MENUS, hasMenu } from '@/lib/navigation'
-import { WINDOWS, paths } from '@/lib/site'
+import { MEGA_MENUS, NAV_PAGES, hasMenu } from '@/lib/navigation'
+import { LIVE_WINDOWS, paths } from '@/lib/site'
 
 import { DisclosureEnhancer } from './DisclosureEnhancer'
 import { localeLabels } from './locale-labels'
@@ -19,13 +19,14 @@ import { SearchDialog } from './SearchDialog'
 // with the `xl:` classes below and in MobileMenu.
 const DESKTOP_QUERY = '(min-width: 80rem)'
 
-// PLAN §2.3, §7.5: lockup, the six windows (Jobs, Events and Resources open a mega-menu from a
-// separate button; the label itself is a real link), search, language, the account and the digest
-// button. The M2 state's public pages have the reduced header instead (ReducedHeader.tsx, D41).
+// PLAN §2.3, §7.5: lockup, the windows that are built (D55: Jobs until M8; a window with a
+// mega-menu opens it from a separate button, and the label itself is a real link), the map, the
+// subfields and About, then search, language, the account and the digest button. The M2 state's
+// public pages have the reduced header instead (ReducedHeader.tsx, D41).
 export async function SiteHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale })
 
-  const windows: MenuWindowLinks[] = WINDOWS.map((key) => ({
+  const windows: MenuWindowLinks[] = LIVE_WINDOWS.map((key) => ({
     key,
     label: t(`windows.${key}`),
     href: paths.window(key),
@@ -36,6 +37,12 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
           href: item.href,
         }))
       : undefined,
+  }))
+
+  const pages = NAV_PAGES.map(({ key, href }) => ({
+    key,
+    href,
+    label: key === 'subfields' ? t('subfields.title') : t(`sections.${key}`),
   }))
 
   const labels = await localeLabels(locale)
@@ -81,6 +88,13 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
                     </div>
                   </details>
                 )}
+              </li>
+            ))}
+            {pages.map((page) => (
+              <li key={page.key} className="flex items-center">
+                <NavLink href={page.href} className="nav-link">
+                  {page.label}
+                </NavLink>
               </li>
             ))}
           </ul>

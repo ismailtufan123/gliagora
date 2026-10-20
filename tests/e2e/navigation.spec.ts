@@ -36,16 +36,36 @@ test.describe('desktop navigation', () => {
     await expect(button).toBeFocused()
   })
 
-  test('only one mega-menu is open at a time, and a click outside closes it', async ({ page }) => {
-    await page.goto('/en/')
+  test('only one header menu is open at a time, and a click outside closes it', async ({
+    page,
+  }) => {
+    // Until M8 Jobs has the only mega-menu (D55): the language menu is the other one.
+    await page.goto('/en/contact/')
     const nav = header(page).getByRole('navigation', { name: 'Main' })
     await nav.getByLabel('Jobs menu').click()
     await expect(nav.getByRole('link', { name: 'All positions' })).toBeVisible()
-    await nav.getByLabel('Events menu').click()
-    await expect(nav.getByRole('link', { name: 'All events' })).toBeVisible()
+    await header(page).getByLabel('Language: English (EN)').click()
+    const turkish = header(page).getByRole('link', { name: 'Türkçe' })
+    await expect(turkish).toBeVisible()
     await expect(nav.getByRole('link', { name: 'All positions' })).toBeHidden()
     await page.mouse.click(5, 700)
-    await expect(nav.getByRole('link', { name: 'All events' })).toBeHidden()
+    await expect(turkish).toBeHidden()
+  })
+
+  test('the windows that are not built yet are not in the navigation (D55)', async ({ page }) => {
+    await page.goto('/en/')
+    const nav = header(page).getByRole('navigation', { name: 'Main' })
+    await expect(nav.getByRole('link')).toHaveText(['Jobs', 'Map', 'Subfields', 'About'])
+    // The Jobs menu leads to the subfields too.
+    await nav.getByLabel('Jobs menu').click()
+    await expect(
+      nav.locator('.menu-panel').getByRole('link', { name: 'Subfields' }),
+    ).toHaveAttribute('href', '/en/subfields/')
+    const footerLinks = page.locator('footer').getByRole('link')
+    await expect(
+      footerLinks.filter({ hasText: /^(Events|Funding|Papers|News|Resources)$/ }),
+    ).toHaveCount(0)
+    await expect(page.locator('footer h2', { hasText: 'Learn' })).toHaveCount(0)
   })
 
   test('using the header while scrolled does not move the page', async ({ page }) => {
@@ -159,7 +179,7 @@ test.describe('mobile menu, small landscape screen', () => {
     await panel.getByRole('link', { name: 'Suggest a listing' }).focus()
     await page.keyboard.press('Tab')
     const focused = page.locator(':focus')
-    await expect(focused).toHaveText('Events')
+    await expect(focused).toHaveText('Map')
     await expect(focused).toBeInViewport()
   })
 
@@ -191,8 +211,8 @@ test.describe('without JavaScript', () => {
       await expect(page.locator('main')).toBeHidden()
       await expect(page.locator('footer')).toBeHidden()
     } else {
-      await header(page).getByLabel('Resources menu').click()
-      await expect(header(page).getByRole('link', { name: 'Datasets' })).toBeVisible()
+      await header(page).getByLabel('Jobs menu').click()
+      await expect(header(page).getByRole('link', { name: 'All positions' })).toBeVisible()
     }
   })
 })

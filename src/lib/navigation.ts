@@ -1,3 +1,4 @@
+import { SUBFIELDS_PATH } from '@/lib/detail-routes'
 import { jobsHref } from '@/lib/filters/jobs'
 import type { WindowKey } from '@/lib/site'
 import { paths } from '@/lib/site'
@@ -21,6 +22,7 @@ export const MEGA_MENUS = {
     { key: 'facultyPi', href: jobsHref({ type: ['faculty-pi'] }) },
     { key: 'industry', href: jobsHref({ type: ['industry'] }) },
     { key: 'closingSoon', href: jobsHref({ deadline: '14d' }) },
+    { key: 'subfields', href: SUBFIELDS_PATH },
     { key: 'map', href: paths.section('map') },
     { key: 'suggest', href: paths.section('suggest') },
   ],
@@ -46,3 +48,15 @@ export type MenuWindow = keyof typeof MEGA_MENUS
 export function hasMenu(key: WindowKey): key is MenuWindow {
   return key in MEGA_MENUS
 }
+
+/**
+ * Built pages that are not windows, beside the windows in the header and the phone menu (D55):
+ * the map, the subfields and About. Labels: `sections.map`, `subfields.title`, `sections.about`.
+ */
+export const NAV_PAGES = [
+  { key: 'map', href: paths.section('map') },
+  { key: 'subfields', href: SUBFIELDS_PATH },
+  { key: 'about', href: paths.section('about') },
+] as const
+
+export type NavPage = (typeof NAV_PAGES)[number]['key']

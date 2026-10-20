@@ -104,15 +104,21 @@ export const AREAS: Area[] = [
       'header.navLabel':
         'Every page - header and mobile menu - name of the main navigation, read by screen readers',
       windows:
-        "Every page - header, mobile menu and footer (first column) - name of a section; also the heading of its page while it is being built, the first link in the path above a job page's heading, and links on the not-found and search pages",
+        "Every page - header, mobile menu and footer (first column) - name of a section, once it is built (Jobs until M8, D55); also the heading of its page while it is being built, the first link in the path above a job page's heading, and links on the not-found and search pages",
       'header.menuFor':
-        'Every page - header, wide screens - the arrow button beside Jobs, Events and Resources that opens their menu (name read by screen readers)',
+        'Every page - header, wide screens - the arrow button beside Jobs (from M8 also Events and Resources) that opens its menu (name read by screen readers)',
       'menus.jobs':
         'Every page - Jobs menu (the arrow beside Jobs in the header, or Jobs in the mobile menu) - links',
-      'menus.events':
-        'Every page - Events menu (the arrow beside Events in the header, or Events in the mobile menu) - links',
-      'menus.resources':
-        'Every page - Resources menu (the arrow beside Resources in the header, or Resources in the mobile menu) - links',
+      'menus.events': {
+        where:
+          'Every page - Events menu (the arrow beside Events in the header, or Events in the mobile menu) - links; hidden until the Events window is built (M8, D55)',
+        shown: false,
+      },
+      'menus.resources': {
+        where:
+          'Every page - Resources menu (the arrow beside Resources in the header, or Resources in the mobile menu) - links; hidden until the Resources window is built (D55)',
+        shown: false,
+      },
       'search.trigger':
         'Every page - header - the search button (magnifier), name read by screen readers; on screens narrower than 360px a Search row at the top of the mobile menu',
       'search.shortcutCtrl':
@@ -146,11 +152,14 @@ export const AREAS: Area[] = [
       'header.menu':
         'Every page - header below 1280px - Menu button (the word shows from 640px; narrower, it is read by screen readers)',
       'sections.map':
-        'Every page - mobile menu - link after the six sections; also the heading of the map page (/en/map/)',
-      'sections.learn':
-        'Every page - mobile menu - link after the six sections; also the heading of the Learn page (/en/learn/, being built)',
+        'Every page - header (from 1280px) and mobile menu - link after the sections, and in the footer (first column) and on the not-found page; also the heading of the map page (/en/map/)',
+      'sections.learn': {
+        where:
+          'The heading of the Learn page (/en/learn/, being built); in the mobile menu and the footer once Learn is built (D55)',
+        shown: false,
+      },
       'sections.about':
-        'Every page - mobile menu, and footer (About column) - link to the About page (/en/about/)',
+        'Every page - header (from 1280px), mobile menu, footer (About column) and the not-found page - link to the About page (/en/about/)',
     },
   },
   {
@@ -160,12 +169,19 @@ export const AREAS: Area[] = [
     places: {
       'footer.sitemap':
         'Every page - footer - name of the footer navigation, read by screen readers',
-      'footer.windows': 'Every page - footer - heading of the first column (the six sections)',
-      'footer.learn': 'Every page - footer - heading of the second column',
-      'footer.learnBasics':
-        'Every page - footer, Learn column - link to the Learn page (/en/learn/)',
+      'footer.windows':
+        'Every page - footer - heading of the first column (the sections that are built, the map and the subfields)',
+      'footer.learn': {
+        where: 'Every page - footer - heading of the Learn column, once Learn is built (D55)',
+        shown: false,
+      },
+      'footer.learnBasics': {
+        where:
+          'Every page - footer, Learn column - link to the Learn page (/en/learn/), once it is built (D55)',
+        shown: false,
+      },
       'sections.benchToBedside':
-        'Every page - footer, Learn column - link; also the heading of the Bench to Bedside page (/en/learn/bench-to-bedside/, being built)',
+        'The heading of the Bench to Bedside page (/en/learn/bench-to-bedside/, being built); in the footer once it is built (D55)',
       'footer.about': 'Every page - footer - heading of the third column',
       'footer.contact':
         'Every page - footer, About column and bottom row - link to the contact and legal notice page',
@@ -390,12 +406,12 @@ export const AREAS: Area[] = [
         'Jobs list - Method filter - heading of the methods without a group',
       'jobs.filters.model': 'Jobs list - filters - fourth filter button (and its panel)',
       'jobs.filters.country':
-        'Jobs list - filters - fifth filter button (location), and the heading of its list of countries',
-      'jobs.filters.region': 'Jobs list - Country filter - heading of the regions',
+        'Jobs list - Country or region filter - heading of its list of countries',
+      'jobs.filters.region': 'Jobs list - Country or region filter - heading of the regions',
       'jobs.filters.regions':
-        'Jobs list - Country filter - the regions; also on the chips of active filters',
+        'Jobs list - Country or region filter - the regions; also on the chips of active filters',
       'jobs.filters.searchInList':
-        'Jobs list - Subfield, Method and Country filters - field that narrows the list of choices as you type',
+        'Jobs list - Subfield, Method and Country or region filters - field that narrows the list of choices as you type',
       'jobs.filters.deadline': 'Jobs list - filters - sixth filter button (and its panel)',
       'jobs.filters.deadlineAny': 'Jobs list - Deadline filter - first choice',
       'jobs.filters.within':
@@ -408,8 +424,10 @@ export const AREAS: Area[] = [
       'jobs.filters.rangeHint': 'Jobs list - Deadline filter - hint under the two dates',
       'jobs.filters.rangeError':
         'Jobs list - Deadline filter - error under the two dates when they make no range',
-      'jobs.filters.more': 'Jobs list - filters - last filter button (and its panel)',
-      'jobs.filters.stage': 'Jobs list - More filter - heading of the career stages',
+      'jobs.filters.place':
+        'Jobs list - filters - fifth filter button (location: countries and regions)',
+      'jobs.filters.stage':
+        'Jobs list - filters - last filter button (career stages, and its panel)',
       'jobs.filters.button':
         'Jobs list - a filter button when values are chosen, with their number, e.g. "Subfield (2)"',
       'jobs.filters.apply':
@@ -579,7 +597,7 @@ export const AREAS: Area[] = [
     note: `The subfield pages exist only in English (/en/subfields/), ${ENGLISH_ONLY}.`,
     places: {
       'subfields.title':
-        'Subfields page (/en/subfields/) - heading and browser tab; also in the path above the heading of each subfield page',
+        'Subfields page (/en/subfields/) - heading and browser tab; also in the path above the heading of each subfield page, and a link in the header (from 1280px), the mobile menu, the footer (first column) and the not-found page (D55)',
       'subfields.description': 'Subfields page - description in search results and link previews',
       'subfields.home':
         'Subfields page and subfield pages - path above the heading (breadcrumbs) - first link, to the home page',
@@ -588,6 +606,8 @@ export const AREAS: Area[] = [
         'Subfield page (/en/subfields/…/) - description in search results and link previews',
       'subfields.positions': 'Subfield page - heading of the open positions',
       'subfields.allPositions': 'Subfield page - link under the positions, when there are more',
+      'subfields.inJobsList':
+        'Subfield page - link under the positions, when all of them are shown, to the filtered jobs list',
       'subfields.noPositions': 'Subfield page - text when there are no open positions',
       'subfields.comingSoon': 'Subfield page - note under the positions',
       'subfields.others': 'Subfield page - heading of the list of the other subfields',
@@ -621,6 +641,8 @@ export const AREAS: Area[] = [
         'Search results - note under the institutions, when there are more than shown',
       'search.subfields': 'Search results - heading of the subfields',
       'search.subfieldsCount': 'Search results - number beside that heading',
+      'search.subfieldsMore':
+        'Search results - under the subfields when not all are shown, with a link to the list of subfields',
       'search.error.title': 'Search page, when the search fails - heading',
       'search.error.text': 'Search page, when the search fails - text',
       'search.error.reference':
@@ -1527,6 +1549,8 @@ export const AREAS: Area[] = [
     places: {
       'save.label':
         "Jobs list (each position), job page (under the heading) and saved positions - the Save button; screen readers hear the position's title after it; also on the sign-in page (/en/sign-in/), when already signed in and opened from a Save button's link",
+      'save.savedLabel':
+        'Jobs list (each position), job page and saved positions - the Save button once the position is saved (it reads "Saved"); screen readers hear the position\'s title after it',
       'save.savedStatus':
         "Jobs list, job page and saved positions - read by screen readers after pressing Save, when the position has been saved; also on the sign-in page (/en/sign-in/), when already signed in and opened from a Save button's link",
       'save.removedStatus':

@@ -32,15 +32,38 @@ const JOB_TEXT = sql`to_tsvector('simple', public.f_unaccent(lower(replace(j.tit
 const GAP = sql`''' '':1'::tsvector`
 
 /**
- * What a position is found and ranked by: its title (weight A), its institution's name (B) and
- * its summary (D), so a word in the title ranks higher than the same word in the summary. A
- * phrase must lie within one of them.
+ * The tags a position is found by besides its own words (D56): its subfields, methods and model
+ * systems, by their English labels, as the pages show them ("glial biology" finds the positions
+ * tagged Glial biology). Paths of the `jobs_rels` table.
+ */
+const TAG_PATHS = sql`('subfields', 'methods', 'modelSystems')`
+const TAG_LOCALE = 'en'
+
+/**
+ * A word between two labels in a position's tags, so that a phrase cannot run from one label into
+ * the next; removed from the document again (ts_delete), leaving the gap in the positions. The
+ * parser makes it a lexeme of its own, which no label holds.
+ */
+const TAG_SEPARATOR = 'gliagoratagseparator'
+
+/** A position's tag labels, separated (the parts of its document's tags). */
+const jobTags = (job: SQL) => sql`(
+  SELECT string_agg(l.label, ${` ${TAG_SEPARATOR} `}::text ORDER BY r."order", r.id)
+  FROM jobs_rels r
+  JOIN terms_locales l ON l._parent_id = r.terms_id AND l._locale = ${TAG_LOCALE}
+  WHERE r.parent_id = ${job} AND r.path IN ${TAG_PATHS})`
+
+/**
+ * What a position is found and ranked by: its title (weight A), its institution's name (B), its
+ * tags (C) and its summary (D), so a word in the title ranks higher than the same word in the
+ * summary. A phrase must lie within one of them (within one tag).
  */
 const JOB_DOCUMENT = sql`ts_delete(
   setweight(to_tsvector('simple', ${foldText(sql`j.title`)}), 'A')
   || ${GAP} || setweight(to_tsvector('simple', ${foldText(sql`i.name`)}), 'B')
+  || ${GAP} || setweight(to_tsvector('simple', ${foldText(sql`coalesce(${jobTags(sql`j.id`)}, '')`)}), 'C')
   || ${GAP} || to_tsvector('simple', ${foldText(sql`coalesce(j.summary, '')`)}),
-  ' ')`
+  ARRAY[' ', ${TAG_SEPARATOR}::text])`
 
 /**
  * The query folded as the full-text search reads it, for parse.ts to read its words from
@@ -107,14 +130,17 @@ const openJob = (now: Date) =>
   sql`j.status = 'published' AND (j.deadline_kind <> 'fixed' OR j.deadline_at > ${now.toISOString()})`
 
 /**
- * The open positions that match: every word of the query in the title, the summary or the
- * institution's name (a word may be in any of them: "postdoc karolinska"). Two cheap ways in find
- * every candidate, and the full check keeps the matches:
+ * The open positions that match: every word of the query in the title, the summary, the
+ * institution's name or the tags (a word may be in any of them: "postdoc karolinska", "phd glial
+ * biology"). Three cheap ways in find every candidate, and the full check keeps the matches:
  * - the job's own words match the query: the full-text index finds these;
- * - the institution's name contains one of the words: only open jobs are read for these.
- * A job that matches only thanks to its institution's name has a word of the query in that name,
- * so the second way finds it: it looks for every word (allWords), not only the first eight that
- * institutions are matched by. Only the candidates' documents are built.
+ * - the institution's name contains one of the words: only open jobs are read for these;
+ * - one of its tags' labels contains one of the words: the matching terms are few (about 120 in
+ *   all), and their jobs are found by the index on `jobs_rels.terms_id`.
+ * A job that matches only thanks to its institution's name or its tags has a word of the query in
+ * that name or label, so the second or third way finds it: they look for every word (allWords),
+ * not only the first eight that institutions are matched by. Only the candidates' documents are
+ * built.
  */
 function matchingJobs(search: Search, now: Date) {
   const query = tsQuery(search)
@@ -125,6 +151,12 @@ function matchingJobs(search: Search, now: Date) {
       UNION
       SELECT j.id FROM jobs j JOIN institutions i ON i.id = j.institution_id
       WHERE ${openJob(now)} AND (${anyWordIn(sql`i.name`, search.allWords)})
+      UNION
+      SELECT j.id FROM terms_locales l
+      JOIN jobs_rels r ON r.terms_id = l._parent_id AND r.path IN ${TAG_PATHS}
+      JOIN jobs j ON j.id = r.parent_id
+      WHERE l._locale = ${TAG_LOCALE} AND ${openJob(now)}
+        AND (${anyWordIn(sql`l.label`, search.allWords)})
     ),
     matches AS (
       SELECT j.id, j.deadline_at, j.published_at, d.document

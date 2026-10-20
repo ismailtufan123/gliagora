@@ -307,7 +307,7 @@ export default async function Page({ searchParams }: Props) {
   )
 
   return (
-    <main id="main" className="page-frame grid flex-1 content-start gap-6 py-12">
+    <main id="main" className="page-frame grid flex-1 content-start gap-4 py-12 sm:gap-6">
       <SaveRegion context={save} />
       <div className="jobs-head flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
         <h1 className="jobs-title text-h1">{t('list.title')}</h1>
@@ -322,13 +322,14 @@ export default async function Page({ searchParams }: Props) {
         rangeInput={rangeInput}
         clearHref={filtersHref(JOB_FILTERS, { ...emptyFilters(JOB_FILTERS), prefs: links.prefs })}
         showAll={escape}
+        aside={
+          <p className="filter-aside">
+            <a href={jobsHref({ ...links, view: mapView ? 'list' : 'map' })} data-soft>
+              {t(mapView ? 'view.hideMap' : 'view.showMap')}
+            </a>
+          </p>
+        }
       />
-
-      <p>
-        <a href={jobsHref({ ...links, view: mapView ? 'list' : 'map' })} data-soft>
-          {t(mapView ? 'view.hideMap' : 'view.showMap')}
-        </a>
-      </p>
 
       {mapView ? (
         <div className="jobs-split">

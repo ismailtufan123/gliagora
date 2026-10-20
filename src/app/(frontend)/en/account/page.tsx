@@ -201,7 +201,7 @@ export default async function Page({ searchParams }: Props) {
         <EmailSettings member={member} available={methods.email} altchaKey={spamKey} />
 
         <section aria-labelledby="methods-heading" className="grid gap-4">
-          <h2 id="methods-heading" className="text-h2">
+          <h2 id="methods-heading" className="text-h3">
             {t('methods.heading')}
           </h2>
           <dl className="grid gap-3">

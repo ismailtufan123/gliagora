@@ -82,11 +82,15 @@ test.describe('search page', () => {
     }
   })
 
-  test('"glia" finds the Glial biology subfield', async ({ page }) => {
+  test('"glia" finds the Glial biology subfield, and the positions tagged with it', async ({
+    page,
+  }) => {
     await search(page, 'glia')
     await expect(
       group(page, 'Subfields').getByRole('link', { name: 'Glial biology' }),
     ).toHaveAttribute('href', '/en/subfields/glia/')
+    // The open position's title says "astrocyte"; its subfield is Glial biology (D56).
+    await expect(positionLink(page, FIXED_JOBS.open)).toBeVisible()
   })
 
   test('links to the jobs list with the same search, which counts the same', async ({ page }) => {
@@ -348,6 +352,19 @@ test.describe("the jobs list's free text", () => {
     expect(phd).toBeLessThan(count)
     for (const row of await page.locator('#job-results .job-list > li').all()) {
       await expect(row.locator('.job-meta dd.font-bold')).toHaveText('PhD')
+    }
+  })
+
+  test('finds positions by the names of their subfields, methods and model systems', async ({
+    page,
+  }) => {
+    // D56: none of these words is in the open position's title or summary.
+    for (const q of ['glial biology', 'phd glial', 'Glial Biology karolinska']) {
+      await page.goto(`/en/jobs/?${new URLSearchParams({ q })}`)
+      await expect(
+        page.locator(`#job-results a[href="${jobPath(FIXED_JOBS.open)}"]`),
+        q,
+      ).toBeVisible()
     }
   })
 

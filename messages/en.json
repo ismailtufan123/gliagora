@@ -132,6 +132,7 @@
       "facultyPi": "Faculty and PI",
       "industry": "Industry",
       "closingSoon": "Closing soon",
+      "subfields": "Subfields",
       "map": "Explore the map",
       "suggest": "Suggest a listing"
     },
@@ -272,9 +273,9 @@
       "method": "Method",
       "model": "Model system",
       "country": "Country",
+      "place": "Country or region",
       "region": "Region",
       "deadline": "Deadline",
-      "more": "More",
       "stage": "Career stage",
       "methodGroups": {
         "recording-imaging": "Recording and imaging",
@@ -379,6 +380,7 @@
     "positions": "Open positions",
     "noPositions": "There are no open positions in this subfield at the moment. See <link>all positions</link>.",
     "allPositions": "All {count} positions in {subfield}",
+    "inJobsList": "See {subfield} on the jobs list, to narrow it down by type, place or deadline",
     "comingSoon": "Events, funding, papers, news and resources in this subfield will appear here as each part of Gliagora opens.",
     "others": "Other subfields"
   },
@@ -404,6 +406,7 @@
     "openPositions": "{count, plural, =0 {No open positions} one {# open position} other {# open positions}}",
     "subfields": "Subfields",
     "subfieldsCount": "{count, plural, one {# subfield} other {# subfields}}",
+    "subfieldsMore": "The {shown} closest are shown. <link>See every subfield</link>.",
     "emptyTitle": "What are you looking for?",
     "emptyText": "Search open positions by title, topic or institution, institutions by any of their names, and the subfields of neuroscience.",
     "browse": "Or browse",
@@ -767,8 +770,8 @@
   },
   "newsletter": {
     "title": "Glia Notes",
-    "description": "Glia Notes, the monthly Gliagora newsletter: new neuroscience positions, upcoming deadlines, papers and funding, once a month by email.",
-    "intro": "The monthly Gliagora newsletter. One email a month: new positions, upcoming deadlines, papers and funding.",
+    "description": "Glia Notes, the monthly Gliagora newsletter: new neuroscience positions and the deadlines ahead, once a month by email.",
+    "intro": "The monthly Gliagora newsletter. One email a month: new positions and the deadlines ahead, with papers and funding as those parts of Gliagora open.",
     "firstIssue": "The first issue comes with our public launch. We first send you a link to confirm your address, then a welcome email, and nothing else until the launch.",
     "unavailable": "Signing up for Glia Notes is not open yet. Please come back later.",
     "noscript": "The spam check on this form needs JavaScript, so the form can only be sent with JavaScript turned on.",
@@ -1108,6 +1111,7 @@
   },
   "save": {
     "label": "Save<hidden>: <job>{title}</job></hidden>",
+    "savedLabel": "Saved<hidden>: <job>{title}</job></hidden>",
     "savedStatus": "Saved: {title}",
     "removedStatus": "Removed from your saved positions: {title}",
     "signInNote": "You need to sign in to save positions."
@@ -1116,11 +1120,11 @@
     "title": "Saved positions",
     "description": "The positions you have saved on Gliagora.",
     "signedOutTitle": "Sign in to see your saved positions",
-    "intro": "{count, plural, one {You have saved one position.} other {You have saved # positions.}} To remove one, press its Save button again.",
+    "intro": "{count, plural, one {You have saved one position.} other {You have saved # positions.}} To remove one, press its Saved button.",
     "empty": "You have not saved any positions yet. Press Save beside a position in the <link>jobs list</link> or on its page to keep it here.",
     "open": "Open positions",
     "closed": "No longer open",
-    "closedText": "These positions have closed or were withdrawn, so you can no longer apply. Press Save to remove one from this list.",
+    "closedText": "These positions have closed or were withdrawn, so you can no longer apply. Press Saved to remove one from this list.",
     "pastEnd": "Your saved positions fill {pages, plural, one {only # page} other {# pages}}.",
     "firstPage": "Go to the first page"
   },

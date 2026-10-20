@@ -129,6 +129,7 @@ export async function JobFilterForm({
   rangeInput,
   clearHref,
   showAll = false,
+  aside,
 }: {
   /** The filters without values that name nothing. */
   filters: JobFilters
@@ -146,6 +147,8 @@ export async function JobFilterForm({
   clearHref: string
   /** A member with preferred subfields: the form asks for all positions when nothing is ticked. */
   showAll?: boolean
+  /** Beside the filters' button: the link that shows or hides the map (on phones, one row). */
+  aside?: ReactNode
 }) {
   const t = await getTranslations({ locale: 'en', namespace: 'jobs.filters' })
   const tList = await getTranslations({ locale: 'en', namespace: 'jobs.list' })
@@ -251,7 +254,7 @@ export async function JobFilterForm({
               </Field>
             </Filter>
 
-            <Filter label={t('country')} count={count(filters.region, filters.country)} t={t}>
+            <Filter label={t('place')} count={count(filters.region, filters.country)} t={t}>
               {options.region.length > 0 && (
                 <fieldset className="filter-group">
                   <legend>{t('region')}</legend>
@@ -350,11 +353,10 @@ export async function JobFilterForm({
               </Field>
             </Filter>
 
-            <Filter label={t('more')} count={count(filters.stage)} t={t}>
-              <fieldset className="filter-group">
-                <legend>{t('stage')}</legend>
+            <Filter label={t('stage')} count={count(filters.stage)} t={t}>
+              <Field legend={t('stage')}>
                 <Options name="stage" options={options.stage} chosen={filters.stage} />
-              </fieldset>
+              </Field>
             </Filter>
           </div>
 
@@ -373,6 +375,8 @@ export async function JobFilterForm({
           </div>
         </div>
       </details>
+
+      {aside}
 
       {/* Filters without controls of their own, kept when the form is sent. */}
       {filters.institution.map((id) => (

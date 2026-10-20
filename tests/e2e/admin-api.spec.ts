@@ -213,6 +213,43 @@ test.describe('admin API', () => {
     })
   })
 
+  // D57: a candidate's machine data in plain words above the folded JSON, and once accepted a
+  // button to its draft job. The fake candidates of `pnpm fake:jobs` (src/scripts/fake-queue-data.ts).
+  test("a candidate's facts, tags and AI draft read in plain words", async ({ page, request }) => {
+    const headers = editorHeaders()
+    const find = async (title: string) => {
+      const query = new URLSearchParams({ 'where[rawTitle][equals]': title, depth: '0' })
+      const response = await request.get(`/api/candidates/?${query}`, { headers })
+      const { docs } = (await response.json()) as {
+        docs: { id: number; publishedRef?: number | null }[]
+      }
+      expect(docs, title).toHaveLength(1)
+      return docs[0]!
+    }
+    await page.context().setExtraHTTPHeaders(headers)
+
+    const drafted = await find('Research assistant in zebrafish behaviour')
+    await page.goto(`/admin/collections/candidates/${drafted.id}/`)
+    const panel = page.locator('.candidate-summary')
+    await expect(panel.getByRole('heading', { name: 'In plain words' })).toBeVisible()
+    await expect(panel).toContainText('30 Nov 2026, Europe/Lisbon')
+    await expect(panel).toContainText("From: the text: 'Applications close on 30 November 2026'")
+    // The terms by their labels, read from the taxonomy.
+    await expect(panel).toContainText('Behavioural and neuroethology')
+    await expect(panel).toContainText('Zebrafish (“zebrafish”)')
+    // The JSON is still there, folded.
+    await expect(page.getByText('The same as data (JSON)')).toBeVisible()
+    await expect(page.locator('.candidate-job-link')).toHaveCount(0)
+
+    const accepted = await find('Postdoctoral researcher in glial metabolism')
+    expect(accepted.publishedRef).toBeTruthy()
+    await page.goto(`/admin/collections/candidates/${accepted.id}/`)
+    await expect(page.getByRole('link', { name: 'Open the draft job' })).toHaveAttribute(
+      'href',
+      `/admin/collections/jobs/${accepted.publishedRef}`,
+    )
+  })
+
   // The email address, the details and the notes are never list columns, and the lists never load
   // them (src/lib/private-fields.ts), not even when a link asks for them as columns: Payload saves
   // those columns as the editor's preference, which every later list load then reads.

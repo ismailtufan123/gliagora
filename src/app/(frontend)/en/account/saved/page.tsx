@@ -130,7 +130,7 @@ export default async function Page({ searchParams }: Props) {
 
         {openCards.length > 0 && (
           <section aria-labelledby="saved-open" className="grid max-w-(--measure) gap-4">
-            <h2 id="saved-open" className="text-h2">
+            <h2 id="saved-open" className="text-h3">
               {t('open')}
             </h2>
             <JobList jobs={openCards} now={now} locale="en" headingLevel={3} save={save} />
@@ -139,7 +139,7 @@ export default async function Page({ searchParams }: Props) {
 
         {closedCards.length > 0 && (
           <section aria-labelledby="saved-closed" className="grid max-w-(--measure) gap-4">
-            <h2 id="saved-closed" className="text-h2">
+            <h2 id="saved-closed" className="text-h3">
               {t('closed')}
             </h2>
             <p>{t('closedText')}</p>

@@ -132,6 +132,7 @@
       "facultyPi": "Öğretim üyesi ve grup lideri",
       "industry": "Özel sektör",
       "closingSoon": "Son başvurusu yaklaşanlar",
+      "subfields": "Alt alanlar",
       "map": "Haritayı keşfedin",
       "suggest": "İlan önerin"
     },
@@ -272,9 +273,9 @@
       "method": "Yöntem",
       "model": "Model sistem",
       "country": "Ülke",
+      "place": "Ülke veya bölge",
       "region": "Bölge",
       "deadline": "Son başvuru",
-      "more": "Diğer",
       "stage": "Kariyer aşaması",
       "methodGroups": {
         "recording-imaging": "Kayıt ve görüntüleme",
@@ -379,6 +380,7 @@
     "positions": "Açık pozisyonlar",
     "noPositions": "Şu anda bu alt alanda açık pozisyon yok. <link>Tüm pozisyonlara</link> göz atın.",
     "allPositions": "{subfield} alanındaki {count} pozisyonun tümü",
+    "inJobsList": "{subfield} alanını iş listesinde görün; türe, yere ya da son başvuruya göre daraltın",
     "comingSoon": "Bu alt alandaki etkinlikler, fonlar, makaleler, haberler ve kaynaklar Gliagora’nın her bölümü açıldıkça burada görünecek.",
     "others": "Diğer alt alanlar"
   },
@@ -404,6 +406,7 @@
     "openPositions": "{count, plural, =0 {Açık pozisyon yok} one {# açık pozisyon} other {# açık pozisyon}}",
     "subfields": "Alt alanlar",
     "subfieldsCount": "{count, plural, one {# alt alan} other {# alt alan}}",
+    "subfieldsMore": "En yakın {shown} alt alan gösteriliyor. <link>Bütün alt alanları görün</link>.",
     "emptyTitle": "Ne arıyorsunuz?",
     "emptyText": "Açık pozisyonları başlığa, konuya ya da kuruma göre, kurumları herhangi bir adıyla ve sinirbilimin alt alanlarını arayın.",
     "browse": "Ya da göz atın",
@@ -767,8 +770,8 @@
   },
   "newsletter": {
     "title": "Glia Notes",
-    "description": "Glia Notes, aylık Gliagora bülteni: yeni nörobilim pozisyonları, yaklaşan son başvuru tarihleri, makaleler ve fonlar, ayda bir e-postayla.",
-    "intro": "Aylık Gliagora bülteni. Ayda bir e-posta: yeni pozisyonlar, yaklaşan son başvuru tarihleri, makaleler ve fonlar.",
+    "description": "Glia Notes, aylık Gliagora bülteni: yeni nörobilim pozisyonları ve yaklaşan son başvuru tarihleri, ayda bir e-postayla.",
+    "intro": "Aylık Gliagora bülteni. Ayda bir e-posta: yeni pozisyonlar ve yaklaşan son başvuru tarihleri; Gliagora'nın bu bölümleri açıldıkça makaleler ve fonlar da.",
     "firstIssue": "İlk sayı, sitenin herkese açılmasıyla birlikte gelir. Önce adresinizi onaylamanız için bir bağlantı, ardından bir hoş geldiniz e-postası göndeririz; site açılana kadar başka bir şey göndermeyiz.",
     "unavailable": "Glia Notes aboneliği henüz açılmadı. Lütfen daha sonra yeniden gelin.",
     "noscript": "Bu formdaki spam denetimi JavaScript gerektirir; form yalnızca JavaScript açıkken gönderilebilir.",
@@ -1108,6 +1111,7 @@
   },
   "save": {
     "label": "Kaydet<hidden>: <job>{title}</job></hidden>",
+    "savedLabel": "Kaydedildi<hidden>: <job>{title}</job></hidden>",
     "savedStatus": "Kaydedildi: {title}",
     "removedStatus": "Kaydettiğiniz pozisyonlardan çıkarıldı: {title}",
     "signInNote": "Pozisyonları kaydetmek için oturum açmanız gerekir."
@@ -1116,11 +1120,11 @@
     "title": "Kaydettiğiniz pozisyonlar",
     "description": "Gliagora'da kaydettiğiniz pozisyonlar.",
     "signedOutTitle": "Kaydettiğiniz pozisyonları görmek için oturum açın",
-    "intro": "{count, plural, one {Bir pozisyon kaydettiniz.} other {# pozisyon kaydettiniz.}} Birini çıkarmak için Kaydet düğmesine yeniden basın.",
+    "intro": "{count, plural, one {Bir pozisyon kaydettiniz.} other {# pozisyon kaydettiniz.}} Birini çıkarmak için Kaydedildi düğmesine basın.",
     "empty": "Henüz bir pozisyon kaydetmediniz. Bir pozisyonu burada tutmak için <link>pozisyon listesinde</link> ya da pozisyonun sayfasında Kaydet düğmesine basın.",
     "open": "Açık pozisyonlar",
     "closed": "Artık açık değil",
-    "closedText": "Bu pozisyonların son başvuru tarihi geçti ya da pozisyonlar geri çekildi; artık başvuramazsınız. Birini bu listeden çıkarmak için Kaydet düğmesine basın.",
+    "closedText": "Bu pozisyonların son başvuru tarihi geçti ya da pozisyonlar geri çekildi; artık başvuramazsınız. Birini bu listeden çıkarmak için Kaydedildi düğmesine basın.",
     "pastEnd": "Kaydettiğiniz pozisyonlar {pages, plural, one {yalnızca # sayfa} other {# sayfa}} tutuyor.",
     "firstPage": "İlk sayfaya git"
   },

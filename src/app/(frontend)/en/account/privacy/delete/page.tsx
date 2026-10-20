@@ -82,7 +82,7 @@ export default async function Page({ searchParams }: Props) {
         </div>
 
         <section aria-labelledby="deleted-heading" className="grid gap-4">
-          <h2 id="deleted-heading" className="text-h2">
+          <h2 id="deleted-heading" className="text-h3">
             {t('goneHeading')}
           </h2>
           <ul className="grid list-disc gap-2 ps-6">
@@ -96,7 +96,7 @@ export default async function Page({ searchParams }: Props) {
         </section>
 
         <section aria-labelledby="kept-heading" className="grid gap-4">
-          <h2 id="kept-heading" className="text-h2">
+          <h2 id="kept-heading" className="text-h3">
             {t('keptHeading')}
           </h2>
           <ul className="grid list-disc gap-2 ps-6">

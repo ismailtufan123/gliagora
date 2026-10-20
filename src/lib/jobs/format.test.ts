@@ -78,6 +78,7 @@ describe('deadlineView', () => {
       day: '2026-11-14',
       left: { key: 'daysLeft', days: 13 },
       closingSoon: true,
+      closedEarly: false,
       gauge: 4,
       zone: { name: 'Central European Time', offset: 'UTC+1' },
     })
@@ -127,6 +128,7 @@ describe('deadlineView', () => {
       open: false,
       left: { key: 'closed' },
       closingSoon: false,
+      closedEarly: false,
     })
   })
 
@@ -135,6 +137,8 @@ describe('deadlineView', () => {
     expect(deadlineView(job, '2026-10-02T00:00:00Z', 'en')).toMatchObject({
       open: false,
       left: { key: 'closed' },
+      // Its day, still to come, is not shown beside "Closed".
+      closedEarly: true,
     })
   })
 
