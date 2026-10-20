@@ -1,3 +1,5 @@
+import { CandidateSummary as CandidateSummary_502519cd7edf701859a60cc7786b0e3b } from '../../../admin/CandidateSummary'
+import { CandidateJobLink as CandidateJobLink_502519cd7edf701859a60cc7786b0e3b } from '../../../admin/CandidateSummary'
 import { DeadlineTimeZoneField as DeadlineTimeZoneField_1e2b4617705334d2bf3c225a6096e604 } from '../../../admin/DeadlineTimeZoneField'
 import { IssueActions as IssueActions_a34815c253f0ab189f7b3e0511deb0e4 } from '../../../admin/IssueActions'
 import { HubIntroWordCount as HubIntroWordCount_6fb9192185c388ca83d999aa8b50e981 } from '../../../admin/HubIntroWordCount'
@@ -8,6 +10,8 @@ import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "/admin/CandidateSummary#CandidateSummary": CandidateSummary_502519cd7edf701859a60cc7786b0e3b,
+  "/admin/CandidateSummary#CandidateJobLink": CandidateJobLink_502519cd7edf701859a60cc7786b0e3b,
   "/admin/DeadlineTimeZoneField#DeadlineTimeZoneField": DeadlineTimeZoneField_1e2b4617705334d2bf3c225a6096e604,
   "/admin/IssueActions#IssueActions": IssueActions_a34815c253f0ab189f7b3e0511deb0e4,
   "/admin/HubIntroWordCount#HubIntroWordCount": HubIntroWordCount_6fb9192185c388ca83d999aa8b50e981,

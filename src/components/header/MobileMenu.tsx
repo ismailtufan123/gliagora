@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 
 import type { Locale } from '@/i18n/routing'
 import { MEMBER_PATHS } from '@/lib/members/paths'
+import { NAV_PAGES } from '@/lib/navigation'
 import type { WindowKey } from '@/lib/site'
 import { paths } from '@/lib/site'
 
@@ -23,9 +24,9 @@ function withWindowLink({ label, href, menu = [] }: MenuWindowLinks) {
   return menu[0]?.href === href ? menu : [{ label, href }, ...menu]
 }
 
-// PLAN §2.3, §7.5: below the `xl` breakpoint, a full-height panel with the six windows
-// (expandable), the map, Learn, About, the account, the digest button and, on small screens, the
-// languages (and, below 360px, search).
+// PLAN §2.3, §7.5: below the `xl` breakpoint, a full-height panel with the windows that are built
+// (expandable; D55), the map, the subfields, About, the account, the digest button and, on small
+// screens, the languages (and, below 360px, search).
 // DisclosureEnhancer makes the page behind it inert while it is open.
 export async function MobileMenu({
   locale,
@@ -40,7 +41,8 @@ export async function MobileMenu({
   return (
     <details className="disclosure xl:hidden" data-disclosure data-modal>
       <summary className="button button-secondary px-2.5 sm:px-3">
-        <Icon name="menu" size={20} />
+        <Icon name="menu" size={20} className="menu-icon-closed" />
+        <Icon name="close" size={20} className="menu-icon-open" />
         <span className="sr-only sm:not-sr-only">{t('header.menu')}</span>
       </summary>
       <div className="mobile-panel">
@@ -81,10 +83,10 @@ export async function MobileMenu({
                 )}
               </li>
             ))}
-            {(['map', 'learn', 'about'] as const).map((key) => (
+            {NAV_PAGES.map(({ key, href }) => (
               <li key={key} className="border-b border-line">
-                <NavLink href={paths.section(key)} className="mobile-row">
-                  {t(`sections.${key}`)}
+                <NavLink href={href} className="mobile-row">
+                  {key === 'subfields' ? t('subfields.title') : t(`sections.${key}`)}
                 </NavLink>
               </li>
             ))}

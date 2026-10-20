@@ -155,3 +155,73 @@
     }
   }
 }
+
+// A candidate's machine data in plain words, above its JSON (src/admin/CandidateSummary.tsx).
+.candidate-summary {
+  margin-bottom: calc(var(--base) * 1.5);
+  padding: var(--base) calc(var(--base) * 1.5);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--style-radius-m);
+  background: var(--theme-elevation-50);
+
+  &__heading {
+    margin: 0;
+  }
+
+  &__hint,
+  &__from {
+    color: var(--theme-elevation-650);
+  }
+
+  &__hint {
+    margin: calc(var(--base) * 0.25) 0 0;
+  }
+
+  &__group {
+    margin-top: var(--base);
+  }
+
+  &__title {
+    margin: 0 0 calc(var(--base) * 0.5);
+  }
+
+  &__rows {
+    margin: 0;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(8rem, 12rem) 1fr;
+    gap: calc(var(--base) * 0.75);
+    padding-block: calc(var(--base) * 0.375);
+    border-top: 1px solid var(--theme-elevation-100);
+
+    dt {
+      font-weight: 600;
+    }
+
+    dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__from {
+    display: block;
+    font-size: 0.9em;
+  }
+}
+
+// Under "Job created" in a candidate's sidebar: the button to the draft job.
+.candidate-job-link {
+  margin-bottom: calc(var(--base) * 1.5);
+
+  .btn {
+    margin: 0;
+  }
+
+  &__hint {
+    margin: calc(var(--base) * 0.5) 0 0;
+    color: var(--theme-elevation-650);
+  }
+}

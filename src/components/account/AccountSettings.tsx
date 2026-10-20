@@ -30,7 +30,7 @@ const Intent = ({ value }: { value: SettingsIntent }) => (
 function Section({ id, heading, children }: { id: string; heading: string; children: ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id}-heading`} className="grid justify-items-start gap-4">
-      <h2 id={`${id}-heading`} className="text-h2">
+      <h2 id={`${id}-heading`} className="text-h3">
         {heading}
       </h2>
       {children}
@@ -190,7 +190,7 @@ export async function EmailSettings({
       <p>{member.email ? t.rich('current', { email: member.email, strong }) : t('none')}</p>
       {available && altchaKey ? (
         <div className="grid w-full gap-4">
-          <h3 className="text-h3">{t(member.email ? 'changeHeading' : 'addHeading')}</h3>
+          <h3 className="text-card">{t(member.email ? 'changeHeading' : 'addHeading')}</h3>
           {/* Without JavaScript the spam check cannot run; the server then says so too. */}
           <noscript>
             <p className="notice">{t('noscript')}</p>

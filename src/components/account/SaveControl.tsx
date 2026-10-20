@@ -15,10 +15,10 @@ import { SAVE_INPUTS, SAVE_NOTE_ID, SAVE_STATUS_ID, signInToSave } from '@/lib/m
 // carries (DisclosureEnhancer), which load the rest (save-toggle.ts) on first use: the button
 // changes in place and the page's live region says "Saved: …"; focus stays on the button.
 //
-// The button is a toggle (aria-pressed): its label stays "Save", and its state shows as a filled
-// style and another icon (a bookmark with a tick), so not by colour alone and also in forced
-// colours. Its name starts with the visible word and adds the position's title for screen readers
-// (WCAG 2.5.3), in the title's own language. The texts the script announces come from the
+// The button is a toggle (aria-pressed): it reads "Save", and once saved "Saved" (D54), with a
+// filled style and another icon (a bookmark with a tick), so the state rests neither on colour
+// alone nor on the word, and also shows in forced colours. Its name starts with the visible word
+// and adds the position's title for screen readers (WCAG 2.5.3), in the title's own language. The texts the script announces come from the
 // messages, in data attributes, so the script holds no text; it gives the title in them the
 // language of the button's own title.
 
@@ -39,15 +39,17 @@ export async function SaveControl({
   const t = await getTranslations({ locale: 'en', namespace: 'save' })
   const saved = context.signedIn && context.saved.has(job.id)
   const lang = titleLanguage(job)
-  const label = t.rich('label', {
-    hidden: (chunks: ReactNode) => <span className="sr-only">{chunks}</span>,
-    job: (chunks: ReactNode) => (
-      <span lang={lang} dir={textDirection(lang)}>
-        {chunks}
-      </span>
-    ),
-    title: job.title,
-  })
+  const words = (key: 'label' | 'savedLabel') =>
+    t.rich(key, {
+      hidden: (chunks: ReactNode) => <span className="sr-only">{chunks}</span>,
+      job: (chunks: ReactNode) => (
+        <span lang={lang} dir={textDirection(lang)}>
+          {chunks}
+        </span>
+      ),
+      title: job.title,
+    })
+  const label = words('label')
 
   if (!context.signedIn) {
     return (
@@ -79,7 +81,10 @@ export async function SaveControl({
       >
         <Icon name="bookmark" size={18} className="save-icon-off flex-none" />
         <Icon name="bookmarkCheck" size={18} className="save-icon-on flex-none" />
-        {label}
+        {/* Both words are here; the button's state shows one (global.css), so the script that
+            changes the state in place needs no text of its own. */}
+        <span className="save-label-off">{label}</span>
+        <span className="save-label-on">{words('savedLabel')}</span>
       </button>
     </form>
   )

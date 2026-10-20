@@ -15,7 +15,9 @@ export type WindowKey = (typeof WINDOWS)[number]
 
 /**
  * The windows that are built (PLAN §20): the others answer with a placeholder page until their
- * milestone. The home page shows only these (PLAN §3.2 "Home": only live windows are shown).
+ * milestone. The home page shows only these (PLAN §3.2 "Home": only live windows are shown), and
+ * so do the header, the phone menu, the footer, the 404 page and search (D55): a window joins them
+ * all when its milestone adds it here.
  */
 export const LIVE_WINDOWS: readonly WindowKey[] = ['jobs']
 
@@ -29,6 +31,13 @@ export const SECTIONS = [
   'about',
 ] as const
 export type SectionKey = (typeof SECTIONS)[number]
+
+/**
+ * The sections that are built: Learn and Bench to Bedside answer with a placeholder page until
+ * their milestone. Like the windows, the header, the phone menu and the footer show only those
+ * that are built (D55); the placeholder pages keep their addresses, not indexed.
+ */
+export const LIVE_SECTIONS: readonly SectionKey[] = ['map', 'suggest', 'newsletter', 'about']
 
 const sectionPaths: Record<SectionKey, string> = {
   map: 'map/',

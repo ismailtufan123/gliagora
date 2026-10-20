@@ -63,7 +63,7 @@ Girişten sonra açılan panonun en üstünde **"Waiting for an editor"** kutusu
 1. Orijinal ilanı açın: işverenin kendi sayfasında mı, hâlâ açık mı?
 2. "Title as posted" (başlık) ve "Institution" (kurum) alanlarını doldurun. "Possible duplicate jobs" altında benzer ilanlar listelenir.
 3. Karar verin ("Status"):
-   - **"Accepted"**: bir taslak ilan oluşturur ve "Job created" altında bağlar. Onu açın, bilgileri tamamlayın ve yayımlayın (bölüm 2). Kabul kesindir.
+   - **"Accepted"**: bir taslak ilan oluşturur ve "Job created" altında bağlar. Altındaki **"Open the draft job"** düğmesiyle açın, bilgileri tamamlayın ve yayımlayın (bölüm 2). Kabul kesindir.
    - **"Rejected"**: bir gerekçe seçin: "Not neuroscience", aracı firma, "Closed, or the deadline has passed", "Not a position", "Not on the employer's own page".
    - **"Duplicate"**: "Duplicate of" alanında aynı pozisyonun ilanını seçin.
    - **"Triaged"**: baktınız ama henüz karar vermediniz. Reddedilen ya da çift kayıt sayılan bir aday yeniden "Triaged" yapılabilir.
@@ -133,6 +133,8 @@ Yeni kaynak eklerken: işvereni "Institution" alanında seçin, kullanım koşul
 
 **Programın bulduğu adaylar**: "Candidates" listesinde, "Source" alanı dolu olanlardır. Elle eklenen adaylar gibi ele alınır (bölüm 3), şu farklarla:
 
+- **"In plain words"** kutusu (adayın sayfasında, "Source text" altında): aşağıdaki üç alanı (programın okuduğu bilgiler, önerilen etiketler, yapay zekâ taslağı) düz sözlerle ve her bilginin nereden geldiğiyle gösterir; etiketler adlarıyla yazılır. Aynı bilgiler JSON olarak **"The same as data (JSON)"** başlığının altında kapalı durur; teknik yönetici içindir.
+
 - **"Extracted facts"**: programın ilandan okuduğu bilgiler (son başvuru tarihi, yer, yayın tarihi) ve her birinin nereden okunduğu. Bunlar yalnızca başlangıçtır: her birini orijinal ilanda kontrol edin. Yayın tarihi ("published") kaynak nerede veriyorsa oradan okunur: ilanın verisi, liste, metindeki "Posted: …" gibi bir ifade ya da ilanın adresi (RIKEN'in `/20250512_1/` gibi adresleri). Sabit son başvuru günü olmayan ("until filled") ve 60 günden eski bir ilanda **"possiblyFilled"** satırı çıkar: önce pozisyonun hâlâ açık olduğunu kontrol edin.
 - **"Source text"**: ilanın metni; kişi adları, e-posta adresleri ve telefon numaraları "[name]", "[email]", "[phone]" ile değiştirilmiş olarak. Sitede hiç görünmez ve karardan 30 gün sonra silinir. Kural tabanlıdır; bir ad gözden kaçabilir.
 - **"Suggested tags"**: başlıkta ve metinde geçen sözcüklere göre önerilen alt alan, yöntem, model sistem, pozisyon türü ve kariyer aşaması (yapay zekâ değil, sözcük eşleştirme). Aday kabul edilince taslak ilan bunlarla ve programın okuduğu son başvuru tarihiyle başlar; ilanda kontrol edip düzeltin.
@@ -154,7 +156,7 @@ Yeni kaynak eklerken: işvereni "Institution" alanında seçin, kullanım koşul
 
 ## 6. Yapay zekâ taslakları ("AI draft")
 
-Bazı adaylarda **"AI draft"** alanı doludur: Claude'un (Anthropic) adayın kişi adları, e-posta adresleri ve telefon numaraları çıkarılmış başlığından ve metninden yazdığı bir taslak (D52). Taslakta kendi sözlerimizle en çok 280 karakterlik bir özet ("summary"), pozisyon türü, son başvuru tarihi ve saat dilimi, yer, alt alanlar ve kariyer aşaması bulunur; her biri neye dayandığını söyler ("from"). Taslak sitede hiçbir zaman görünmez.
+Bazı adaylarda **"AI draft"** alanı doludur (adayın sayfasında "In plain words" kutusunda okunur; bölüm 5): Claude'un (Anthropic) adayın kişi adları, e-posta adresleri ve telefon numaraları çıkarılmış başlığından ve metninden yazdığı bir taslak (D52). Taslakta kendi sözlerimizle en çok 280 karakterlik bir özet ("summary"), pozisyon türü, son başvuru tarihi ve saat dilimi, yer, alt alanlar ve kariyer aşaması bulunur; her biri neye dayandığını söyler ("from"). Taslak sitede hiçbir zaman görünmez.
 
 - Taslaklar şimdilik **haftada bir** gelir: teknik yönetici Claude Code'a "Do the weekly drafts" der; Claude Code bekleyen adayları sunucudan dışa aktarır, taslakları yazar ve geri yükler. İleride Claude API ile her gün de gelebilir (bir anahtar ve aylık harcama sınırı girilene kadar kapalıdır).
 - Metni kısmen büyük harfi olmayan bir yazıyla (Çince, Japonca, Korece, Arapça, İbranice, Tayca…) yazılmış adaylar taslağa gönderilmez ve taslaksız kalır: bu yazılardaki kişi adlarını kurallar bulamaz. Onların özetini siz yazarsınız.

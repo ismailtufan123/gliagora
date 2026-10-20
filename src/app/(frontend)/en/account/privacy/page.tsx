@@ -44,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
 function Section({ id, heading, children }: { id: string; heading: string; children: ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id}-heading`} className="grid justify-items-start gap-4">
-      <h2 id={`${id}-heading`} className="text-h2">
+      <h2 id={`${id}-heading`} className="text-h3">
         {heading}
       </h2>
       {children}

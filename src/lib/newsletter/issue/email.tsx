@@ -159,6 +159,9 @@ export function IssueEmail({ content, links, t, month, testNote }: IssueEmailPro
   return (
     <Html lang="en" dir="ltr">
       <Head>
+        {/* Mail apps that honour it lay the 600px column out at the phone's width, not at 980px
+            scaled down. */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light dark" />
         <meta name="supported-color-schemes" content="light dark" />
         <title>{content.subject}</title>

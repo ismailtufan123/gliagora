@@ -26,9 +26,10 @@ export type JobRowOptions = {
 }
 
 // A job in a list (PLAN §3.2 "Job card", §7.5 "Job row", §9.3): the title linking to the job
-// page, institution, place, position type, deadline with days left and gauge, up to three tags,
-// the original posting and, where the page has them, the Save control. The metadata are separate
-// labelled elements (§7.6), with the labels for screen readers only.
+// page, institution, place, position type, deadline with days left and gauge, up to three tags
+// (from 480px; phones leave them to the job page, PLAN §9.4), the original posting and, where the
+// page has them, the Save control. The metadata are separate labelled elements (§7.6), with the
+// labels for screen readers only.
 export async function JobRow({
   job,
   now,
@@ -91,7 +92,11 @@ export async function JobRow({
         )}
       </dl>
       {tags && tags.shown.length > 0 && (
-        <ul role="list" aria-label={t('topics')} className="flex flex-wrap gap-2">
+        <ul
+          role="list"
+          aria-label={t('topics')}
+          className="flex flex-wrap gap-2 max-[30rem]:hidden"
+        >
           {tags.shown.map((tag) => (
             <li key={tag.id} className="chip">
               {tag.label}

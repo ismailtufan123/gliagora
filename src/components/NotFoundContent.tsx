@@ -2,10 +2,12 @@ import { getTranslations } from 'next-intl/server'
 
 import { SearchForm } from '@/components/search/SearchForm'
 import type { Locale } from '@/i18n/routing'
-import { paths, WINDOWS } from '@/lib/site'
+import { NAV_PAGES } from '@/lib/navigation'
+import { LIVE_WINDOWS, paths } from '@/lib/site'
 
-// 404 and 410: what happened, links to the six windows, the search form (M4.9, a plain GET form,
-// so it works without JavaScript) and the home page (PLAN §2.5).
+// 404 and 410: what happened, links to the main parts (the windows that are built, the map, the
+// subfields and About, as in the header, D55), the search form (M4.9, a plain GET form, so it
+// works without JavaScript) and the home page (PLAN §2.5).
 export async function NotFoundContent({
   locale,
   kind = 'notFound',
@@ -19,10 +21,17 @@ export async function NotFoundContent({
       <div className="prose">
         <h1>{t(`${kind}.title`)}</h1>
         <p>{t(`${kind}.text`)}</p>
-        <ul role="list" className="flex flex-wrap gap-x-6 gap-y-2">
-          {WINDOWS.map((key) => (
+        {/* A row of links, without the bullets .prose gives its lists: they read as dots between
+            the words (PLAN §7.6). */}
+        <ul role="list" className="flex list-none flex-wrap gap-x-6 gap-y-2 ps-0">
+          {LIVE_WINDOWS.map((key) => (
             <li key={key}>
               <a href={paths.window(key)}>{t(`windows.${key}`)}</a>
+            </li>
+          ))}
+          {NAV_PAGES.map(({ key, href }) => (
+            <li key={key}>
+              <a href={href}>{key === 'subfields' ? t('subfields.title') : t(`sections.${key}`)}</a>
             </li>
           ))}
         </ul>

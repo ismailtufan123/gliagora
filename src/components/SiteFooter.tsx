@@ -5,10 +5,13 @@ import type { Locale } from '@/i18n/routing'
 import { CONTENT_PAGES } from '@/lib/content'
 import { isPublicAddress } from '@/lib/public-pages'
 import type { SiteStage } from '@/lib/site-stage'
-import { CONTACT_EMAIL, SOCIAL_LINKS, WINDOWS, paths } from '@/lib/site'
+import { SUBFIELDS_PATH } from '@/lib/detail-routes'
+import { CONTACT_EMAIL, LIVE_SECTIONS, LIVE_WINDOWS, SOCIAL_LINKS, paths } from '@/lib/site'
 
 // PLAN §2.3: sitemap footer (Windows | Learn | About | Legal). The contact and legal notice link
-// is on every page (Law 5651, PLAN §15). Profiles elsewhere are plain links (D14).
+// is on every page (Law 5651, PLAN §15). Profiles elsewhere are plain links (D14). Only what is
+// built (D55): the windows of LIVE_WINDOWS with the map and the subfields, and Learn once one of
+// its sections is (LIVE_SECTIONS).
 // The columns follow PLAN §2.3 (the sources and editorial policy in About, the accessibility
 // statement last in Legal); the Turkish texts carry hrefLang="tr".
 // In the M2 state (D41 (4), D50) the footer of the public pages links to public pages only: About,
@@ -17,6 +20,9 @@ import { CONTACT_EMAIL, SOCIAL_LINKS, WINDOWS, paths } from '@/lib/site'
 // to write to instead.
 
 type FooterLink = { label: string; href: string; hrefLang?: string }
+
+/** From 1024px, one row of columns (spelled out, so that Tailwind finds the classes). */
+const LG_COLUMNS: Record<number, string> = { 3: 'lg:grid-cols-3', 4: 'lg:grid-cols-4' }
 
 export async function SiteFooter({
   locale,
@@ -46,13 +52,24 @@ export async function SiteFooter({
       : [
           {
             heading: t('footer.windows'),
-            links: WINDOWS.map((key) => ({ label: t(`windows.${key}`), href: paths.window(key) })),
+            links: [
+              ...LIVE_WINDOWS.map((key) => ({
+                label: t(`windows.${key}`),
+                href: paths.window(key),
+              })),
+              { label: t('sections.map'), href: paths.section('map') },
+              { label: t('subfields.title'), href: SUBFIELDS_PATH },
+            ],
           },
           {
             heading: t('footer.learn'),
             links: [
-              { label: t('footer.learnBasics'), href: paths.section('learn') },
-              { label: t('sections.benchToBedside'), href: paths.section('benchToBedside') },
+              ...(LIVE_SECTIONS.includes('learn')
+                ? [{ label: t('footer.learnBasics'), href: paths.section('learn') }]
+                : []),
+              ...(LIVE_SECTIONS.includes('benchToBedside')
+                ? [{ label: t('sections.benchToBedside'), href: paths.section('benchToBedside') }]
+                : []),
             ],
           },
         ]),
@@ -65,7 +82,7 @@ export async function SiteFooter({
       ].filter(shown),
     },
     ...(legal.length > 0 ? [{ heading: t('footer.legal'), links: legal }] : []),
-  ]
+  ].filter((column) => column.links.length > 0)
 
   const contact = { href: paths.contact(locale) }
   const email = (chunks: ReactNode) => <a href={`mailto:${CONTACT_EMAIL}`}>{chunks}</a>
@@ -74,7 +91,7 @@ export async function SiteFooter({
     <footer className="border-t border-line bg-surface-sunken">
       <nav
         aria-label={t('footer.sitemap')}
-        className={`page-frame grid gap-8 py-12 sm:grid-cols-2 ${m2 ? '' : 'lg:grid-cols-4'}`}
+        className={`page-frame grid gap-8 py-12 sm:grid-cols-2 ${LG_COLUMNS[columns.length] ?? ''}`}
       >
         {columns.map((column) => (
           <div key={column.heading}>

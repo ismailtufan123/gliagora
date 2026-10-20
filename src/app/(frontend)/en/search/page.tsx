@@ -10,7 +10,7 @@ import { errorSummary } from '@/lib/errors'
 import { jobsHref } from '@/lib/filters/jobs'
 import { type SiteSearch, requestTime, siteSearch } from '@/lib/records'
 import { normaliseQuery } from '@/lib/search/parse'
-import { WINDOWS, paths } from '@/lib/site'
+import { LIVE_WINDOWS, paths } from '@/lib/site'
 
 // The search page (PLAN §2.2, §3.2, §7.5): a GET form and the results in groups (positions,
 // institutions, subfields), each with its count; the hints and the windows when there is no query,
@@ -102,7 +102,8 @@ export default async function Page({ searchParams }: Props) {
           <p>{t('search.hintSyntax')}</p>
           <h3 className="text-card">{t('search.browse')}</h3>
           <ul role="list" className="flex flex-wrap gap-3">
-            {WINDOWS.map((key) => (
+            {/* The windows that are built (D55); the subfields lead into every one. */}
+            {LIVE_WINDOWS.map((key) => (
               <li key={key}>
                 <a href={paths.window(key)} className="button button-secondary">
                   {t(`windows.${key}`)}
@@ -222,6 +223,14 @@ export default async function Page({ searchParams }: Props) {
               </li>
             ))}
           </ul>
+          {results.subfields.total > results.subfields.items.length && (
+            <p>
+              {t.rich('search.subfieldsMore', {
+                shown: results.subfields.items.length,
+                link: (chunks) => <a href={SUBFIELDS_PATH}>{chunks}</a>,
+              })}
+            </p>
+          )}
         </section>
       )}
     </main>

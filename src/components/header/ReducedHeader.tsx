@@ -20,8 +20,8 @@ const DESKTOP_QUERY = '(min-width: 48rem)'
 // The header of the M2 state (D41 (4), D50; src/lib/site-stage.ts), on its public pages only, so
 // it links to public pages only: the lockup (the coming-soon page), the language button where the
 // page has a translation that is public too, and the Glia Notes button while the signup is public
-// (with the açık rıza metni, m2SignupLink). On phones a menu holds About, the Glia Notes button and
-// the languages. No windows, search or Account: they stay private until the launch (D39, D49). Its
+// (with the açık rıza metni, m2SignupLink), and About. On phones a menu holds About, the Glia Notes
+// button and the languages. No windows, search or Account: they stay private until the launch (D39, D49). Its
 // Turkish texts are reviewed first (PUBLIC_AT_M2 in src/scripts/tr-strings-review-areas.ts, D47).
 export async function ReducedHeader({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale })
@@ -43,6 +43,10 @@ export async function ReducedHeader({ locale }: { locale: Locale }) {
           descriptor={t('brand.descriptor')}
         />
         <div className="ms-auto flex shrink-0 items-center gap-1 sm:gap-2">
+          {/* About, as in the phones' menu: one link, so no navigation landmark of its own. */}
+          <NavLink href={paths.section('about')} className="nav-link hidden md:inline">
+            {t('sections.about')}
+          </NavLink>
           <LocaleSwitcher
             className="hidden md:block"
             locale={locale}
@@ -67,7 +71,8 @@ export async function ReducedHeader({ locale }: { locale: Locale }) {
               JavaScript; DisclosureEnhancer makes the page behind it inert while it is open. */}
           <details className="disclosure md:hidden" data-disclosure data-modal>
             <summary className="button button-secondary px-2.5 sm:px-3">
-              <Icon name="menu" size={20} />
+              <Icon name="menu" size={20} className="menu-icon-closed" />
+              <Icon name="close" size={20} className="menu-icon-open" />
               <span className="sr-only sm:not-sr-only">{t('header.menu')}</span>
             </summary>
             <div className="mobile-panel">

@@ -427,6 +427,12 @@
     transform: rotate(180deg);
   }
 
+  /* The phones' menu button shows a cross while its menu is open: the same button closes it. */
+  .disclosure:not([open]) > summary > .menu-icon-open,
+  .disclosure[open] > summary > .menu-icon-closed {
+    display: none;
+  }
+
   .menu-panel {
     position: absolute;
     top: calc(100% + var(--space-2));
@@ -506,6 +512,12 @@
     gap: var(--space-2);
     padding-inline-start: 0;
     list-style: none;
+  }
+
+  /* At least 24px high, as a target to tap (WCAG 2.5.8), though the text is small. */
+  .breadcrumbs a {
+    display: inline-block;
+    padding-block: 0.1875rem;
   }
 
   .breadcrumbs li + li::before {
@@ -623,9 +635,9 @@
   }
 
   /*
-   * Save (SaveControl.tsx): a toggle whose label stays "Save". Saved, it is filled and shows a
-   * bookmark with a tick instead of the plain one, so the state does not rest on colour alone, and
-   * in forced colours the icon still differs.
+   * Save (SaveControl.tsx): a toggle that reads "Save", and once saved "Saved" (D54). Saved, it is
+   * also filled and shows a bookmark with a tick instead of the plain one, so the state does not
+   * rest on colour alone, and in forced colours the icon still differs.
    */
   .save-button {
     justify-self: start;
@@ -642,8 +654,14 @@
   }
 
   .save-button .save-icon-on,
-  .save-button[aria-pressed='true'] .save-icon-off {
+  .save-button[aria-pressed='true'] .save-icon-off,
+  .save-button .save-label-on,
+  .save-button[aria-pressed='true'] .save-label-off {
     display: none;
+  }
+
+  .save-button[aria-pressed='true'] .save-label-on {
+    display: inline;
   }
 
   .save-button[aria-pressed='true'] .save-icon-on {
@@ -945,6 +963,12 @@
     flex-basis: 100%;
   }
 
+  /* Show or hide the map: beside the "Filters" button on small screens, so the first positions
+     come into view sooner (PLAN §9.4); below the bar of popovers from 1280px. */
+  .filter-aside {
+    align-self: center;
+  }
+
   .sheet-panel {
     display: grid;
     gap: var(--space-4);
@@ -1119,6 +1143,12 @@
       justify-self: start;
     }
 
+    /* With JavaScript a ticked box applies at once (ListBehaviour, or a page load when it cannot
+       be loaded), so Apply stays only where the change waits for it: the deadline's two days. */
+    html[data-js] .filter:not(:has(input[type='date'])) .filter-apply {
+      display: none;
+    }
+
     /* The bar is always shown: the sheet's button, title and footer are for small screens. Where
        a browser cannot show a closed disclosure's content, the button stays as the way in. */
     @supports selector(::details-content) {
@@ -1199,6 +1229,11 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
+  }
+
+  /* As wide as its longest choice, so "Sort by" stays beside it where they fit. */
+  .sort .input {
+    width: auto;
   }
 
   /* At least a screen tall, so the footer does not rise into view when a change brings fewer
@@ -1631,6 +1666,22 @@
   button.map-list-item:hover,
   .map-list-item[aria-pressed='true'] {
     background: var(--surface-sunken);
+  }
+
+  /* A row that opens the institution's panel: its name looks like the link it acts as. */
+  button.map-list-item {
+    cursor: pointer;
+  }
+
+  button.map-list-item > span:first-child {
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  button.map-list-item:hover > span:first-child {
+    text-decoration-thickness: 2px;
   }
 
   .map-list-item[aria-pressed='true'] > span:first-child {

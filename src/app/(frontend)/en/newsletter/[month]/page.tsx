@@ -54,7 +54,6 @@ export default async function Page({ params }: Props) {
             { label: title },
           ]}
         />
-        <p className="text-text-muted">{t('gliaNotes.subtitle')}</p>
         <h1>{title}</h1>
         {issue.sentAt && (
           <p className="text-text-muted">
@@ -62,10 +61,14 @@ export default async function Page({ params }: Props) {
           </p>
         )}
         <IssueArticle content={issue.content} />
-        <p>
-          <a href={ARCHIVE_PATH}>{t('newsletter.archive.all')}</a> ·{' '}
-          <a href={NEWSLETTER_PATHS.signup}>{t('newsletter.archive.subscribe')}</a>
-        </p>
+        <ul role="list" className="flex list-none flex-wrap gap-x-6 gap-y-2 ps-0">
+          <li>
+            <a href={ARCHIVE_PATH}>{t('newsletter.archive.all')}</a>
+          </li>
+          <li>
+            <a href={NEWSLETTER_PATHS.signup}>{t('newsletter.archive.subscribe')}</a>
+          </li>
+        </ul>
       </article>
     </main>
   )

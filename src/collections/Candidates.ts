@@ -598,38 +598,53 @@ export const Candidates: CollectionConfig = {
           'Text from the source, such as a mailing-list announcement, for editors only. Never shown on the site or copied into a job; deleted 30 days after the decision (PLAN §5.1).',
       },
     },
+    // The three fields below in plain words (D57), and once accepted a button to the draft job in
+    // the sidebar (src/admin/CandidateSummary.tsx); the JSON itself is folded, for the technical
+    // administrator.
     {
-      name: 'extracted',
-      label: 'Extracted facts',
-      type: 'json',
-      admin: {
-        readOnly: true,
-        disableBulkEdit: true,
-        description:
-          "Facts a source monitor read from the posting, each with where it was found, to check against the original. An accepted candidate's job starts with its deadline.",
-      },
+      name: 'plainWords',
+      type: 'ui',
+      admin: { components: { Field: '/admin/CandidateSummary#CandidateSummary' } },
     },
     {
-      name: 'tagSuggestions',
-      label: 'Suggested tags',
-      type: 'json',
-      access: { create: () => false, update: () => false },
-      admin: {
-        readOnly: true,
-        description:
-          "Subfields, methods, model systems, position type and career stages whose words appear in the title or the source text (no AI, PLAN §6.3), with the words found. Suggestions only: an accepted candidate's job starts with them, and you check and change them there.",
-      },
-    },
-    {
-      name: 'aiSuggestion',
-      label: 'AI draft',
-      type: 'json',
-      access: { create: () => false, update: () => false },
-      admin: {
-        readOnly: true,
-        description:
-          'A draft by Claude from the redacted title and source text (PLAN §6.6): a summary in our own words, the position type, the deadline, the place, the subfields and the career stages, each saying what it came from. It is never shown on the site. Check every fact on the original posting.',
-      },
+      type: 'collapsible',
+      label: 'The same as data (JSON)',
+      admin: { initCollapsed: true },
+      fields: [
+        {
+          name: 'extracted',
+          label: 'Extracted facts',
+          type: 'json',
+          admin: {
+            readOnly: true,
+            disableBulkEdit: true,
+            description:
+              "Facts a source monitor read from the posting, each with where it was found, to check against the original. An accepted candidate's job starts with its deadline.",
+          },
+        },
+        {
+          name: 'tagSuggestions',
+          label: 'Suggested tags',
+          type: 'json',
+          access: { create: () => false, update: () => false },
+          admin: {
+            readOnly: true,
+            description:
+              "Subfields, methods, model systems, position type and career stages whose words appear in the title or the source text (no AI, PLAN §6.3), with the words found. Suggestions only: an accepted candidate's job starts with them, and you check and change them there.",
+          },
+        },
+        {
+          name: 'aiSuggestion',
+          label: 'AI draft',
+          type: 'json',
+          access: { create: () => false, update: () => false },
+          admin: {
+            readOnly: true,
+            description:
+              'A draft by Claude from the redacted title and source text (PLAN §6.6): a summary in our own words, the position type, the deadline, the place, the subfields and the career stages, each saying what it came from. It is never shown on the site. Check every fact on the original posting.',
+          },
+        },
+      ],
     },
     {
       name: 'useAiDraft',
@@ -739,6 +754,14 @@ export const Candidates: CollectionConfig = {
         readOnly: true,
         description:
           'The draft job made when the candidate was accepted: open it to add the facts and publish it.',
+      },
+    },
+    {
+      name: 'jobLink',
+      type: 'ui',
+      admin: {
+        position: 'sidebar',
+        components: { Field: '/admin/CandidateSummary#CandidateJobLink' },
       },
     },
     {

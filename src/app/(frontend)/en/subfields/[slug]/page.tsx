@@ -71,13 +71,15 @@ export default async function Page({ params }: Props) {
         {positions.jobs.length > 0 ? (
           <>
             <JobList jobs={positions.jobs} now={requestTime()} locale="en" headingLevel={3} />
-            {positions.total > POSITIONS && (
-              <p>
-                <a href={jobsHref({ subfield: [slug] })}>
-                  {t('subfields.allPositions', { count: positions.total, subfield: label })}
-                </a>
-              </p>
-            )}
+            {/* Always a way on to the jobs list, where the positions narrow by type, place or
+                deadline: with "All 24 positions" when not all are shown here. */}
+            <p>
+              <a href={jobsHref({ subfield: [slug] })}>
+                {positions.total > POSITIONS
+                  ? t('subfields.allPositions', { count: positions.total, subfield: label })
+                  : t('subfields.inJobsList', { subfield: label })}
+              </a>
+            </p>
           </>
         ) : (
           <p>{t.rich('subfields.noPositions', { link: allJobsLink })}</p>

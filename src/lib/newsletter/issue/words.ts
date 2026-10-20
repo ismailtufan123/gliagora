@@ -37,9 +37,12 @@ export function deadlineText(job: IssueJob, t: IssueText): string {
 export const jobPlace = (job: IssueJob) =>
   [job.institution, job.place].filter((part): part is string => Boolean(part)).join(', ')
 
-/** "Postdoc · Deadline: …": the facts under a selected position's title. */
-export const jobFacts = (job: IssueJob, t: IssueText) =>
-  [job.positionType, deadlineText(job, t)].filter(Boolean).join(' · ')
+/** The facts under a selected position's title: its type and its deadline. */
+export const jobFactParts = (job: IssueJob, t: IssueText) =>
+  [job.positionType, deadlineText(job, t)].filter((part): part is string => Boolean(part))
+
+/** "Postdoc · Deadline: …": the facts in one line, for the email and its plain text. */
+export const jobFacts = (job: IssueJob, t: IssueText) => jobFactParts(job, t).join(' · ')
 
 /** The paragraphs of a text that separates them with blank lines (the opening note). */
 export const paragraphsOf = (value: string) =>

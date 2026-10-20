@@ -34,10 +34,11 @@ const endsWith = (path: string) => new RegExp(`${escape(path)}$`)
 
 const row = (page: Page, job: { shortId: string }) => page.locator(`#job-${job.shortId}`)
 /**
- * A Save control's name: "Save", then the hidden ": {title}". Chromium puts a space between the
- * visible word and the hidden part (it is taken out of the flow), so it reads "Save : …".
+ * A Save control's name: "Save" (or "Saved" once saved, D54), then the hidden ": {title}".
+ * Chromium puts a space between the visible word and the hidden part (it is taken out of the
+ * flow), so it reads "Save : …".
  */
-const saveName = (title: string) => new RegExp(`^Save ?: ${escape(title)}$`)
+const saveName = (title: string) => new RegExp(`^Saved? ?: ${escape(title)}$`)
 const saveButton = (page: Page, job: { shortId: string; title: string }) =>
   row(page, job).getByRole('button', { name: saveName(job.title) })
 const pageSave = (page: Page) => page.locator('#save').getByRole('button')
@@ -71,8 +72,13 @@ test.describe('with JavaScript', () => {
     await expect(button).toHaveAttribute('aria-pressed', 'false')
     await expect(status(page)).toBeEmpty()
 
+    await expect(button.locator('.save-label-off')).toBeVisible()
     await button.click()
     await expect(button).toHaveAttribute('aria-pressed', 'true')
+    // The button reads "Saved" now (D54), and its name with it.
+    await expect(button.locator('.save-label-on')).toBeVisible()
+    await expect(button.locator('.save-label-off')).toBeHidden()
+    await expect(button).toHaveAccessibleName(new RegExp(`^Saved ?: ${escape(OPEN.title)}$`))
     await expect(status(page)).toHaveText(`Saved: ${OPEN.title}`)
     await expect(button).toBeFocused()
     await expect(page).toHaveURL(endsWith(LIST))
@@ -105,10 +111,12 @@ test.describe('with JavaScript', () => {
     await page.goto(LIST)
     const button = saveButton(page, OPEN)
     // As for a posting in Arabic (the fake jobs are all in English): the title in the button's
-    // name then has its language and direction (SaveControl).
-    await button.locator('.sr-only > span').evaluate((title) => {
-      title.setAttribute('lang', 'ar')
-      title.setAttribute('dir', 'rtl')
+    // name then has its language and direction (SaveControl), in both its words, Save and Saved.
+    await button.locator('.sr-only > span').evaluateAll((titles) => {
+      for (const title of titles) {
+        title.setAttribute('lang', 'ar')
+        title.setAttribute('dir', 'rtl')
+      }
     })
     await button.click()
     await expect(status(page)).toHaveText(`Saved: ${OPEN.title}`)

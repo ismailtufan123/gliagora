@@ -3,10 +3,12 @@
 // notes, addresses and email addresses only on the reserved example.org and example.com domains,
 // no real people. src/scripts/fake-queue.ts stores them after the fake jobs.
 
+import type { AiDraft } from '@/lib/ai/draft'
 import type { DataRequestKind, DataRequestSource } from '@/lib/data-requests/kinds'
 import type { DataRequestAction, DataRequestStatus } from '@/lib/data-requests/status'
 import type { ReportAction, ReportKind, ReportStatus } from '@/lib/reports/status'
 import type { RejectionReason, SubmissionKind } from '@/lib/review/status'
+import type { ExtractedFacts } from '@/lib/sources/facts'
 
 import { postingUrl } from './fake-jobs-data'
 import { FIXED_JOBS } from './fake-jobs-fixed'
@@ -50,6 +52,10 @@ export type FakeCandidate = {
   institutionRorId?: string
   snippet: string
   review?: FakeReview
+  /** As a source monitor would store them (src/lib/sources/facts.ts). */
+  extracted?: ExtractedFacts
+  /** As the weekly AI drafts store one (src/lib/ai/draft.ts), for the admin's plain-words panel. */
+  aiSuggestion?: AiDraft
 }
 
 const note = (text: string) => `${FAKE_QUEUE_NOTE} ${text}`
@@ -141,6 +147,38 @@ export const FAKE_CANDIDATES: FakeCandidate[] = [
     snippet: note(
       'From a mailing list: a research assistant position in a zebrafish behaviour group; details on the institute page.',
     ),
+    extracted: {
+      version: 1,
+      readAt: '2026-10-18T04:41:00.000Z',
+      listedOn: { kind: 'page', url: 'https://careers.example.org/vacancies/' },
+      page: 'read',
+      title: { value: 'Research assistant in zebrafish behaviour', from: "the posting's heading" },
+      deadline: {
+        value: { date: '2026-11-30', timeZone: 'Europe/Lisbon' },
+        from: "the text: 'Applications close on 30 November 2026'",
+      },
+      location: { value: 'Lisbon, Portugal', from: "the posting's address line" },
+      published: { value: '2026-10-12', from: 'the list' },
+    },
+    aiSuggestion: {
+      version: 1,
+      by: 'claude-code',
+      at: '2026-10-19T10:00:00.000Z',
+      from: 'the redacted title and source text exported on 19 Oct 2026',
+      inputHash: '0'.repeat(64),
+      summary:
+        'A research assistant post in a group that studies zebrafish behaviour, running experiments and looking after the fish facility.',
+      positionType: 'research-staff',
+      careerStages: ['research-staff'],
+      subfields: ['behavioral'],
+      deadline: {
+        kind: 'fixed',
+        date: '2026-11-30',
+        timeZone: 'Europe/Lisbon',
+        from: "the text: 'Applications close on 30 November 2026'",
+      },
+      place: { city: 'Lisbon', country: 'PT', from: "the posting's address line" },
+    },
   },
   {
     // Nearly the title of a fixed job at the same institution: listed as a possible duplicate.

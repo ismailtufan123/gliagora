@@ -93,6 +93,15 @@ describe.skipIf(!ADMIN_URL)('search on a scratch database', () => {
     return id
   }
 
+  /** Tags a job with taxonomy terms (seeded by the migrations), as Payload stores them. */
+  async function tag(jobId: number, path: string, slugs: string[]) {
+    for (const [order, slug] of slugs.entries()) {
+      await db.execute(sql`
+        insert into jobs_rels ("order", parent_id, path, terms_id)
+        select ${order + 1}, ${jobId}, ${path}, t.id from terms t where t.slug = ${slug}`)
+    }
+  }
+
   beforeAll(async () => {
     admin = drizzle(ADMIN_URL!)
     // Identifiers cannot be parameters; these are made here, from digits and a UUID.
@@ -160,6 +169,18 @@ describe.skipIf(!ADMIN_URL)('search on a scratch database', () => {
       institution: karolinska,
       deadlineInDays: -1,
     })
+    // Found by its tags only (D56): neither its title nor its summary names them.
+    ids.manager = await job({
+      title: 'Laboratory manager',
+      summary: 'Runs the lab day to day.',
+      institution: geneva,
+      deadlineInDays: 40,
+    })
+    await tag(ids.manager, 'subfields', ['glia', 'systems-circuits'])
+    await tag(ids.manager, 'methods', ['electrophysiology'])
+    await tag(ids.manager, 'modelSystems', ['zebrafish'])
+    // Tagged the same, but closed: never found.
+    await tag(ids.expired, 'subfields', ['glia'])
     // Enough open positions that the planner reads the full-text index, as it will on the server.
     await db.execute(sql`
       insert into jobs (title, summary, institution_id, status, deadline_kind, deadline_at,
@@ -288,7 +309,7 @@ describe.skipIf(!ADMIN_URL)('search on a scratch database', () => {
 
     it('finds longer words from the last word (prefix)', async () => {
       expect((await jobs('astro')).sort()).toEqual([ids.phd, ids.postdoc, ids.engineer].sort())
-      expect(await jobs('glia')).toEqual([ids.postdoc])
+      expect(await jobs('glia')).toEqual([ids.postdoc, ids.manager])
       // Only the last word, and only from three characters.
       expect(await jobs('astro calcium')).toEqual([])
       expect(await jobs('po')).toEqual([])
@@ -307,7 +328,7 @@ describe.skipIf(!ADMIN_URL)('search on a scratch database', () => {
       }
       expect(await jobs('phd karolinska')).toEqual([ids.phd])
       expect(await jobs('istanbul postdoc')).toEqual([ids.postdoc])
-      expect(await jobs('geneve')).toEqual([ids.engineer])
+      expect(await jobs('geneve')).toEqual([ids.engineer, ids.manager])
     })
 
     it('reads a slash as a space, and web search syntax', async () => {
@@ -359,6 +380,24 @@ describe.skipIf(!ADMIN_URL)('search on a scratch database', () => {
         rankedJobsSql(await search('astrocyte'), NOW, 1),
       )
       expect(top).toEqual([{ id: ids.phd, total: 3 }])
+    })
+
+    it('finds open positions by the labels of their subfields, methods and model systems', async () => {
+      // In the postdoc's title (ranked first) and in the manager's tags.
+      expect(await jobs('glial biology')).toEqual([ids.postdoc, ids.manager])
+      expect(await jobs('zebrafish')).toEqual([ids.manager])
+      expect(await jobs('ELECTROPHYSIOLOGY')).toEqual([ids.manager])
+      // With words from elsewhere: the institution's name, the title.
+      expect(await jobs('geneve zebrafish')).toEqual([ids.manager])
+      expect(await jobs('laboratory manager glial')).toEqual([ids.manager])
+      // The prefix of the last word; a word in the title ranks above the same word in a tag.
+      expect(await jobs('glia')).toEqual([ids.postdoc, ids.manager])
+      // A phrase lies within one label, never across two.
+      expect(await jobs('"systems and circuits"')).toEqual([ids.manager])
+      expect(await jobs('"biology systems"')).toEqual([])
+      expect(await jobs('"circuits electrophysiology"')).toEqual([])
+      // Words that are in no tag, title, summary or institution find nothing.
+      expect(await jobs('zebrafish karolinska')).toEqual([])
     })
 
     it("uses the full-text index for the job's own words", async () => {
