@@ -1,6 +1,6 @@
 # Next task
 
-Status: **open**
+Status: **done** (2026-10-21; #110 and #111)
 Written: 2026-10-17, by the operator's planning chat (Claude) on the operator's behalf. Parked on 2026-10-18 for the UI/UX pass, and put back on 2026-10-21 once that pass was done (#107, #108).
 
 ## How this file works
