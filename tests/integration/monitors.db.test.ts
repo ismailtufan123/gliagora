@@ -6,7 +6,8 @@ import { checkLinks } from '@/jobs/maintenance/checkLinks'
 import { monitorSources } from '@/jobs/maintenance/monitorSources'
 import { purgeSourcePostings, purgeSourceRuns } from '@/jobs/maintenance/purgeRetention'
 import { type Fetcher, FetchProblem } from '@/lib/monitors/http'
-import { monitorReport } from '@/lib/monitors/report'
+import { WITHHELD_TITLE, monitorReport } from '@/lib/monitors/report'
+import { storedFacts } from '@/lib/sources/facts'
 import { forgetTaxonomy } from '@/lib/tags/terms'
 
 import { institution, job, rows, testPayload, unique } from './helpers'
@@ -319,6 +320,37 @@ describe('monitorSources', () => {
   })
 })
 
+describe("what a list's rows say (M7, second round)", () => {
+  it("skips a row the list marks closed without reading it, and takes the list's closing date", async () => {
+    const host = `${unique('jobs')}.example.org`
+    const at = (n: number) => `https://${host}/jobs/${n}`
+    const list = `<table><tr><th>Status</th><th>Title</th><th>Closing Date</th></tr>
+      <tr><td>In progress</td><td><a href="/jobs/1">Postdoc in synaptic plasticity</a></td><td>2026-11-06</td></tr>
+      <tr><td>Closed</td><td><a href="/jobs/2">Postdoc in synaptic plasticity, 2024</a></td><td>2024-12-26</td></tr></table>`
+    const web = fakeWeb({
+      [`https://${host}/jobs/`]: list,
+      [at(1)]: posting('Postdoc in synaptic plasticity', '<p>Neurons and synapses.</p>'),
+      [at(2)]: posting('Postdoc in synaptic plasticity, 2024', '<p>Neurons and synapses.</p>'),
+    })
+    const source = await pageSource(host)
+    const { results } = await monitorSources(payload, now, {
+      only: [source.id],
+      fetcher: web.fetcher,
+    })
+    expect(results[0]?.counts).toMatchObject({ new: 2, read: 1, candidates: 1, closed: 1 })
+    expect(web.asked).not.toContain(at(2))
+    const { docs } = await payload.find({
+      collection: 'candidates',
+      where: { source: { equals: source.id } },
+      depth: 0,
+    })
+    expect(storedFacts(docs[0]?.extracted)?.deadline).toEqual({
+      value: { date: '2026-11-06', timeZone: null },
+      from: 'the list: Closing Date: 2026-11-06',
+    })
+  })
+})
+
 describe('the record of each run and the report (M7, second round)', () => {
   it('records each run with its counts, also the postings left for the next run', async () => {
     const host = `${unique('jobs')}.example.org`
@@ -445,6 +477,23 @@ describe('the record of each run and the report (M7, second round)', () => {
     })
     const again = await monitorReport(payload, now, { source: source.id, parts: ['candidates'] })
     expect(again.candidates?.find((c) => c.id === byHand.id)?.title).toBeNull()
+
+    // Nor a title partly in a script whose names redaction cannot find (invented: "the Wang Kai
+    // group seeks a research assistant").
+    const caseless = await payload.create({
+      collection: 'candidates',
+      data: {
+        kind: 'job',
+        status: 'new',
+        source: source.id,
+        rawTitle: '王凯研究组招聘研究助理',
+        rawUrl: at(8),
+      },
+      depth: 0,
+    })
+    const withheld = await monitorReport(payload, now, { source: source.id, parts: ['candidates'] })
+    expect(withheld.candidates?.find((c) => c.id === caseless.id)?.title).toBe(WITHHELD_TITLE)
+    expect(JSON.stringify(withheld)).not.toContain('王凯')
 
     const onlySkipped = await monitorReport(payload, now, { source: source.id, parts: ['skipped'] })
     expect(Object.keys(onlySkipped).sort()).toEqual(['generatedAt', 'skipped'])

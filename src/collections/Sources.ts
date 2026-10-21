@@ -135,7 +135,7 @@ export const Sources: CollectionConfig = {
     ],
     listSearchableFields: ['name', 'url'],
     description:
-      'Where positions come from (PLAN §6.1). A monitor reads the feeds, APIs, vacancy list pages and sitemaps once a day, where robots.txt and the terms allow it, and puts new neuroscience postings into the review queue as New candidates. Manual sources are checked by an editor: open the page, add what is new as candidates, then tick "Looked at today". Job boards are never sources.',
+      'Where positions come from (PLAN §6.1). A monitor reads the feeds, APIs, vacancy list pages and sitemaps once a day, where robots.txt and the terms allow it, and puts new neuroscience postings into the review queue as New candidates. Manual sources are checked by an editor: open the page, add what is new as candidates, then tick "Looked at today". Sources "Left out" are kept only to record why they are not used (see their terms and notes). Job boards are never sources.',
     pagination: { defaultLimit: 50 },
   },
   defaultSort: 'name',

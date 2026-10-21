@@ -239,6 +239,25 @@ export function deadlineFromText(
   return null
 }
 
+/**
+ * The deadline a list gives in a column of its own (IBS's "Closing Date"): the cell's first date,
+ * which counts as the source's data, like `validThrough`.
+ */
+export function deadlineFromList(
+  listed: { label: string; value: string } | undefined,
+  country: string | null,
+  now: Date,
+): FoundDeadline | null {
+  if (!listed) return null
+  const found = firstDate(fold(listed.value), country === 'US')
+  if (!found || !plausible(found.date, now)) return null
+  return {
+    date: found.date,
+    timeZone: zoneAfter(fold(listed.value).slice(found.end)),
+    from: `the list: ${quote(`${listed.label}: ${listed.value}`)}`,
+  }
+}
+
 /** The deadline in a JobPosting's `validThrough` ("2026-11-03" or "2026-11-03T23:59:00+01:00"). */
 export function deadlineFromValidThrough(
   value: string | undefined,
@@ -355,16 +374,22 @@ const pastDay = (date: string, now: Date) => {
   return at <= now.getTime() + 86_400_000 && at >= now.getTime() - 10 * 366 * 86_400_000
 }
 
-/** The calendar day of an ISO date or date-time, or of a date a feed or an API gives. */
-export function dayOf(value: string | undefined | null, now: Date): string | null {
+/**
+ * The calendar day of an ISO date or date-time, of a date a feed or an API gives, or of a date a
+ * list's cell writes as people do ("21.10.2026", "3 November 2026"; `country` decides 3/11).
+ */
+export function dayOf(
+  value: string | undefined | null,
+  now: Date,
+  country: string | null = null,
+): string | null {
   if (!value) return null
   const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim())
   let date: string | null = null
   if (iso) date = validDay(Number(iso[1]), Number(iso[2]), Number(iso[3]))
-  else {
-    const parsed = new Date(value)
-    if (!Number.isNaN(parsed.getTime())) date = parsed.toISOString().slice(0, 10)
-  }
+  // Else our own reading, which needs a day ("Wed, 12 Mar 2025 09:30:00 GMT", "21.10.2026"):
+  // JavaScript's would take 10.11.2026 for 11 October and "March 2026" for a day, in local time.
+  else date = firstDate(fold(value), country === 'US')?.date ?? null
   return date && pastDay(date, now) ? date : null
 }
 

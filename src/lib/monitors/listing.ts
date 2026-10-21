@@ -24,6 +24,10 @@ export type ListedPosting = {
   detailUrl?: string
   published?: string
   location?: string
+  /** The list's own mark that the posting is closed ("Closed", "Expired"): it is not read. */
+  closedInList?: string
+  /** The list's "Closing date" for the posting: the column's heading and the cell. */
+  listedDeadline?: { label: string; value: string }
 }
 
 export type SourceToRead = {
@@ -107,16 +111,24 @@ function fromPage(
   byId: { idPattern: RegExp; template: string } | null,
 ): ListedPosting[] {
   const doc = parseHtml(fetched.text)
+  const wanted = (url: string) => !pattern || pattern.test(url)
   const links = (
-    byId ? idLinksOf(doc, byId.idPattern, byId.template) : linksOf(doc, fetched.url)
-  ).filter((link) => !pattern || pattern.test(link.url))
+    byId ? idLinksOf(doc, byId.idPattern, byId.template) : linksOf(doc, fetched.url, wanted)
+  ).filter((link) => wanted(link.url))
   // A list often links a posting twice (its title and "Read more"): the longest text names it.
-  const byUrl = new Map<string, string>()
+  // What the rows say is kept from whichever link's row says it.
+  const byUrl = new Map<string, ListedPosting>()
   for (const link of links) {
     const known = byUrl.get(link.url)
-    if (known === undefined || link.text.length > known.length) byUrl.set(link.url, link.text)
+    const row = link.row ?? {}
+    const posting: ListedPosting = known ?? { url: link.url, canonicalUrl: '', title: link.text }
+    if (link.text.length > posting.title.length) posting.title = link.text
+    posting.closedInList ??= row.closed
+    posting.listedDeadline ??= row.deadline
+    posting.published ??= row.published?.value
+    byUrl.set(link.url, posting)
   }
-  return [...byUrl].map(([url, text]) => ({ url, canonicalUrl: '', title: text }))
+  return [...byUrl.values()]
 }
 
 /**

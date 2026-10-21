@@ -2,7 +2,7 @@ import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import { sql } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
 
-import { redacted } from '@/lib/redaction/redact'
+import { inCaselessScript, redacted } from '@/lib/redaction/redact'
 import { storedFacts } from '@/lib/sources/facts'
 import type { StoredTagSuggestions } from '@/lib/tags/terms'
 
@@ -10,8 +10,8 @@ import type { StoredTagSuggestions } from '@/lib/tags/terms'
 // went, what became of its candidates, and which postings were skipped and why, so that the rules
 // and the sources can be judged on real runs. Read only. It returns counts, IDs, outcomes, dates and
 // titles with names removed (the one redaction function, again on titles the monitor stored
-// redacted); never a candidate's source text or notes, a posting's address, or anything about
-// members.
+// redacted; a title in a script redaction cannot read is withheld); never a candidate's source text
+// or notes, a posting's address, or anything about members.
 
 export const REPORT_PARTS = ['sources', 'candidates', 'skipped'] as const
 
@@ -107,9 +107,18 @@ export type MonitorReport = {
 
 const db = (payload: Payload) => (payload.db as unknown as PostgresAdapter).drizzle
 
-/** A title with names removed, or null; never an address (a title may have fallen back to one). */
-const titleOf = (value: string | null | undefined): string | null =>
-  value && !/^\s*(?:https?:)?\/\//i.test(value) ? redacted(value) : null
+/** What the report shows for a title written partly in a script whose names redaction misses. */
+export const WITHHELD_TITLE = '[withheld: partly in a script whose names redaction cannot find]'
+
+/**
+ * A title with names removed, or null; never an address (a title may have fallen back to one), and
+ * never a title partly in Chinese, Japanese, Korean or another script without capitals, whose names
+ * redaction cannot find (CEBSIT's Chinese lists name their groups' heads).
+ */
+const titleOf = (value: string | null | undefined): string | null => {
+  if (!value || /^\s*(?:https?:)?\/\//i.test(value)) return null
+  return inCaselessScript(value) ? WITHHELD_TITLE : redacted(value)
+}
 
 const iso = (value: unknown): string | null =>
   value === null || value === undefined ? null : new Date(value as string).toISOString()

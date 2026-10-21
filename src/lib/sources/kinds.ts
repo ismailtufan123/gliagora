@@ -2,7 +2,10 @@
 // monitor reads `rss`, `api`, `page` and `sitemap` sources by itself, at most once a day; an editor
 // checks `manual` ones, which the dashboard shows when they are due for a look. A sitemap (M7's
 // second round) is the XML list of posting pages a site names in its robots.txt: Workday career
-// sites, whose lists need JavaScript, name one, and their posting pages carry JobPosting data.
+// sites, whose lists need JavaScript, name one, and their posting pages carry JobPosting data. A
+// source `left-out` is kept only to record why it is not used (its terms forbid a link to a
+// posting's own page: NUS, the operator's decision of 2026-10-18), so that no one adds it again:
+// no monitor reads it, the dashboard never asks for a look, and it cannot be switched on.
 
 export const SOURCE_KINDS = [
   { value: 'rss', label: 'RSS or Atom feed' },
@@ -10,6 +13,7 @@ export const SOURCE_KINDS = [
   { value: 'page', label: 'Vacancy list page (plain HTML)' },
   { value: 'sitemap', label: 'Sitemap of posting pages (XML)' },
   { value: 'manual', label: 'Checked by an editor' },
+  { value: 'left-out', label: 'Left out: neither read nor checked' },
 ] as const
 
 export type SourceKind = (typeof SOURCE_KINDS)[number]['value']

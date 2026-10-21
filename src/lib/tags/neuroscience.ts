@@ -252,10 +252,29 @@ function merged(spans: readonly Span[]): Span[] {
   return result
 }
 
+// Uses of neuroscience words in other fields (M7, second round: UCSF's "Cardiology
+// Electrophysiology Faculty" passed on its title), folded: they count in neither title nor text.
+const OTHER_FIELDS = new RegExp(
+  [
+    // One word may stand between ("heart rhythm electrophysiology"); letters only, joined by
+    // single hyphens, so that a run of hyphens cannot make the pattern backtrack.
+    String.raw`(?:cardiac|cardiology|cardiovascular|heart|atrial|ventricular|arrhythmias?)(?:[\s-]+\p{L}+(?:-\p{L}+)*)?[\s-]+electrophysiolog\p{L}*`,
+    String.raw`electrophysiolog\p{L}*[\s-]+(?:of[\s-]+the[\s-]+)?(?:heart|cardiac)`,
+    String.raw`neuroendocrine[\s-]+(?:tumou?rs?|neoplasms?|carcinomas?|cancers?|neoplasias?)`,
+  ]
+    .map((pattern) => String.raw`(?<![\p{L}\p{N}])${pattern}`)
+    .join('|'),
+  'gu',
+)
+
+/** Where `folded` uses a neuroscience word for another field (`OTHER_FIELDS`). */
+const otherFieldSpans = (folded: string): Span[] =>
+  [...folded.matchAll(OTHER_FIELDS)].map((match) => [match.index, match.index + match[0].length])
+
 /** How many neuroscience words `text` holds, outside the spans in `ignored`. */
 function count(text: string, compiled: CompiledTerms, ignored: readonly Span[] = []): number {
   const folded = fold(text)
-  const skipped = merged(ignored)
+  const skipped = merged([...ignored, ...otherFieldSpans(folded)])
   const found: Array<[number, number]> = []
   const add = (start: number, end: number) => {
     if (!overlaps(skipped, start, end)) found.push([start, end])

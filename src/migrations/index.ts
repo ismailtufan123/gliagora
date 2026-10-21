@@ -37,6 +37,8 @@ import * as migration_20261017_194500_source_adapters from './20261017_194500_so
 import * as migration_20261017_195000_sources_by_adapters from './20261017_195000_sources_by_adapters';
 import * as migration_20261017_210000_sources_round_2 from './20261017_210000_sources_round_2';
 import * as migration_20261017_193500_chinese_lists_manual from './20261017_193500_chinese_lists_manual';
+import * as migration_20261021_122950_source_left_out from './20261021_122950_source_left_out';
+import * as migration_20261021_130000_sources_round_2_findings from './20261021_130000_sources_round_2_findings';
 
 export const migrations = [
   {
@@ -232,6 +234,16 @@ export const migrations = [
   {
     up: migration_20261017_193500_chinese_lists_manual.up,
     down: migration_20261017_193500_chinese_lists_manual.down,
-    name: '20261017_193500_chinese_lists_manual'
+    name: '20261017_193500_chinese_lists_manual',
+  },
+  {
+    up: migration_20261021_122950_source_left_out.up,
+    down: migration_20261021_122950_source_left_out.down,
+    name: '20261021_122950_source_left_out',
+  },
+  {
+    up: migration_20261021_130000_sources_round_2_findings.up,
+    down: migration_20261021_130000_sources_round_2_findings.down,
+    name: '20261021_130000_sources_round_2_findings',
   },
 ];

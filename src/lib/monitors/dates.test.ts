@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ageInDays,
   dayOf,
+  deadlineFromList,
   deadlineFromText,
   deadlineFromValidThrough,
   hasClosed,
@@ -84,6 +85,33 @@ describe('deadlineFromValidThrough', () => {
   })
 })
 
+describe('Turkish dates (M7, second round)', () => {
+  it('reads month names with a dotless ı', () => {
+    expect(day('Son başvuru tarihi: 25 Kasım 2026', 'TR')).toBe('2026-11-25')
+    expect(day('SON BAŞVURU TARİHİ : 30 Aralık 2026', 'TR')).toBe('2026-12-30')
+  })
+})
+
+describe('deadlineFromList (M7, second round)', () => {
+  it("reads the day in a list's own deadline column, saying where it came from", () => {
+    expect(deadlineFromList({ label: 'Closing Date', value: '2026-11-06' }, 'KR', now)).toEqual({
+      date: '2026-11-06',
+      timeZone: null,
+      from: 'the list: Closing Date: 2026-11-06',
+    })
+    expect(
+      deadlineFromList({ label: 'Deadline', value: '06.11.2026 12:00 GMT' }, 'GB', now),
+    ).toMatchObject({
+      date: '2026-11-06',
+      timeZone: 'Europe/London',
+    })
+    expect(
+      deadlineFromList({ label: 'Deadline', value: 'open until filled' }, 'GB', now),
+    ).toBeNull()
+    expect(deadlineFromList(undefined, 'GB', now)).toBeNull()
+  })
+})
+
 describe('openEndedFromText', () => {
   it('finds postings without a fixed day', () => {
     expect(openEndedFromText('The post remains open until the position is filled.')?.value).toBe(
@@ -116,6 +144,16 @@ describe('when a posting was published', () => {
     // Not in the future, nor more than ten years back.
     expect(dayOf('2027-01-01', now)).toBeNull()
     expect(dayOf('2001-01-01', now)).toBeNull()
+  })
+
+  it("reads a day a list's cell writes as people do, day first except in the United States", () => {
+    expect(dayOf('01.10.2026', now)).toBe('2026-10-01')
+    // JavaScript alone would take 10.03.2026 for 3 October, in the computer's time zone.
+    expect(dayOf('10.03.2026', now)).toBe('2026-03-10')
+    expect(dayOf('10.03.2026', now, 'US')).toBe('2026-10-03')
+    expect(dayOf('3 March 2026', now)).toBe('2026-03-03')
+    // A month without a day is no day.
+    expect(dayOf('March 2026', now)).toBeNull()
   })
 
   it('reads a day right after a "posted" or "published" word, in several languages', () => {

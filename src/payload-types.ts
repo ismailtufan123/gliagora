@@ -1575,7 +1575,7 @@ export interface Submission {
   createdAt: string;
 }
 /**
- * Where positions come from (PLAN §6.1). A monitor reads the feeds, APIs, vacancy list pages and sitemaps once a day, where robots.txt and the terms allow it, and puts new neuroscience postings into the review queue as New candidates. Manual sources are checked by an editor: open the page, add what is new as candidates, then tick "Looked at today". Job boards are never sources.
+ * Where positions come from (PLAN §6.1). A monitor reads the feeds, APIs, vacancy list pages and sitemaps once a day, where robots.txt and the terms allow it, and puts new neuroscience postings into the review queue as New candidates. Manual sources are checked by an editor: open the page, add what is new as candidates, then tick "Looked at today". Sources "Left out" are kept only to record why they are not used (see their terms and notes). Job boards are never sources.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sources".
@@ -1587,7 +1587,7 @@ export interface Source {
    * The employer whose positions it lists. New candidates get it; change it on a candidate whose posting is another institute's.
    */
   institution?: (number | null) | Institution;
-  kind: 'rss' | 'api' | 'page' | 'sitemap' | 'manual';
+  kind: 'rss' | 'api' | 'page' | 'sitemap' | 'manual' | 'left-out';
   apiFormat?: ('greenhouse' | 'lever' | 'smartrecruiters') | null;
   /**
    * How often it is read: by the monitor (at most once a day), or by an editor.

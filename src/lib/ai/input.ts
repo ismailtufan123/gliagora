@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-import { redacted } from '@/lib/redaction/redact'
+import { inCaselessScript, redacted } from '@/lib/redaction/redact'
 import { storedFacts } from '@/lib/sources/facts'
 import type { StoredTagSuggestions } from '@/lib/tags/terms'
 import type { Candidate, Institution } from '@/payload-types'
@@ -40,51 +40,13 @@ export type DraftInput = {
 const one = (value: string | null | undefined) => (value ? (redacted(value) ?? '') : '')
 
 /**
- * Scripts without capital letters, where redaction cannot find names (it finds them by their
- * capitals and the words around them, PLAN §6.6): Chinese, Japanese, Korean, Arabic, Hebrew, Thai,
- * the Indic scripts and others.
- */
-const CASELESS = new RegExp(
-  `[${[
-    'Han',
-    'Hiragana',
-    'Katakana',
-    'Hangul',
-    'Arabic',
-    'Hebrew',
-    'Syriac',
-    'Thaana',
-    'Thai',
-    'Lao',
-    'Khmer',
-    'Myanmar',
-    'Tibetan',
-    'Devanagari',
-    'Bengali',
-    'Gurmukhi',
-    'Gujarati',
-    'Oriya',
-    'Tamil',
-    'Telugu',
-    'Kannada',
-    'Malayalam',
-    'Sinhala',
-    'Ethiopic',
-    'Georgian',
-  ]
-    .map((script) => `\\p{Script=${script}}`)
-    .join('')}]`,
-  'u',
-)
-
-/**
  * Whether redaction cannot vouch for `input`: its title, text or facts are written partly in a
  * script without capital letters, whose names the rules cannot find (M7 notes: Chinese, Japanese
  * and Korean; Arabic, Hebrew, Thai and the Indic scripts alike). Such a candidate is drafted by
  * hand, as §6.6 says for text redaction cannot read, and never sent.
  */
 export function cannotRedact(input: DraftInput): boolean {
-  return CASELESS.test(
+  return inCaselessScript(
     [
       input.title,
       input.text,

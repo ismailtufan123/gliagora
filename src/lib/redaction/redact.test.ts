@@ -62,6 +62,31 @@ describe('redact: names', () => {
     expect(redact('Join Dr. Maria van der Berg in Leiden').text).toBe(
       `Join Dr. ${PLACEHOLDER.name} in Leiden`,
     )
+    // A title joined to the employer's name by two hyphens (CEBSIT's titles, M7 second round).
+    expect(
+      redact(
+        'Lab Manager Position in the lab of Dr. Jane Kapoor--Center for Excellence in Brain Science',
+      ).text,
+    ).toBe(
+      `Lab Manager Position in the lab of Dr. ${PLACEHOLDER.name}--Center for Excellence in Brain Science`,
+    )
+    expect(redact('Prof. Anna Müller-Lüdenscheidt leads it').text).toBe(
+      `Prof. ${PLACEHOLDER.name} leads it`,
+    )
+  })
+
+  it("replaces a person's initials in brackets, not a country's", () => {
+    expect(redact('PhD position - READEXP (A.C.)').text).toBe(
+      `PhD position - READEXP (${PLACEHOLDER.name})`,
+    )
+    expect(redact('Postdoc (J. R. T.) in Leipzig').text).toBe(
+      `Postdoc (${PLACEHOLDER.name}) in Leipzig`,
+    )
+    expect(redact('Funded by the NIH (U.S.)').text).toBe('Funded by the NIH (U.S.)')
+    expect(redact('Physician-scientist (M.D.) in Ohio (U.S.A.)').text).toBe(
+      'Physician-scientist (M.D.) in Ohio (U.S.A.)',
+    )
+    expect(redact('Postdoc (m/f/d)').text).toBe('Postdoc (m/f/d)')
   })
 
   it('replaces the name of a lab or group, not its topic', () => {
