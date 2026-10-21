@@ -3,7 +3,7 @@ import { gzipSync } from 'node:zlib'
 import { describe, expect, it } from 'vitest'
 
 import { type Fetcher, FetchProblem, politeFetcher } from './http'
-import { comparableText, readPostingPage } from './html'
+import { comparableText, pageTitleFor, readPostingPage } from './html'
 import { readList, titleFromAddress, withoutSession } from './listing'
 
 // Invented employers and postings only.
@@ -269,6 +269,140 @@ describe('readPostingPage', () => {
   })
 })
 
+describe('readPostingPage: chrome without its own element (M7, second round)', () => {
+  it("leaves out menus, breadcrumbs, cookie notices, other postings' teasers and hidden text", () => {
+    const page = readPostingPage(`<html><body>
+      <div class="parent-menu"><ul class="submenu"><li>Centre for Restorative Neurotechnology</li></ul></div>
+      <div class="mobileOpenSubMenu">Neuroscience of Disease Programme</div>
+      <ol class="breadcrumbs"><li>Brain research</li></ol>
+      <div id="cookie-banner">We use cookies on our neuroscience pages.</div>
+      <div role="navigation">Neural circuits</div>
+      <h1>Bioinformatician in cancer genomics</h1>
+      <p>Analyse tumour genomes.</p>
+      <p style="display: none">Neuroscience brain</p>
+      <section class="related-vacancies component"><div class="vacancy-item">PhD in vascular neurology</div></section>
+      </body></html>`)
+    expect(page.text).toBe('Bioinformatician in cancer genomics\nAnalyse tumour genomes.')
+  })
+
+  it("never takes the page's own containers, or a wrapper that holds the posting, for chrome", () => {
+    const page = readPostingPage(`<html><body class="menu-closed"><div class="menu-push-wrapper">
+      <h1>Postdoc in glial biology</h1><p>We study astrocytes.</p></div></body></html>`)
+    expect(page.text).toBe('Postdoc in glial biology\nWe study astrocytes.')
+  })
+
+  it('gives every title the page has, in order', () => {
+    const page = readPostingPage(`<html><head><title>Example Institute</title>
+      <meta property="og:title" content="Example Institute"></head>
+      <body><h1>Research assistant in the [name] lab</h1></body></html>`)
+    expect(page.titles).toEqual([
+      { from: 'og:title', value: 'Example Institute' },
+      { from: 'h1', value: 'Research assistant in the [name] lab' },
+      { from: 'title', value: 'Example Institute' },
+    ])
+  })
+})
+
+describe('pageTitleFor (M7, second round)', () => {
+  const titles = (...pairs: Array<[string, string]>) => ({
+    titles: pairs.map(([from, value]) => ({ from: from as 'h1', value })),
+  })
+
+  it("takes the page's title that agrees with the list's link, not the site's name", () => {
+    const page = titles(
+      ['og:title', 'Example Institute for Brain Research, Beijing (EIBR, Beijing)'],
+      ['h1', 'Research Assistant Opportunities: Join the [name] Lab at EIBR'],
+      ['title', 'Example Institute for Brain Research, Beijing (EIBR, Beijing)'],
+    )
+    expect(
+      pageTitleFor(
+        page,
+        'Research Assistant Opportunities: Join the [name] Lab at EIBR NEW Example Institute | 1 | Full-Time',
+      ),
+    ).toEqual({
+      from: 'h1',
+      value: 'Research Assistant Opportunities: Join the [name] Lab at EIBR',
+    })
+    // Without the h1, the list's link names the posting better than the site's name.
+    expect(
+      pageTitleFor(
+        titles(['og:title', 'Example Institute for Brain Research, Beijing']),
+        'Postdoctoral Researcher in Systems Neuroscience',
+      ),
+    ).toBeNull()
+  })
+
+  it("prefers the title without the site's name, and keeps the page's title for a short link", () => {
+    expect(
+      pageTitleFor(
+        titles(['og:title', 'Postdoc in glia | Example Foundation'], ['h1', 'Postdoc in glia']),
+        'Postdoc in glia',
+      ),
+    ).toEqual({ from: 'h1', value: 'Postdoc in glia' })
+    // A page's title that only adds the site's name to the link's: the link, unless cut short.
+    const suffixed = titles([
+      'og:title',
+      'AI Research Scientist II  Office of the CTO, Careers At Example Institute',
+    ])
+    expect(pageTitleFor(suffixed, 'AI Research Scientist II - Office of the CTO')).toBeNull()
+    expect(pageTitleFor(suffixed, 'AI Research Scientist II - Office of…')).toEqual(
+      suffixed.titles[0],
+    )
+    expect(pageTitleFor(titles(['h1', 'Postdoc in glial biology']), 'Read more')).toEqual({
+      from: 'h1',
+      value: 'Postdoc in glial biology',
+    })
+    // A <title> alone never beats the list (Oxford's CoreHR: "Job Details").
+    expect(pageTitleFor(titles(['title', 'Job Details']), 'Read more')).toBeNull()
+    // Without a list title (a sitemap's), the page's first.
+    expect(pageTitleFor(titles(['title', 'Postdoc']), null)).toEqual({
+      from: 'title',
+      value: 'Postdoc',
+    })
+  })
+})
+
+describe('readList: what a list row says (M7, second round)', () => {
+  const source = {
+    kind: 'page' as const,
+    url: 'https://jobs.example.org/board/',
+    postingPattern: '^https://jobs\\.example\\.org/board/view\\?idx=\\d+$',
+  }
+
+  it("reads a table's status and its Closing Date and Posted columns", async () => {
+    const list = `<table><thead><tr><th>Status</th><th>Title</th><th>Closing Date</th><th>Posted</th></tr></thead>
+      <tbody>
+        <tr><td> In progress </td><td><a href="/board/view?idx=3">2026-10 Postdoc in synaptic biology</a></td><td>2026-11-06</td><td>01.10.2026</td></tr>
+        <tr><td> Closed </td><td><a href="/board/view?idx=2">2024-14 Postdoc in synaptic biology</a></td><td>2024-12-26</td><td></td></tr>
+      </tbody></table>`
+    const { postings } = await readList(source, fakeFetcher({ [source.url]: list }), allowAll)
+    expect(postings).toMatchObject([
+      {
+        title: '2026-10 Postdoc in synaptic biology',
+        listedDeadline: { label: 'Closing Date', value: '2026-11-06' },
+        published: '01.10.2026',
+      },
+      { title: '2024-14 Postdoc in synaptic biology', closedInList: 'Closed' },
+    ])
+    expect(postings[0]?.closedInList).toBeUndefined()
+  })
+
+  it('reads a mark only while it is shown', async () => {
+    const card = (
+      idx: number,
+      hidden: [string, string],
+    ) => `<div class="list-item"><a href="/board/view?idx=${idx}">
+      <div class="a-title">Postdoc ${idx} in neural circuits</div>
+      <div class="mark"><span style="${hidden[0]}">NEW</span><span style="${hidden[1]}">Expired</span></div></a></div>`
+    const list = card(1, ['', 'display:none;']) + card(2, ['display:none;', ''])
+    const { postings } = await readList(source, fakeFetcher({ [source.url]: list }), allowAll)
+    expect(postings.map((p) => [p.title, p.closedInList])).toEqual([
+      ['Postdoc 1 in neural circuits NEW', undefined],
+      ['Postdoc 2 in neural circuits Expired', 'Expired'],
+    ])
+  })
+})
+
 describe('readList: a sitemap of posting pages (M7, second round)', () => {
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/TR/xhtml11/xhtml11_schema.html">
@@ -461,6 +595,20 @@ describe('politeFetcher', () => {
     expect(
       (await fetcher.get('https://a.example.org/', { accept: 'text/html', maxBytes: 100 })).text,
     ).toBe('München')
+  })
+
+  it('reads an answer that names no charset as UTF-8, or as Windows-1252 when it is not UTF-8', async () => {
+    const answer = (bytes: number[]) =>
+      politeFetcher({
+        clock: clock(),
+        fetchImpl: (async () =>
+          new Response(new Uint8Array(bytes), {
+            headers: { 'content-type': 'text/html' },
+          })) as never,
+      }).get('https://a.example.org/', { accept: 'text/html', maxBytes: 100 })
+    // "Institute’s" in Windows-1252, then "Müller" in UTF-8.
+    expect((await answer([0x49, 0x6e, 0x73, 0x74, 0x92, 0x73])).text).toBe('Inst’s')
+    expect((await answer([0x4d, 0xc3, 0xbc, 0x6c, 0x6c, 0x65, 0x72])).text).toBe('Müller')
   })
 })
 

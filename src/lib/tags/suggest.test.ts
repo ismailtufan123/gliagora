@@ -142,6 +142,21 @@ describe('neuroscienceCheck', () => {
     expect(check('Finance officer', 'Budgets and invoices.')).toBe(false)
   })
 
+  it("does not count a neuroscience word used for another field's subject (M7, second round)", () => {
+    expect(check('UCSF Fresno - Cardiology Electrophysiology Faculty Opportunity')).toBe(false)
+    expect(
+      check(
+        'Cardiac electrophysiologist',
+        'Electrophysiology of the heart and atrial fibrillation.',
+      ),
+    ).toBe(false)
+    expect(
+      check('Research nurse', 'Neuroendocrine tumours of the pancreas; neuroendocrine neoplasms.'),
+    ).toBe(false)
+    expect(check('Postdoc in cortical electrophysiology')).toBe(true)
+    expect(check('Neuroendocrinology of stress')).toBe(true)
+  })
+
   it('reads Japanese, Chinese and Korean', () => {
     expect(check('脳科学研究センター 研究員')).toBe(true)
     expect(check('神经科学研究所 博士后')).toBe(true)

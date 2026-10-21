@@ -69,16 +69,25 @@ const realClock: Clock = {
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 }
 
-/** The charset an answer names, or one a page names in its first bytes. */
-function charsetOf(contentType: string, head: Uint8Array): string {
+/** The charset an answer names, or one a page names in its first bytes, or null. */
+function charsetOf(contentType: string, head: Uint8Array): string | null {
   const named = /charset=["']?([\w-]+)/i.exec(contentType)?.[1]
   if (named) return named
   const start = new TextDecoder('latin1').decode(head.subarray(0, 2048))
-  return /<meta[^>]+charset=["']?([\w-]+)/i.exec(start)?.[1] ?? 'utf-8'
+  return /<meta[^>]+charset=["']?([\w-]+)/i.exec(start)?.[1] ?? null
 }
 
 function decode(bytes: Uint8Array, contentType: string): string {
   const label = charsetOf(contentType, bytes)
+  if (!label) {
+    // Nothing named: UTF-8, unless the bytes are not UTF-8, as on older pages written in
+    // Windows-1252 (the Allen Institute's list: "Institute’s" read as "Institute�s").
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+    } catch {
+      return new TextDecoder('windows-1252').decode(bytes)
+    }
+  }
   try {
     return new TextDecoder(label).decode(bytes)
   } catch {

@@ -19,6 +19,7 @@ import {
   POSSIBLY_FILLED_DAYS,
   ageInDays,
   dayOf,
+  deadlineFromList,
   deadlineFromText,
   deadlineFromValidThrough,
   hasClosed,
@@ -27,7 +28,7 @@ import {
   publishedFromText,
 } from './dates'
 import { type Fetcher, FetchProblem } from './http'
-import { comparableText, readPostingPage } from './html'
+import { comparableText, pageTitleFor, readPostingPage } from './html'
 import { type ListedPosting, ListProblem, readList, smartRecruitersText } from './listing'
 import type { RobotsCache } from './robots'
 
@@ -196,8 +197,13 @@ type Posting = {
 }
 
 /** A day the list or the posting's data gives as published, with where it came from. */
-function listedDay(value: string | undefined, from: string, now: Date): Fact<string> | undefined {
-  const day = dayOf(value, now)
+function listedDay(
+  value: string | undefined,
+  from: string,
+  now: Date,
+  country: string | null,
+): Fact<string> | undefined {
+  const day = dayOf(value, now, country)
   return day ? { value: day, from: `${from}: ${value}` } : undefined
 }
 
@@ -218,14 +224,18 @@ export function ignoredNamesOf(source: Source): string[] {
 }
 
 /** Reads what the monitor needs of one posting; null when its page is gone (a 404 or 410). */
-async function readPosting(deps: MonitorDeps, posting: ListedPosting): Promise<Posting | null> {
+async function readPosting(
+  deps: MonitorDeps,
+  posting: ListedPosting,
+  country: string | null,
+): Promise<Posting | null> {
   const listed: Posting = {
     title: posting.title,
     titleFrom: 'the list',
     text: posting.text ?? '',
     page: 'from-api',
     location: posting.location ? { value: posting.location, from: 'the list' } : undefined,
-    published: listedDay(posting.published, 'the list', deps.now),
+    published: listedDay(posting.published, 'the list', deps.now, country),
   }
   if (posting.complete) return listed
   const allow = (url: URL) => deps.robots.allows(url)
@@ -263,9 +273,8 @@ async function readPosting(deps: MonitorDeps, posting: ListedPosting): Promise<P
   if (type && !type.includes('html')) return { ...listed, page: 'not-html' }
   const page = readPostingPage(fetched.text)
   if (fetched.tdmReserved || page.tdmReserved) return { ...listed, page: 'robots' }
-  // A page whose only title is its <title> element names the posting less well than the list.
-  const pageTitle =
-    page.titleFrom === 'title' && posting.title && !posting.provisionalTitle ? null : page.title
+  // The page's title that agrees with the list's link: a page may give only its site's name.
+  const pageTitle = pageTitleFor(page, posting.provisionalTitle ? null : posting.title)?.value
   return {
     title: pageTitle ?? posting.title,
     titleFrom: pageTitle ? "the posting's page" : 'the list',
@@ -276,7 +285,7 @@ async function readPosting(deps: MonitorDeps, posting: ListedPosting): Promise<P
       ? { value: page.jobPosting.location, from: "the posting's JobPosting data" }
       : listed.location,
     published:
-      listedDay(page.jobPosting?.datePosted, "the posting's JobPosting data", deps.now) ??
+      listedDay(page.jobPosting?.datePosted, "the posting's JobPosting data", deps.now, country) ??
       listed.published,
   }
 }
@@ -290,9 +299,15 @@ async function handlePosting(
   counts: SourceCounts,
 ): Promise<void> {
   const { payload, now } = deps
+  // The list itself says the posting is closed (IBS's "Closed", CIBR's "Expired"): not read.
+  if (posting.closedInList) {
+    counts.closed++
+    await remember(payload, source.id, posting, 'closed', now)
+    return
+  }
   let read: Posting | null
   try {
-    read = await readPosting(deps, posting)
+    read = await readPosting(deps, posting, country)
   } catch (error) {
     counts.failedPages++
     payload.logger.warn(
@@ -322,7 +337,9 @@ async function handlePosting(
   }
   // The posting's own words win over an earlier validThrough, which some systems fill with the
   // first review date (UC Recruit: "Next review date" in the data, "Final date: …" in the text).
-  const fromData = deadlineFromValidThrough(read.validThrough, now)
+  const fromData =
+    deadlineFromValidThrough(read.validThrough, now) ??
+    deadlineFromList(posting.listedDeadline, country, now)
   const fromText = deadlineFromText(read.text, country, now)
   const deadline: FoundDeadline | null =
     fromData && fromText && fromText.date > fromData.date ? fromText : (fromData ?? fromText)

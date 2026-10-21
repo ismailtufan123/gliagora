@@ -78,7 +78,11 @@ describe('the weekly drafts', () => {
     const exported = await exportForDrafts(payload, new Date('2026-10-20T07:00:00Z'))
     const mine = exported.candidates.filter((c) => [one.id, two.id].includes(c.id))
     expect(mine).toHaveLength(2)
-    const sent = JSON.stringify(exported)
+    // What is sent, without the hashes, whose hex digits could hold "7946" by chance.
+    const sent = JSON.stringify({
+      ...exported,
+      candidates: exported.candidates.map((c) => c.input),
+    })
     expect(sent).not.toMatch(/jane|doe\b|@example|7946|www\.example\.org\/jobs|Editor note/i)
     expect(mine[0]?.input.title).toBe('PhD position in the [name] Lab: astrocytes and sleep')
     expect(exported.vocabularies.subfields).toContainEqual({ slug: 'glia', label: 'Glial biology' })

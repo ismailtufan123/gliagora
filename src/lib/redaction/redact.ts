@@ -3,7 +3,8 @@
 // remembers) or exported for an AI draft. It works by rules, so it lowers the chance that a name is
 // kept but cannot remove it (the risk accepted in §15.2, flag 6): email addresses and phone
 // numbers are found reliably; names only where the text marks them, after a title (Prof., Dr.),
-// before "Lab" or "Group", or after words such as "contact" or "supervised by".
+// before "Lab" or "Group", after words such as "contact" or "supervised by", or as initials in
+// brackets ("(A.C.)").
 //
 // Each removed part becomes a placeholder in square brackets ([email], [phone], [name]), which the
 // rules never match again, so redacting a redacted text changes nothing.
@@ -85,6 +86,11 @@ const LEAD_IN = new RegExp(
   String.raw`(?<![\p{L}\p{N}])(?:(?:the\s+)?(?:laboratory|lab|group|team)\s+of|group\s+led\s+by|led\s+by|headed\s+by|supervised\s+by|(?:under\s+the\s+)?supervision\s+of|supervisors?:|PI:|principal\s+investigator:|contact(?:\s+persons?)?:|(?:please\s+)?contact|(?:informal\s+)?(?:enquiries|inquiries|questions)\s+[^.:\n]{0,40}?\bto|ansprechpartner(?:in)?:?|kontakt:|interlocuteur\s*:|responsable\s*:|referente\s*:|send\s+(?:your\s+)?applications?\s+to|addressed\s+to)\s+`,
   'giu',
 )
+// A person's initials in brackets after a project's name ("PhD position - READEXP (A.C.)", BCBL):
+// two or three capitals with full stops, not a country's (U.S., U.K., E.U.).
+const INITIALS = /(?<=\()(?:\p{Lu}\.[^\S\n]?){2,3}(?=\))/gu
+const NOT_INITIALS = new Set(['U.S.', 'U.K.', 'E.U.', 'U.A.E.', 'P.R.'])
+
 const TITLE_AT = new RegExp(String.raw`${TITLE}${MORE_TITLES}\s+`, 'uy')
 const NAME_AT = new RegExp(NAME, 'uy')
 const NAME_EXACT = new RegExp(String.raw`^${NAME}$`, 'u')
@@ -168,9 +174,13 @@ function looksLikeName(name: string): boolean {
  * "Jane Doe", "Cognitive Neuroscience Smith" before "Lab" gives "Smith".
  */
 function nameIn(found: string, from: 'start' | 'end'): string | null {
-  const words = found.split(/\s+/)
+  // The words of `found` where NAME separates them: spaces, or hyphens between two words
+  // ("Dr. Jane Doe--Center for …"); one hyphen inside a word joins it ("Müller-Lüdenscheidt").
+  const words = [...found.matchAll(/[^\s-]+(?:-[^\s-]+)*/gu)]
   for (let size = words.length; size > 0; size--) {
-    const part = (from === 'start' ? words.slice(0, size) : words.slice(-size)).join(' ')
+    const first = from === 'start' ? words[0]! : words[words.length - size]!
+    const last = from === 'start' ? words[size - 1]! : words[words.length - 1]!
+    const part = found.slice(first.index, last.index + last[0].length)
     if (looksLikeName(part)) return part
   }
   return null
@@ -218,6 +228,11 @@ export function redact(input: string): Redaction {
     return `${found.slice(0, found.length - person.length)}${PLACEHOLDER.name}${group}`
   })
   text = replaceAfterLeadIns(text, counts)
+  text = text.replace(INITIALS, (match) => {
+    if (NOT_INITIALS.has(match.replace(/\s/g, ''))) return match
+    counts.name++
+    return PLACEHOLDER.name
+  })
 
   return { text, counts }
 }
@@ -241,6 +256,49 @@ function replaceAfterLeadIns(text: string, counts: RedactionCounts): string {
     counts.name++
   }
   return result + text.slice(done)
+}
+
+/**
+ * Scripts without capital letters, where redaction cannot find names (it finds them by their
+ * capitals and the words around them, PLAN §6.6): Chinese, Japanese, Korean, Arabic, Hebrew, Thai,
+ * the Indic scripts and others.
+ */
+const CASELESS = new RegExp(
+  `[${[
+    'Han',
+    'Hiragana',
+    'Katakana',
+    'Hangul',
+    'Arabic',
+    'Hebrew',
+    'Syriac',
+    'Thaana',
+    'Thai',
+    'Lao',
+    'Khmer',
+    'Myanmar',
+    'Tibetan',
+    'Devanagari',
+    'Bengali',
+    'Gurmukhi',
+    'Gujarati',
+    'Oriya',
+    'Tamil',
+    'Telugu',
+    'Kannada',
+    'Malayalam',
+    'Sinhala',
+    'Ethiopic',
+    'Georgian',
+  ]
+    .map((script) => `\\p{Script=${script}}`)
+    .join('')}]`,
+  'u',
+)
+
+/** Whether `text` is written partly in a script whose names redaction cannot find (`CASELESS`). */
+export function inCaselessScript(text: string): boolean {
+  return CASELESS.test(text)
 }
 
 /** `input` redacted, or null for an empty value. */
