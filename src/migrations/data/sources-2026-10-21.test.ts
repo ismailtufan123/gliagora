@@ -4,6 +4,7 @@ import { SOURCES_2026_10 } from './sources-2026-10'
 import { DUKE_NUS, SOURCES_2026_10_17 } from './sources-2026-10-17'
 import {
   ALLEN,
+  ALL_NEUROSCIENCE,
   ELSC,
   FIREWALLED,
   LEFT_OUT,
@@ -36,6 +37,7 @@ describe("the second round's changes to sources (2026-10-21)", () => {
       ELSC.url,
       UBC.url,
       ...TERMS_READ.sources.map((source) => source.url),
+      ...ALL_NEUROSCIENCE.urls,
     ]) {
       expect(seeded, url).toContain(url)
     }

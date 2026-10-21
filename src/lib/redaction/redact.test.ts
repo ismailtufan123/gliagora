@@ -83,6 +83,9 @@ describe('redact: names', () => {
       `Postdoc (${PLACEHOLDER.name}) in Leipzig`,
     )
     expect(redact('Funded by the NIH (U.S.)').text).toBe('Funded by the NIH (U.S.)')
+    expect(redact('Physician-scientist (M.D.) in Ohio (U.S.A.)').text).toBe(
+      'Physician-scientist (M.D.) in Ohio (U.S.A.)',
+    )
     expect(redact('Postdoc (m/f/d)').text).toBe('Postdoc (m/f/d)')
   })
 

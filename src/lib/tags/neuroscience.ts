@@ -256,7 +256,9 @@ function merged(spans: readonly Span[]): Span[] {
 // Electrophysiology Faculty" passed on its title), folded: they count in neither title nor text.
 const OTHER_FIELDS = new RegExp(
   [
-    String.raw`(?:cardiac|cardiology|cardiovascular|heart|atrial|ventricular|arrhythmias?)(?:[\s-]+[\p{L}-]+)?[\s-]+electrophysiolog\p{L}*`,
+    // One word may stand between ("heart rhythm electrophysiology"); letters only, joined by
+    // single hyphens, so that a run of hyphens cannot make the pattern backtrack.
+    String.raw`(?:cardiac|cardiology|cardiovascular|heart|atrial|ventricular|arrhythmias?)(?:[\s-]+\p{L}+(?:-\p{L}+)*)?[\s-]+electrophysiolog\p{L}*`,
     String.raw`electrophysiolog\p{L}*[\s-]+(?:of[\s-]+the[\s-]+)?(?:heart|cardiac)`,
     String.raw`neuroendocrine[\s-]+(?:tumou?rs?|neoplasms?|carcinomas?|cancers?|neoplasias?)`,
   ]

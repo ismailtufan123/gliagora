@@ -85,6 +85,13 @@ describe('deadlineFromValidThrough', () => {
   })
 })
 
+describe('Turkish dates (M7, second round)', () => {
+  it('reads month names with a dotless ı', () => {
+    expect(day('Son başvuru tarihi: 25 Kasım 2026', 'TR')).toBe('2026-11-25')
+    expect(day('SON BAŞVURU TARİHİ : 30 Aralık 2026', 'TR')).toBe('2026-12-30')
+  })
+})
+
 describe('deadlineFromList (M7, second round)', () => {
   it("reads the day in a list's own deadline column, saying where it came from", () => {
     expect(deadlineFromList({ label: 'Closing Date', value: '2026-11-06' }, 'KR', now)).toEqual({
@@ -145,6 +152,8 @@ describe('when a posting was published', () => {
     expect(dayOf('10.03.2026', now)).toBe('2026-03-10')
     expect(dayOf('10.03.2026', now, 'US')).toBe('2026-10-03')
     expect(dayOf('3 March 2026', now)).toBe('2026-03-03')
+    // A month without a day is no day.
+    expect(dayOf('March 2026', now)).toBeNull()
   })
 
   it('reads a day right after a "posted" or "published" word, in several languages', () => {

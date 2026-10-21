@@ -77,15 +77,31 @@ function charsetOf(contentType: string, head: Uint8Array): string | null {
   return /<meta[^>]+charset=["']?([\w-]+)/i.exec(start)?.[1] ?? null
 }
 
+/** Whether `bytes` hold a well-formed UTF-8 character of two to four bytes. */
+function hasUtf8Sequence(bytes: Uint8Array): boolean {
+  const next = (i: number) => i < bytes.length && (bytes[i]! & 0xc0) === 0x80
+  for (let i = 0; i < bytes.length; i++) {
+    const b = bytes[i]!
+    const length =
+      b >= 0xc2 && b <= 0xdf ? 2 : b >= 0xe0 && b <= 0xef ? 3 : b >= 0xf0 && b <= 0xf4 ? 4 : 0
+    if (length === 0) continue
+    let ok = true
+    for (let k = 1; k < length; k++) ok &&= next(i + k)
+    if (ok) return true
+  }
+  return false
+}
+
 function decode(bytes: Uint8Array, contentType: string): string {
   const label = charsetOf(contentType, bytes)
   if (!label) {
-    // Nothing named: UTF-8, unless the bytes are not UTF-8, as on older pages written in
-    // Windows-1252 (the Allen Institute's list: "Institute’s" read as "Institute�s").
+    // Nothing named: UTF-8, unless the bytes hold no UTF-8 character of more than one byte and
+    // some that cannot be UTF-8, as on older pages written in Windows-1252 (the Allen Institute's
+    // list: "Institute’s" read as "Institute�s"). A UTF-8 page with one stray byte stays UTF-8.
     try {
       return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
     } catch {
-      return new TextDecoder('windows-1252').decode(bytes)
+      return new TextDecoder(hasUtf8Sequence(bytes) ? 'utf-8' : 'windows-1252').decode(bytes)
     }
   }
   try {

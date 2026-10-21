@@ -155,6 +155,11 @@ describe('neuroscienceCheck', () => {
     ).toBe(false)
     expect(check('Postdoc in cortical electrophysiology')).toBe(true)
     expect(check('Neuroendocrinology of stress')).toBe(true)
+    expect(check('Fellow', 'Heart rhythm electrophysiology and neural circuits.')).toBe(false)
+    // A run of hyphens after "heart" costs linear time.
+    const started = performance.now()
+    check('Fellow', `Heart ${'-'.repeat(30_000)}`)
+    expect(performance.now() - started).toBeLessThan(1000)
   })
 
   it('reads Japanese, Chinese and Korean', () => {

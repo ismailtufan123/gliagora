@@ -67,6 +67,32 @@ export const SISSA = {
 }
 
 /**
+ * The lists of institutes whose every post is in neuroscience. Their postings used to pass the
+ * check partly by the site's name in their page titles ("… - Netherlands Institute for
+ * Neuroscience"); the title is now the posting's own, so a technician's or a lab manager's post
+ * there is kept by this setting instead.
+ */
+export const ALL_NEUROSCIENCE = {
+  note: "Every posting here is in neuroscience since M7's second round (2026-10-21): a neuroscience institute's own list, whose technical and support posts name no neuroscience words of their own.",
+  urls: [
+    'https://nin.nl/vacancies/',
+    'https://emploi.cnrs.fr/Rss/Offres.ashx?CodeUnite=umr7289',
+    'https://emploi.cnrs.fr/Rss/Offres.ashx?CodeUnite=umr5293',
+    'https://emploi.cnrs.fr/Rss/Offres.ashx?CodeUnite=umr9197',
+    'https://emploi.cnrs.fr/Rss/Offres.ashx?CodeUnite=umr5292',
+    'https://emploi.cnrs.fr/Rss/Offres.ashx?CodeUnite=upr3212',
+    'https://emploi.cnrs.fr/Rss/Offres.ashx?CodeUnite=umr7225',
+    'https://in.umh-csic.es/en/the-institute/job-offers/',
+    'https://www.bcbl.eu/en/join-us/job-offers',
+    'https://www.iit.it/openings?p_p_id=IITOPENINGSSEARCH&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&cur=1&location=Trento+-+CNCS&selectType=-1',
+    'https://cbs.riken.jp/en/careers/',
+    'https://en.cibr.ac.cn/cibrRecruitment/recruitInfo',
+    'http://english.cebsit.cas.cn/JOIN/',
+    'https://floreyinstitute.applynow.net.au/',
+  ],
+}
+
+/**
  * The Allen Institute: every posting ends with the institute's mission and the list of its
  * divisions, which made software and immunology posts pass the neuroscience check.
  */

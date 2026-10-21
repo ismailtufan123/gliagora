@@ -285,6 +285,21 @@ describe('readPostingPage: chrome without its own element (M7, second round)', (
     expect(page.text).toBe('Bioinformatician in cancer genomics\nAnalyse tumour genomes.')
   })
 
+  it('keeps a wrapper whose layout class names a menu but that holds text, not links', () => {
+    const page = readPostingPage(`<html><body><header><h1>Example University</h1></header>
+      <div class="layout-content sidebar-menu-layout"><h2>Postdoc in glial biology</h2>
+      <p>${'We study astrocytes and their calcium signals in the living brain. '.repeat(6)}</p></div>
+      <div class="main-menu">${'<a href="/x">Departments and institutes</a> '.repeat(12)}</div></body></html>`)
+    expect(page.text).toMatch(/^Postdoc in glial biology\nWe study astrocytes/)
+    expect(page.text).not.toMatch(/Departments/)
+  })
+
+  it('compares terms pages by the rules they were first hashed with', () => {
+    expect(
+      comparableText('<main><div class="breadcrumbs">Home</div><p>Terms of use</p></main>'),
+    ).toBe('home terms of use')
+  })
+
   it("never takes the page's own containers, or a wrapper that holds the posting, for chrome", () => {
     const page = readPostingPage(`<html><body class="menu-closed"><div class="menu-push-wrapper">
       <h1>Postdoc in glial biology</h1><p>We study astrocytes.</p></div></body></html>`)
@@ -352,6 +367,28 @@ describe('pageTitleFor (M7, second round)', () => {
       from: 'h1',
       value: 'Postdoc in glial biology',
     })
+    // Neither a one-word heading nor a title that only adds the site's name to the link's.
+    expect(
+      pageTitleFor(
+        titles(
+          ['og:title', 'Postdoctoral Researcher in Neuroimaging - Example University'],
+          ['h1', 'Neuroimaging'],
+        ),
+        'Postdoctoral Researcher in Neuroimaging',
+      ),
+    ).toBeNull()
+    expect(
+      pageTitleFor(
+        titles(
+          [
+            'json-ld',
+            'Postdoctoral Researcher in Cognitive Neuroscience (m/f/d), Example University',
+          ],
+          ['h1', 'Postdoc'],
+        ),
+        'Postdoc in cognitive neuroscience',
+      )?.from,
+    ).toBe('json-ld')
     // A <title> alone never beats the list (Oxford's CoreHR: "Job Details").
     expect(pageTitleFor(titles(['title', 'Job Details']), 'Read more')).toBeNull()
     // Without a list title (a sitemap's), the page's first.
@@ -385,6 +422,41 @@ describe('readList: what a list row says (M7, second round)', () => {
       { title: '2024-14 Postdoc in synaptic biology', closedInList: 'Closed' },
     ])
     expect(postings[0]?.closedInList).toBeUndefined()
+  })
+
+  it('reads no row that holds other postings, nor a label before a date, as a closed mark', async () => {
+    const list = `<table><tr><td>Vacancies</td><td>
+      <p><a href="/board/view?idx=1">Postdoc in synaptic biology</a></p>
+      <p><a href="/board/view?idx=2">PhD in glia</a> <b>Filled</b></p></td></tr></table>
+      <ul><li><a href="/board/view?idx=3">박사후연구원 모집</a><span><em>마감</em> 2026.11.30</span></li></ul>`
+    const { postings } = await readList(source, fakeFetcher({ [source.url]: list }), allowAll)
+    expect(postings.map((p) => p.closedInList)).toEqual([undefined, undefined, undefined])
+  })
+
+  it('lines columns up with their headings across a colspan, and skips rows that do not', async () => {
+    const list = `<table><tr><th colspan="2">Position</th><th>Closing date</th><th>Posted</th></tr>
+      <tr><td>R-1</td><td><a href="/board/view?idx=1">Postdoc starting 1 March 2027</a></td><td>30.11.2026</td><td>01.10.2026</td></tr>
+      <tr><td colspan="4"><a href="/board/view?idx=2">PhD in glia</a> 15.12.2026</td></tr></table>`
+    const { postings } = await readList(source, fakeFetcher({ [source.url]: list }), allowAll)
+    expect(postings[0]).toMatchObject({
+      listedDeadline: { label: 'Closing date', value: '30.11.2026' },
+      published: '01.10.2026',
+    })
+    expect(postings[1]?.listedDeadline).toBeUndefined()
+  })
+
+  it('reads long lists in linear time', async () => {
+    const rows = Array.from(
+      { length: 1500 },
+      (_, n) =>
+        `<tr><td>Open</td><td><a href="/board/view?idx=${n}">Postdoc ${n}</a></td><td>2026-11-06</td></tr>`,
+    ).join('')
+    const one = `<ul><li>${Array.from({ length: 400 }, (_, n) => `<a href="/board/view?idx=${n + 5000}">PhD ${n}</a>`).join(' ')}</li></ul>`
+    const list = `<table><tr><th>Status</th><th>Title</th><th>Closing date</th></tr>${rows}</table>${one}`
+    const started = performance.now()
+    const { postings } = await readList(source, fakeFetcher({ [source.url]: list }), allowAll)
+    expect(postings).toHaveLength(1900)
+    expect(performance.now() - started).toBeLessThan(5000)
   })
 
   it('reads a mark only while it is shown', async () => {
@@ -609,6 +681,8 @@ describe('politeFetcher', () => {
     // "Institute’s" in Windows-1252, then "Müller" in UTF-8.
     expect((await answer([0x49, 0x6e, 0x73, 0x74, 0x92, 0x73])).text).toBe('Inst’s')
     expect((await answer([0x4d, 0xc3, 0xbc, 0x6c, 0x6c, 0x65, 0x72])).text).toBe('Müller')
+    // UTF-8 with one stray byte stays UTF-8.
+    expect((await answer([0x4d, 0xc3, 0xbc, 0x6c, 0x92, 0x72])).text).toBe('Mül\ufffdr')
   })
 })
 

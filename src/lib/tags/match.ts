@@ -44,12 +44,13 @@ const capitals = (value: string) => (value.match(/\p{Lu}/gu) ?? []).length
 
 /**
  * The text folded for case-insensitive matching, one character for one, so positions agree with
- * the text as written: lower case without accents ("Ç" → "c", "İ" → "i").
+ * the text as written: lower case without accents ("Ç" → "c", "İ" → "i", and the dotless "ı" →
+ * "i", so that "Kasım" reads as "kasim").
  */
 export function fold(text: string): string {
   let result = ''
   for (const char of text) {
-    const base = char.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase()
+    const base = char === 'ı' ? 'i' : char.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase()
     // Keep the length: a character whose folded form is longer or shorter (a ligature) stays.
     result += base.length === char.length ? base : char
   }

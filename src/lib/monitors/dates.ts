@@ -387,12 +387,9 @@ export function dayOf(
   const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim())
   let date: string | null = null
   if (iso) date = validDay(Number(iso[1]), Number(iso[2]), Number(iso[3]))
-  else {
-    // Our own reading first: JavaScript's takes 10.11.2026 for 11 October, in local time.
-    date = firstDate(fold(value), country === 'US')?.date ?? null
-    const parsed = date ? null : new Date(value)
-    if (parsed && !Number.isNaN(parsed.getTime())) date = parsed.toISOString().slice(0, 10)
-  }
+  // Else our own reading, which needs a day ("Wed, 12 Mar 2025 09:30:00 GMT", "21.10.2026"):
+  // JavaScript's would take 10.11.2026 for 11 October and "March 2026" for a day, in local time.
+  else date = firstDate(fold(value), country === 'US')?.date ?? null
   return date && pastDay(date, now) ? date : null
 }
 

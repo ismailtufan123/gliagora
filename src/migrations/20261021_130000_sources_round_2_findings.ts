@@ -1,7 +1,10 @@
 import { type MigrateDownArgs, type MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 
+import { SOURCES_2026_10, TERMS_CHECKED_ON } from './data/sources-2026-10'
+import { DUKE_NUS, SOURCES_2026_10_17, TERMS_CHECKED_ON_ROUND_2 } from './data/sources-2026-10-17'
 import {
   ALLEN,
+  ALL_NEUROSCIENCE,
   CHANGES_CHECKED_ON,
   ELSC,
   FIREWALLED,
@@ -18,7 +21,7 @@ import {
 // the operator's decisions on terms of 2026-10-18 (src/migrations/data/sources-2026-10-21.ts):
 // NUS and Duke-NUS left out (deep links forbidden), UCSF manual (UC's "one copy for personal
 // use"), the Crick and Koç University manual (their firewall refuses the monitor), SISSA's
-// neuroscience list kept whole, the Allen Institute's standing paragraphs not counted, Stanford's
+// neuroscience list and the lists of whole neuroscience institutes kept whole, the Allen Institute's standing paragraphs not counted, Stanford's
 // five postings that the first round's code checked by the wrong title read again, ELSC noted as
 // unreachable from the server too, the terms the operator read as allowing our use noted on their
 // sources (Baylor, NTU, Aga Khan, Cinvestav, Glasgow, Basel, Gothenburg; UBC stays manual), and the
@@ -47,6 +50,12 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
     update sources set all_neuroscience = true,
       notes = ${note(SISSA.note)} || coalesce(notes, ''), updated_at = now()
     where url = ${SISSA.url} and kind = 'page'`)
+  for (const url of ALL_NEUROSCIENCE.urls) {
+    await db.execute(sql`
+      update sources set all_neuroscience = true,
+        notes = ${note(ALL_NEUROSCIENCE.note)} || coalesce(notes, ''), updated_at = now()
+      where url = ${url} and all_neuroscience = false`)
+  }
   await db.execute(sql`
     update sources set ignored_names = ${ALLEN.ignoredNames},
       notes = ${note(ALLEN.note)} || coalesce(notes, ''), updated_at = now()
@@ -107,14 +116,29 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
     update sources set all_neuroscience = false,
       notes = replace(coalesce(notes, ''), ${note(SISSA.note)}, ''), updated_at = now()
     where url = ${SISSA.url}`)
+  for (const url of ALL_NEUROSCIENCE.urls) {
+    await db.execute(sql`
+      update sources set all_neuroscience = false,
+        notes = replace(coalesce(notes, ''), ${note(ALL_NEUROSCIENCE.note)}, ''), updated_at = now()
+      where url = ${url} and notes like ${`${ALL_NEUROSCIENCE.note}%`}`)
+  }
   for (const source of [UCSF, ...FIREWALLED]) {
     await db.execute(sql`
       update sources set kind = 'page', active = false, schedule = 'daily',
         notes = replace(coalesce(notes, ''), ${note(source.note)}, ''), updated_at = now()
       where url = ${source.url} and kind = 'manual'`)
   }
-  await db.execute(sql`
-    update sources set kind = 'sitemap', active = false,
-      notes = replace(coalesce(notes, ''), ${note(LEFT_OUT.note)}, ''), updated_at = now()
-    where url = ${LEFT_OUT.url} and kind = 'left-out'`)
+  // NUS and Duke-NUS: back to the kind and terms their seeds gave them.
+  const nus = SOURCES_2026_10_17.find((source) => source.url === LEFT_OUT.url)
+  const dukeSeed = SOURCES_2026_10.find((source) => source.url === DUKE_NUS.from)
+  for (const [pattern, terms, checkedOn] of [
+    [nus?.postingPattern, nus, TERMS_CHECKED_ON_ROUND_2],
+    [DUKE_NUS.postingPattern, dukeSeed, TERMS_CHECKED_ON],
+  ] as const) {
+    await db.execute(sql`
+      update sources set kind = 'sitemap', active = false, terms_url = ${terms?.termsUrl ?? null},
+        terms_note = ${terms?.termsNote ?? null}, terms_checked_at = ${`${checkedOn}T12:00:00.000Z`},
+        notes = replace(coalesce(notes, ''), ${note(LEFT_OUT.note)}, ''), updated_at = now()
+      where url = ${LEFT_OUT.url} and kind = 'left-out' and posting_pattern = ${pattern ?? ''}`)
+  }
 }

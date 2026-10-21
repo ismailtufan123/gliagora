@@ -87,9 +87,26 @@ const LEAD_IN = new RegExp(
   'giu',
 )
 // A person's initials in brackets after a project's name ("PhD position - READEXP (A.C.)", BCBL):
-// two or three capitals with full stops, not a country's (U.S., U.K., E.U.).
+// two or three capitals with full stops, not a country's (U.S., U.K., E.U.) or a degree (M.D.).
 const INITIALS = /(?<=\()(?:\p{Lu}\.[^\S\n]?){2,3}(?=\))/gu
-const NOT_INITIALS = new Set(['U.S.', 'U.K.', 'E.U.', 'U.A.E.', 'P.R.'])
+const NOT_INITIALS = new Set([
+  'U.S.',
+  'U.S.A.',
+  'U.K.',
+  'E.U.',
+  'U.A.E.',
+  'P.R.',
+  'D.C.',
+  // Degrees and roles.
+  'M.D.',
+  'B.S.',
+  'M.S.',
+  'B.A.',
+  'M.A.',
+  'D.O.',
+  'R.N.',
+  'P.I.',
+])
 
 const TITLE_AT = new RegExp(String.raw`${TITLE}${MORE_TITLES}\s+`, 'uy')
 const NAME_AT = new RegExp(NAME, 'uy')
