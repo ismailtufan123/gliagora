@@ -58,6 +58,12 @@ The texts the lawyer reads should be as final as the operator can make them.
 - **The texts (`metinler/`).**
   - **Files:** each legal draft, the About page, the sources and editorial policy, and the processing agreement, as a Word file (.docx), so the lawyer can answer with tracked changes. Add one PDF that holds them all, for reading.
   - **A list (`metinler.md`):** for each text, its purpose, its language, when it goes live (M2 or the launch), and that it is a draft.
+- **Redaction, as it really works:** say it plainly in the summary and in B17 and B22. The first weekly AI drafts run (2026-10-22, 100 candidates) found what redaction misses:
+  - names left in about half of the texts: HR and union contacts, team leaders, names inside lab addresses and CNRS reference codes;
+  - phone numbers in 7 of the texts, and a name with an email address in 1;
+  - all of these texts went to Anthropic.
+
+  Better rules come in a later task, and the weekly drafts pause until then.
 - **What the packet must never hold:** secrets, or real personal data beyond what the drafts already say.
 - **Keeping it in step:** a way to make the Word and PDF files again after the texts change. A script is fine; mind the CI minutes.
 
