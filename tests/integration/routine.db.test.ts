@@ -455,6 +455,55 @@ describe('applyDecisions', () => {
     expect(again.results[0]!.outcome).toBe('decided')
   })
 
+  it("publishes a title without its person's name on the operator's word only", async () => {
+    const path = unique('titled')
+    const named = await candidate(path, { rawTitle: 'Research Technician, [name] Lab' })
+    const fetcher = fakeWeb({ [at(path)]: page('Research Technician', 'Apply now.') })
+    await expect(
+      applyDecisions(
+        payload,
+        decisions({
+          id: named.id,
+          decision: 'publish',
+          why: 'Shortened.',
+          title: 'Research Technician',
+        }),
+        { fetcher, dryRun: true },
+      ),
+    ).rejects.toThrow()
+    const stillNamed = await applyDecisions(
+      payload,
+      decisions({
+        id: named.id,
+        decision: 'publish',
+        why: 'Shortened.',
+        byOperator: true,
+        title: 'Research Technician, Exemplar Lab',
+      }),
+      { fetcher, dryRun: true },
+    )
+    expect(stillNamed.results[0]!.outcome).toBe('refused')
+    const result = await applyDecisions(
+      payload,
+      decisions({
+        id: named.id,
+        decision: 'publish',
+        why: "The posting's title without the lab head's name, on the operator's word.",
+        byOperator: true,
+        title: 'Research Technician in Astrocyte Physiology',
+      }),
+      { fetcher },
+    )
+    expect(result.results[0]!.outcome).toBe('published')
+    const accepted = await payload.findByID({ collection: 'candidates', id: named.id, depth: 0 })
+    const job = await payload.findByID({
+      collection: 'jobs',
+      id: Number(accepted.publishedRef),
+      depth: 0,
+    })
+    expect(job.title).toBe('Research Technician in Astrocyte Physiology')
+  })
+
   it('rejects with a reason and asks with a question', async () => {
     const rejected = await candidate(unique('rejected'))
     const asked = await candidate(unique('asked'))
