@@ -123,37 +123,51 @@ test.describe('the 3D hero', () => {
     expect(await settled(page)).toBe('live')
     const box = page.locator('.home-poster')
     const jobs = page.getByRole('list', { name: 'The windows' }).getByRole('link').first()
-    const count = jobs.locator('.home-poster-count')
-    // At rest the count waits for the label (in the link's name all along).
-    await expect(count).toHaveCSS('opacity', '0')
+    // The count stays in view, as with the poster, and in the link's name.
+    await expect(jobs.locator('.home-poster-count')).toBeVisible()
+    await expect(jobs.locator('.home-poster-count')).toHaveCSS('opacity', '1')
     await expect(jobs).toHaveAccessibleName(/^Jobs ?, \d+ open positions?$/)
 
     await jobs.hover()
     await expect(box).toHaveAttribute('data-hero-focus', 'jobs')
-    await expect(count).toHaveCSS('opacity', '1')
     await page.mouse.move(0, 0)
     await expect(box).not.toHaveAttribute('data-hero-focus')
-    await expect(count).toHaveCSS('opacity', '0')
 
     await jobs.focus()
     await page.keyboard.press('Shift+Tab')
     await page.keyboard.press('Tab')
     await expect(jobs).toBeFocused()
     await expect(box).toHaveAttribute('data-hero-focus', 'jobs')
-    await expect(count).toHaveCSS('opacity', '1')
-    await page.keyboard.press('Tab')
+    await jobs.evaluate((link: HTMLElement) => link.blur())
     await expect(box).not.toHaveAttribute('data-hero-focus')
   })
 
-  test('hands the header’s mark back as the hero leaves the screen (F5)', async ({ page }) => {
+  test('off screen, gives the GPU its memory back after 10 s and builds again on return (F5)', async ({
+    page,
+  }) => {
     await page.goto('/en/')
     expect(await settled(page)).toBe('live')
-    await expect(page.locator('html')).toHaveAttribute('data-hero-mark', 'outline')
-    await page.locator('#home-figures-title, .home-figures').first().scrollIntoViewIfNeeded()
-    await page.mouse.wheel(0, 1200)
-    await expect(page.locator('html')).toHaveAttribute('data-hero-mark', 'filled')
+    await expect(page.locator('canvas.hero-canvas')).toHaveCount(1)
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
+    // Paused: no canvas, the poster in its place.
+    await expect(page.locator('.home-poster')).toHaveAttribute('data-hero', 'paused', {
+      timeout: 15_000,
+    })
+    await expect(page.locator('canvas.hero-canvas')).toHaveCount(0)
+    await expect(page.locator('svg.poster-art')).toHaveCSS('opacity', '1')
+    // Back on screen: built again and shown.
     await page.evaluate(() => scrollTo(0, 0))
-    await expect(page.locator('html')).toHaveAttribute('data-hero-mark', 'outline')
+    await expect(page.locator('.home-poster')).toHaveAttribute('data-hero', 'live')
+    await expect(page.locator('canvas.hero-canvas')).toHaveCount(1)
+    await expect(page.locator('canvas.hero-canvas')).toHaveCSS('opacity', '1')
+  })
+
+  test('shows the poster, not the canvas, when printed', async ({ page }) => {
+    await page.goto('/en/')
+    expect(await settled(page)).toBe('live')
+    await page.emulateMedia({ media: 'print' })
+    await expect(page.locator('svg.poster-art')).toHaveCSS('opacity', '1')
+    await expect(page.locator('canvas.hero-canvas')).toBeHidden()
   })
 
   test('plays its arrival once per session (session storage, D60)', async ({ page }) => {
@@ -264,6 +278,8 @@ test.describe('the 3D hero on a phone', () => {
     })
     await page.goto('/en/')
     expect(await heroState(page)).toMatchObject({ quality: 'phone' })
+    // It shows once at least half of it is on screen.
+    await page.locator('.home-poster').scrollIntoViewIfNeeded()
     expect(['live', 'poster']).toContain(await settled(page))
   })
 })

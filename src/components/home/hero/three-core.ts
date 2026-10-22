@@ -5,7 +5,7 @@
 export { BufferAttribute } from 'three/src/core/BufferAttribute.js'
 export { BufferGeometry } from 'three/src/core/BufferGeometry.js'
 export { Color } from 'three/src/math/Color.js'
-export { GLSL3 } from 'three/src/constants.js'
+export { GLSL3, LinearSRGBColorSpace } from 'three/src/constants.js'
 export { Group } from 'three/src/objects/Group.js'
 export { PerspectiveCamera } from 'three/src/cameras/PerspectiveCamera.js'
 export { Points } from 'three/src/objects/Points.js'

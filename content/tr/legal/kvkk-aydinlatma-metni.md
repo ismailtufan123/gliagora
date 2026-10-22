@@ -327,6 +327,7 @@ Tarayıcınızda yalnızca hizmetin çalışması için zorunlu bilgileri saklar
 - **Giriş çerezi (`__Host-gliagora-signin`):** Google, ORCID veya e-posta bağlantısıyla girişe başladığınızda 15 dakika için oluşturulur. Girişi kötüye kullanıma karşı korur; e-posta bağlantısı istendiği tarayıcıdan başka bir tarayıcıda açılırsa sizi uyarmamızı sağlar.
 - **Bülten çerezi (`__Host-gliagora-newsletter`):** Bülten formunu gönderdiğinizde oluşturulur ve o andan itibaren bir saat geçerlidir; süresi uzatılmaz. Tarayıcınızda okunamayacak ve değiştirilemeyecek biçimde mühürlenmiş olarak, onay bağlantısının gönderildiği adresi ve zamanı, sayfanın dilini, formu gönderdiğiniz zamanı ve açık rıza metninin sürümünü taşır. "{en: Check your inbox}" sayfasının adresi kısmen gizli olarak göstermesini ve "{en: Send it again}" (Yeniden gönder) düğmesinin yeni bir bağlantı göndermesini sağlar. [KARAR VERİLECEK: B14 – bülten çerezinin zorunlu çerezler arasında sayılması]
 - **Yönetim paneli oturum çerezi:** Yalnızca editörler için.
+- **Ana sayfa animasyonu (`gliagora-hero-played`, oturum depolaması):** Cihazınız ana sayfadaki hareketli beyni gösteriyorsa, tarayıcınız kısa açılış hareketinin oynatıldığını sekmeyi kapatana kadar hatırlar. Yalnızca 1 rakamını tutar ve tarayıcınızdan çıkmaz.
 
 Formlardaki spam koruması (ALTCHA) çerez kullanmaz ve tarayıcınızda hiçbir şey saklamaz.
 

@@ -41,8 +41,17 @@ export function HeroLoader() {
     if (!box) return
     let handle: Handle | null = null
     let gone = false
+    const leaving = new AbortController()
     whenIdle(() => {
       if (gone || box.dataset.hero !== 'pending') return
+      // Motion reduced or colours forced since the page's check: the poster stays.
+      if (
+        !matchMedia('(prefers-reduced-motion: no-preference)').matches ||
+        matchMedia('(forced-colors: active)').matches
+      ) {
+        box.dataset.hero = 'poster'
+        return
+      }
       box.dataset.hero = 'loading'
       const quality = box.dataset.heroQuality === 'phone' ? 'phone' : 'full'
       Promise.all([
@@ -55,7 +64,9 @@ export function HeroLoader() {
           return response.arrayBuffer()
         }),
       ])
-        .then(([scene, bytes]) => (gone ? null : scene.mountHero(box, quality, bytes)))
+        .then(([scene, bytes]) =>
+          gone ? null : scene.mountHero(box, quality, bytes, leaving.signal),
+        )
         .then((mounted) => {
           if (gone) mounted?.destroy()
           else handle = mounted
@@ -66,6 +77,7 @@ export function HeroLoader() {
     })
     return () => {
       gone = true
+      leaving.abort()
       handle?.destroy()
     }
   }, [])

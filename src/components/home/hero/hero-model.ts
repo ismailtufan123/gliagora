@@ -14,22 +14,22 @@ export const HERO_MODEL: {
   waveReach: number
   anchors: Record<string, [number, number, number]>
 } = {
-  file: '/hero/brain-30eab3072b.bin',
+  file: '/hero/brain-e98e7caf9d.bin',
   box: {
-    min: [-0.4216, -0.30569, -0.26951],
-    max: [0.41643, 0.38248, 0.32887],
+    min: [-0.42168, -0.30569, -0.26951],
+    max: [0.41667, 0.38238, 0.32889],
   },
   aspect: 1.36,
   centre: [-0.0025, 0.0385, 0],
-  origin: [-0.3718, 0.0546, 0.172],
+  origin: [-0.3706, 0.0536, 0.1713],
   waveWidth: 0.032,
-  waveReach: 0.8311,
+  waveReach: 0.8301,
   anchors: {
-    jobs: [-0.3031, 0.2811, 0.0425],
-    events: [0.2663, 0.2993, 0.0768],
-    funding: [0.4032, 0.0786, 0.0619],
-    papers: [0.3231, -0.1583, -0.0397],
-    news: [-0.1883, -0.1163, 0.1605],
-    resources: [-0.4189, 0.1034, 0.0634],
+    jobs: [-0.2977, 0.2819, 0.0605],
+    events: [0.2609, 0.3046, 0.0737],
+    funding: [0.4053, 0.073, 0.0609],
+    papers: [0.3243, -0.1575, -0.0416],
+    news: [-0.1777, -0.1266, 0.1551],
+    resources: [-0.4198, 0.0995, 0.0581],
   },
 }

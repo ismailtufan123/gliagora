@@ -11,6 +11,7 @@ import {
   Color,
   GLSL3,
   Group,
+  LinearSRGBColorSpace,
   PerspectiveCamera,
   Points,
   RawShaderMaterial,
@@ -23,18 +24,20 @@ import {
 // page's `load`. In order:
 // - F1: built in slices (no long task), then drawn unseen for 60 frames; if building took more than
 //   1.5 s or those frames ran below 30 a second, the poster stays (`data-hero="poster"`), else the
-//   canvas fades in over the poster (`data-hero="live"`, 300 ms in global.css);
+//   canvas fades in over the poster (`data-hero="live"`, 600 ms in global.css) once at least half
+//   of the box is on screen;
 // - F2: once per browser session, the points gather into the brain while it turns to the poster's
 //   view, and one calcium wave runs across the cortex (1.6 s); afterwards nothing moves by itself;
 // - F3: hovering or focusing a window's label sends a wave to that label's anchor (400 ms) and
-//   marks the box (`data-hero-focus`), which reveals the label's count in global.css;
+//   marks the box (`data-hero-focus`); the other labels turn muted (global.css);
 // - the brain leans a little towards the pointer, frame by frame;
-// - F5: off screen, nothing is drawn, the header's mark is filled again (`data-hero-mark` on
-//   <html>), and after 10 s the GPU's memory is released, to be built again on return.
-// Frames are drawn only while something moves. Should frames take longer than 20 ms for 30 frames
-// in a row, the quality steps down (fewer device pixels, then fewer points); below 30 a second at
-// the lowest step, the poster stays. Reduced motion, forced colours or a lost GPU context switch
-// back to the poster at any time.
+// - F5: off screen or in a hidden tab, nothing is drawn, and after 10 s the GPU's memory is
+//   released (`data-hero="paused"`, the poster in its place), to be built again on return. (The
+//   header mark's hand-over comes with F4's scroll, where it can be seen.)
+// Frames are drawn only while something moves. Should 30 frames in a row come clearly slower than
+// the screen's own pace (at least 20 ms), the quality steps down (fewer device pixels, then fewer
+// points); below 30 a second at the lowest step, the poster stays. Reduced motion, forced colours,
+// a shader that fails or a lost GPU context switch back to the poster at any time.
 
 const PIXEL_RATIO = { full: 1.75, phone: 1.5 } as const
 /** The share of points a phone draws at its best step: its brain is smaller, so as dense. */
@@ -47,7 +50,11 @@ const STEPS = [
 ]
 const BUILD_LIMIT_MS = 1500
 const CHECK_FRAMES = 60
-const MIN_FPS = 30
+/**
+ * The run-time check's floor: 30 frames a second, less a frame for the timer's jitter, so a screen
+ * held at 30 Hz (a phone saving power) keeps the 3D layer.
+ */
+const MIN_FPS = 29
 const SLOW_FRAME_MS = 20
 const SLOW_FRAMES = 30
 const RELEASE_AFTER_MS = 10_000
@@ -65,6 +72,24 @@ class HeroGaveUp extends Error {}
 const now = () => performance.now()
 const nextTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve))
+
+/** Resolves once at least `share` of the element is on screen, or once `signal` aborts. */
+function inView(element: Element, share: number, signal: AbortSignal) {
+  return new Promise<void>((resolve) => {
+    const done = () => {
+      watch.disconnect()
+      resolve()
+    }
+    const watch = new IntersectionObserver(
+      (entries) => {
+        if ((entries.at(-1)?.intersectionRatio ?? 0) >= share) done()
+      },
+      { threshold: share },
+    )
+    watch.observe(element)
+    signal.addEventListener('abort', done, { once: true })
+  })
+}
 
 function played() {
   try {
@@ -86,21 +111,26 @@ const setState = (box: HTMLElement, state: HeroState) => {
   box.dataset.hero = state
 }
 
-/** The token colours the scene draws with, read from the page (they follow light and dark). */
+/**
+ * The token colours the scene draws with, read from the page (they follow light and dark). Read as
+ * they are: the shaders write them straight to the canvas, so three.js must not convert them.
+ */
 function tokenColours(box: HTMLElement) {
   const style = getComputedStyle(box)
-  const read = (name: string) => new Color(style.getPropertyValue(name).trim() || undefined)
+  const read = (name: string) =>
+    new Color().setStyle(style.getPropertyValue(name).trim() || '', LinearSRGBColorSpace)
   return { ink: read('--text'), accent: read('--accent'), dapi: read('--dapi') }
 }
 
 /**
  * Builds the 3D layer in `box` (the poster's box) from the point file's bytes. Resolves once the
- * layer is shown; rejects (and leaves the poster) when it should not be.
+ * layer is shown; rejects (and leaves the poster) when it should not be, or once `signal` aborts.
  */
 export async function mountHero(
   box: HTMLElement,
   quality: HeroQuality,
   bytes: ArrayBuffer,
+  signal: AbortSignal,
 ): Promise<HeroHandle> {
   const started = now()
   const cloud = decodeHeroPoints(bytes, HERO_MODEL.box)
@@ -111,6 +141,7 @@ export async function mountHero(
     forced: matchMedia('(forced-colors: active)'),
     dark: matchMedia('(prefers-color-scheme: dark)'),
   }
+  const allowed = () => media.motion.matches && !media.forced.matches
   const hero = box.closest<HTMLElement>('.home-hero') ?? box
   const links = [...box.querySelectorAll<HTMLAnchorElement>('.home-poster-links a')]
 
@@ -127,7 +158,10 @@ export async function mountHero(
     uGather: { value: 1 },
     uOrigin: { value: new Vector3(...HERO_MODEL.origin) },
     uCentre: { value: centre.clone() },
+    uReach: { value: HERO_MODEL.waveReach },
+    uFloor: { value: HERO_MODEL.box.min[1] },
     uWave: { value: -1 },
+    uWaveFade: { value: 0 },
     uWaveWidth: { value: HERO_MODEL.waveWidth },
     uFocus: { value: centre.clone() },
     uFocusRun: { value: 0 },
@@ -166,6 +200,10 @@ export async function mountHero(
   let renderer: WebGLRenderer | null = null
   let step = 0
   let lost = false
+  let broken = false
+  /** Everything set up and shown: from then on, giving up cleans up and shows the poster. */
+  let ready = false
+  let destroyed = false
 
   function resize() {
     if (!renderer || !canvas) return
@@ -180,28 +218,42 @@ export async function mountHero(
     geometry.setDrawRange(0, Math.round(cloud.count * share))
   }
 
+  /** Whether the context is gone or a shader failed: nothing drawn could be trusted. */
+  const failed = () => lost || broken || !renderer || renderer.getContext().isContextLost()
+
   async function build(): Promise<WebGLRenderer> {
-    canvas = document.createElement('canvas')
-    canvas.className = 'hero-canvas'
-    canvas.setAttribute('aria-hidden', 'true')
-    canvas.addEventListener('webglcontextlost', onLost)
-    box.prepend(canvas)
-    renderer = new WebGLRenderer({
-      canvas,
-      alpha: true,
-      premultipliedAlpha: true,
-      antialias: false,
-      depth: false,
-      stencil: false,
-      powerPreference: 'low-power',
-    })
-    renderer.setClearColor(0x000000, 0)
-    const built = renderer
+    lost = false
+    broken = false
+    const next = document.createElement('canvas')
+    next.className = 'hero-canvas'
+    next.setAttribute('aria-hidden', 'true')
+    next.addEventListener('webglcontextlost', onLost)
+    let made: WebGLRenderer
+    try {
+      made = new WebGLRenderer({
+        canvas: next,
+        alpha: true,
+        premultipliedAlpha: true,
+        antialias: false,
+        depth: false,
+        stencil: false,
+        powerPreference: 'low-power',
+      })
+    } catch (error) {
+      next.removeEventListener('webglcontextlost', onLost)
+      throw error
+    }
+    made.debug.onShaderError = () => {
+      broken = true
+    }
+    made.setClearColor(0x000000, 0)
+    box.prepend(next)
+    canvas = next
+    renderer = made
     resize()
     await nextTask()
-    await built.compileAsync(scene, camera)
-    lost = false
-    return built
+    await made.compileAsync(scene, camera)
+    return made
   }
 
   function release() {
@@ -228,6 +280,7 @@ export async function mountHero(
     const intro = fixed ?? (introStart === null ? REST : introAt((time - introStart) / 1000))
     uniforms.uGather.value = intro.gather
     uniforms.uWave.value = intro.wave < 0 ? -1 : intro.wave * HERO_MODEL.waveReach
+    uniforms.uWaveFade.value = intro.waveFade
     lean.yaw = follow(lean.yaw, lean.targetYaw, seconds)
     lean.pitch = follow(lean.pitch, lean.targetPitch, seconds)
     brain.rotation.set(lean.pitch, intro.turn + lean.yaw, 0)
@@ -255,6 +308,8 @@ export async function mountHero(
   let frame = 0
   let visible = true
   let previous = 0
+  /** A frame counts as slow above this: 20 ms, or a quarter more than the screen's own pace. */
+  let slowAfter = SLOW_FRAME_MS
   const slow = { frames: 0, total: 0 }
 
   function draw(time: number) {
@@ -265,7 +320,7 @@ export async function mountHero(
     renderer.render(scene, camera)
     previous = moving ? time : 0
     // Quality steps (PLAN §10.5), measured only between frames drawn one after another.
-    if (interval > SLOW_FRAME_MS) {
+    if (interval > slowAfter) {
       slow.frames++
       slow.total += interval
     } else if (interval) {
@@ -278,7 +333,9 @@ export async function mountHero(
       slow.total = 0
       if (step < STEPS.length - 1) {
         step++
+        // A new size clears the canvas: draw the frame again at once.
         resize()
+        renderer.render(scene, camera)
       } else if (average > 1000 / MIN_FPS) {
         giveUp()
         return
@@ -292,31 +349,38 @@ export async function mountHero(
     if (!frame && renderer && visible) frame = requestAnimationFrame(draw)
   }
 
-  // Build, then the run-time check of F1: 60 frames drawn unseen.
+  // Build, then the run-time check of F1: 60 frames drawn unseen, timed by the frames themselves.
   const gl = await build()
   const intro = !played()
-  const opening = intro ? introAt(0) : REST
-  update(now(), opening)
+  update(now(), intro ? introAt(0) : REST)
   gl.render(scene, camera)
-  if (now() - started > BUILD_LIMIT_MS) {
+  if (now() - started > BUILD_LIMIT_MS || failed()) {
     release()
-    throw new HeroGaveUp('build too slow')
+    throw new HeroGaveUp('build too slow or failed')
   }
   let first = 0
+  let latest = 0
   for (let i = 0; i <= CHECK_FRAMES; i++) {
-    const time = await nextFrame()
-    if (i === 0) first = time
+    latest = await nextFrame()
+    if (i === 0) first = latest
     else gl.render(scene, camera)
   }
-  const fps = (CHECK_FRAMES * 1000) / (now() - first)
-  if (fps < MIN_FPS || lost) {
+  const pace = (latest - first) / CHECK_FRAMES
+  if (1000 / pace < MIN_FPS || failed()) {
     release()
-    throw new HeroGaveUp('too slow')
+    throw new HeroGaveUp('too slow or failed')
   }
+  slowAfter = Math.max(SLOW_FRAME_MS, pace * 1.25)
 
-  // Shown.
+  // Shown once at least half of it is on screen, so that the arrival is seen (on a phone the
+  // poster may still be below the fold), unless the page has gone, or motion became reduced or
+  // colours forced, meanwhile.
+  await inView(box, 0.5, signal)
+  if (signal.aborted || failed() || !allowed()) {
+    release()
+    throw new HeroGaveUp('gone or not wanted any more')
+  }
   setState(box, 'live')
-  document.documentElement.dataset.heroMark = 'outline'
   if (intro) {
     introStart = now()
     remember()
@@ -369,13 +433,18 @@ export async function mountHero(
   hero.addEventListener('pointermove', onPointerMove, { passive: true })
   hero.addEventListener('pointerleave', onPointerLeave)
 
-  // On and off screen (F5).
+  // On and off screen, and in a hidden tab (F5). Built again a little before it comes back.
+  let onScreen = true
   let releaseTimer = 0
-  const observer = new IntersectionObserver(([entry]) => {
-    visible = entry?.isIntersecting ?? true
-    document.documentElement.dataset.heroMark = visible ? 'outline' : 'filled'
+  function pause() {
+    release()
+    setState(box, 'paused')
+  }
+  function seen() {
+    visible = onScreen && !document.hidden
     if (visible) {
       clearTimeout(releaseTimer)
+      releaseTimer = 0
       if (!renderer) void restore()
       else wake()
     } else {
@@ -383,19 +452,35 @@ export async function mountHero(
       frame = 0
       last = 0
       previous = 0
-      releaseTimer = window.setTimeout(release, RELEASE_AFTER_MS)
+      if (!releaseTimer && renderer) releaseTimer = window.setTimeout(pause, RELEASE_AFTER_MS)
     }
-  })
+  }
+  const observer = new IntersectionObserver(
+    (entries) => {
+      onScreen = entries.at(-1)?.isIntersecting ?? true
+      seen()
+    },
+    { rootMargin: '25% 0px' },
+  )
   observer.observe(box)
+  document.addEventListener('visibilitychange', seen)
 
+  let restoring = false
   async function restore() {
+    if (restoring) return
+    restoring = true
     setState(box, 'loading')
     try {
       await build()
+      if (destroyed) return release()
+      renderer?.render(scene, camera)
+      if (failed()) throw new HeroGaveUp('failed again')
       setState(box, 'live')
       wake()
     } catch {
       giveUp()
+    } finally {
+      restoring = false
     }
   }
 
@@ -406,17 +491,18 @@ export async function mountHero(
     uniforms.uAccent.value.copy(next.accent)
     uniforms.uDapi.value.copy(next.dapi)
     uniforms.uDark.value = media.dark.matches ? 1 : 0
-    wake()
+    if (renderer) renderer.render(scene, camera)
   }
   const onMotion = () => {
-    if (!media.motion.matches || media.forced.matches) giveUp()
+    if (!allowed()) giveUp()
   }
   media.dark.addEventListener('change', onScheme)
   media.motion.addEventListener('change', onMotion)
   media.forced.addEventListener('change', onMotion)
   function onLost() {
     lost = true
-    if (renderer) giveUp()
+    // Before the layer is shown, the run-time check sees `lost` and gives up itself.
+    if (renderer && ready) giveUp()
   }
   const onResize = () => {
     resize()
@@ -425,7 +511,6 @@ export async function mountHero(
   const sizeObserver = new ResizeObserver(onResize)
   sizeObserver.observe(box)
 
-  let destroyed = false
   function destroy() {
     if (destroyed) return
     destroyed = true
@@ -433,6 +518,7 @@ export async function mountHero(
     clearTimeout(releaseTimer)
     observer.disconnect()
     sizeObserver.disconnect()
+    document.removeEventListener('visibilitychange', seen)
     for (const link of links) {
       link.removeEventListener('pointerenter', onEnter)
       link.removeEventListener('pointerleave', focusOff)
@@ -448,7 +534,6 @@ export async function mountHero(
     geometry.dispose()
     material.dispose()
     delete box.dataset.heroFocus
-    delete document.documentElement.dataset.heroMark
   }
 
   function giveUp() {
@@ -456,5 +541,6 @@ export async function mountHero(
     setState(box, 'poster')
   }
 
+  ready = true
   return { destroy }
 }

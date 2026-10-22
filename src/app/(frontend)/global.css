@@ -1,14 +1,6 @@
 @import 'tailwindcss';
 @import './tokens.css';
 
-/* The hole in the header's mark while the hero's 3D layer is on screen (F5, below): a registered
-   property, so the hole can close smoothly. */
-@property --hero-mark-hole {
-  syntax: '<percentage>';
-  inherits: false;
-  initial-value: 0%;
-}
-
 /*
  * Tailwind utilities come only from the design tokens (PLAN §7, §11.3): the default colours,
  * type scale, radii, shadows and breakpoints are removed, so `bg-red-500` or `text-xl` do not exist.
@@ -1978,7 +1970,7 @@
   /*
    * The 3D layer (PLAN §10, L2; src/components/home/hero/, D60): its canvas lies over the poster in
    * the same box, unseen while it is built and checked, then fades in as the poster fades out
-   * (300 ms). Where the page's check lets it load (`data-hero` other than `off`), the poster skips
+   * (600 ms). Where the page's check lets it load (`data-hero` other than `off`), the poster skips
    * its own draw-in of the wave, since the 3D layer brings the wave, and shows it drawn should the
    * 3D layer give up (`poster`). In print and in forced colours, the poster only.
    */
@@ -1991,19 +1983,23 @@
     aspect-ratio: 1360 / 1000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease-out;
+    transition: opacity 0.6s ease-out;
   }
 
+  /* The poster's lines go a little after the points appear, so the two never show as one tangle. */
   .home-poster .poster-art {
-    transition: opacity 0.3s ease-out;
+    transition: opacity 0.45s ease-in 0.15s;
   }
 
-  .home-poster[data-hero='live'] .hero-canvas {
-    opacity: 1;
-  }
+  /* Only on screen and without forced colours: in print and in forced colours, the poster. */
+  @media screen and (forced-colors: none) {
+    .home-poster[data-hero='live'] .hero-canvas {
+      opacity: 1;
+    }
 
-  .home-poster[data-hero='live'] .poster-art {
-    opacity: 0;
+    .home-poster[data-hero='live'] .poster-art {
+      opacity: 0;
+    }
   }
 
   .home-poster[data-hero]:not([data-hero='off'])
@@ -2017,50 +2013,18 @@
     .hero-canvas {
       display: none;
     }
-
-    .home-poster .poster-art {
-      opacity: 1;
-    }
   }
 
   /*
-   * F3 (PLAN §10.3): on a screen with a pointer, while the 3D layer is shown, a window's count
-   * appears when its label is hovered or focused, as the wave reaches it (the count stays in the
-   * link's name, and in view on touch screens and with the poster); the other labels turn muted.
+   * F3 (PLAN §10.3): while the 3D layer is shown, hovering or focusing a window's label sends a wave
+   * to it; the other labels turn muted. The counts stay in view throughout (the independent review
+   * of 2026-10-23: a count that vanished as the 3D layer arrived, and a focus ring around an empty
+   * box, cost more than the reveal gave).
    */
-  @media (hover: hover) {
-    .home-poster[data-hero='live'] .home-poster-count {
-      opacity: 0;
-      transition: opacity 0.2s ease-out 0.15s;
-    }
-
-    .home-poster[data-hero='live'] a:is(:hover, :focus-visible) .home-poster-count {
-      opacity: 1;
-    }
-  }
-
   .home-poster[data-hero='live']
     .home-poster-links:has(a:is(:hover, :focus-visible))
     a:not(:hover, :focus-visible) {
     color: var(--text-muted);
-  }
-
-  /*
-   * F5 (PLAN §10.3): while the hero's 3D layer is on screen, the header's mark shows its arcs only
-   * (its astrocyte is the brain's cell below); as the hero leaves the screen, the astrocyte fills
-   * in again (200 ms), as if handed over. A mask over the mark as it is (D12: never redrawn).
-   */
-  .lockup-header img {
-    mask-image: radial-gradient(
-      circle closest-side,
-      transparent calc(var(--hero-mark-hole) - 2%),
-      var(--text) var(--hero-mark-hole)
-    );
-    transition: --hero-mark-hole 0.2s ease-out;
-  }
-
-  :root[data-hero-mark='outline'] .lockup-header img {
-    --hero-mark-hole: 25%;
   }
 
   /* The windows' links: under the poster on small screens, around the brain from 64rem. */

@@ -34,6 +34,7 @@ export type HeroState =
   | 'pending' // checks passed; waits for the page's `load`
   | 'loading' // the 3D layer is being fetched and built
   | 'live' // the 3D layer is shown over the poster
+  | 'paused' // off screen (or in a hidden tab) for 10 s: the GPU's memory given back, the poster shown
   | 'poster' // the 3D layer gave up (too slow, an error): the poster only
 
 export const HERO_CHECK_SCRIPT = `(function(){var b=document.currentScript&&document.currentScript.parentElement;if(!b)return;var w=window,n=navigator,c=n.connection||{},m=n.deviceMemory,q=function(s){return w.matchMedia(s).matches},p=!q('(min-width: 768px)'),r=!w.WebGL2RenderingContext?'no-webgl2':!q('(prefers-reduced-motion: no-preference)')?'reduced-motion':q('(forced-colors: active)')?'forced-colors':c.saveData?'save-data':/^(slow-2g|2g|3g)$/.test(c.effectiveType)?'slow-connection':m&&m<4?'low-memory':p&&m&&m<6?'small-screen':'';b.dataset.hero=r?'off':'pending';if(r)b.dataset.heroSkip=r;else b.dataset.heroQuality=p?'phone':'full'})()`

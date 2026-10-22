@@ -67,13 +67,12 @@ export function decodeHeroPoints(buffer: ArrayBuffer, box: HeroBox): HeroPoints 
   const positions = new Float32Array(count * 3)
   const normals = new Float32Array(count * 3)
   const shades = new Float32Array(count)
-  const packed = new Uint32Array(buffer, 16, count)
   const octa = new Int8Array(buffer, 16 + count * 4, count * 2)
   const shade = new Uint8Array(buffer, 16 + count * 6, count)
   const [sx, sy, sz] = BITS.map((bits, axis) => (box.max[axis]! - box.min[axis]!) / (2 ** bits - 1))
   const [x0, y0, z0] = box.min
   for (let i = 0; i < count; i++) {
-    const p = packed[i]!
+    const p = view.getUint32(16 + i * 4, true)
     positions[i * 3] = x0 + (p & 0x7ff) * sx!
     positions[i * 3 + 1] = y0 + ((p >>> 11) & 0x7ff) * sy!
     positions[i * 3 + 2] = z0 + (p >>> 22) * sz!

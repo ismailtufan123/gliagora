@@ -5,6 +5,7 @@
 export const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
 export const easeOutCubic = (t: number) => 1 - (1 - t) ** 3
 export const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2)
+export const easeInOutSine = (t: number) => (1 - Math.cos(Math.PI * t)) / 2
 
 /** The part of a span that has passed at `t`: 0 before `start`, 1 after `start + duration`. */
 export const progress = (t: number, start: number, duration: number) =>
@@ -14,28 +15,35 @@ export const progress = (t: number, start: number, duration: number) =>
 export const INTRO_SECONDS = 1.6
 
 export type IntroFrame = {
-  /** 0: the points are scattered around the brain; 1: each is in its place. */
+  /** 0: the points lie a little inside the brain; 1: each is on its surface. */
   gather: number
-  /** How far the calcium wave has run from its cell, 0–1 of the way across the brain; −1 before. */
+  /** How far the calcium wave has run from its cell, as a share of the way across the brain; −1 before. */
   wave: number
+  /** How strongly the wave shows: 1 while it runs, fading to 0 as the arrival ends. */
+  waveFade: number
   /** The brain's turn about its vertical axis, in radians: from a quarter view to the poster's. */
   turn: number
   /** Whether anything still moves. */
   moving: boolean
 }
 
-/** The arrival at `t` seconds after the 3D layer appeared. */
+/**
+ * The arrival at `t` seconds after the 3D layer appeared: the points settle in the first second;
+ * the wave starts at 0.25 s, crosses the brain in about a second and fades out by 1.6 s, so it
+ * reads as one calm sweep and never stops abruptly.
+ */
 export function introAt(t: number): IntroFrame {
   return {
-    gather: easeOutCubic(progress(t, 0, 1.05)),
-    wave: t < 0.45 ? -1 : easeInOutCubic(progress(t, 0.45, INTRO_SECONDS - 0.45)) * 1.25,
-    turn: -0.22 * (1 - easeOutCubic(progress(t, 0, INTRO_SECONDS))),
+    gather: easeOutCubic(progress(t, 0, 1)),
+    wave: t < 0.25 ? -1 : easeInOutSine(progress(t, 0.25, INTRO_SECONDS - 0.25)) * 1.25,
+    waveFade: 1 - progress(t, 1.25, INTRO_SECONDS - 1.25),
+    turn: -0.3 * (1 - easeOutCubic(progress(t, 0, INTRO_SECONDS))),
     moving: t < INTRO_SECONDS,
   }
 }
 
 /** The arrival's last frame: everything in its place, no wave. */
-export const REST: IntroFrame = { gather: 1, wave: -1, turn: 0, moving: false }
+export const REST: IntroFrame = { gather: 1, wave: -1, waveFade: 0, turn: 0, moving: false }
 
 /** How long the wave takes to reach a label's anchor (F3), in seconds. */
 export const FOCUS_SECONDS = 0.4

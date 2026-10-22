@@ -16,10 +16,11 @@ console.log(`model: ${mesh.positions.length / 3} vertices, ${mesh.faces.length /
 
 const normals = vertexNormals(mesh)
 const depth = foldDepth(mesh)
-// Only what the camera can see, in the arrival's turn and while leaning towards the pointer.
+// Only what the camera can see, in the arrival's turn (motion.ts) and while leaning towards the
+// pointer (scene.ts), with a little to spare.
 const seen = seenTriangles(mesh, {
   centre,
-  turns: [-0.26, -0.13, 0, 0.08],
+  turns: [-0.38, -0.26, -0.13, 0, 0.08],
   tilts: [-0.05, 0, 0.05],
 })
 console.log(`seen: ${seen.reduce((a, b) => a + b, 0)} of ${seen.length} triangles`)
