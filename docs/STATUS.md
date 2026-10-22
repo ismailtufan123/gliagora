@@ -2,7 +2,16 @@
 
 One page for whoever picks up the work next: what is done, what is live, what is open and what comes next. Updated at the end of every task (CLAUDE.md, "Session handoff"). The details are in `PLAN.md` (the milestone notes in §20, the decisions in §22.3).
 
-Last updated: 2026-10-21, at the end of the task "Better candidates and more sources (M7, second round)" (`docs/NEXT.md` of 2026-10-17, put back on 2026-10-21): **done and merged** (#101–#104 earlier, now #110 and #111), with the operator's decisions on terms of 2026-10-18 (confirmed in the session). Still waiting from earlier: the rate limits on the server (D51) need the Caddy image's package to be public.
+Last updated: 2026-10-22, at the start of the task "Claude Code publishes the jobs on the operator's command, with the fixes this needs" (`docs/NEXT.md` of 2026-10-22, **in progress**). **The lawyer packet is parked**: it was `docs/NEXT.md` as of #113, and the planning chat puts it back after this task.
+
+## In progress (2026-10-22)
+
+- **D59, the operator's decision of 2026-10-22** (recorded in PLAN §22.3, confirmed in the session): there is no editor at first. When the operator says **"Update the jobs"** ("İlanları güncelle"), Claude Code drafts the waiting candidates, checks each against written rules, publishes those that pass (after the server reads the posting's page once more), rejects those that clearly fail and leaves the uncertain ones for the operator with a question. Nothing is published without the operator's command; the Claude API stays off; the operator holds editorial responsibility and can change or remove any listing at any time. Lawyer question B17 now asks whether such listings need an AI label (EU AI Act Art. 50) and what the texts must say.
+- **The operator's answers in the session** to the four open suggestions: UCSF's candidates and those left by CEBSIT's Chinese lists are rejected; Hacettepe's institute and Üsküdar University are looked at weekly; UC Irvine becomes manual; Gothenburg, MedUni Vienna and UNSW are run by hand once more and switched on if they read.
+- **Approved for this task on the server** (in the session): the new redaction over the waiting candidates' stored texts and titles; the changed sources and the three still off run by hand, and switched on if they run without a failure; the first "Update the jobs" with the operator in the session; and a standing go-ahead for the routine's export, import, last look, publishing and closing.
+- **Next in this task**: the redaction's second round and better candidates, then the routine itself (`docs/update-jobs.md`).
+
+Before this task: last updated 2026-10-21, at the end of the task "Better candidates and more sources (M7, second round)" (`docs/NEXT.md` of 2026-10-17, put back on 2026-10-21): **done and merged** (#101–#104 earlier, now #110 and #111), with the operator's decisions on terms of 2026-10-18 (confirmed in the session). Still waiting from earlier: the rate limits on the server (D51) need the Caddy image's package to be public.
 
 ## Done
 
