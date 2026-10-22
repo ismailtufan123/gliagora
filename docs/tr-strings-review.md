@@ -2,7 +2,7 @@
 
 Every text of the Gliagora interface in Turkish, next to its English original and where it appears, so that a native speaker can review them all in one pass (PLAN §12, D40). Until then the Turkish texts are drafts.
 
-Updated 2026-10-20: 1005 strings in 23 areas, 64 of them shown on the Turkish site now.
+Updated 2026-10-22: 1006 strings in 23 areas, 64 of them shown on the Turkish site now.
 
 This file is generated from `messages/en.json` and `messages/tr.json` by `pnpm tr:review`; do not edit it by hand. A test fails when it no longer matches the messages.
 
@@ -88,9 +88,9 @@ The rows of the table are grouped by these areas, in this order.
 - **20. Glia Notes issues and their archive**: 39 strings, shown on the Turkish site now: not yet. The issues of Glia Notes and their archive pages (M11) are English only, like the windows; the archive is private until the launch. The Turkish texts are drafts for a Turkish issue later.
 - **21. Sign-in and account pages**: 237 strings, shown on the Turkish site now: not yet. Sign-in, sign-out and the account pages exist only in English (/en/sign-in/, /en/account/), like the rest of the site until the Turkish locale gate (PLAN §3.4); Turkish pages link to them from the header and the mobile menu.
 - **22. Save buttons and saved positions**: 18 strings, shown on the Turkish site now: not yet. The Save buttons are on the jobs list and the job pages, and the saved positions on /en/account/saved/, all only in English, like the rest of the site until the Turkish locale gate (PLAN §3.4). They show only once a way of signing in is switched on.
-- **23. Automatic emails**: 72 strings, shown on the Turkish site now: not yet. Each email goes out in the language of the form the person used, and those forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).
+- **23. Automatic emails**: 73 strings, shown on the Turkish site now: not yet. Each email goes out in the language of the form the person used, and those forms exist only in English, so every email is in English for now; the Turkish texts are used once Turkish forms exist. Emails are sent only once a mail server is set up (M2).
 
-Total: 1005 strings, 64 of them shown on the Turkish site now.
+Total: 1006 strings, 64 of them shown on the Turkish site now.
 
 ## Strings
 
@@ -1037,6 +1037,7 @@ Total: 1005 strings, 64 of them shown on the Turkish site now.
 | 23. Automatic emails | `emails.suggestion.notAdded` | We have decided not to add it to Gliagora. | Bu öneriyi Gliagora'ya eklememeye karar verdik. | Email about a suggestion that was not added - second paragraph, followed by the reason | not yet |
 | 23. Automatic emails | `emails.suggestion.reasons.duplicate` | We already list this position. | Bu pozisyon Gliagora'da zaten yer alıyor. | Email about a suggestion that was not added - the reason, as the editor chose it | not yet |
 | 23. Automatic emails | `emails.suggestion.reasons.not-neuroscience` | The position is not in neuroscience or a closely related field, which is what Gliagora lists. | Pozisyon, Gliagora'nın yer verdiği sinirbilim veya ona yakın bir alanda değil. | Email about a suggestion that was not added - the reason, as the editor chose it | not yet |
+| 23. Automatic emails | `emails.suggestion.reasons.not-research` | The position is not a research or research-support post (for example an administrative, clinical-only or teaching-only post), which is what Gliagora lists. | Pozisyon, Gliagora'nın yer verdiği bir araştırma ya da araştırma destek pozisyonu değil (örneğin idari, yalnızca klinik ya da yalnızca öğretim pozisyonu). | Email about a suggestion that was not added - the reason, as the editor chose it | not yet |
 | 23. Automatic emails | `emails.suggestion.reasons.agency-or-intermediary` | It was advertised by a recruitment agency or another intermediary. We list only positions that the employer publishes itself. | Pozisyonu bir işe alım ajansı veya başka bir aracı ilan etmiş. Yalnızca işverenin kendisinin yayımladığı pozisyonlara yer veriyoruz. | Email about a suggestion that was not added - the reason, as the editor chose it | not yet |
 | 23. Automatic emails | `emails.suggestion.reasons.closed` | The position had already closed, or its deadline had passed, when we checked it. | Kontrol ettiğimizde pozisyon kapanmıştı ya da son başvuru tarihi geçmişti. | Email about a suggestion that was not added - the reason, as the editor chose it | not yet |
 | 23. Automatic emails | `emails.suggestion.reasons.not-a-position` | The page does not describe a position that people can apply for. | Sayfa, başvurulabilecek bir pozisyonu anlatmıyor. | Email about a suggestion that was not added - the reason, as the editor chose it | not yet |

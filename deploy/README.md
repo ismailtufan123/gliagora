@@ -653,6 +653,9 @@ echo '{"sources":"all"}' | docker compose -f compose.prod.yml exec -T app node o
 # the rejections by reason); per candidate its title without names, status, reason, deadline, type and
 # subfields; per skipped posting its title and outcome. ?part=sources|candidates|skipped, ?source=ID.
 docker compose -f compose.prod.yml exec -T app node ops/call.mjs GET '/api/ops/monitors/report/?part=sources'
+# Redaction's newest rules over the waiting candidates' stored text, title, facts and draft quotes and
+# their saved versions (M7, third round; ?dry=1 counts without saving). Counts only.
+docker compose -f compose.prod.yml exec -T app node ops/call.mjs POST '/api/ops/candidates/redact/?dry=1' < /dev/null
 ```
 
 The report never holds a candidate's source text, a posting's address or anything about members, and withholds a title written partly in a script whose names redaction cannot find (Chinese, Japanese, Korean, Arabic, Hebrew…). To keep a copy, run it from the operator's computer, so that nothing is written on the server: `ssh gliagora@45.144.214.78 "cd /opt/gliagora && docker compose -f compose.prod.yml exec -T app node ops/call.mjs GET /api/ops/monitors/report/" > monitor-report.json`; delete the file when the round is done. Each run of a source is recorded in `source-runs` (the admin's "Monitor runs", counts only, kept a year), from the first deploy of the second round (2026-10-17) on; earlier runs are only in the app's log (`docker compose -f compose.prod.yml logs app | grep monitorSources`, 14 days).

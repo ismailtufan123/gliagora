@@ -33,12 +33,14 @@ import * as migration_20261017_130500_seed_launch_issue from './20261017_130500_
 import * as migration_20261017_140000_glia_notes_issues_task from './20261017_140000_glia_notes_issues_task';
 import * as migration_20261017_191618_source_runs from './20261017_191618_source_runs';
 import * as migration_20261017_193416_candidate_rules from './20261017_193416_candidate_rules';
+import * as migration_20261017_193500_chinese_lists_manual from './20261017_193500_chinese_lists_manual';
 import * as migration_20261017_194500_source_adapters from './20261017_194500_source_adapters';
 import * as migration_20261017_195000_sources_by_adapters from './20261017_195000_sources_by_adapters';
 import * as migration_20261017_210000_sources_round_2 from './20261017_210000_sources_round_2';
-import * as migration_20261017_193500_chinese_lists_manual from './20261017_193500_chinese_lists_manual';
 import * as migration_20261021_122950_source_left_out from './20261021_122950_source_left_out';
 import * as migration_20261021_130000_sources_round_2_findings from './20261021_130000_sources_round_2_findings';
+import * as migration_20261022_092547_round_3_fields from './20261022_092547_round_3_fields';
+import * as migration_20261022_120000_sources_round_3 from './20261022_120000_sources_round_3';
 
 export const migrations = [
   {
@@ -217,6 +219,11 @@ export const migrations = [
     name: '20261017_193416_candidate_rules',
   },
   {
+    up: migration_20261017_193500_chinese_lists_manual.up,
+    down: migration_20261017_193500_chinese_lists_manual.down,
+    name: '20261017_193500_chinese_lists_manual',
+  },
+  {
     up: migration_20261017_194500_source_adapters.up,
     down: migration_20261017_194500_source_adapters.down,
     name: '20261017_194500_source_adapters',
@@ -232,11 +239,6 @@ export const migrations = [
     name: '20261017_210000_sources_round_2',
   },
   {
-    up: migration_20261017_193500_chinese_lists_manual.up,
-    down: migration_20261017_193500_chinese_lists_manual.down,
-    name: '20261017_193500_chinese_lists_manual',
-  },
-  {
     up: migration_20261021_122950_source_left_out.up,
     down: migration_20261021_122950_source_left_out.down,
     name: '20261021_122950_source_left_out',
@@ -245,5 +247,15 @@ export const migrations = [
     up: migration_20261021_130000_sources_round_2_findings.up,
     down: migration_20261021_130000_sources_round_2_findings.down,
     name: '20261021_130000_sources_round_2_findings',
+  },
+  {
+    up: migration_20261022_092547_round_3_fields.up,
+    down: migration_20261022_092547_round_3_fields.down,
+    name: '20261022_092547_round_3_fields',
+  },
+  {
+    up: migration_20261022_120000_sources_round_3.up,
+    down: migration_20261022_120000_sources_round_3.down,
+    name: '20261022_120000_sources_round_3',
   },
 ];

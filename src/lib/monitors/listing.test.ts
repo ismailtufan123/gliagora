@@ -300,6 +300,23 @@ describe('readPostingPage: chrome without its own element (M7, second round)', (
     ).toBe('home terms of use')
   })
 
+  it('reads a posting that a form holds, and leaves out a search form (M7, third round)', () => {
+    // CoreHR (Oxford) wraps the whole posting in one form.
+    const page =
+      readPostingPage(`<html><head><style id="antiClickjack">body{display:none !important;}</style>
+      <title>Job Details</title></head><body>
+      <form name="search"><input name="q"><label>Search vacancies</label></form>
+      <form role="search" class="job-filter">${'<label><input type="checkbox">Department of Neuroscience and Brain Research</label>'.repeat(35)}</form>
+      <form class="facets">${'<label><input type="checkbox">Neurology clinic</label>'.repeat(60)}</form>
+      <form name="ecoreJobSpecificationForm"><table><tr><td>
+      <h2>Postdoctoral Research Scientist in Neural Circuits</h2>
+      <p>${'We record from cortical neurons in behaving mice and model their dynamics. '.repeat(8)}</p>
+      <p>Closing Date &amp; Time : 19-Nov-2026 12:00</p></td></tr></table></form></body></html>`)
+    expect(page.text).toMatch(/^Postdoctoral Research Scientist in Neural Circuits\nWe record/)
+    expect(page.text).toMatch(/Closing Date & Time : 19-Nov-2026 12:00$/)
+    expect(page.text).not.toMatch(/Search vacancies|Department of Neuroscience|Neurology clinic/)
+  })
+
   it("never takes the page's own containers, or a wrapper that holds the posting, for chrome", () => {
     const page = readPostingPage(`<html><body class="menu-closed"><div class="menu-push-wrapper">
       <h1>Postdoc in glial biology</h1><p>We study astrocytes.</p></div></body></html>`)

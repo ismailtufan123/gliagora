@@ -300,6 +300,7 @@ export interface Candidate {
   decisionReason?:
     | (
         | 'not-neuroscience'
+        | 'not-research'
         | 'agency-or-intermediary'
         | 'closed'
         | 'not-a-position'
@@ -1623,6 +1624,10 @@ export interface Source {
    */
   allNeuroscience?: boolean | null;
   /**
+   * A shared board whose postings name their own institute or site (the Max Planck Society's, VIB's, HHMI's, DZNE's): check each posting's institution, not the source's.
+   */
+  severalSites?: boolean | null;
+  /**
    * One a line, e.g. Department of Clinical Neuroscience: names of the employer's units that its ads repeat whatever their field. The monitor leaves them out of a posting's text (not its title) before it looks for neuroscience words. Names written with capitals (Department of …, … Institute) and the institution's own names are left out without being listed here.
    */
   ignoredNames?: string | null;
@@ -1697,7 +1702,7 @@ export interface SourcePosting {
    * As the list or the posting gave it, with names removed.
    */
   title?: string | null;
-  outcome: 'candidate' | 'not-neuroscience' | 'closed' | 'duplicate' | 'old';
+  outcome: 'candidate' | 'not-neuroscience' | 'not-research' | 'closed' | 'duplicate' | 'old';
   candidate?: (number | null) | Candidate;
   firstSeenAt: string;
   lastSeenAt: string;
@@ -1743,6 +1748,10 @@ export interface SourceRun {
    * Skipped: no neuroscience words.
    */
   notNeuroscience: number;
+  /**
+   * Skipped: the title names an administrative, nursing, clinical-only, teaching or business post, or no posting.
+   */
+  notResearch: number;
   /**
    * Skipped: the deadline has passed, or the page is gone.
    */
@@ -2467,6 +2476,7 @@ export interface SourcesSelect<T extends boolean = true> {
   postingIdPattern?: T;
   postingUrlTemplate?: T;
   allNeuroscience?: T;
+  severalSites?: T;
   ignoredNames?: T;
   active?: T;
   termsUrl?: T;
@@ -2525,6 +2535,7 @@ export interface SourceRunsSelect<T extends boolean = true> {
   read?: T;
   candidates?: T;
   notNeuroscience?: T;
+  notResearch?: T;
   closed?: T;
   duplicates?: T;
   old?: T;
@@ -3054,6 +3065,8 @@ export interface TaskExpireListings {
   output: {
     expired?: number | null;
     failed?: number | null;
+    candidatesClosed?: number | null;
+    candidatesFailed?: number | null;
     skipped?: boolean | null;
   };
 }

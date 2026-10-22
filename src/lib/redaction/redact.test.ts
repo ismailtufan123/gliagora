@@ -154,17 +154,299 @@ describe('redact: as a whole', () => {
   ].join('\n')
 
   it('counts what it replaced', () => {
-    expect(redact(posting).counts).toEqual({ email: 1, phone: 1, name: 2 })
+    expect(redact(posting).counts).toEqual({ email: 1, phone: 1, name: 2, link: 0 })
   })
 
   it('changes nothing when it runs again', () => {
     const once = redact(posting).text
-    expect(redact(once)).toEqual({ text: once, counts: { email: 0, phone: 0, name: 0 } })
+    expect(redact(once)).toEqual({ text: once, counts: { email: 0, phone: 0, name: 0, link: 0 } })
   })
 
   it('gives null for an empty value', () => {
     expect(redacted(null)).toBeNull()
     expect(redacted('   ')).toBeNull()
     expect(redacted('Mail x@example.org')).toBe(`Mail ${PLACEHOLDER.email}`)
+  })
+})
+
+// The second round (2026-10-22, M7 notes, third round): what the first weekly AI drafts found. Every
+// pattern with invented examples, those that must go and those that must stay.
+describe('redact: second round', () => {
+  const { email, phone, name, link } = PLACEHOLDER
+  const gone = (input: string, expected: string) => expect(redact(input).text).toBe(expected)
+  const kept = (input: string) => expect(redact(input).text).toBe(input)
+
+  it('replaces HR and union contact blocks with their phone numbers', () => {
+    gone(
+      [
+        'Contact persons',
+        'Anna Exempelsson, HR partner',
+        '08-524 800 00',
+        'anna.exempelsson@example.se',
+        '',
+        'Union representatives',
+        'Saco-S: Bertil Provsson, 08-524 800 01',
+        'OFR: Cecilia Testlund',
+        '',
+        'We welcome applicants of every background.',
+      ].join('\n'),
+      [
+        'Contact persons',
+        `${name}, HR partner`,
+        phone,
+        email,
+        '',
+        'Union representatives',
+        `Saco-S: ${name}, ${phone}`,
+        `OFR: ${name}`,
+        '',
+        'We welcome applicants of every background.',
+      ].join('\n'),
+    )
+    gone(
+      'For further information regarding the position: Dana Provsdotter, Senior lecturer, +46 31-786 0000',
+      `For further information regarding the position: ${name}, Senior lecturer, ${phone}`,
+    )
+    gone('Kontaktperson: Erik Exempel, tfn 031-786 1234', `Kontaktperson: ${name}, tfn ${phone}`)
+    gone(
+      'Upplysningar om anställningen lämnas av Frida Prov, telefon 018-471 0000.',
+      `Upplysningar om anställningen lämnas av ${name}, telefon ${phone}.`,
+    )
+  })
+
+  it('keeps the dates and ordinary lines of a contact block', () => {
+    kept('Contact\nApplication deadline 2026-11-03\nReference number 2026/123')
+    kept('Further information\nThe position starts on 01.02.2027.')
+  })
+
+  it('replaces recruitment advisers before and after their role', () => {
+    gone(
+      'For questions about the procedure, contact recruitment adviser Gerda Voorbeeld.',
+      `For questions about the procedure, contact recruitment adviser ${name}.`,
+    )
+    gone('Hanna Proefje (recruiter) will answer.', `${name} (recruiter) will answer.`)
+    gone(
+      'Voor meer informatie kun je contact opnemen met Ivo Testman.',
+      `Voor meer informatie kun je contact opnemen met ${name}.`,
+    )
+    gone('HR adviser: Jan Steekproef', `HR adviser: ${name}`)
+  })
+
+  it('replaces "Team Leader:" and "Unit Leader:" lines', () => {
+    gone('Team Leader: Taro Tameshi', `Team Leader: ${name}`)
+    gone('Unit Leader : Hanako Shiken', `Unit Leader : ${name}`)
+    gone(
+      'Laboratory for Neural Dynamics (Team Leader: Jiro Rei)',
+      `Laboratory for Neural Dynamics (Team Leader: ${name})`,
+    )
+    gone('Principal investigator Mira Example', `Principal investigator ${name}`)
+    gone('HHMI Investigator Ola Normann leads the lab.', `HHMI Investigator ${name} leads the lab.`)
+  })
+
+  it('replaces names inside lab names', () => {
+    gone('Research Specialist (Doe Lab)', `Research Specialist (${name} Lab)`)
+    gone('in the Doe and Roe Labs at the campus', `in the ${name} and ${name} Labs at the campus`)
+    gone('Lab Manager, Exemplar/Roe Lab', `Lab Manager, ${name}/${name} Lab`)
+    gone('Join the DoeLab at the institute', `Join the ${name}Lab at the institute`)
+    gone(
+      'Postdoctoral Fellow - Example Lab, Department of Neurology',
+      `Postdoctoral Fellow - ${name} Lab, Department of Neurology`,
+    )
+    kept('the NeuroLab and the MemoryLab')
+  })
+
+  it('replaces web addresses and file names, which can carry names', () => {
+    gone('See https://doelab.example.edu/people/jane-doe.', `See ${link}.`)
+    gone('More at www.roe-lab.example.org or doelab.example.org/join', `More at ${link} or ${link}`)
+    gone('Download Bando_Rossi_2026.pdf and Annex-B.docx', `Download ${link} and ${link}`)
+    kept('PhD (m/f/d), 3.5 years, e.g. in Berlin; i.e. full time')
+  })
+
+  it('replaces the shortened name in a CNRS offer reference', () => {
+    gone('Reference: UMR5293-JANDOE-001', `Reference: UMR5293-${name}-001`)
+    gone('Offer UPR3212-ALIROE-015 in Marseille', `Offer UPR3212-${name}-015 in Marseille`)
+    kept('Funded by ANR-22-CE37-0001')
+  })
+
+  it("replaces SISSA's titles and supervisors", () => {
+    gone(
+      'Research fellowship in neuroscience - Supervisor Prof.ssa Maria Esempio',
+      `Research fellowship in neuroscience - Supervisor Prof.ssa ${name}`,
+    )
+    gone('Responsabile scientifico: Luca Prova', `Responsabile scientifico: ${name}`)
+    gone('tutor Dott.ssa Anna Campione', `tutor Dott.ssa ${name}`)
+  })
+
+  it('replaces more titles', () => {
+    gone('prof. dr. Pieter Voorbeeld leads it', `prof. dr. ${name} leads it`)
+    gone('Contact Mme Claire Exemple', `Contact Mme ${name}`)
+    gone('Dra. Lucia Ejemplo dirige el grupo', `Dra. ${name} dirige el grupo`)
+    gone('Frau Erika Beispiel beantwortet Fragen', `Frau ${name} beantwortet Fragen`)
+  })
+
+  it('replaces phone numbers it missed', () => {
+    gone('Call (415) 555-0100 or 415-555-0101.', `Call ${phone} or ${phone}.`)
+    gone('Office: 415.555.0102', `Office: ${phone}`)
+    gone('Tél. 01.23.45.67.89', `Tél. ${phone}`)
+    gone('Sekretariat 0761/203-1234', `Sekretariat ${phone}`)
+    gone('Segreteria 040 3787111', `Segreteria ${phone}`)
+    gone('Bel 020 - 566 9111', `Bel ${phone}`)
+    gone('Direct line 07700 900123', `Direct line ${phone}`)
+  })
+
+  it('keeps numbers that are not phone numbers', () => {
+    for (const value of [
+      'Salary SEK 100 000 – 120 000 per month',
+      'Salary $125,000 - $150,000',
+      'From 01.10.2026 - 31.12.2026',
+      'From 01/10/2026 to 31/12/2026',
+      'Job ID 2026-123-4567',
+      'Grade 7 (£38,205 – £46,021)',
+    ]) {
+      kept(value)
+    }
+  })
+
+  it('replaces obfuscated email addresses', () => {
+    gone('Write to jane.doe(a)example.fi', `Write to ${email}`)
+    gone('Write to jane.doe @ example.org', `Write to ${email}`)
+    gone('Write to jane.doe at example dot org', `Write to ${email}`)
+    gone("Write to o'brien@example.ie", `Write to ${email}`)
+    gone('Write to jane.doe＠example.jp', `Write to ${email}`)
+    kept('Apply at example.org/jobs'.replace('example.org/jobs', 'the employer'))
+  })
+
+  it('replaces a name next to its email address', () => {
+    gone('Jane Exemplar (jane.exemplar@example.org)', `${name} (${email})`)
+    gone('Jane Exemplar\njane.exemplar@example.org', `${name}\n${email}`)
+  })
+
+  it('keeps institutions and ordinary capitalised words', () => {
+    for (const value of [
+      'Cold Spring Harbor Laboratory',
+      'The Jackson Laboratory',
+      'Contact Us',
+      "Please contact the Allen Institute's Talent Acquisition Team",
+      'Join our People Operations Team',
+      'Investigator Award holders',
+      'a collaboration with the Mount Sinai Hospital',
+      'supervised by Stockholm University and Karolinska Institutet',
+    ]) {
+      kept(value)
+    }
+  })
+
+  it('keeps a place after a name', () => {
+    gone('led by Dr. Jane Exemplar, Stockholm', `led by Dr. ${name}, Stockholm`)
+  })
+
+  it('redacts titles as well as texts', () => {
+    gone('Postdoc in the lab of Dr. Jane Exemplar', `Postdoc in the lab of Dr. ${name}`)
+    gone('PhD student – Exemplar Group', `PhD student – ${name} Group`)
+  })
+
+  // The independent review of 2026-10-22: invented examples of what still went or stayed.
+  it('keeps dates, salaries and periods in a contact block', () => {
+    kept('Further information\nClosing date: 30.11.2026 23:59 CET\nSalary: SEK 34 000 – 38 000')
+    kept('Contact\nApplication period: 21.10.2026 – 04.11.2026')
+    kept('Contact\nThe project runs (2027-2031) in Stockholm.')
+  })
+
+  it('replaces surnames in capitals and names after more roles', () => {
+    gone('Contact : Jean DUPONT (secrétariat)', `Contact : ${name} (secrétariat)`)
+    gone('Responsable scientifique : Marie MARTIN', `Responsable scientifique : ${name}`)
+    gone('Contact: Prof. JANE EXEMPLAR', `Contact: Prof. ${name}`)
+    gone('PI Name: Jane Exemplar', `PI Name: ${name}`)
+    gone(
+      'For more information:\nJane Exemplar tel. +46 8 524 000 00',
+      `For more information:\n${name} tel. ${phone}`,
+    )
+    gone(
+      'contact the head of department, Jane Exemplar, for details',
+      `contact the head of department, ${name}, for details`,
+    )
+    gone('Your contact person is Jane Exemplar.', `Your contact person is ${name}.`)
+    gone(
+      'co-supervised by Jane Exemplar (Stockholm) and John Roe (Uppsala)',
+      `co-supervised by ${name} (Stockholm) and ${name} (Uppsala)`,
+    )
+    gone('the Exemplar and Roe labs', `the ${name} and ${name} labs`)
+    gone('Jane Exemplar (PI) leads it', `${name} (PI) leads it`)
+    gone('Jane Exemplar, Ph.D., leads it', `${name}, Ph.D., leads it`)
+    gone('Please email Jane Exemplar.', `Please email ${name}.`)
+    gone('contactez Marie Exemple', `contactez ${name}`)
+  })
+
+  it('replaces mobiles and numbers in pairs, and addresses in words', () => {
+    gone('Móvil 612 345 678', `Móvil ${phone}`)
+    gone('Cellulare 333 123 4567', `Cellulare ${phone}`)
+    gone('Jane Exemplar (35 32 00 00)', `${name} (${phone})`)
+    gone('Write to jane dot exemplar at example dot org', `Write to ${email}`)
+    kept('A budget of € 300 000 000 and SEK 612 345 678 kr')
+  })
+
+  it('keeps eponyms, prizes, places and institutions in titles', () => {
+    for (const value of [
+      'Young Investigator Group Leader',
+      'Sir Henry Dale Fellowship',
+      'a Max Planck Group in Bonn',
+      'the Emmy Noether Lab',
+      'the Howard Hughes team',
+      'the Novo Nordisk team',
+      'Allen Brain Cell Atlas team',
+      'Rett Syndrome Team',
+      'Johns Hopkins – Postdoctoral Fellow',
+      'Los Angeles - Lab Manager',
+      "contact Boston Children's Hospital",
+    ]) {
+      kept(value)
+    }
+  })
+
+  it('changes nothing on a second run, also with names and numbers glued together', () => {
+    for (const value of [
+      'Jane Exemplar\nContact\nSalary 34 000 – 38 000',
+      'supervised by Jane Exemplar+46 8 524 800 00',
+      'Contact persons\nAnna Exempelsson\nHR partner\n08-524 800 00',
+    ]) {
+      const once = redact(value).text
+      expect(redact(once).text, value).toBe(once)
+    }
+  })
+
+  it('reads a very long word in linear time', () => {
+    const started = performance.now()
+    redact(`A${'b'.repeat(32000)} Lab`)
+    expect(performance.now() - started).toBeLessThan(500)
+  })
+
+  it('changes nothing when it runs again', () => {
+    const once = redact(
+      'Contact persons\nAnna Exempelsson, HR partner, 08-524 800 00\nSee https://doelab.example.edu.',
+    ).text
+    expect(redact(once).text).toBe(once)
+  })
+
+  it('stays fast on long runs of capitals, hyphens and digits', () => {
+    // Each alone, 20,000 characters or more: a pattern that tried again from every character of a
+    // run would take seconds on one of them.
+    for (const long of [
+      'Aa '.repeat(20000),
+      'Aa-'.repeat(20000),
+      'a.'.repeat(20000),
+      'abc-def.'.repeat(5000),
+      'a_'.repeat(20000),
+      '('.repeat(20000),
+      'UMR1234-'.repeat(10000),
+      '1 '.repeat(20000),
+      'Jane Doe and '.repeat(5000),
+      'Jane Doe, '.repeat(5000),
+      'Team Leader: '.repeat(5000),
+      'jane.doe at '.repeat(5000),
+    ]) {
+      const started = performance.now()
+      redact(long)
+      expect(performance.now() - started, long.slice(0, 12)).toBeLessThan(500)
+    }
   })
 })

@@ -61,6 +61,10 @@ export const FAILURES_FLAGGED = 3
 export const POSTING_OUTCOMES = [
   { value: 'candidate', label: 'Made a candidate' },
   { value: 'not-neuroscience', label: 'Skipped: not neuroscience' },
+  {
+    value: 'not-research',
+    label: 'Skipped: not a research position (administrative, clinical, teaching, business)',
+  },
   { value: 'closed', label: 'Skipped: its deadline has passed' },
   { value: 'duplicate', label: 'Skipped: already a candidate or a job' },
   { value: 'old', label: 'Skipped: no deadline, and published over 6 months ago' },

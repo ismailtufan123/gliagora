@@ -88,7 +88,7 @@ describe('expireListings', () => {
       )
     }
 
-    expect(await expireListings(payload, new Date())).toEqual({ expired: 0, failed: 0 })
+    expect(await expireListings(payload, new Date())).toMatchObject({ expired: 0, failed: 0 })
   })
 
   it('expires a job once when two runs meet', async () => {
@@ -105,6 +105,85 @@ describe('expireListings', () => {
       where: { parent: { equals: due.id } },
     })
     expect(versions.totalDocs).toBe(2)
+  })
+})
+
+describe('expireListings: waiting candidates (M7, third round)', () => {
+  const facts = (date: string) => ({
+    version: 1,
+    readAt: new Date().toISOString(),
+    listedOn: { kind: 'page', url: 'https://jobs.example.org/' },
+    page: 'read',
+    deadline: { value: { date, timeZone: null }, from: 'the text: "Closing date: …"' },
+  })
+  const draft = (deadline: { kind: string; date: string | null } | null) => ({
+    version: 1,
+    by: 'claude-code',
+    at: new Date().toISOString(),
+    from: 'the redacted title and text',
+    inputHash: '0'.repeat(64),
+    summary: 'A postdoctoral position in glial biology.',
+    positionType: null,
+    careerStages: [],
+    subfields: [],
+    deadline: deadline && { ...deadline, timeZone: null, from: 'the text' },
+    place: null,
+  })
+  const candidate = (data: Record<string, unknown>) =>
+    payload.create({
+      collection: 'candidates',
+      data: {
+        kind: 'job',
+        status: 'new',
+        rawUrl: `https://jobs.example.org/${unique('posting')}`,
+        rawTitle: 'Postdoc in glial biology',
+        ...data,
+      },
+      depth: 0,
+    })
+  const day = (days: number) => new Date(Date.now() + days * DAY).toISOString().slice(0, 10)
+
+  it('closes those whose deadline passed while they waited, and only those', async () => {
+    const passed = await candidate({ extracted: facts(day(-5)) })
+    const draftPassed = await candidate({
+      extracted: facts(day(-6)),
+      aiSuggestion: draft({ kind: 'fixed', date: day(-4) }),
+    })
+    // A draft's day alone is never enough; a reopened (Triaged) candidate stays.
+    const draftOnly = await candidate({ aiSuggestion: draft({ kind: 'fixed', date: day(-4) }) })
+    const reopened = await candidate({ status: 'triaged', extracted: facts(day(-5)) })
+    const open = await candidate({ extracted: facts(day(10)) })
+    // A day ago: not yet ended everywhere.
+    const yesterday = await candidate({ extracted: facts(day(-1)) })
+    // The draft says rolling: the monitor's day does not count.
+    const rolling = await candidate({
+      extracted: facts(day(-5)),
+      aiSuggestion: draft({ kind: 'rolling', date: null }),
+    })
+    // The draft took a review date that passed; the monitor read the final date, still ahead.
+    const review = await candidate({
+      extracted: facts(day(200)),
+      aiSuggestion: draft({ kind: 'fixed', date: day(-6) }),
+    })
+
+    const run = await expireListings(payload, new Date())
+    expect(run.candidatesClosed).toBeGreaterThanOrEqual(2)
+    expect(run.candidatesFailed).toBe(0)
+    for (const { id } of [passed, draftPassed]) {
+      const closed = await payload.findByID({ collection: 'candidates', id, depth: 0 })
+      expect(closed.status).toBe('rejected')
+      expect(closed.decisionReason).toBe('closed')
+      expect(closed.decisionNote).toMatch(/passed while it waited/)
+    }
+    for (const { id } of [open, yesterday, rolling, review, draftOnly]) {
+      expect((await payload.findByID({ collection: 'candidates', id, depth: 0 })).status).toBe(
+        'new',
+      )
+    }
+    expect(
+      (await payload.findByID({ collection: 'candidates', id: reopened.id, depth: 0 })).status,
+    ).toBe('triaged')
+    expect((await expireListings(payload, new Date())).candidatesClosed).toBe(0)
   })
 })
 

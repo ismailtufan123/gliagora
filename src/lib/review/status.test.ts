@@ -68,6 +68,7 @@ describe('candidate statuses', () => {
   it('name the agency rule among the reasons for rejecting (PLAN §6.1)', () => {
     expect(REJECTION_REASONS.map(({ value }) => value)).toEqual([
       'not-neuroscience',
+      'not-research',
       'agency-or-intermediary',
       'closed',
       'not-a-position',
@@ -75,7 +76,7 @@ describe('candidate statuses', () => {
       'spam',
       'other',
     ])
-    expect(REJECTION_REASONS[1].label).toMatch(/Law 4904/)
+    expect(REJECTION_REASONS[2].label).toMatch(/Law 4904/)
   })
 })
 
