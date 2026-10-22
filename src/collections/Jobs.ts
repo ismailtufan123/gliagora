@@ -1074,5 +1074,19 @@ export const Jobs: CollectionConfig = {
         description: 'Tick if the summary or tags started from an AI draft (PLAN §6.6).',
       },
     },
+    {
+      // D59: set only by "Update the jobs" (src/lib/routine/decide.ts), never shown on the site.
+      name: 'publishedByRoutine',
+      label: 'Published by "Update the jobs" on the operator\'s command',
+      type: 'checkbox',
+      defaultValue: false,
+      access: { create: () => false, update: () => false },
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description:
+          'Claude Code checked it against the written rules and published it when the operator said "Update the jobs" (D59); the internal notes say why. The operator holds editorial responsibility: correct or withdraw it like any job.',
+      },
+    },
   ],
 }

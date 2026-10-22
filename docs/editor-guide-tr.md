@@ -56,6 +56,13 @@ Girişten sonra açılan panonun en üstünde **"Waiting for an editor"** kutusu
 - Yanlışlıkla yayımlanan ya da işverenin kaldırdığı bir ilanı "Withdrawn" yapın; adresi hemen "kaldırıldı" (410) yanıtı verir.
 - Yayımlanmış ilanlar hiç silinmez. Her değişiklik "Versions" sekmesinde saklanır.
 
+**Yayın turu ("Update the jobs", D59, 2026-10-22'den beri):** Şimdilik panelde her adaya tek tek bakan bir editör yoktur; her yayın turunu editör başlatır ve her ilandan editör sorumludur. Teknik yöneticinin bilgisayarındaki Claude Code'a "İlanları güncelle" ("Update the jobs") dendiğinde Claude Code bekleyen adayların taslaklarını yazar, her adayı yazılı kurallara göre değerlendirir (`docs/update-jobs.md`): kuralların hepsini karşılayanları yayımlar, açıkça karşılamayanları gerekçesiyle reddeder, emin olmadıklarını bir soruyla bırakır ("Triaged"; soru "Decision note" alanındadır ve "Question for the operator" ile başlar). Yayımlamadan hemen önce program ilanın sayfasını bir kez daha okur: sayfa kalkmışsa ya da pozisyonun dolduğunu söylüyorsa ilan yayımlanmaz.
+
+- Bu yolla yayımlanan ilanlarda sağ sütunda **"Published by "Update the jobs" on the operator's command"** işaretlidir (yalnızca panelde görünür, sitede asla); "Internal notes" neden yayımlandığını ve son bakışın ne bulduğunu söyler; "Last verified" son bakışın günüdür; kontrol listesi işaretlidir.
+- Aynı tur, haftalık bağlantı kontrolünün sayfası kalkmış ya da dolmuş bulduğu ilanları "Withdrawn" yapar.
+- Her ilan panelden her zaman değiştirilebilir ya da kaldırılabilir (yukarıya bakın); Claude Code'a "bu ilanı kaldır" ya da "son başvuru tarihini değiştir" de denebilir.
+- Hiçbir ilan bir yayın turu başlatılmadan yayımlanmaz; Claude API kapalıdır.
+
 ## 3. İnceleme kuyruğu
 
 **Adaylar ("Candidates")**: "Suggest a listing" formundan gelen iş önerileri buraya kendiliğinden düşer. Siz de elle aday ekleyebilirsiniz. Her aday için:

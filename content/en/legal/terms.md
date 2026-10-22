@@ -31,7 +31,7 @@ We call each thing we publish an "item", for example a job listing. Every item h
 - a short summary in our own words;
 - a "Last verified" date.
 
-Our editor approves every item before it is published and checks the facts against the original posting. Our [sources and editorial policy](/en/about/sources/) explains how we work.
+Items are published only in publishing rounds that our editor starts: an AI assistant checks each one against our written rules, and our program reads the original posting once more first. A person does not check every item. Our editor is responsible for every item and corrects or removes it as soon as a problem is found. Our [sources and editorial policy](/en/about/sources/) explains how we work.
 
 No one pays to appear on Gliagora. We do not publish paid placements.
 

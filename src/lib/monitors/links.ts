@@ -2,7 +2,7 @@ import { canonicalUrl } from '@/lib/jobs/url'
 import { fold } from '@/lib/tags/match'
 
 import { type Fetcher, FetchProblem } from './http'
-import { readPostingPage } from './html'
+import { type PostingPage, readPostingPage } from './html'
 import type { RobotsCache } from './robots'
 
 // The weekly link check (PLAN §6.3, D52): each published job's original page, read as the monitors
@@ -88,6 +88,19 @@ export async function checkLink(
   robots: RobotsCache,
   address: string,
 ): Promise<LinkCheck> {
+  const { page: _page, ...check } = await lookAt(fetcher, robots, address)
+  return check
+}
+
+/**
+ * The link check of one page, with the page as read when it answered with HTML: the last look of
+ * "Update the jobs" before a job is published (D59) reads its deadline there too.
+ */
+export async function lookAt(
+  fetcher: Fetcher,
+  robots: RobotsCache,
+  address: string,
+): Promise<LinkCheck & { page?: PostingPage }> {
   let url: URL
   try {
     url = new URL(address)
@@ -105,8 +118,8 @@ export async function checkLink(
     })
     const moved = canonicalUrl(fetched.url) !== canonicalUrl(address)
     const type = fetched.contentType.toLowerCase()
-    const words =
-      !type || type.includes('html') ? closedWords(readPostingPage(fetched.text).text) : null
+    const page = !type || type.includes('html') ? readPostingPage(fetched.text) : undefined
+    const words = page ? closedWords(page.text) : null
     const notes = [
       moved ? `Redirects to ${fetched.url}` : null,
       words ? `The page says: "${words}"` : null,
@@ -115,6 +128,7 @@ export async function checkLink(
       status: moved ? 'redirect' : 'ok',
       saysClosed: words,
       note: notes.length > 0 ? `${notes.join('. ')}.` : 'The page answers.',
+      ...(page ? { page } : {}),
     }
   } catch (error) {
     if (error instanceof FetchProblem) {

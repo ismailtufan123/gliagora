@@ -1459,6 +1459,10 @@ export interface Job {
    * Tick if the summary or tags started from an AI draft (PLAN §6.6).
    */
   aiAssisted?: boolean | null;
+  /**
+   * Claude Code checked it against the written rules and published it when the operator said "Update the jobs" (D59); the internal notes say why. The operator holds editorial responsibility: correct or withdraw it like any job.
+   */
+  publishedByRoutine?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2666,6 +2670,7 @@ export interface JobsSelect<T extends boolean = true> {
   submission?: T;
   source?: T;
   aiAssisted?: T;
+  publishedByRoutine?: T;
   updatedAt?: T;
   createdAt?: T;
 }

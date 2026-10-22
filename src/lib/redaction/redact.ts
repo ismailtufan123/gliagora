@@ -449,7 +449,7 @@ const NOT_NAMES = new Set(
   nosotros su puesto plaza convocatoria laboratorio equipo unidad nostro posizione bando gruppo vaga
   edital laboratório equipe duyuru ilan başvuru merkez merkezi enstitü enstitüsü laboratuvar araştırma
   bölüm bölümü birim kadro saco seko young investigator investigators atlas syndrome name names children
-  childrens`
+  childrens dr prof professor mr mrs ms mx sir dame herr herrn frau mme mlle med phil rer nat habil`
     .split(/\s+/)
     .filter(Boolean),
 )
@@ -675,9 +675,24 @@ function redactContactBlocks(text: string, counts: RedactionCounts): string {
 
 /**
  * `input` with email addresses, phone numbers, web addresses and file names, and the names the
- * rules can find, replaced by placeholders, and how many of each were replaced.
+ * rules can find, replaced by placeholders, and how many of each were replaced. The rules run again
+ * until nothing changes (a name can show only once its neighbour is replaced: "Doe and [name]"),
+ * at most three times, so that redacting a redacted text changes nothing.
  */
 export function redact(input: string): Redaction {
+  const counts = emptyCounts()
+  let text = input
+  for (let pass = 0; pass < 3; pass++) {
+    const once = redactOnce(text)
+    for (const key of Object.keys(counts) as (keyof RedactionCounts)[])
+      counts[key] += once.counts[key]
+    if (once.text === text) break
+    text = once.text
+  }
+  return { text, counts }
+}
+
+function redactOnce(input: string): Redaction {
   const counts = emptyCounts()
   let text = input.normalize('NFC')
 
