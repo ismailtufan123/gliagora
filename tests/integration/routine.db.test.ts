@@ -46,8 +46,11 @@ afterAll(async () => {
 const today = () => calendarDay(new Date()) as string
 const at = (path: string) => `https://${host}/jobs/${path}`
 
-/** Serves `pages` (address → HTML, or a status) and an allowing robots.txt for every host. */
-function fakeWeb(pages: Record<string, string | number>): Fetcher {
+/**
+ * Serves `pages` (address → HTML, a status, or a redirect to another address with its HTML) and an
+ * allowing robots.txt for every host.
+ */
+function fakeWeb(pages: Record<string, string | number | { to: string; html: string }>): Fetcher {
   return {
     get: async (url, options) => {
       const parsed = new URL(url)
@@ -65,10 +68,10 @@ function fakeWeb(pages: Record<string, string | number>): Fetcher {
       if (page === undefined) throw new FetchProblem('status', 404)
       if (typeof page === 'number') throw new FetchProblem('status', page)
       return {
-        url,
+        url: typeof page === 'object' ? page.to : url,
         status: 200,
         contentType: 'text/html; charset=utf-8',
-        text: page,
+        text: typeof page === 'object' ? page.html : page,
         tdmReserved: false,
       }
     },
@@ -382,6 +385,74 @@ describe('applyDecisions', () => {
     expect(published.deadlineTz).not.toBe('Pacific/Kiritimati')
     const again = await applyDecisions(payload, decision, { fetcher })
     expect(again.results[0]).toMatchObject({ outcome: 'decided', job: first.results[0]!.job })
+  })
+
+  it('publishes again what a last look took for filled, two positions of one title, and a redirect to the same posting', async () => {
+    const [mistaken, first, second, moved] = [
+      unique('until-filled'),
+      unique('twin-a'),
+      unique('twin-b'),
+      unique('moved'),
+    ]
+    const candidates = await Promise.all([
+      candidate(mistaken, { rawTitle: 'Research Technician in Myelin Imaging' }),
+      candidate(first, { rawTitle: 'PhD Student in Neurochemistry' }),
+      candidate(second, { rawTitle: 'PhD Student in Neurochemistry' }),
+      candidate(moved, { rawTitle: 'Postdoc in Cortical Oscillations' }),
+    ])
+    const ids = candidates.map((c) => c.id)
+    // An earlier run's mistake: the page was read as filled and the candidate rejected as closed.
+    await payload.update({
+      collection: 'candidates',
+      id: ids[0]!,
+      data: {
+        status: 'rejected',
+        decisionReason: 'closed',
+        decisionNote:
+          'Update the jobs (D59), 2026-10-22: the last look before publishing found it closed.',
+      },
+      depth: 0,
+    })
+    const fetcher = fakeWeb({
+      [at(mistaken)]: page(
+        'Research Technician in Myelin Imaging',
+        'Open until the position is filled.',
+      ),
+      [at(first)]: page('PhD Student in Neurochemistry', 'Project one.'),
+      [at(second)]: page('PhD Student in Neurochemistry', 'Project two.'),
+      [at(moved)]: {
+        to: `https://${host}/apply/form?id=1`,
+        html: page('Postdoc in Cortical Oscillations', 'Apply now.'),
+      },
+    })
+    const result = await applyDecisions(
+      payload,
+      decisions(
+        { id: ids[0], decision: 'publish', reopen: true, why: 'The page is open until filled.' },
+        { id: ids[1], decision: 'publish', why: 'Project one.' },
+        {
+          id: ids[2],
+          decision: 'publish',
+          notDuplicate: true,
+          why: 'Another project of the same title.',
+        },
+        { id: ids[3], decision: 'publish', why: 'The address moved within the employer site.' },
+      ),
+      { fetcher },
+    )
+    expect(result.results.map((r) => r.outcome)).toEqual([
+      'published',
+      'published',
+      'published',
+      'published',
+    ])
+    // Without reopen, a decided candidate stays decided.
+    const again = await applyDecisions(
+      payload,
+      decisions({ id: ids[0], decision: 'publish', why: 'Again.' }),
+      { fetcher },
+    )
+    expect(again.results[0]!.outcome).toBe('decided')
   })
 
   it('rejects with a reason and asks with a question', async () => {

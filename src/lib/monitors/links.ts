@@ -70,13 +70,25 @@ const CLOSED = [
 
 const CLOSED_RE = new RegExp(
   `(?<![\\p{L}])(?:${CLOSED.map((phrase) => phrase.replace(/ /g, '\\s+')).join('|')})(?![\\p{L}])`,
-  'u',
+  'gu',
 )
+
+/**
+ * Words before a phrase that make it a condition, not a fact: "open until the position is
+ * filled", "unless the vacancy has been filled", "applications close once the post is filled"
+ * (M7, third round: the first "Update the jobs" took five open postings for filled ones).
+ */
+const CONDITION =
+  /\b(?:until|till|unless|before|once|when|whenever|if|as soon as|after|bis|tant que|jusqu'a ce que|hasta que|fino a|tot)\b[^.!?\n]{0,40}$/u
 
 /** The words of `text` that say the position is filled or closed, as written, or null. */
 export function closedWords(text: string): string | null {
-  const match = CLOSED_RE.exec(fold(text))
-  return match ? text.slice(match.index, match.index + match[0].length).replace(/\s+/g, ' ') : null
+  const folded = fold(text)
+  for (const match of folded.matchAll(CLOSED_RE)) {
+    if (CONDITION.test(folded.slice(Math.max(0, match.index - 60), match.index))) continue
+    return text.slice(match.index, match.index + match[0].length).replace(/\s+/g, ' ')
+  }
+  return null
 }
 
 const PAGE_ACCEPT = 'text/html, application/xhtml+xml;q=0.9, */*;q=0.1'

@@ -15,6 +15,7 @@ import { RobotsCache } from '@/lib/monitors/robots'
 import { idOf } from '@/lib/relationship'
 import { REJECTION_REASONS } from '@/lib/review/status'
 import { storedFacts } from '@/lib/sources/facts'
+import { fold } from '@/lib/tags/match'
 import { notResearch } from '@/lib/tags/research'
 import { type Taxonomy, loadTaxonomy, termKey } from '@/lib/tags/terms'
 import type { Vocabulary } from '@/lib/taxonomy'
@@ -77,6 +78,10 @@ export const decisionSchema = z
     reason: z.enum(reasons).optional(),
     question: z.string().trim().min(3).max(500).optional(),
     institution: z.number().int().positive().optional(),
+    /** A publication of a candidate the routine itself rejected as closed at a last look. */
+    reopen: z.boolean().optional(),
+    /** The job is another position than the similar one the duplicate check names. */
+    notDuplicate: z.boolean().optional(),
     language: z
       .enum(ORIGINAL_LANGUAGES.map(({ value }) => value) as [string, ...string[]])
       .optional(),
@@ -170,7 +175,30 @@ const OUTCOMES: readonly DecisionOutcome[] = [
   'decided',
 ]
 
-const note = (day: string, text: string) => `Update the jobs (D59), ${day}: ${text}`
+const ROUTINE_NOTE = 'Update the jobs (D59)'
+const note = (day: string, text: string) => `${ROUTINE_NOTE}, ${day}: ${text}`
+
+/** Whether a decided candidate is one the routine rejected as closed at its last look. */
+const closedByLastLook = (candidate: Candidate) =>
+  candidate.status === 'rejected' &&
+  candidate.decisionReason === 'closed' &&
+  (candidate.decisionNote ?? '').startsWith(ROUTINE_NOTE) &&
+  (candidate.decisionNote ?? '').includes('the last look')
+
+/**
+ * Whether a page that a posting's address now redirects to still shows the posting: most of the
+ * title's words (four letters or more) are on it. Gothenburg's recruitment system redirects every
+ * posting to its own address form.
+ */
+function showsPosting(page: { title?: string | null; text: string }, title: string): boolean {
+  const words = fold(title)
+    .replace(/\[(?:name|email|phone|link)\]/g, ' ')
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((word) => word.length >= 4)
+  if (words.length === 0) return false
+  const onPage = fold(`${page.title ?? ''} ${page.text}`)
+  return words.filter((word) => onPage.includes(word)).length >= Math.ceil(words.length * 0.8)
+}
 
 /** The reader of the last looks: one per process, so its pauses per site hold across batches. */
 let shared: { fetcher: Fetcher; robots: RobotsCache; since: number } | null = null
@@ -353,7 +381,10 @@ async function applyOne(
     disableErrors: true,
   })) as Candidate | null
   if (!candidate || candidate.kind !== 'job') return { id, outcome: 'missing' }
-  if (!['new', 'triaged'].includes(candidate.status)) {
+  // The routine's own mistake at a last look (a page it took for filled) may be decided again.
+  const reopening =
+    decision.decision === 'publish' && decision.reopen === true && closedByLastLook(candidate)
+  if (!['new', 'triaged'].includes(candidate.status) && !reopening) {
     return { id, outcome: 'decided', job: await jobOf(payload, candidate) }
   }
   const by = decision.byOperator ? " (the operator's decision)" : ''
@@ -486,7 +517,8 @@ async function applyOne(
   if (look.status === null) {
     return { id, outcome: 'refused', problems: ['robots.txt does not allow a last look.'] }
   }
-  if (look.status === 'redirect' && !waived.includes('redirect')) {
+  const samePosting = look.page ? showsPosting(look.page, title) : false
+  if (look.status === 'redirect' && !samePosting && !waived.includes('redirect')) {
     return {
       id,
       outcome: 'refused',
@@ -515,6 +547,15 @@ async function applyOne(
   }
 
   const job = await inTransaction(payload, async (req) => {
+    if (reopening) {
+      await payload.update({
+        collection: 'candidates',
+        id,
+        data: { status: 'triaged', decisionNote: note(day, `reopened. ${decision.why}`) },
+        depth: 0,
+        req,
+      })
+    }
     await payload.update({
       collection: 'candidates',
       id,
@@ -610,6 +651,7 @@ async function publishJob(
     aiAssisted: true,
     publishedByRoutine: true,
     internalNotes: [draftJob.internalNotes, text].filter(Boolean).join('\n'),
+    ...(decision.notDuplicate ? { confirmNotDuplicate: true } : {}),
   }
   const saved = await payload.update({ collection: 'jobs', id: jobId, data, depth: 0, req })
   return { shortId: saved.shortId as string, slug: saved.slug as string }
