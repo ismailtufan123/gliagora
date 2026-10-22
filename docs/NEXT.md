@@ -1,7 +1,7 @@
 # Next task
 
 Status: **open**
-Written: 2026-10-22, by the operator's planning chat (Claude) on the operator's behalf. First written for #112 and #113, parked during the D59 task (#114–#120), and put back here with what changed since.
+Written: 2026-10-22, by the operator's planning chat (Claude) on the operator's behalf.
 
 ## How this file works
 
@@ -9,139 +9,128 @@ Written: 2026-10-22, by the operator's planning chat (Claude) on the operator's 
 - `docs/STATUS.md` is your one-page handoff: what is done, what is live, open decisions and the next step. Read it before this file, and update it at the end of every task.
 - When the task below is finished, set the status above to **done**, with the date and the pull request numbers, in your last pull request. The planning chat then replaces this file with the next task.
 
-## Task: the lawyer packet, for the one-time legal review
+## Task: M13, the signature hero (the 3D brain on the home page)
 
-**Why:** M2 waits for the one-time lawyer review (D32), and that waits for a lawyer. The operator needs one packet to send to lawyers, first for a quote and then for the review itself.
-- **Language:** Turkish.
-- **Complete:** the lawyer needs nothing else from us.
-- **Easy to answer:** written answers per question, and tracked changes in the texts.
-- **As it works now:** since D59 (2026-10-22), positions are published on the operator's command by written rules, without a person checking each one. B17 asks the lawyer what that needs, so the packet describes it as it works today.
+**Why:** the operator wants the site to draw people in as much as it serves them: its look matters as much as its function. So M13 comes forward, at the operator's request (2026-10-22), ahead of the lawyer packet and of M8–M10, M12 and M14.
+- **Record it** as D60, the next free number.
+- **The bar is high:** it should look polished and alive, never like a tech demo. When in doubt, choose fewer and finer effects.
+- **Private:** everything stays behind the site-wide password. The home page goes public with the launch (D39), unless the operator also wants the hero on the M2 coming-soon page (section 1).
+- **The lawyer packet** (`docs/NEXT.md` as of #121) is parked again. The planning chat puts it back when the operator says so, with its decisions numbered from the next free D.
 
 Start by reading `CLAUDE.md`, `docs/STATUS.md` and:
-- `docs/legal-open-questions.md`, all of it;
-- every draft in `content/`, the About page (`content/en/about.md`) and `docs/legal/veri-isleme-sozlesmesi-taslak.md`;
-- `docs/update-jobs.md`, the written rules of D59;
-- in `PLAN.md`: §15, §18, §20's "M7 notes, third round", and D28, D32, D33, D39, D41, D52 and D59.
+- in `PLAN.md`: §10 (the storyboard, its budgets and technology), §17.1–§17.3, §20's M6 notes (the poster), and D12, D18, D41, D45, D47 and D55;
+- the home page: `src/app/(frontend)/en/page.tsx`, `src/components/home/`, and `tools/poster/` with its README;
+- `public/brand/` (the 6b mark), `tests/e2e/budgets.spec.ts`, and `withSiteCsp` in `tests/e2e/map.ts`.
 
-### 1. The operator's open points (C6–C9, C11, C12, and the About page)
+### 1. First, with the operator (in Turkish)
 
-The texts the lawyer reads should be as final as the operator can make them.
-- **Ask:** present the seven open points to the operator in the session, in Turkish. The operator may accept them all at once.
-  - C6–C9, C11 and C12: give each its default (the "until decided" of `docs/legal-open-questions.md`) and your recommendation.
-  - The About page's "How curation works", item 3, below.
-- **The About page, item 3.** It still says each entry has "a short summary we write ourselves", but since D59 an AI assistant drafts the summaries of positions. The About page is approved, so change it only with the operator's approval of the exact words. The planning chat recommends this wording, which keeps the drafts' own phrase, "a short summary in our own words":
+Ask these together at the start; the operator may accept the recommendations at once.
+- **The coming-soon page at M2.** The plan puts the hero on the full home page only, and that page stays private until the launch. From M2 until the launch, the public sees the coming-soon page (D41), possibly for months.
+  - Ask whether the coming-soon page should get the hero too: without the window links, since they lead to private pages, and with the Glia Notes signup as its action.
+  - The planning chat recommends yes: it is the first thing the public will see.
+- **Phones.** §10.2 lets a phone load the 3D layer only when it reports at least 6 GB of `deviceMemory`. iPhones never report it, so every iPhone would see the poster only, and much of the audience will come from Instagram on phones.
+  - The planning chat recommends: on a phone that does not report its memory, try the 3D layer at the phone's lighter quality (§10.5).
+  - Keep it only if the run-time check of §10.3 passes: built within 1.5 s, and the first 60 frames at 30 fps or more on average. The other checks of §10.2 stay as they are.
+  - If the operator agrees, change §10.2 in `PLAN.md` and record it with D60.
+- **The brain model.** §10.5 asks for a point cloud from an openly licensed brain surface model, derived from real data:
+  - CC0 or CC BY only (for example from NIH 3D, which states each model's licence), seen from the side like the poster;
+  - show the operator its source, its licence and the credit line for the About page's "Data and credits";
+  - the About page is approved, so add the line only once the operator has approved its words.
+- **Licences, for the record:**
+  - confirm GSAP's current terms and resolve the `[U]` of §10.6;
+  - if those terms restrict a site like this one, stop and tell the operator;
+  - Three.js is MIT.
 
-  > 3. **Summarise in our own words.** Each entry gives the facts and a short summary in our own words; for positions, an AI assistant drafts it from the original posting. We do not copy descriptions, abstracts, images or logos.
+  No new service: the libraries and the model are served from our own origin, so `docs/vendors.md` stays as it is.
 
-  If another sentence of the About page no longer holds since D59, show it to the operator the same way, with a proposed wording. Change nothing there without the operator's approval.
-- **Record:** write the answers down as decisions, D60 onwards (D59 is the last one).
-- **Update:**
-  - change the two drafts the C points touch, the accessibility statement and the sources and editorial policy; both stay drafts (`draft: true`);
-  - change the About page's item 3 if the operator approves it.
+### 2. Build it as §10 plans it
 
-  Changes under `content/` run CI. Put them, and any script of section 2, into one code pull request.
+- **Layers and frames:**
+  - the layers L0–L2 of §10.1;
+  - the checks of §10.2 (with the phone rule of section 1, if approved);
+  - the frames F0–F6 of §10.3;
+  - the fallback and reduced motion of §10.4.
+- **Budgets (§10.5 and §17.3):**
+  - the hero's JavaScript ≤230 KB gzip, measured in CI;
+  - the point cloud ≤150 KB;
+  - the home page's first JavaScript stays ≤140 KB;
+  - no effect on LCP (the H1 stays the LCP element);
+  - no layout shift;
+  - no task over 50 ms during setup;
+  - 3D and GSAP only on the home route.
+- **Our own origin only:** no CDN, and nothing fetched from another site at run time. The site's CSP allows no `blob:` workers: check the hero under it with `withSiteCsp`.
+- **Windows:** label only the built ones (`LIVE_WINDOWS`, D55): Jobs today. A later window appears around the brain when its milestone adds it to the list, as it does on the poster.
+- **The logo target:** a build script samples the 6b mark into target positions (§10.3). Never redraw the mark.
+- **The poster stays layer L1.** The 3D brain's first frame should match it closely enough for the cross-fade: the same view and the same size.
+  - If they differ too much, regenerate the poster from the same model with `tools/poster`, keeping it ≤15 KB.
+  - Never edit `HomePoster.tsx` by hand.
+- **Browser storage:** the hero may store something, for example that it already played in this session.
+  - List it in the cookies and storage draft, which stays a draft.
+  - Say so in the report.
+- **Tests:**
+  - the budgets;
+  - the hero's chunk is never requested on another route, nor when a check fails: reduced motion, Save-Data, a small screen without the phone rule, no WebGL2;
+  - the page is complete without JavaScript and in forced colours;
+  - keyboard focus on a label does what hover does (F3);
+  - axe on the home page in both states.
+- **Pull requests:** two or three:
+  1. the groundwork: the model, the point cloud, the logo target, the checks;
+  2. the scene with its fallbacks;
+  3. the polish, and the coming-soon version if the operator wants one.
 
-### 2. The packet (`docs/legal/avukat-paketi/`, in Turkish)
+### 3. Let the operator see it before the polish
 
-- **`README.md`, for the operator.** How to use the packet:
-  - which files to send for a quote, and which for the review;
-  - what kind of lawyer: KVKK and IT law, in Türkiye;
-  - what to ask for in the quote: the scope, the deliverables, one follow-up round, the timeline and a fixed fee;
-  - how the answers come back: to the planning chat, which turns them into a task.
-- **The cover letter (`on-yazi.md`).** An email the operator can send as it is. Leave placeholders for the sender's name and contact details, and never fill them in. It says:
-  - who we are and what we ask;
-  - the scope and the deliverables: written answers per question, and tracked changes in the texts;
-  - the timeline we need: before M2;
-  - that we ask for a fixed-fee quote;
-  - that the texts are drafts, not yet live on the site.
-- **The summary of Gliagora (`gliagora-ozeti.md`, 2–3 pages).**
-  - what the site does, and for whom;
-  - who runs it: the controller, a natural person, and the technical administrator as processor (D33);
-  - how positions are found and published:
-    - the monitors read employers' own pages (D52), and redaction removes names and contact details before anything is stored;
-    - an AI assistant drafts each position;
-    - since D59, publishing rounds run on the operator's command, with written rules and a last look at the employer's page, and no person checks each listing (B17);
-  - where data is kept (Türkiye), and which outside services see what:
-    - Cloudflare's DNS;
-    - Google and ORCID sign-in;
-    - Anthropic, for redacted listing text: Claude Code on the operator's computer, in the weekly drafts and in each publishing round (the Claude API is built but off);
-    - the mail provider, still to be chosen;
-  - a table of the personal data flows: what is collected, why, on which assumed legal basis, for how long, and who sees it;
-  - what goes public at M2 and what at the launch;
-  - that the site is non-commercial.
-- **The questions (`sorular.md` and `sorular.docx`).** B1–B22 in Turkish. For each:
-  - its context in a few sentences;
-  - the exact question;
-  - the texts it touches;
-  - when its answer is needed: before M2, before the launch, or later.
+- **The first version:** when F0–F3 and F5 run, merge it, so that it deploys behind the password.
+- **An independent reviewer first:** someone who has not seen the code looks at recordings of the hero, at a desktop and a phone size, in light and dark. What to look for:
+  - the motion;
+  - the legibility of the labels;
+  - the contrast;
+  - anything that looks cheap or stutters.
+- **Then the operator:**
+  - show the address and the reviewer's recordings or screenshots;
+  - ask the operator to open it on their own phone too (the real-device check of §17.2);
+  - wait for the operator's go or changes before F4's polish and the coming-soon version.
+- **The anatomy:** Nuray's look at the poster's anatomy (D47) can include the 3D brain. Nothing waits for it.
 
-  Name `docs/legal-open-questions.md` as the English original, the reference if the two differ.
+### 4. Checks
 
-  First bring B17 and B22 up to date there, in English, since D59 changed what they say:
-  - B17 (2) says that the About page's section on reading employers' pages says a person checks every position first. The operator changed that section on 2026-10-22.
-  - B17 says the redaction rules were widened "before the next run". In fact the second weekly drafts run (231 candidates) also ran on the first rules; the second round of rules came after it (#116). Use the numbers below.
-  - B22 still says that a person checks and approves every item. Since D59 that no longer holds (B17).
-- **The texts (`metinler/`).**
-  - **Files:** each legal draft, the About page, the sources and editorial policy, and the processing agreement, as a Word file (.docx), so the lawyer can answer with tracked changes. Add one PDF that holds them all, for reading.
-  - **A list (`metinler.md`):** for each text:
-    - its purpose;
-    - its language;
-    - when it goes live (M2 or the launch);
-    - its state: a draft, or approved by the operator (the About page; it changes only with the operator's approval).
-- **Redaction, as it really works:** say it plainly in the summary and in B17 and B22, with the numbers in PLAN §20 (M7 notes, third round).
-  - **The first two weekly AI drafts runs** (2026-10-22, 331 candidates) ran on the first rules, and all 331 texts went to Anthropic. In the first 100 texts:
-    - names were left in about half: HR and union contacts, team leaders, names inside lab addresses and CNRS reference codes;
-    - phone numbers were left in 7;
-    - a name with an email address was left in 1.
-  - **The second round of rules** (#116, 2026-10-22) then ran again over the 374 waiting candidates and their saved versions. It removed:
-    - from texts: 195 names, 43 phone numbers and 403 web addresses;
-    - from titles: 46 names and one email address;
-    - from facts and drafts: 49 more names.
-  - **What is left:**
-    - names in about 40 of 306 texts, about one in seven: in reference lists, in attachments' names and in titles with a hyphen;
-    - a few institutional switchboard and press-office numbers.
-
-    A third round of rules comes when the next drafts show them.
-  - **What is published:** no published listing names a person or gives an email address or a phone number. Before publishing, the server checks every title, summary, start date and city again (D59).
-- **What the packet must never hold:** secrets, or real personal data beyond what the drafts already say.
-- **Keeping it in step:** a way to make the Word and PDF files again after the texts change. A script is fine; put it into section 1's code pull request.
-
-### 3. Checks
-
-- **Read it as the lawyer would:**
-  - every question is clear without the repository;
-  - every text is listed;
-  - the summary describes publishing as D59 does it;
-  - the Turkish is plain and correct, with KVKK's own terms: veri sorumlusu, veri işleyen, açık rıza, aydınlatma metni, yurt dışına aktarım.
-- **An independent reviewer** reads the summary and the questions, for clarity and for accuracy against the English originals.
+- **Lighthouse:** `pnpm lighthouse:local` on the home page, before and after. Run `pnpm lighthouse:prod` only if the operator asks.
+- **Frame rate:** the quality steps of §10.5 work, and a slow device stays on the poster.
+- **The coming-soon version, if built:**
+  - its public files (the point cloud, say) are in `src/lib/public-pages.ts`, and `pnpm caddy:public` has been run;
+  - `tests/e2e/m2.spec.ts` covers it.
 
 ### On the server
 
-- **Nothing.** This task has no server steps.
+- **Nothing** beyond the automatic deploys of merges to `main`, behind the password.
 
 ### Not in this task
 
-- choosing a lawyer, or sending anything;
-- changing the legal texts beyond the operator's decisions in section 1;
-- approving or publishing any text: they all stay drafts;
+- M8–M10, M12 and M14;
+- the lawyer packet;
 - "Update the jobs": it runs only on the operator's own command;
-- the repository's visibility on GitHub: the operator's own decision;
-- M2's other steps.
+- approving or publishing any text;
+- the M2 switch, or making anything public.
 
 ### Report
 
 At the end, one short report in plain language:
-- **Decisions:** the operator's decisions on C6–C12, and on the About page's item 3;
-- **Files:** the packet's files with their sizes, and which to send for a quote and which for the review;
-- **Gaps:** anything the lawyer will need that we cannot provide yet;
+- **Decisions:** D60 and the operator's answers in section 1;
+- **What a visitor sees:** on a desktop, on a phone, with reduced motion, without JavaScript;
+- **Sizes:**
+  - the hero's JavaScript;
+  - the point cloud;
+  - the home page's first JavaScript;
+  - Lighthouse before and after;
+- **Licences and credits:** the model, GSAP, Three.js;
 - **CI minutes:** how many this task used.
-  - On 2026-10-22 GitHub reported the repository as public (`gh api repos/ismailtufan123/gliagora --jq .visibility`). The planning chat has asked the operator whether that is wanted.
+  - On 2026-10-22 GitHub reported the repository as public (`gh api repos/ismailtufan123/gliagora --jq .visibility`), and the operator has not yet said whether that is wanted.
   - While it is public, GitHub's standard runners cost it no minutes. Say which it is when you start.
-  - If it is private again, about 360 of October's 2,000 are left by the last count. If fewer than 150 remain before a code pull request, stop and tell the operator.
+  - If it is private again, about 360 of October's 2,000 are left by the last count, and November starts again at 2,000. If fewer than 150 remain before a code pull request, stop and tell the operator.
 
 ### Working rules
 
 Follow `CLAUDE.md`:
 - one pull request per step, merged when its checks pass;
 - CI minutes are limited (D46), so run every check locally before pushing, and put documentation into the same push;
-- stop and ask only for rules (a) to (c), and for section 1's open points.
+- stop and ask only for rules (a) to (c), for section 1, and for section 3's review.
