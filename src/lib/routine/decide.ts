@@ -82,6 +82,11 @@ export const decisionSchema = z
     reopen: z.boolean().optional(),
     /** The job is another position than the similar one the duplicate check names. */
     notDuplicate: z.boolean().optional(),
+    /**
+     * On the operator's word only: the posting's own title without the person it names
+     * ("Research Technician, [name] Lab" → "Research Technician"), checked like any published text.
+     */
+    title: z.string().trim().min(3).max(300).optional(),
     language: z
       .enum(ORIGINAL_LANGUAGES.map(({ value }) => value) as [string, ...string[]])
       .optional(),
@@ -111,6 +116,10 @@ export const decisionSchema = z
   .refine((d) => !d.waive?.length || d.byOperator === true, {
     message: 'Only the operator\'s word ("byOperator": true) waives a judgement.',
     path: ['waive'],
+  })
+  .refine((d) => d.title === undefined || d.byOperator === true, {
+    message: 'Only the operator\'s word ("byOperator": true) changes a posting\'s title.',
+    path: ['title'],
   })
 
 export type Decision = z.infer<typeof decisionSchema>
@@ -444,7 +453,7 @@ async function applyOne(
   const published = facts?.published?.value
   const deadline = deadlineOf(decision, draft, candidate)
   const summary = decision.summary ?? draft.summary
-  const title = candidate.rawTitle ?? ''
+  const title = decision.title ?? candidate.rawTitle ?? ''
   const problems: Problem[] = publishProblems(
     {
       title,
@@ -624,6 +633,7 @@ async function publishJob(
   const fixed = deadline.kind === 'fixed' && deadline.date
   const data: Partial<Job> = {
     status: 'published',
+    ...(decision.title ? { title: decision.title } : {}),
     institution: institution.id,
     summary,
     deadlineKind: deadline.kind,
