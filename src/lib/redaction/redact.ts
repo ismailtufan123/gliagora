@@ -137,7 +137,7 @@ const NAME = String.raw`${PART}(?:${GAP}(?:${PARTICLE}[^\S\n]+)*${PART}){0,3}`
 const FULL_NAME = String.raw`${PART}(?:${GAP}(?:${PARTICLE}[^\S\n]+)*${PART}){1,3}`
 
 // Specific forms first, so that "Prof." does not take the start of "Prof.ssa".
-const TITLE = String.raw`(?:Prof\.ssa|Dr\.ssa|Dott\.(?:ssa)?|Prof\.ª|Profª|Profa\.|Drª|Dra\.|Prof(?:essor)?\.?|Dr\.?|PD|Priv\.-Doz\.|Univ\.-Prof\.|Mr\.?|Mrs\.?|Ms\.?|Mx\.?|Mme\.?|Mlle\.?|Pr\.?|Frau|Herrn?|Sig\.(?:ra)?|Ing\.|Doç\.|Sir|Dame|prof\.|dr\.|drs\.|ir\.|dhr\.|mevr\.|Öğr\.\s?Üyesi|Arş\.\s?Gör\.|Öğr\.\s?Gör\.)`
+const TITLE = String.raw`(?:Prof\.ssa|Dr\.ssa|Dott\.(?:ssa)?|Prof\.ª|Profª|Profa\.|Drª|Dra\.|Profs\.|Drs\.|Prof(?:essor)?\.?|Dr\.?|PD|Priv\.-Doz\.|Univ\.-Prof\.|Mr\.?|Mrs\.?|Ms\.?|Mx\.?|Mme\.?|Mlle\.?|Pr\.?|Frau|Herrn?|Sig\.(?:ra)?|Ing\.|Doç\.|Sir|Dame|prof\.|dr\.|drs\.|ir\.|dhr\.|mevr\.|Öğr\.\s?Üyesi|Arş\.\s?Gör\.|Öğr\.\s?Gör\.)`
 /** Degrees and titles that can follow the first title: "Prof. Dr. med.", "Dr. rer. nat.". */
 const MORE_TITLES = String.raw`(?:\s+(?:Dr\.?|Prof\.?|dr\.|med\.|rer\.\s?nat\.|phil\.|habil\.|h\.\s?c\.|PhD|MD|Öğr\.\s?Üyesi)){0,4}`
 
@@ -350,6 +350,17 @@ const JOINED_BEFORE = new RegExp(
   'gu',
 )
 
+// Authors in a reference ("Doe and Roe, Curr. Opin. Neurobiol. (2023)", "Doe et al."): a posting's
+// list of references names people as well as any contact does.
+const CITED_PAIR = new RegExp(
+  String.raw`(?<![\p{L}\p{N}\]])(${WORD})([^\S\n]+(?:and|&)[^\S\n]+)(${WORD})(?=,[^\S\n]+[^\n()]{2,100}\([^\S\n]?(?:19|20)\d{2}[^\S\n]?\))`,
+  'gu',
+)
+const CITED_ET_AL = new RegExp(
+  String.raw`(?<![\p{L}\p{N}\]])(${WORD})(?=[^\S\n]+et[^\S\n]+al\b)`,
+  'gu',
+)
+
 // A person's initials in brackets after a project's name ("PhD position - READEXP (A.C.)", BCBL):
 // two or three capitals with full stops, not a country's (U.S., U.K., E.U.) or a degree (M.D.).
 const INITIALS = /(?<=\()(?:\p{Lu}\.[^\S\n]?){2,3}(?=\))/gu
@@ -449,7 +460,7 @@ const NOT_NAMES = new Set(
   nosotros su puesto plaza convocatoria laboratorio equipo unidad nostro posizione bando gruppo vaga
   edital laboratório equipe duyuru ilan başvuru merkez merkezi enstitü enstitüsü laboratuvar araştırma
   bölüm bölümü birim kadro saco seko young investigator investigators atlas syndrome name names children
-  childrens dr prof professor mr mrs ms mx sir dame herr herrn frau mme mlle med phil rer nat habil`
+  childrens biomarker biomarkers dr drs prof profs professor mr mrs ms mx sir dame herr herrn frau mme mlle med phil rer nat habil`
     .split(/\s+/)
     .filter(Boolean),
 )
@@ -731,6 +742,16 @@ function redactOnce(input: string): Redaction {
     })
   }
 
+  text = text.replace(CITED_PAIR, (match, first: string, join: string, second: string) => {
+    if (!looksLikeName(first) || !looksLikeName(second)) return match
+    counts.name += 2
+    return `${PLACEHOLDER.name}${join}${PLACEHOLDER.name}`
+  })
+  text = text.replace(CITED_ET_AL, (match) => {
+    if (!looksLikeName(match)) return match
+    counts.name++
+    return PLACEHOLDER.name
+  })
   text = text.replace(CNRS_REFERENCE, (_match, before: string, after: string) => {
     counts.name++
     return `${before}${PLACEHOLDER.name}${after}`
