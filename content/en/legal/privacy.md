@@ -369,6 +369,8 @@ We use only what is strictly necessary for the site to work, so there is no cook
 - **Newsletter cookie (`__Host-gliagora-newsletter`):** set when you send the newsletter form, for one hour from then (never extended). It holds, sealed so that it can be neither read nor changed in your browser, the address the confirmation link went to, the language of the page and when the link went, with the time you sent the form and the version of the consent text, so that "Check your inbox" can show the address (partly hidden) and "Send it again" can send a new link. [TO DECIDE: B14 – the newsletter cookie among the strictly necessary ones]
 - **Editor session cookie:** only for editors of Gliagora. It cannot be read by scripts, is sent only over encrypted connections and is not sent when you arrive from another site (HttpOnly, Secure, SameSite=Strict). Its lifetime is listed on the cookies and storage page.
 
+- **Home page animation (`gliagora-hero-played`, session storage):** where your device shows the home page's moving brain, the browser remembers, until you close the tab, that its short opening movement has played. It holds only the figure 1 and never leaves your browser.
+
 The spam protection on forms (ALTCHA) sets no cookie and stores nothing in your browser.
 
 [TO DECIDE: when the translated-version notice is built – whether it stores anything in your browser; this list is completed then]

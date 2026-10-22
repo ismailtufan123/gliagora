@@ -32,6 +32,11 @@ const BUDGET_KB = { script: 140, stylesheet: 35, html: 60, font: 120 }
 /** Where a map is shown, MapLibre and the map's own code come on top (§17.3, "Map chunk"). */
 const MAP_BUDGET_KB = { script: 330, stylesheet: 11 }
 const MAPLIBRE = /\/map\/maplibre-gl\//
+/**
+ * On the home page, the 3D hero's code comes on top where it loads, after the page (§17.3, "Hero
+ * chunk", D60); tests/e2e/budgets.spec.ts checks it and the page's own first JavaScript apart.
+ */
+const HERO_BUDGET_KB = { script: 230 }
 
 /**
  * The main templates. `find` looks a path up on the site first: a job needs an open position,
@@ -39,7 +44,7 @@ const MAPLIBRE = /\/map\/maplibre-gl\//
  * data); an institution is reached through the redirect to its current address.
  */
 const TEMPLATES = [
-  { name: 'home', path: '/en/' },
+  { name: 'home', path: '/en/', hero: true },
   { name: 'jobs list', path: '/en/jobs/', scriptKb: 137 },
   { name: 'jobs list (filtered)', path: '/en/jobs/?type=phd', scriptKb: 137 },
   { name: 'jobs list (map)', path: '/en/jobs/?view=map', map: true },
@@ -423,7 +428,10 @@ async function main() {
         const html = await kb(url, true)
 
         const budget = {
-          script: (page.scriptKb ?? BUDGET_KB.script) + (page.map ? MAP_BUDGET_KB.script : 0),
+          script:
+            (page.scriptKb ?? BUDGET_KB.script) +
+            (page.map ? MAP_BUDGET_KB.script : 0) +
+            (page.hero ? HERO_BUDGET_KB.script : 0),
           stylesheet: BUDGET_KB.stylesheet + (page.map ? MAP_BUDGET_KB.stylesheet : 0),
         }
         const row = {
@@ -522,7 +530,7 @@ function markdown({ origin, at, runs, applied, rows }) {
   const out = [
     `# Lighthouse: ${origin}`,
     '',
-    `${at.slice(0, 16).replace('T', ' ')} UTC; the median of ${runs} run${runs === 1 ? '' : 's'} per template and device, ${applied ? 'with the browser slowed down for real' : "estimated from a fast load (Lighthouse's default)"}. Targets (PLAN §17.1, §17.3): performance ≥ ${pct(TARGETS.performance)}, accessibility ${pct(TARGETS.accessibility)}, LCP ≤ ${seconds(TARGETS.lcpMs)}, CLS ≤ ${TARGETS.cls}, TBT ≤ ${TARGETS.tbtMs} ms; JavaScript ≤ ${BUDGET_KB.script} KB (the jobs list 137), CSS ≤ ${BUDGET_KB.stylesheet} KB, HTML ≤ ${BUDGET_KB.html} KB, fonts ≤ ${BUDGET_KB.font} KB (gzip), nothing from other sites.`,
+    `${at.slice(0, 16).replace('T', ' ')} UTC; the median of ${runs} run${runs === 1 ? '' : 's'} per template and device, ${applied ? 'with the browser slowed down for real' : "estimated from a fast load (Lighthouse's default)"}. Targets (PLAN §17.1, §17.3): performance ≥ ${pct(TARGETS.performance)}, accessibility ${pct(TARGETS.accessibility)}, LCP ≤ ${seconds(TARGETS.lcpMs)}, CLS ≤ ${TARGETS.cls}, TBT ≤ ${TARGETS.tbtMs} ms; JavaScript ≤ ${BUDGET_KB.script} KB (the jobs list 137; the home page's 3D hero ${HERO_BUDGET_KB.script} more, after the page), CSS ≤ ${BUDGET_KB.stylesheet} KB, HTML ≤ ${BUDGET_KB.html} KB, fonts ≤ ${BUDGET_KB.font} KB (gzip), nothing from other sites.`,
   ]
   for (const form of FORMS) {
     const of = rows.filter((row) => row.form === form)

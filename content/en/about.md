@@ -32,6 +32,7 @@ If you run one of these sites and would rather we did not read it, block `Gliago
 - Institution names, places and identifiers come from the [Research Organization Registry (ROR)](https://ror.org/), released under CC0.
 - Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), available under the Open Database License (ODbL). The maps are drawn with [Protomaps](https://protomaps.com/) and [MapLibre](https://maplibre.org/).
 - The time zone in which a deadline ends is worked out from the institution's location, with time-zone borders made from OpenStreetMap data ([timezone-boundary-builder](https://github.com/evansiroky/timezone-boundary-builder)), © OpenStreetMap contributors, available under the Open Database License (ODbL).
+- The brain on the home page is drawn from “Brain Model” by Nevit Dilmen ([NIH 3D](https://3d.nih.gov/entries/3DPX-002739)), available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); we made it into a cloud of points.
 
 ## Who runs Gliagora
 

@@ -16,6 +16,14 @@ const BUDGET_KB = { script: 140, stylesheet: 35, html: 60, font: 120 }
  */
 const MAP_BUDGET_KB = { script: 330, stylesheet: 11 }
 const MAPLIBRE = /\/map\/maplibre-gl\//
+/**
+ * The home page's 3D hero (PLAN §10.5, §17.3, "Hero chunk"; D60): its code and its point file load
+ * after the page's `load`, on the home page only and only where its checks pass, with budgets of
+ * their own. The home page's first JavaScript is measured with the hero off (reduced motion).
+ */
+const HERO_BUDGET_KB = { script: 230, points: 150 }
+/** A word three.js's code holds (its warnings' prefix): no other script of the site has it. */
+const THREE_MARK = 'THREE.'
 const MAX_PRELOADED_FONTS = 4
 const MAX_FONT_FAMILIES = 2
 
@@ -28,6 +36,8 @@ test.describe('size budgets', () => {
   for (const template of PAGES) {
     test(`${template.name} stays within the budgets`, async ({ page, baseURL }) => {
       await asTemplateMember(page, template, baseURL)
+      // The home page's first JavaScript, without the hero (measured below).
+      if (template.path === '/en/') await page.emulateMedia({ reducedMotion: 'reduce' })
       const responses: Response[] = []
       page.on('response', (response) => {
         if (
@@ -59,6 +69,9 @@ test.describe('size budgets', () => {
             : 'script'
           : (type as Kind)
         const body = await response.body()
+        // The hero's code loads nowhere else, and not on the home page with reduced motion.
+        if (kind === 'script')
+          expect(body.includes(THREE_MARK), `${response.url()} holds three.js`).toBe(false)
         // Scripts and styles are served compressed; font files are already compressed.
         const size = (kind === 'font' ? body.length : gzipSync(body).length) / 1024
         kb[kind] += size
@@ -95,4 +108,45 @@ test.describe('size budgets', () => {
       expect(families, 'font families').toBeLessThanOrEqual(MAX_FONT_FAMILIES)
     })
   }
+
+  test('the home page’s 3D hero stays within its budgets', async ({ browser, baseURL }) => {
+    /** The scripts a load of the home page fetches, by address, with their sizes (KB gzip). */
+    async function scripts(reducedMotion: 'reduce' | 'no-preference') {
+      const context = await browser.newContext({ reducedMotion, baseURL })
+      const page = await context.newPage()
+      const sizes = new Map<string, number>()
+      let points = 0
+      const pending: Promise<void>[] = []
+      page.on('response', (response) => {
+        const path = new URL(response.url()).pathname
+        if (path.startsWith('/hero/'))
+          pending.push(response.body().then((body) => void (points += body.length / 1024)))
+        else if (response.request().resourceType() === 'script')
+          pending.push(
+            response.body().then((body) => void sizes.set(path, gzipSync(body).length / 1024)),
+          )
+      })
+      await page.goto('/en/')
+      if (reducedMotion === 'no-preference')
+        await expect(page.locator('.home-poster')).toHaveAttribute('data-hero', /^(live|poster)$/, {
+          timeout: 20_000,
+        })
+      else await page.waitForLoadState('networkidle')
+      await Promise.all(pending)
+      await context.close()
+      return { sizes, points }
+    }
+    const first = await scripts('reduce')
+    const hero = await scripts('no-preference')
+    const extra = [...hero.sizes].filter(([path]) => !first.sizes.has(path))
+    const heroKb = extra.reduce((sum, [, kb]) => sum + kb, 0)
+    console.log(
+      `home hero: JavaScript ${heroKb.toFixed(2)} KB (gzip, ${extra.length} chunks), point file ${hero.points.toFixed(1)} KB`,
+    )
+    expect(extra.length, 'the hero loads its own chunks').toBeGreaterThan(0)
+    expect(heroKb, 'hero JavaScript, KB gzip').toBeLessThanOrEqual(HERO_BUDGET_KB.script)
+    expect(hero.points, 'point file, KB').toBeGreaterThan(0)
+    expect(hero.points, 'point file, KB').toBeLessThanOrEqual(HERO_BUDGET_KB.points)
+    expect(first.points, 'no point file without the hero').toBe(0)
+  })
 })

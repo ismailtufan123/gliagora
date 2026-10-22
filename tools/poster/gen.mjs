@@ -1,7 +1,7 @@
 // Generates poster.svg (contour-line brain with one calcium wave) and anchors.json.
 // node gen.mjs [debug]   (debug also writes debug.svg with the levels in colour)
 // Design units: 680 × 500, frontal pole on the left; output at 2× (viewBox 1360 × 1000).
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import {
   spline,
   polyLength,
@@ -125,42 +125,15 @@ function offset(pts, d) {
   })
 }
 
+// ---------- the outlines: from the brain model (tools/hero/outline.mjs, D60) ----------
+// The cerebrum, the cerebellum and the brainstem as the 3D brain's camera sees them at rest, so the
+// poster and the 3D layer draw the same brain in the same place. Control points along each outline,
+// for the same Catmull-Rom curves as before.
+const OUTLINE = JSON.parse(readFileSync(new URL('outline.json', import.meta.url), 'utf8'))
+const controls = (pts, count, closed) => resample(pts, polyLength(pts, closed) / count, closed)
+
 // ---------- the cerebrum ----------
-const cerebrumCtl = [
-  [118, 198],
-  [121, 162],
-  [139, 125],
-  [171, 96],
-  [215, 75],
-  [270, 63],
-  [330, 59],
-  [390, 65],
-  [441, 79],
-  [482, 101],
-  [511, 131],
-  [529, 166],
-  [535, 198],
-  [530, 222],
-  [512, 240],
-  [476, 256],
-  [438, 273],
-  [400, 292],
-  [360, 310],
-  ...(process.env.NOTCH
-    ? JSON.parse(process.env.NOTCH)
-    : [
-        [316, 320],
-        [276, 316],
-        [248, 303],
-        [232, 290],
-        [226, 275],
-        [228, 262],
-        [222, 255],
-        [200, 252],
-        [166, 246],
-        [138, 230],
-      ]),
-]
+const cerebrumCtl = controls(OUTLINE.cerebrum, +(process.env.CTL ?? 30), true)
 const cerebrum = spline(cerebrumCtl, true, 20)
 const sylvianCtl = process.env.SYL
   ? JSON.parse(process.env.SYL)
@@ -274,20 +247,7 @@ let wave
 }
 
 // ---------- the cerebellum: an outline and folia, concentric arcs like the logo's ----------
-const cbCtl = [
-  [386, 300],
-  [388, 324],
-  [402, 343],
-  [432, 355],
-  [468, 357],
-  [496, 345],
-  [512, 319],
-  [516, 289],
-  [510, 252],
-  [490, 214],
-  [440, 214],
-  [404, 256],
-]
+const cbCtl = controls(OUTLINE.cerebellum, 16, true)
 const cb = spline(cbCtl, true, 16)
 const FOLIA_C = process.env.FC ? JSON.parse(process.env.FC) : [446, 176]
 const FOLIA_R = process.env.FR ? JSON.parse(process.env.FR) : [112, 124, 136, 148, 160]
@@ -303,34 +263,15 @@ const folia = FOLIA_R.flatMap((R) => {
 })
 
 // ---------- the brainstem: pons bulge, medulla tilted slightly back, cut across ----------
-const CUT = 426
-const stemL = spline(
-  [
-    [352, 296],
-    [342, 322],
-    [344, 348],
-    [356, 370],
-    [364, 396],
-    [368, 430],
-    [370, 470],
-  ],
-  false,
-  12,
-)
-const stemR = spline(
-  [
-    [402, 300],
-    [398, 340],
-    [395, 380],
-    [394, 420],
-    [396, 470],
-  ],
-  false,
-  12,
-)
+// A level cut a little above the model's own (slanted) end, where the stem's fill fades out.
+const CUT = OUTLINE.cut - 6
+const stemL = spline(controls(OUTLINE.stemLeft, 7, false), false, 12)
+const stemR = spline(controls(OUTLINE.stemRight, 7, false), false, 12)
 const stemLeft = cutAt(stemL, CUT),
   stemRight = cutAt(stemR, CUT)
-const stemInner = cutAt(offset(stemL, 12), CUT).filter((p) => !underCerebrum(p) && sdf(p, cb) < -6)
+const stemInner = cutAt(offset(stemL, OUTLINE.stemWidth * 0.3), CUT).filter(
+  (p) => !underCerebrum(p) && sdf(p, cb) < -6,
+)
 
 // ---------- output ----------
 const K = 2
