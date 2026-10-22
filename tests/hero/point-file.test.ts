@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { encodeHeroPoints } from '../../../../tools/hero/encode.mjs'
-import { decodeHeroPoints, heroFileLength } from './data'
+import { encodeHeroPoints } from '../../tools/hero/encode.mjs'
+import { decodeHeroPoints, heroFileLength } from '../../src/components/home/hero/data'
 
 const box = {
   min: [-1, -0.5, -0.25] as [number, number, number],
