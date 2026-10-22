@@ -2,7 +2,7 @@
 
 This page explains how to ask Gliagora | Neuroscience to correct or remove something we have published, for example a wrong fact or content that harms your personal rights, such as your privacy or your reputation.
 
-Our editor writes and checks every item. Under Turkish Law No. 5651, our editor is the content provider ({tr: içerik sağlayıcı}), responsible for what we publish. [TO DECIDE: B1 – content provider role] In Turkish, the main points are on the [{tr: İletişim ve yasal bilgiler}](/tr/iletisim/) page.
+Our editor is responsible for every item, also for those that an AI assistant drafted and checked against our written rules in a publishing round our editor started. Under Turkish Law No. 5651, our editor is the content provider ({tr: içerik sağlayıcı}), responsible for what we publish. [TO DECIDE: B1 – content provider role] In Turkish, the main points are on the [{tr: İletişim ve yasal bilgiler}](/tr/iletisim/) page.
 
 ## How to reach us
 

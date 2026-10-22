@@ -33,7 +33,7 @@ export const CONTENT_PAGES = {
     messages: 'about',
     path: '/en/about/',
     file: 'en/about.md',
-    updated: '2026-10-01',
+    updated: '2026-10-22',
     draft: false,
   },
   // Legal texts (PLAN §15.4): drafts for the operator's review, written in M1 and, for the
@@ -59,7 +59,7 @@ export const CONTENT_PAGES = {
     messages: 'privacy',
     path: '/en/legal/privacy/',
     file: 'en/legal/privacy.md',
-    updated: '2026-10-02',
+    updated: '2026-10-22',
     draft: true,
   },
   kvkk: {
@@ -67,7 +67,7 @@ export const CONTENT_PAGES = {
     messages: 'kvkk',
     path: '/tr/legal/kvkk-aydinlatma-metni/',
     file: 'tr/legal/kvkk-aydinlatma-metni.md',
-    updated: '2026-10-02',
+    updated: '2026-10-22',
     draft: true,
   },
   acikRiza: {
@@ -91,7 +91,7 @@ export const CONTENT_PAGES = {
     messages: 'terms',
     path: '/en/legal/terms/',
     file: 'en/legal/terms.md',
-    updated: '2026-10-07',
+    updated: '2026-10-22',
     draft: true,
   },
   takedown: {
@@ -99,7 +99,7 @@ export const CONTENT_PAGES = {
     messages: 'takedown',
     path: '/en/legal/takedown/',
     file: 'en/legal/takedown.md',
-    updated: '2026-10-02',
+    updated: '2026-10-22',
     draft: true,
   },
   dataRequests: {
@@ -125,7 +125,7 @@ export const CONTENT_PAGES = {
     messages: 'sources',
     path: '/en/about/sources/',
     file: 'en/about/sources.md',
-    updated: '2026-10-07',
+    updated: '2026-10-22',
     draft: true,
   },
 } as const satisfies Record<string, ContentPageInfo>

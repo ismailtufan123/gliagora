@@ -414,6 +414,20 @@ describe('redact: second round', () => {
     }
   })
 
+  it('replaces names after "Drs." and the authors of references', () => {
+    gone(
+      'in partnership with Drs. Jane Exemplar (U. Example) and John Roe (ExampleNet).',
+      `in partnership with Drs. ${name} (U. Example) and ${name} (ExampleNet).`,
+    )
+    gone(
+      'Exemplar and Roe, Curr. Opin. Neurobiol. (2023), doi: 10.1016/j.conb.2023.102799',
+      `${name} and ${name}, Curr. Opin. Neurobiol. (2023), doi: 10.1016/j.conb.2023.102799`,
+    )
+    gone('as shown by Exemplar et al. in 2024', `as shown by ${name} et al. in 2024`)
+    kept('Translational Imaging Biomarkers Lab')
+    kept('Neuron and Cell, Elsevier (2023)')
+  })
+
   it('reads a very long word in linear time', () => {
     const started = performance.now()
     redact(`A${'b'.repeat(32000)} Lab`)

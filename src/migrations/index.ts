@@ -41,6 +41,7 @@ import * as migration_20261021_122950_source_left_out from './20261021_122950_so
 import * as migration_20261021_130000_sources_round_2_findings from './20261021_130000_sources_round_2_findings';
 import * as migration_20261022_092547_round_3_fields from './20261022_092547_round_3_fields';
 import * as migration_20261022_120000_sources_round_3 from './20261022_120000_sources_round_3';
+import * as migration_20261022_130000_routine_mark from './20261022_130000_routine_mark';
 
 export const migrations = [
   {
@@ -257,5 +258,10 @@ export const migrations = [
     up: migration_20261022_120000_sources_round_3.up,
     down: migration_20261022_120000_sources_round_3.down,
     name: '20261022_120000_sources_round_3',
+  },
+  {
+    up: migration_20261022_130000_routine_mark.up,
+    down: migration_20261022_130000_routine_mark.down,
+    name: '20261022_130000_routine_mark',
   },
 ];

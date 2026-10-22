@@ -24,3 +24,5 @@ tests
 playwright.config.ts
 # The weekly AI drafts' files on the operator's computer (tools/ai-drafts/weekly.sh)
 /ai-drafts/
+# The files of "Update the jobs" on the operator's computer (tools/update-jobs/update.sh, D59)
+/update-jobs/

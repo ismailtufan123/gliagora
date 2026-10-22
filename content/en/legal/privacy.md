@@ -140,7 +140,7 @@ You can [suggest a listing](/en/suggest/) to us: point us to a position or anoth
 - **What:** the link (http or https only), the type of item, a note of up to 500 characters, the language of the page you used and, if you want, your email address.
 - **Where it comes from:** you, through the form.
 - **Your email address is optional.** We use it only to tell you the outcome, and only if you tick the box that asks us to do this. The box is never ticked in advance. You can withdraw this consent at any time by writing to privacy@gliagora.com. We then delete your email address from the suggestion. This does not affect the review of the suggestion itself.
-- **Why:** to review your suggestion and, if you asked, to tell you what we decided. Nothing is published automatically. If we publish a listing, we write it ourselves from the original source.
+- **Why:** to review your suggestion and, if you asked, to tell you what we decided. Nothing is published automatically: only in a publishing round that our editor starts, after a check against our written rules. If we publish a listing, it is our own summary of the original source, which an AI assistant may draft.
 - **Legal basis:**
   - Reviewing the suggestion: our legitimate interest in finding relevant listings (KVKK Art. 5(2)(f); GDPR Art. 6(1)(f)).
   - Your email address: your consent (GDPR Art. 6(1)(a)). Under KVKK: explicit consent (Art. 5(1)) or legitimate interest (Art. 5(2)(f)). [TO DECIDE: B8 – KVKK basis for the optional email]
@@ -241,7 +241,7 @@ This applies only to people who edit Gliagora.
 
 ### People named in listings and sources
 
-We find positions, events and funding on employers' and funders' pages, on job boards, on mailing lists, on social media and through suggestions. We always check each item on the original page. These sources sometimes name people, for example the head of a lab.
+We find positions, events and funding on employers' and funders' pages, on job boards, on mailing lists, on social media and through suggestions. Each item is checked against the original page: by our program, which reads it once more just before publishing, or by our editor. These sources sometimes name people, for example the head of a lab.
 
 - **What:** names, job titles and lab or group names as they appear on the original page. A published listing shows a person's name only where the original page shows it, for example in the original title of a position, as the organiser of an event or in the name of a lab or group. We never copy personal contact details.
 - **Where it comes from:** the public pages of employers and funders, and announcements on mailing lists and social media. We receive mailing lists in a project mailbox hosted in Türkiye. A program of ours also reads some employers' own vacancy pages and feeds, at most once a day (see the [sources and editorial policy](/en/about/sources/)); before it stores a posting's text, it replaces names, email addresses and phone numbers with placeholders, as far as rules can find them. [TO DECIDE: B22 – reading pages that name people by program]
@@ -325,7 +325,7 @@ Our technical administrator is a person who maintains our server and software on
 
 ### Service providers outside Türkiye
 
-- **Anthropic (Claude Code and the Claude API):** receives the text of job listings, with names and contact details replaced, to prepare drafts that our editor checks: once a week through Claude Code, Anthropic's assistant, used by our technical administrator. The Claude API, which would do the same each day, is currently switched off. See "Transfers outside Türkiye".
+- **Anthropic (Claude Code and the Claude API):** receives the text of job listings, with names and contact details replaced, to prepare drafts and to check each listing against our written rules before it is published: through Claude Code, Anthropic's assistant, used by our technical administrator, in the publishing rounds that our editor starts. The Claude API, which would do the same each day, is currently switched off. See "Transfers outside Türkiye".
 
 ### Services you deal with directly
 
@@ -351,7 +351,7 @@ We choose service providers registered in Türkiye, with data centres in Türkiy
 
 ### Exception
 
-**AI help with drafting (Anthropic).** Once a week we send the text of job listings, after replacing email addresses, phone numbers and personal names with placeholders, to Claude Code, Anthropic's assistant, which our technical administrator uses to prepare drafts. The Claude API, by Anthropic, which would do the same each day, is currently switched off. When the events, funding and papers sections open, their listings may be drafted in the same way; for openly licensed papers we will first remove author lists, affiliations, correspondence details, acknowledgements and references. We do not send anything from our subscriber, member or request records. The service runs outside Türkiye. Replacing names lowers the risk, but a name can still slip through. A person checks and approves every item before it is published. [TO DECIDE: B17 – transfer route for AI drafting]
+**AI help with drafting and checking (Anthropic).** In each publishing round that our editor starts, we send the text of job listings, after replacing email addresses, phone numbers and personal names with placeholders, to Claude Code, Anthropic's assistant, which our technical administrator uses to prepare drafts and to check each listing against our written rules. The Claude API, by Anthropic, which would do the same each day, is currently switched off. When the events, funding and papers sections open, their listings may be drafted in the same way; for openly licensed papers we will first remove author lists, affiliations, correspondence details, acknowledgements and references. We do not send anything from our subscriber, member or request records. The service runs outside Türkiye. Replacing names lowers the risk, but a name can still slip through. Listings are published only in publishing rounds that our editor starts; a person does not check every listing before it is published, and our editor corrects or removes any listing as soon as a problem is found. [TO DECIDE: B17 – transfer route for AI drafting, and whether listings need a label]
 
 You can ask for a copy of the safeguard we use for each transfer by writing to privacy@gliagora.com. [TO DECIDE: B12 – which safeguard applies to each transfer, if any; see also B17]
 

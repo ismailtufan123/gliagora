@@ -98,7 +98,7 @@ Text: `content/en/about/sources.md`
 
 ### C11. Sources policy: saying that the site itself was built with an AI assistant
 
-The policy's section on AI is about the items: no AI tool chooses, writes or checks them today, and it describes how AI drafting would work if it is switched on (PLAN §6.6, B17). The site's software, and the first drafts of some of its own pages (the legal texts, this policy), were prepared with an AI assistant and checked by the operator. Should the policy say so? **Until decided:** it does not; the draft carries the question.
+The policy's section on AI is about the items: since D59 (2026-10-22) an AI assistant drafts each position and checks it against written rules in the publishing rounds the editor starts, and no person checks each one before it is published (PLAN §6.6, B17). The site's software, and the first drafts of some of its own pages (the legal texts, this policy), were prepared with an AI assistant and checked by the operator. Should the policy say so? **Until decided:** it does not; the draft carries the question.
 
 Text: `content/en/about/sources.md`
 

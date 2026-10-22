@@ -117,7 +117,7 @@ Hukuki sebepler KVKK m.5'e göre belirtilmiştir:
   - isteğe bağlı olarak e-posta adresiniz.
 - **Nereden ve nasıl:** Sizden, [bize bir ilan önerdiğinizde](/en/suggest/) (İngilizce "{en: Suggest a listing}" formu). E-posta alanı isteğe bağlıdır; yanındaki onay kutusu önceden işaretlenmemiştir.
 - **Amaç:**
-  - Önerinizi değerlendirmek. Hiçbir öneri otomatik olarak yayımlanmaz; her öneriyi editör inceler.
+  - Önerinizi değerlendirmek. Hiçbir öneri kendiliğinden yayımlanmaz: öneriler yalnızca editörün başlattığı bir yayın turunda, yazılı kurallarımıza göre kontrol edildikten sonra yayımlanabilir.
   - E-posta adresinizi verdiyseniz, adresinizi yalnızca size sonucu bildirmek için kullanırız.
 - **Hukuki sebep:**
   - Önerinin değerlendirilmesi: meşru menfaatimiz (m.5/2 (f)), yani siteyi doğru ve güncel tutmak.
@@ -248,10 +248,10 @@ Bu bölüm, sitemizi kullanmayan ama yayımladığımız bilgilerin kaynakların
   - Yayımlanan ilan, son başvuru tarihinden sonraki bir saat içinde kapanır. Kapandıktan 30 gün sonra tamamen yayından kalkar. Yayından kalkan ilanın kaydının tamamı veritabanında 12 ay daha tutulur; sonra yalnızca ilanın web adresi ve ilan numarası saklanır. Böylece eski adres, ilanın kaldırıldığını göstermeye devam eder.
   - Proje posta kutusundaki e-posta listesi iletileri, geldikten 30 gün sonra silinir.
 - **Yapay zekâ desteği:**
-  - Haftada bir, ilan metinleri taslak hazırlamak için teknik yöneticimizin kullandığı Anthropic'in Claude Code asistanına gönderilir. Aynı işi her gün yapabilecek Claude API şimdilik kapalıdır.
+  - Editörün başlattığı yayın turlarında ilan metinleri, taslak hazırlamak ve her ilanı yazılı kurallarımıza göre kontrol etmek için teknik yöneticimizin kullandığı Anthropic'in Claude Code asistanına gönderilir. Aynı işi her gün yapabilecek Claude API şimdilik kapalıdır.
   - Göndermeden önce e-posta adresleri, telefon numaraları ve kişi adları metinden çıkarılır (örneğin `Smith Lab` yerine `[name] Lab` yazılır).
   - Gönderilen metin, ilanın kaynak metni olarak denetim için saklanır ve içerik hakkında karar verildikten 30 gün sonra silinir.
-  - Her içeriği yayımlamadan önce editör onaylar.
+  - İlanlar yalnızca editörün başlattığı yayın turlarında yayımlanır; her ilanı yayımlanmadan önce bir kişi kontrol etmez. Editör her ilandan sorumludur ve bir sorun görüldüğünde ilanı hemen düzeltir veya kaldırır.
   - Ayrıntılar "Yurt dışına aktarım" bölümündedir.
 - Bu bilgilerin düzeltilmesini veya kaldırılmasını İngilizce [{en: Notice and takedown}](/en/legal/takedown/) (kaldırma ve düzeltme) sayfasından isteyebilirsiniz.
 
@@ -280,7 +280,7 @@ Kişisel verilerinizi yalnızca aşağıdaki alıcılara ve belirtilen amaçlarl
   - Bülten, onay ve giriş e-postaları ile yanıtlarımız bu hizmet üzerinden gönderilir.
   - hello@gliagora.com ve privacy@gliagora.com adreslerine yazdığınız e-postalar burada tutulur.
   - Abone sayısı yaklaşık 1.000'i geçince Türkiye'de bir e-posta gönderim hizmeti eklenir.
-- **Anthropic (Claude Code ve Claude API):** Kişi adları ve iletişim bilgileri çıkarılmış ilan metinlerini alır. Amaç: editörün kontrol edeceği taslakları hazırlamak. Haftalık taslaklar, teknik yöneticimizin kullandığı Claude Code ile hazırlanır; Claude API şimdilik kapalıdır.
+- **Anthropic (Claude Code ve Claude API):** Kişi adları ve iletişim bilgileri çıkarılmış ilan metinlerini alır. Amaç: taslak hazırlamak ve her ilanı yayımlanmadan önce yazılı kurallarımıza göre kontrol etmek. Bu iş, editörün başlattığı yayın turlarında teknik yöneticimizin kullandığı Claude Code ile yapılır; Claude API kapalıdır.
 - **Teknik yönetici (veri işleyen):** Sunucumuzu ve yazılımımızı talimatlarımız doğrultusunda, yazılı bir sözleşmeyle yöneten ve kişisel verileri yalnızca bu işin gerektirdiği ölçüde gören bir kişi. Bu iş için sunucuya, yönetim paneline ve veritabanlarına erişimi vardır. Amaç: sunucumuzun ve yazılımımızın bakımını yapmak.
 - **Yetkili kamu kurum ve kuruluşları ile yargı mercileri:** Yalnızca kanunun gerektirdiği hâllerde ve gerektirdiği ölçüde. Bir veri ihlali olursa, gerekiyorsa Kişisel Verileri Koruma Kuruluna bildirim yaparız. [KARAR VERİLECEK: B15 – kamu kurumlarına aktarım ifadesi ve veri ihlali bildirimi]
 
@@ -304,7 +304,7 @@ Bu ilkenin bir istisnası vardır. Ayrıca, kendi seçtiğiniz bazı hizmetler y
 
 ### Yapay zekâ desteği (Anthropic)
 
-Haftada bir, ilan metinleri teknik yöneticimizin kullandığı, Anthropic'in yurt dışındaki Claude Code asistanına gönderilir. Aynı işi her gün yapabilecek Claude API şimdilik kapalıdır. Göndermeden önce metinden kişi adları, e-posta adresleri ve telefon numaraları çıkarılır. Amaç, editörün inceleyip onaylayacağı bir taslak hazırlamaktır. Bu çıkarma işleminde bir adın gözden kaçması riski tamamen ortadan kalkmaz. [KARAR VERİLECEK: B17 – bu aktarımın KVKK m.9'daki dayanağı]
+Editörün başlattığı yayın turlarında ilan metinleri, teknik yöneticimizin kullandığı, Anthropic'in yurt dışındaki Claude Code asistanına gönderilir. Aynı işi her gün yapabilecek Claude API şimdilik kapalıdır. Göndermeden önce metinden kişi adları, e-posta adresleri ve telefon numaraları çıkarılır. Amaç, taslak hazırlamak ve her ilanı yazılı kurallarımıza göre kontrol etmektir; her ilanı yayımlanmadan önce bir kişi kontrol etmez. Bu çıkarma işleminde bir adın gözden kaçması riski tamamen ortadan kalkmaz. [KARAR VERİLECEK: B17 – bu aktarımın KVKK m.9'daki dayanağı ve ilanların etiket gerektirip gerektirmediği]
 
 ### Sizin seçtiğiniz hizmetler
 
@@ -341,7 +341,7 @@ Analiz veya reklam çerezi kullanmayız. Üçüncü taraf çerezi yoktur. İstat
 
 ## Otomatik kararlar
 
-Hakkınızda yalnızca otomatik sistemlerle karar vermeyiz; bu, sizi hukuken veya benzer ölçüde önemli biçimde etkileyen kararlar için geçerlidir. Yayımlanan her içeriği bir editör onaylar.
+Hakkınızda yalnızca otomatik sistemlerle karar vermeyiz; bu, sizi hukuken veya benzer ölçüde önemli biçimde etkileyen kararlar için geçerlidir. Yayımlanacak ilanları seçmek, sizin hakkınızda verilen bir karar değildir; ilanlar editörün başlattığı yayın turlarında yayımlanır ve editör her ilandan sorumludur.
 
 ## Verilerinizi nasıl koruyoruz
 

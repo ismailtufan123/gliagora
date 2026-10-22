@@ -1,8 +1,8 @@
 # The weekly AI drafts
 
-When the operator says **"Do the weekly drafts"**, Claude Code follows this file (M7, D52; PLAN §6.6). The operator's standing go-ahead (confirmed on 2026-10-16) covers exactly two steps on the production server: the export and the import below, through `tools/ai-drafts/weekly.sh`. Nothing else on the server, no pull request, and no change to the repository.
+When the operator says **"Do the weekly drafts"**, Claude Code follows this file (M7, D52; PLAN §6.6). It is also the first step of **"Update the jobs"** (`docs/update-jobs.md`, D59), which then decides and publishes the drafted candidates on the operator's command; alone, it drafts only. The operator's standing go-ahead (confirmed on 2026-10-16) covers exactly two steps on the production server: the export and the import below, through `tools/ai-drafts/weekly.sh`. Nothing else on the server, no pull request, and no change to the repository.
 
-What goes where: the export holds only the candidates' text with names, email addresses and phone numbers replaced (`[name]`, `[email]`, `[phone]`), the facts the monitors read, the suggested tags and the institution; never a posting's address, an editor's note, a suggestion's note or email, or anything about members (`src/lib/ai/input.ts`). That text reaches Anthropic through this session, the risk accepted in PLAN §15.2 (flag 6). The drafts never appear on the site: an editor accepts or changes each one.
+What goes where: the export holds only the candidates' text with names, email addresses and phone numbers replaced (`[name]`, `[email]`, `[phone]`), the facts the monitors read, the suggested tags and the institution; never a posting's address, an editor's note, a suggestion's note or email, or anything about members (`src/lib/ai/input.ts`). That text reaches Anthropic through this session, the risk accepted in PLAN §15.2 (flag 6). The drafts never appear on the site by themselves: a job starts from one only when "Update the jobs" publishes it on the operator's command (D59), or when an editor accepts its candidate.
 
 ## Steps
 
