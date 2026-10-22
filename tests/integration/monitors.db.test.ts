@@ -84,6 +84,63 @@ async function pageSource(host: string, fields: Record<string, unknown> = {}) {
 const now = new Date('2026-10-16T04:15:00Z')
 
 describe('monitorSources', () => {
+  it('skips posts that are not research, reads review dates and placeholders, and stores titles redacted (M7, third round)', async () => {
+    const host = `${unique('jobs')}.example.org`
+    const at = (n: number) => `https://${host}/jobs/${n}`
+    const list = `<html><body><main>${[1, 2, 3, 4]
+      .map((n) => `<a href="/jobs/${n}">Posting ${n}</a>`)
+      .join('')}</main></body></html>`
+    const { fetcher } = fakeWeb({
+      [`https://${host}/jobs/`]: list,
+      [at(1)]: posting(
+        'Research Nurse, Memory Clinic',
+        '<p>Neuroscience studies of dementia. Closing date: 1 December 2026.</p>',
+      ),
+      // UC Recruit: the JobPosting's validThrough is the review date; the final date is the deadline.
+      [at(2)]: posting(
+        'Postdoctoral Scholar in Systems Neuroscience',
+        '<p>Neural circuits of the cortex.</p><p>Next review date: Monday, Nov 2, 2026</p><p>Apply by this date to ensure full consideration by the committee.</p><p>Final date: Tuesday, Jun 30, 2027</p>',
+        { '@type': 'JobPosting', validThrough: '2026-11-02' },
+      ),
+      [at(3)]: posting(
+        'Research Technician in Neurobiology',
+        '<p>Neural circuits and synapses. Closing date: 31/12/2035.</p>',
+      ),
+      [at(4)]: posting(
+        'PhD position in the Exemplar Lab: astrocytes',
+        '<p>Glial cells and synaptic plasticity in the mouse brain. Closing date: 1 December 2026.</p>',
+      ),
+    })
+    const source = await pageSource(host)
+    const { results } = await monitorSources(payload, now, { only: [source.id], fetcher })
+    expect(results[0]).toMatchObject({ outcome: 'ok', counts: { candidates: 3, notResearch: 1 } })
+    const run = await payload.find({
+      collection: 'source-runs',
+      where: { source: { equals: source.id } },
+      depth: 0,
+    })
+    expect(run.docs[0]?.notResearch).toBe(1)
+    const skipped = await payload.find({
+      collection: 'source-postings',
+      where: { and: [{ source: { equals: source.id } }, { outcome: { equals: 'not-research' } }] },
+      depth: 0,
+    })
+    expect(skipped.docs).toHaveLength(1)
+
+    const { docs } = await payload.find({
+      collection: 'candidates',
+      where: { source: { equals: source.id } },
+      sort: 'id',
+      depth: 0,
+    })
+    const facts = docs.map((doc) => storedFacts(doc.extracted))
+    expect(facts[0]?.deadline?.value.date).toBe('2027-06-30')
+    expect(facts[1]?.deadline).toBeUndefined()
+    expect(facts[1]?.openEnded?.value).toBe('rolling')
+    expect(docs[2]?.rawTitle).toBe('PhD position in the [name] Lab: astrocytes')
+    expect(facts[2]?.title?.value).toBe('PhD position in the [name] Lab: astrocytes')
+  })
+
   it('makes candidates of new neuroscience postings, and skips the others with a reason', async () => {
     const host = `${unique('jobs')}.example.org`
     const at = (n: number) => `https://${host}/jobs/${n}`

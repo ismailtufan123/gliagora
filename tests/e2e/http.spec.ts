@@ -411,6 +411,8 @@ test.describe('operations routes', () => {
     ['POST', '/api/ops/monitors/switch-on/'],
     ['GET', '/api/ops/ai-drafts/export/'],
     ['POST', '/api/ops/ai-drafts/import/'],
+    ['GET', '/api/ops/monitors/report/'],
+    ['POST', '/api/ops/candidates/redact/'],
   ]
   for (const [method, path] of routes) {
     test(`${method} ${path} answers 404 without the key, with a wrong key and through a proxy`, async ({

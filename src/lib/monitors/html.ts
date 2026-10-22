@@ -47,6 +47,10 @@ const SKIPPED = new Set([
   'button',
 ])
 const CHROME = new Set(['nav', 'header', 'footer', 'aside', 'form'])
+// A form is chrome (a search box, a login) unless it holds the page's content: CoreHR (Oxford)
+// and ASP.NET sites wrap the whole posting in one `<form>` (M7, third round: only Oxford's page
+// header was read).
+const FORM_TEXT_MAX = 500
 // Chrome that is not marked by its element (M7, second round): a site's menu in `<div
 // class="parent-menu">` (Champalimaud: every posting named its "Centre for Restorative
 // Neurotechnology"), breadcrumbs, a cookie notice, and the teasers of other postings
@@ -90,6 +94,9 @@ function mostlyLinks(element: Element): boolean {
  * the rules it was first hashed with.
  */
 function isChrome(element: Element, marked: boolean): boolean {
+  if (element.name === 'form' && marked) {
+    return textOf([element], { skipChrome: false }).length <= FORM_TEXT_MAX
+  }
   if (CHROME.has(element.name)) return true
   if (!marked) return false
   const role = attr(element, 'role')?.toLowerCase()

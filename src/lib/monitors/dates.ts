@@ -68,6 +68,10 @@ const LABELS = [
   'last day to apply',
   'last date',
   'last day',
+  'submission deadlines for applications',
+  'deadlines for applications',
+  'submission deadline',
+  'deadlines',
   'deadline',
   'bewerbungsschluss',
   'bewerbungsfrist',
@@ -177,8 +181,8 @@ function validDay(year: number, month: number, day: number): string | null {
   return `${year}-${pad(month)}-${pad(day)}`
 }
 
-/** The first date in `text` (folded), and where it ends. */
-function firstDate(text: string, us: boolean): { date: string; end: number } | null {
+/** The first date in `text` (folded), and where it starts and ends. */
+function firstDate(text: string, us: boolean): { date: string; start: number; end: number } | null {
   let best: { date: string; start: number; end: number } | null = null
   for (const { regexp, parts } of PATTERNS) {
     const match = regexp.exec(text)
@@ -190,7 +194,7 @@ function firstDate(text: string, us: boolean): { date: string; end: number } | n
       best = { date, start: match.index, end: match.index + match[0].length }
     }
   }
-  return best ? { date: best.date, end: best.end } : null
+  return best
 }
 
 /** The zone named just after the date ("… 23:59 UK time"), if a clear one. */
@@ -205,10 +209,46 @@ const quote = (text: string) => {
   return one.length > 120 ? `${one.slice(0, 117)}…` : one
 }
 
-/** Whether a found year is one a current posting could have. */
+/**
+ * A deadline further ahead than this is a placeholder ("31/12/2035"), not a day: the posting is
+ * open until filled, and counts as rolling (M7, third round).
+ */
+export const PLACEHOLDER_AFTER_DAYS = 730
+
+/** Whether a found day is one a current posting's deadline could be. */
 const plausible = (date: string, now: Date) => {
   const year = Number(date.slice(0, 4))
-  return year >= now.getUTCFullYear() - 1 && year <= now.getUTCFullYear() + 3
+  return (
+    year >= now.getUTCFullYear() - 1 &&
+    Date.parse(`${date}T00:00:00Z`) <= now.getTime() + PLACEHOLDER_AFTER_DAYS * 86_400_000
+  )
+}
+
+/** Whether `date` (YYYY-MM-DD) is so far ahead that it stands for "no deadline". */
+export function isPlaceholderDeadline(date: string, now: Date): boolean {
+  return Date.parse(`${date}T00:00:00Z`) > now.getTime() + PLACEHOLDER_AFTER_DAYS * 86_400_000
+}
+
+// A range's end: "21.10.2026 – 04.11.2026", "from 21 October 2026 to 4 November 2026", "del 21 de
+// octubre al 4 de noviembre de 2026" (Udelar). The deadline is its last day.
+const RANGE =
+  /^[^\S\n]*(?:-|–|—|to|until|till|through|thru|al|a|hasta|bis|au|t\/m|tot|fino al|ate|ila)[^\S\n]+|^[^\S\n]*[-–—][^\S\n]*/u
+
+/** The last day of a range that starts at `found` (in `window`, folded), or `found` itself. */
+function rangeEnd<T extends { date: string; end: number }>(
+  window: string,
+  found: T,
+  us: boolean,
+): T {
+  const rest = window.slice(found.end)
+  const connector = RANGE.exec(rest)
+  if (!connector) return found
+  const after = rest.slice(connector[0].length, connector[0].length + 40)
+  const next = firstDate(after, us)
+  // The second date must start right after the connector ("21.10.2026 - 12:00" is a time) and
+  // come later.
+  if (!next || next.start !== 0 || next.date <= found.date) return found
+  return { ...found, date: next.date, end: found.end + connector[0].length + next.end }
 }
 
 /**
@@ -228,12 +268,88 @@ export function deadlineFromText(
   for (const label of labels) {
     const start = label.index + label[0].length
     const window = folded.slice(start, start + NEAR)
-    const found = firstDate(window, us)
-    if (!found || !plausible(found.date, now)) continue
+    // UC Recruit: "Apply by this date to ensure full consideration" follows its review date.
+    if (/^[^\S\n]*this date/.test(window)) continue
+    const first = firstDate(window, us)
+    if (!first || !plausible(first.date, now)) continue
+    const found = rangeEnd(window, first, us)
+    if (!plausible(found.date, now)) continue
     return {
       date: found.date,
       timeZone: zoneAfter(window.slice(found.end)),
       from: `the text: "${quote(text.slice(label.index, start + found.end))}"`,
+    }
+  }
+  return null
+}
+
+/** Words that introduce a review date, which is not a deadline (UC Recruit), folded. */
+const REVIEW_LABELS = [
+  'next review date',
+  'initial review date',
+  'first review date',
+  'review date',
+  'review of applications will begin on',
+  'review of applications will begin',
+  'review of applications begins on',
+  'review of applications begins',
+  'applications will be reviewed beginning',
+  'applications will be reviewed starting',
+  'screening will begin',
+  'screening begins',
+]
+const REVIEW_LABEL = new RegExp(
+  String.raw`(?<![\p{L}])(?:${REVIEW_LABELS.map((label) => label.replace(/ /g, String.raw`\s+`)).join('|')})(?![\p{L}])`,
+  'gu',
+)
+
+/**
+ * The days a posting's text gives as review dates ("Next review date: Monday, Nov 3, 2026"): UC
+ * Recruit writes the first one into its JobPosting data as `validThrough`, while its deadline is
+ * the "Final date", or none (open until filled). M7, third round.
+ */
+export function reviewDates(text: string, country: string | null, now: Date): Set<string> {
+  const folded = fold(text)
+  const days = new Set<string>()
+  for (const label of folded.matchAll(REVIEW_LABEL)) {
+    const start = label.index + label[0].length
+    const found = firstDate(folded.slice(start, start + NEAR), country === 'US')
+    if (found && plausible(found.date, now)) days.add(found.date)
+  }
+  return days
+}
+
+/**
+ * A placeholder for "no deadline" ("Closing date: 31/12/2035", `validThrough` 2099-12-31): the
+ * first deadline the data or the text gives is more than two years ahead. Such a posting counts as
+ * rolling (M7, third round).
+ */
+export function placeholderDeadline(
+  text: string,
+  validThrough: string | undefined,
+  country: string | null,
+  now: Date,
+): { value: 'rolling'; from: string } | null {
+  const data = /^(\d{4})-(\d{2})-(\d{2})/.exec(validThrough?.trim() ?? '')
+  if (data) {
+    const date = validDay(Number(data[1]), Number(data[2]), Number(data[3]))
+    if (date && isPlaceholderDeadline(date, now)) {
+      return {
+        value: 'rolling',
+        from: `the posting's JobPosting data: validThrough ${quote(validThrough!)}, a placeholder`,
+      }
+    }
+    return null
+  }
+  const folded = fold(text)
+  for (const label of folded.matchAll(LABEL)) {
+    const start = label.index + label[0].length
+    const found = firstDate(folded.slice(start, start + NEAR), country === 'US')
+    if (!found) continue
+    if (!isPlaceholderDeadline(found.date, now)) return null
+    return {
+      value: 'rolling',
+      from: `the text: "${quote(text.slice(label.index, start + found.end))}", a placeholder`,
     }
   }
   return null
@@ -249,8 +365,11 @@ export function deadlineFromList(
   now: Date,
 ): FoundDeadline | null {
   if (!listed) return null
-  const found = firstDate(fold(listed.value), country === 'US')
-  if (!found || !plausible(found.date, now)) return null
+  const value = fold(listed.value)
+  const first = firstDate(value, country === 'US')
+  if (!first) return null
+  const found = rangeEnd(value, first, country === 'US')
+  if (!plausible(found.date, now)) return null
   return {
     date: found.date,
     timeZone: zoneAfter(fold(listed.value).slice(found.end)),
@@ -289,8 +408,13 @@ export function openEndedFromText(
       value: 'until-filled',
       from: `the text: "${quote(text.slice(until.index, until.index + until[0].length))}"`,
     }
+  // Only phrases about the applications: "laufend" alone is any ongoing thing ("laufende
+  // Projekte"), "in continu" a Dutch shift pattern (M7, third round: four postings were read as
+  // rolling from such words).
   const rolling =
-    /rolling basis|on a rolling|reviewed continuously|laufend|fortlaufend|in continu/.exec(folded)
+    /(?:on a )?rolling basis|rolling (?:admissions?|applications?|deadline|review)|(?:reviewed|considered|assessed) (?:continuously|on an ongoing basis|as (?:they are|they're) received)|until a suitable candidate (?:is|has been) (?:found|identified|appointed)|bewerbungen werden (?:fort)?laufend|(?:fort)?laufend (?:gesichtet|berucksichtigt|bearbeitet|gepruft|entgegengenommen|ausgewertet)|bewerbungsfrist:? (?:fort)?laufend|candidatures? (?:sont |seront )?(?:examinees|traitees|etudiees) (?:en continu|au fil de l'eau)|doorlopend (?:solliciteren|werving)/.exec(
+      folded,
+    )
   if (rolling)
     return {
       value: 'rolling',

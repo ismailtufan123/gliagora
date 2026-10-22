@@ -1202,6 +1202,7 @@
       "reasons": {
         "duplicate": "Bu pozisyon Gliagora'da zaten yer alıyor.",
         "not-neuroscience": "Pozisyon, Gliagora'nın yer verdiği sinirbilim veya ona yakın bir alanda değil.",
+        "not-research": "Pozisyon, Gliagora'nın yer verdiği bir araştırma ya da araştırma destek pozisyonu değil (örneğin idari, yalnızca klinik ya da yalnızca öğretim pozisyonu).",
         "agency-or-intermediary": "Pozisyonu bir işe alım ajansı veya başka bir aracı ilan etmiş. Yalnızca işverenin kendisinin yayımladığı pozisyonlara yer veriyoruz.",
         "closed": "Kontrol ettiğimizde pozisyon kapanmıştı ya da son başvuru tarihi geçmişti.",
         "not-a-position": "Sayfa, başvurulabilecek bir pozisyonu anlatmıyor.",

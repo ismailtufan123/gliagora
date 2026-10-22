@@ -132,6 +132,7 @@ const RUN_COUNTS = [
   'read',
   'candidates',
   'not_neuroscience',
+  'not_research',
   'closed',
   'duplicates',
   'old',

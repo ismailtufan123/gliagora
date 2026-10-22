@@ -1202,6 +1202,7 @@
       "reasons": {
         "duplicate": "We already list this position.",
         "not-neuroscience": "The position is not in neuroscience or a closely related field, which is what Gliagora lists.",
+        "not-research": "The position is not a research or research-support post (for example an administrative, clinical-only or teaching-only post), which is what Gliagora lists.",
         "agency-or-intermediary": "It was advertised by a recruitment agency or another intermediary. We list only positions that the employer publishes itself.",
         "closed": "The position had already closed, or its deadline had passed, when we checked it.",
         "not-a-position": "The page does not describe a position that people can apply for.",

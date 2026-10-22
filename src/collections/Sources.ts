@@ -294,6 +294,20 @@ export const Sources: CollectionConfig = {
       },
     },
     {
+      // M7, third round: a shared board (the Max Planck Society's, VIB's, HHMI's, DZNE's) whose
+      // postings are at different institutes or sites; the institution is taken from each posting
+      // when it is decided ("Update the jobs", D59).
+      name: 'severalSites',
+      label: 'Its postings are at several sites',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        condition: isKind('page', 'rss', 'api', 'sitemap', 'manual'),
+        description:
+          "A shared board whose postings name their own institute or site (the Max Planck Society's, VIB's, HHMI's, DZNE's): check each posting's institution, not the source's.",
+      },
+    },
+    {
       name: 'ignoredNames',
       label: 'Names that do not count as neuroscience',
       type: 'textarea',

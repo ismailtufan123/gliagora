@@ -32,6 +32,11 @@ export type CandidateKind = (typeof CANDIDATE_KINDS)[number]['value']
 export const REJECTION_REASONS = [
   { value: 'not-neuroscience', label: 'Not neuroscience' },
   {
+    value: 'not-research',
+    label:
+      'Not a research or research-support position (administrative, clinical, teaching, business)',
+  },
+  {
     value: 'agency-or-intermediary',
     label: 'Placed by a recruitment agency or other intermediary (§6.1 rule 3, Law 4904)',
   },

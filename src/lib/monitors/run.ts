@@ -10,6 +10,7 @@ import { idOf } from '@/lib/relationship'
 import type { ExtractedFacts, Fact } from '@/lib/sources/facts'
 import { type PostingOutcome, isAutomatic } from '@/lib/sources/kinds'
 import { neuroscienceCheck } from '@/lib/tags/neuroscience'
+import { notResearch } from '@/lib/tags/research'
 import type { Taxonomy } from '@/lib/tags/terms'
 import type { Source } from '@/payload-types'
 
@@ -24,8 +25,10 @@ import {
   deadlineFromValidThrough,
   hasClosed,
   openEndedFromText,
+  placeholderDeadline,
   publishedFromAddress,
   publishedFromText,
+  reviewDates,
 } from './dates'
 import { type Fetcher, FetchProblem } from './http'
 import { comparableText, pageTitleFor, readPostingPage } from './html'
@@ -54,6 +57,8 @@ export type SourceCounts = {
   read: number
   candidates: number
   notNeuroscience: number
+  /** Skipped: the title names a post that is not research or research support (M7, third round). */
+  notResearch: number
   closed: number
   duplicates: number
   /** Skipped: no fixed deadline, and published over OPEN_ENDED_MAX_DAYS ago. */
@@ -89,6 +94,7 @@ export const emptyCounts = (): SourceCounts => ({
   read: 0,
   candidates: 0,
   notNeuroscience: 0,
+  notResearch: 0,
   closed: 0,
   duplicates: 0,
   old: 0,
@@ -335,10 +341,20 @@ async function handlePosting(
       return
     }
   }
+  // An administrative, nursing, clinical-only, teaching or business post, or no posting at all,
+  // also at a whole neuroscience institute (D59: research and research-support positions only).
+  if (notResearch(title)) {
+    counts.notResearch++
+    await remember(payload, source.id, posting, 'not-research', now, undefined, title)
+    return
+  }
   // The posting's own words win over an earlier validThrough, which some systems fill with the
   // first review date (UC Recruit: "Next review date" in the data, "Final date: …" in the text).
+  // UC Recruit writes its first review date into `validThrough`: a review date is no deadline.
+  const reviews = reviewDates(read.text, country, now)
+  const validThrough = deadlineFromValidThrough(read.validThrough, now)
   const fromData =
-    deadlineFromValidThrough(read.validThrough, now) ??
+    (validThrough && !reviews.has(validThrough.date) ? validThrough : null) ??
     deadlineFromList(posting.listedDeadline, country, now)
   const fromText = deadlineFromText(read.text, country, now)
   const deadline: FoundDeadline | null =
@@ -366,13 +382,24 @@ async function handlePosting(
     await remember(payload, source.id, posting, 'old', now, undefined, title)
     return
   }
-  const openEnded = deadline ? null : openEndedFromText(read.text)
+  // A placeholder far ahead ("31/12/2035") means rolling; a posting that gives only review dates
+  // is open until filled.
+  const openEnded = deadline
+    ? null
+    : (openEndedFromText(read.text) ??
+      placeholderDeadline(read.text, read.validThrough, country, now) ??
+      (reviews.size > 0
+        ? {
+            value: 'until-filled' as const,
+            from: 'the text gives a review date but no deadline',
+          }
+        : null))
   const facts: ExtractedFacts = {
     version: 1,
     readAt: now.toISOString(),
     listedOn: { kind: source.kind, url: source.url },
     page: read.page,
-    title: { value: title, from: read.titleFrom },
+    title: { value: redacted(title) ?? '', from: read.titleFrom },
     ...(deadline
       ? {
           deadline: {
@@ -404,7 +431,8 @@ async function handlePosting(
       source: source.id,
       institution: (idOf(source.institution) as number | undefined) ?? null,
       rawUrl: posting.url,
-      rawTitle: title || null,
+      // Redacted like the text: a title can name a lab's head (M7, third round).
+      rawTitle: redacted(title)?.slice(0, 300) || null,
       snippet,
       extracted: facts,
     },

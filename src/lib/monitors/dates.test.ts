@@ -8,8 +8,10 @@ import {
   deadlineFromValidThrough,
   hasClosed,
   openEndedFromText,
+  placeholderDeadline,
   publishedFromAddress,
   publishedFromText,
+  reviewDates,
 } from './dates'
 
 const now = new Date('2026-10-16T10:00:00Z')
@@ -192,5 +194,64 @@ describe('when a posting was published', () => {
     expect(ageInDays('2026-10-16', now)).toBe(0)
     expect(ageInDays('2026-08-17', now)).toBe(60)
     expect(ageInDays('2025-10-16', now)).toBe(365)
+  })
+})
+
+// M7, third round: what the first weekly AI drafts found about dates.
+describe('dates: third round', () => {
+  it("reads SISSA's plural label", () => {
+    expect(day('Submission Deadlines for Applications:\n05/11/2026 - 13:00', 'IT')).toBe(
+      '2026-11-05',
+    )
+  })
+
+  it('takes the last day of a range', () => {
+    expect(day('Plazo: del 21/10/2026 al 04/11/2026', 'UY')).toBe('2026-11-04')
+    expect(day('Inscripciones (plazo): del 21 de octubre al 4 de noviembre de 2026', 'UY')).toBe(
+      '2026-11-04',
+    )
+    expect(day('Deadline: from 21 October 2026 to 4 November 2026')).toBe('2026-11-04')
+    expect(day('Closing date: 21.10.2026 – 04.11.2026', 'DE')).toBe('2026-11-04')
+    // A time after the day is not a range.
+    expect(day('Deadline: 05/11/2026 - 13:00', 'IT')).toBe('2026-11-05')
+    expect(
+      deadlineFromList({ label: 'Application period', value: '21.10.2026 - 04.11.2026' }, 'DE', now)
+        ?.date,
+    ).toBe('2026-11-04')
+  })
+
+  it('skips the review date of UC Recruit', () => {
+    const text = [
+      'Next review date: Monday, Nov 3, 2026 at 11:59pm (Pacific Time)',
+      'Apply by this date to ensure full consideration by the committee.',
+      'Final date: Tuesday, Jun 30, 2027 at 11:59pm (Pacific Time)',
+    ].join('\n')
+    expect(day(text, 'US')).toBe('2027-06-30')
+    expect([...reviewDates(text, 'US', now)]).toEqual(['2026-11-03'])
+  })
+
+  it('reads rolling only from phrases about the applications', () => {
+    expect(openEndedFromText('Applications are reviewed on a rolling basis.')?.value).toBe(
+      'rolling',
+    )
+    expect(openEndedFromText('Bewerbungen werden laufend gesichtet.')?.value).toBe('rolling')
+    for (const text of [
+      'Sie arbeiten in laufenden Projekten mit.',
+      'Die fortlaufende Nummer steht oben.',
+      'Werken in continu dienst',
+      'a rolling stone of ideas',
+    ]) {
+      expect(openEndedFromText(text), text).toBeNull()
+    }
+  })
+
+  it('takes a far-off date for a placeholder: rolling', () => {
+    expect(placeholderDeadline('Closing date: 31/12/2035', undefined, 'DE', now)?.value).toBe(
+      'rolling',
+    )
+    expect(placeholderDeadline('', '2099-12-31T23:59:00Z', null, now)?.value).toBe('rolling')
+    expect(placeholderDeadline('Closing date: 31/12/2026', undefined, 'DE', now)).toBeNull()
+    expect(placeholderDeadline('', '2026-12-31', null, now)).toBeNull()
+    expect(day('Closing date: 31/12/2035', 'DE')).toBeNull()
   })
 })

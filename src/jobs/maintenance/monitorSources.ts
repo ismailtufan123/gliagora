@@ -147,7 +147,7 @@ export async function monitorSources(
     counts.candidates += result.counts.candidates
     counts.read += result.counts.read
     payload.logger.info(
-      `monitorSources: source ${source.id} ${result.outcome}: ${result.counts.listed} listed, ${result.counts.new} new, ${result.counts.candidates} candidates, ${result.counts.notNeuroscience} not neuroscience, ${result.counts.closed} closed, ${result.counts.duplicates} duplicates${result.counts.old ? `, ${result.counts.old} old` : ''}${result.counts.capped ? `, ${result.counts.capped} left for later` : ''}${result.counts.failedPages ? `, ${result.counts.failedPages} pages failed` : ''}${result.error ? ` (${result.error})` : ''}`,
+      `monitorSources: source ${source.id} ${result.outcome}: ${result.counts.listed} listed, ${result.counts.new} new, ${result.counts.candidates} candidates, ${result.counts.notNeuroscience} not neuroscience, ${result.counts.notResearch} not research, ${result.counts.closed} closed, ${result.counts.duplicates} duplicates${result.counts.old ? `, ${result.counts.old} old` : ''}${result.counts.capped ? `, ${result.counts.capped} left for later` : ''}${result.counts.failedPages ? `, ${result.counts.failedPages} pages failed` : ''}${result.error ? ` (${result.error})` : ''}`,
     )
     if (result.outcome !== 'skipped' && (await checkTerms(deps, source)) === 'changed') {
       counts.termsChanged++
