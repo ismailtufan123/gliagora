@@ -47,10 +47,29 @@ const SKIPPED = new Set([
   'button',
 ])
 const CHROME = new Set(['nav', 'header', 'footer', 'aside', 'form'])
-// A form is chrome (a search box, a login) unless it holds the page's content: CoreHR (Oxford)
-// and ASP.NET sites wrap the whole posting in one `<form>` (M7, third round: only Oxford's page
-// header was read).
+// A form is chrome (a search box, a filter, a login) unless it holds the page's content: CoreHR
+// (Oxford) and ASP.NET sites wrap the whole posting in one `<form>` (M7, third round: only Oxford's
+// page header was read). A form counts as content when it is not marked as a search or a filter
+// and holds more than 500 characters of text that are mostly not its controls' labels.
 const FORM_TEXT_MAX = 500
+const FORM_CHROME = /search|filter|login|log-in|signin|sign-in|subscribe|newsletter|cookie/i
+
+/** Whether a form holds the page's content rather than controls. */
+function formIsContent(form: Element): boolean {
+  const role = attr(form, 'role')?.toLowerCase()
+  if (role === 'search') return false
+  const tokens = [attr(form, 'class'), attr(form, 'id'), attr(form, 'name'), attr(form, 'action')]
+    .filter(Boolean)
+    .join(' ')
+  if (FORM_CHROME.test(tokens)) return false
+  const total = textOf([form], { skipChrome: false }).length
+  if (total <= FORM_TEXT_MAX) return false
+  let controls = 0
+  for (const control of all(form, (el) => el.name === 'label' || el.name === 'option')) {
+    controls += textOf(control.children as Node[], { skipChrome: false }).length
+  }
+  return controls < total / 2
+}
 // Chrome that is not marked by its element (M7, second round): a site's menu in `<div
 // class="parent-menu">` (Champalimaud: every posting named its "Centre for Restorative
 // Neurotechnology"), breadcrumbs, a cookie notice, and the teasers of other postings
@@ -94,9 +113,7 @@ function mostlyLinks(element: Element): boolean {
  * the rules it was first hashed with.
  */
 function isChrome(element: Element, marked: boolean): boolean {
-  if (element.name === 'form' && marked) {
-    return textOf([element], { skipChrome: false }).length <= FORM_TEXT_MAX
-  }
+  if (element.name === 'form' && marked) return !formIsContent(element)
   if (CHROME.has(element.name)) return true
   if (!marked) return false
   const role = attr(element, 'role')?.toLowerCase()

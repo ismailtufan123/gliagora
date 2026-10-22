@@ -2,6 +2,7 @@ import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import { sql } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
 
+import { SUMMARY_MAX, aiDraftSchema } from '@/lib/ai/draft'
 import { errorSummary } from '@/lib/errors'
 
 import { type RedactionCounts, redact } from './redact'
@@ -72,6 +73,36 @@ function redactedJson(value: unknown, counts: RedactionCounts, key = ''): unknow
   return value
 }
 
+const cut = (value: unknown, max: number) =>
+  typeof value === 'string' && value.length > max ? `${value.slice(0, max - 1)}…` : value
+
+/**
+ * A redacted draft cut back to the draft's limits where a placeholder made a field longer (a
+ * quote of 300 characters, a summary of 280), so that it stays a valid draft (`aiDraftSchema`):
+ * an invalid one would silently drop out of the job it starts and of the closing of candidates.
+ */
+function fitDraft(draft: unknown): unknown {
+  if (!draft || typeof draft !== 'object' || aiDraftSchema.safeParse(draft).success) return draft
+  const value = draft as Record<string, unknown>
+  const inner = (key: string) => {
+    const part = value[key]
+    return part && typeof part === 'object'
+      ? {
+          ...(part as Record<string, unknown>),
+          from: cut((part as Record<string, unknown>).from, 300),
+        }
+      : part
+  }
+  return {
+    ...value,
+    from: cut(value.from, 300),
+    summary: cut(value.summary, SUMMARY_MAX),
+    note: cut(value.note, 500),
+    deadline: inner('deadline'),
+    place: inner('place'),
+  }
+}
+
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
 
 const db = (payload: Payload) => (payload.db as unknown as PostgresAdapter).drizzle
@@ -111,7 +142,9 @@ export async function redactWaitingAgain(
     const extracted =
       row.extracted == null ? null : redactedJson(row.extracted, result.inFactsAndDrafts)
     const draft =
-      row.ai_suggestion == null ? null : redactedJson(row.ai_suggestion, result.inFactsAndDrafts)
+      row.ai_suggestion == null
+        ? null
+        : fitDraft(redactedJson(row.ai_suggestion, result.inFactsAndDrafts))
     const textChanged = snippet !== row.snippet
     const titleChanged = title !== row.raw_title
     const changed =
@@ -168,7 +201,9 @@ async function redactVersionsAgain(payload: Payload, parent: number): Promise<nu
     const extracted =
       row.version_extracted == null ? null : redactedJson(row.version_extracted, ignore)
     const draft =
-      row.version_ai_suggestion == null ? null : redactedJson(row.version_ai_suggestion, ignore)
+      row.version_ai_suggestion == null
+        ? null
+        : fitDraft(redactedJson(row.version_ai_suggestion, ignore))
     if (
       snippet === row.version_snippet &&
       title === row.version_raw_title &&

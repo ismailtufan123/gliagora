@@ -422,7 +422,8 @@ async function handlePosting(
         }
       : {}),
   }
-  const snippet = redacted(read.text)?.slice(0, SNIPPET_MAX) ?? null
+  // Cut first (with room for what redaction shortens), then redact, then cut to the limit.
+  const snippet = redacted(read.text.slice(0, SNIPPET_MAX * 2))?.slice(0, SNIPPET_MAX) ?? null
   const candidate = await payload.create({
     collection: 'candidates',
     data: {

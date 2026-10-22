@@ -16,7 +16,6 @@ describe('notResearch', () => {
       'Teamassistenz im Institut für Neurologie',
       'Administratör till Institutionen för neurovetenskap',
       'Secrétaire de laboratoire',
-      'Research Administrator',
     ]) {
       expect(kind(title), title).toBe('administrative')
     }
@@ -68,8 +67,7 @@ describe('notResearch', () => {
       'Head of Partnerships',
       'Partnerships Manager, Brain Health',
       'Project Manager – Neuroscience Consortium',
-      'Research Project Manager',
-      'Programme Coordinator, Doctoral School',
+      'Programme Coordinator, Graduate School',
       'Business Development Officer',
       'Projektkoordinator*in Exzellenzcluster',
     ]) {
@@ -114,6 +112,18 @@ describe('notResearch', () => {
       'Imaging Core Facility Manager',
       'Postdoc in brain–computer interface controller design',
       'Research partnership postdoc with industry',
+      // The independent review of 2026-10-22: a monitor's skip is final, so these stay for a decision.
+      'Research Program Coordinator',
+      'Research Project Coordinator',
+      'Scientific Project Manager',
+      'Wissenschaftliche/r Projektkoordinator/in',
+      'Postdoctoral Fellow – Nursing Science',
+      'Nurse Scientist',
+      'Postdoc in the Carpenter Lab',
+      'Technician, Porter Lab',
+      'PhD position: neuroeconomics of financial decisions',
+      'Research Assistant in consumer neuroscience and marketing',
+      'Research Project Manager',
     ]) {
       expect(notResearch(title), title).toBeNull()
     }

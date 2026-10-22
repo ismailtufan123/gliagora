@@ -246,7 +246,7 @@ describe('redact: second round', () => {
   it('replaces names inside lab names', () => {
     gone('Research Specialist (Doe Lab)', `Research Specialist (${name} Lab)`)
     gone('in the Doe and Roe Labs at the campus', `in the ${name} and ${name} Labs at the campus`)
-    gone('Lab Manager, Svoboda/Roe Lab', `Lab Manager, ${name}/${name} Lab`)
+    gone('Lab Manager, Exemplar/Roe Lab', `Lab Manager, ${name}/${name} Lab`)
     gone('Join the DoeLab at the institute', `Join the ${name}Lab at the institute`)
     gone(
       'Postdoctoral Fellow - Example Lab, Department of Neurology',
@@ -343,6 +343,81 @@ describe('redact: second round', () => {
   it('redacts titles as well as texts', () => {
     gone('Postdoc in the lab of Dr. Jane Exemplar', `Postdoc in the lab of Dr. ${name}`)
     gone('PhD student – Exemplar Group', `PhD student – ${name} Group`)
+  })
+
+  // The independent review of 2026-10-22: invented examples of what still went or stayed.
+  it('keeps dates, salaries and periods in a contact block', () => {
+    kept('Further information\nClosing date: 30.11.2026 23:59 CET\nSalary: SEK 34 000 – 38 000')
+    kept('Contact\nApplication period: 21.10.2026 – 04.11.2026')
+    kept('Contact\nThe project runs (2027-2031) in Stockholm.')
+  })
+
+  it('replaces surnames in capitals and names after more roles', () => {
+    gone('Contact : Jean DUPONT (secrétariat)', `Contact : ${name} (secrétariat)`)
+    gone('Responsable scientifique : Marie MARTIN', `Responsable scientifique : ${name}`)
+    gone('Contact: Prof. JANE EXEMPLAR', `Contact: Prof. ${name}`)
+    gone('PI Name: Jane Exemplar', `PI Name: ${name}`)
+    gone(
+      'For more information:\nJane Exemplar tel. +46 8 524 000 00',
+      `For more information:\n${name} tel. ${phone}`,
+    )
+    gone(
+      'contact the head of department, Jane Exemplar, for details',
+      `contact the head of department, ${name}, for details`,
+    )
+    gone('Your contact person is Jane Exemplar.', `Your contact person is ${name}.`)
+    gone(
+      'co-supervised by Jane Exemplar (Stockholm) and John Roe (Uppsala)',
+      `co-supervised by ${name} (Stockholm) and ${name} (Uppsala)`,
+    )
+    gone('the Exemplar and Roe labs', `the ${name} and ${name} labs`)
+    gone('Jane Exemplar (PI) leads it', `${name} (PI) leads it`)
+    gone('Jane Exemplar, Ph.D., leads it', `${name}, Ph.D., leads it`)
+    gone('Please email Jane Exemplar.', `Please email ${name}.`)
+    gone('contactez Marie Exemple', `contactez ${name}`)
+  })
+
+  it('replaces mobiles and numbers in pairs, and addresses in words', () => {
+    gone('Móvil 612 345 678', `Móvil ${phone}`)
+    gone('Cellulare 333 123 4567', `Cellulare ${phone}`)
+    gone('Jane Exemplar (35 32 00 00)', `${name} (${phone})`)
+    gone('Write to jane dot exemplar at example dot org', `Write to ${email}`)
+    kept('A budget of € 300 000 000 and SEK 612 345 678 kr')
+  })
+
+  it('keeps eponyms, prizes, places and institutions in titles', () => {
+    for (const value of [
+      'Young Investigator Group Leader',
+      'Sir Henry Dale Fellowship',
+      'a Max Planck Group in Bonn',
+      'the Emmy Noether Lab',
+      'the Howard Hughes team',
+      'the Novo Nordisk team',
+      'Allen Brain Cell Atlas team',
+      'Rett Syndrome Team',
+      'Johns Hopkins – Postdoctoral Fellow',
+      'Los Angeles - Lab Manager',
+      "contact Boston Children's Hospital",
+    ]) {
+      kept(value)
+    }
+  })
+
+  it('changes nothing on a second run, also with names and numbers glued together', () => {
+    for (const value of [
+      'Jane Exemplar\nContact\nSalary 34 000 – 38 000',
+      'supervised by Jane Exemplar+46 8 524 800 00',
+      'Contact persons\nAnna Exempelsson\nHR partner\n08-524 800 00',
+    ]) {
+      const once = redact(value).text
+      expect(redact(once).text, value).toBe(once)
+    }
+  })
+
+  it('reads a very long word in linear time', () => {
+    const started = performance.now()
+    redact(`A${'b'.repeat(32000)} Lab`)
+    expect(performance.now() - started).toBeLessThan(500)
   })
 
   it('changes nothing when it runs again', () => {

@@ -145,7 +145,13 @@ describe('expireListings: waiting candidates (M7, third round)', () => {
 
   it('closes those whose deadline passed while they waited, and only those', async () => {
     const passed = await candidate({ extracted: facts(day(-5)) })
-    const draftPassed = await candidate({ aiSuggestion: draft({ kind: 'fixed', date: day(-4) }) })
+    const draftPassed = await candidate({
+      extracted: facts(day(-6)),
+      aiSuggestion: draft({ kind: 'fixed', date: day(-4) }),
+    })
+    // A draft's day alone is never enough; a reopened (Triaged) candidate stays.
+    const draftOnly = await candidate({ aiSuggestion: draft({ kind: 'fixed', date: day(-4) }) })
+    const reopened = await candidate({ status: 'triaged', extracted: facts(day(-5)) })
     const open = await candidate({ extracted: facts(day(10)) })
     // A day ago: not yet ended everywhere.
     const yesterday = await candidate({ extracted: facts(day(-1)) })
@@ -169,11 +175,14 @@ describe('expireListings: waiting candidates (M7, third round)', () => {
       expect(closed.decisionReason).toBe('closed')
       expect(closed.decisionNote).toMatch(/passed while it waited/)
     }
-    for (const { id } of [open, yesterday, rolling, review]) {
+    for (const { id } of [open, yesterday, rolling, review, draftOnly]) {
       expect((await payload.findByID({ collection: 'candidates', id, depth: 0 })).status).toBe(
         'new',
       )
     }
+    expect(
+      (await payload.findByID({ collection: 'candidates', id: reopened.id, depth: 0 })).status,
+    ).toBe('triaged')
     expect((await expireListings(payload, new Date())).candidatesClosed).toBe(0)
   })
 })

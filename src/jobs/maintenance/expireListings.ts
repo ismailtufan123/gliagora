@@ -15,8 +15,10 @@ import { inTransaction, logCounts, maintenanceTask } from './task'
 //
 // A candidate whose deadline passed while it waited (M7, third round: about 20 did before the
 // first "Update the jobs") closes by itself too: rejected as "Closed, or the deadline has passed",
-// with a note that says which deadline. The AI draft's deadline counts when there is a draft (it
-// was checked against the text), else the monitor's. Nothing is published here.
+// with a note that says which deadline. Only a New candidate (nobody decided or reopened it) whose
+// monitor read a deadline: the later of the monitor's and the AI draft's day counts, and a draft
+// that says rolling or open until filled keeps it open. A candidate without the monitor's deadline
+// (a suggestion, one an editor added) waits for "Update the jobs". Nothing is published here.
 
 const BATCH = 50
 const MAX_BATCHES = 20
@@ -58,27 +60,27 @@ async function expire(payload: Payload, id: number, now: Date): Promise<boolean>
 }
 
 /**
- * The fixed deadline a waiting candidate's draft or facts give, with where it came from. A draft
- * that says rolling or open until filled has none; when both give a day, the later counts (some
- * drafts took UC Recruit's review date, while the monitor read its final date), so that nothing
- * closes too early.
+ * The fixed deadline by which a waiting candidate closes by itself, with where it came from: the
+ * monitor's, or the AI draft's when that is later (some drafts took UC Recruit's review date,
+ * while the monitor read its final date); none without the monitor's, or when the draft says
+ * rolling or open until filled. A draft's day alone is never enough: nothing checked it.
  */
 export function waitingDeadline(candidate: {
   aiSuggestion?: unknown
   extracted?: unknown
 }): { date: string; from: string } | null {
-  const draft = storedDraft(candidate.aiSuggestion)
   const facts = storedFacts(candidate.extracted)
-  const fromFacts = facts?.deadline
-    ? { date: facts.deadline.value.date, from: "the monitor's facts" }
-    : null
-  if (!draft) return fromFacts
-  if (draft.deadline?.kind !== 'fixed' || !draft.deadline.date) return null
-  const fromDraft = { date: draft.deadline.date, from: 'the AI draft' }
-  return fromFacts && fromFacts.date > fromDraft.date ? fromFacts : fromDraft
+  if (!facts?.deadline) return null
+  const fromFacts = { date: facts.deadline.value.date, from: "the monitor's facts" }
+  const draft = storedDraft(candidate.aiSuggestion)
+  if (!draft?.deadline) return fromFacts
+  if (draft.deadline.kind !== 'fixed' || !draft.deadline.date) return null
+  return draft.deadline.date > fromFacts.date
+    ? { date: draft.deadline.date, from: 'the AI draft' }
+    : fromFacts
 }
 
-/** Waiting candidates (New or Triaged) whose deadline day has ended everywhere, closed as such. */
+/** New candidates whose deadline day has ended everywhere, closed as such. */
 async function closeWaitingCandidates(payload: Payload, now: Date) {
   const counts = { candidatesClosed: 0, candidatesFailed: 0 }
   let after = 0
@@ -87,10 +89,10 @@ async function closeWaitingCandidates(payload: Payload, now: Date) {
       collection: 'candidates',
       where: {
         and: [
-          { status: { in: ['new', 'triaged'] } },
+          { status: { equals: 'new' } },
           { kind: { equals: 'job' } },
           { id: { greater_than: after } },
-          { or: [{ aiSuggestion: { exists: true } }, { extracted: { exists: true } }] },
+          { extracted: { exists: true } },
         ],
       },
       select: { aiSuggestion: true, extracted: true },
@@ -103,9 +105,10 @@ async function closeWaitingCandidates(payload: Payload, now: Date) {
       const deadline = waitingDeadline(candidate)
       if (!deadline || !hasClosed(deadline.date, now)) continue
       try {
-        await payload.update({
+        // Only while it is still New: an editor's decision a moment ago wins.
+        const { docs: saved } = await payload.update({
           collection: 'candidates',
-          id: candidate.id,
+          where: { and: [{ id: { equals: candidate.id } }, { status: { equals: 'new' } }] },
           data: {
             status: 'rejected',
             decisionReason: 'closed',
@@ -113,7 +116,7 @@ async function closeWaitingCandidates(payload: Payload, now: Date) {
           },
           depth: 0,
         })
-        counts.candidatesClosed++
+        if (saved.length > 0) counts.candidatesClosed++
       } catch (error) {
         counts.candidatesFailed++
         payload.logger.warn(

@@ -71,7 +71,7 @@ const LABELS = [
   'submission deadlines for applications',
   'deadlines for applications',
   'submission deadline',
-  'deadlines',
+  'application deadlines',
   'deadline',
   'bewerbungsschluss',
   'bewerbungsfrist',
@@ -234,6 +234,9 @@ export function isPlaceholderDeadline(date: string, now: Date): boolean {
 const RANGE =
   /^[^\S\n]*(?:-|–|—|to|until|till|through|thru|al|a|hasta|bis|au|t\/m|tot|fino al|ate|ila)[^\S\n]+|^[^\S\n]*[-–—][^\S\n]*/u
 
+/** A range longer than this is two dates, not an application period. */
+const RANGE_MAX_DAYS = 90
+
 /** The last day of a range that starts at `found` (in `window`, folded), or `found` itself. */
 function rangeEnd<T extends { date: string; end: number }>(
   window: string,
@@ -245,9 +248,11 @@ function rangeEnd<T extends { date: string; end: number }>(
   if (!connector) return found
   const after = rest.slice(connector[0].length, connector[0].length + 40)
   const next = firstDate(after, us)
-  // The second date must start right after the connector ("21.10.2026 - 12:00" is a time) and
-  // come later.
+  // The second date must start right after the connector ("21.10.2026 - 12:00" is a time), come
+  // later and within a few months: "15 November 2026 – 1 March 2027 start" is a deadline and a
+  // start, "30.11.2026 - 31.10.2030 (contract)" a deadline and a contract.
   if (!next || next.start !== 0 || next.date <= found.date) return found
+  if (Date.parse(next.date) - Date.parse(found.date) > RANGE_MAX_DAYS * 86_400_000) return found
   return { ...found, date: next.date, end: found.end + connector[0].length + next.end }
 }
 
@@ -268,12 +273,15 @@ export function deadlineFromText(
   for (const label of labels) {
     const start = label.index + label[0].length
     const window = folded.slice(start, start + NEAR)
-    // UC Recruit: "Apply by this date to ensure full consideration" follows its review date.
+    // UC Recruit: "Apply by this date to ensure full consideration" follows its review date, and
+    // "For full consideration, apply by …" gives one.
     if (/^[^\S\n]*this date/.test(window)) continue
+    const before = folded.slice(Math.max(0, label.index - 60), label.index)
+    if (/(?:full|priority)\s+consideration[^\n.;]*$|priority[^\S\n]*$/.test(before)) continue
     const first = firstDate(window, us)
     if (!first || !plausible(first.date, now)) continue
-    const found = rangeEnd(window, first, us)
-    if (!plausible(found.date, now)) continue
+    const range = rangeEnd(window, first, us)
+    const found = plausible(range.date, now) ? range : first
     return {
       date: found.date,
       timeZone: zoneAfter(window.slice(found.end)),
@@ -297,6 +305,11 @@ const REVIEW_LABELS = [
   'applications will be reviewed starting',
   'screening will begin',
   'screening begins',
+  'for full consideration, apply by',
+  'for full consideration apply by',
+  'priority deadline',
+  'priority consideration date',
+  'priority date',
 ]
 const REVIEW_LABEL = new RegExp(
   String.raw`(?<![\p{L}])(?:${REVIEW_LABELS.map((label) => label.replace(/ /g, String.raw`\s+`)).join('|')})(?![\p{L}])`,
@@ -368,7 +381,8 @@ export function deadlineFromList(
   const value = fold(listed.value)
   const first = firstDate(value, country === 'US')
   if (!first) return null
-  const found = rangeEnd(value, first, country === 'US')
+  const range = rangeEnd(value, first, country === 'US')
+  const found = plausible(range.date, now) ? range : first
   if (!plausible(found.date, now)) return null
   return {
     date: found.date,

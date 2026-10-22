@@ -2,6 +2,7 @@ import { sql } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { storedDraft } from '@/lib/ai/draft'
 import { redactWaitingAgain } from '@/lib/redaction/stored'
 
 import { rows, testPayload, unique } from './helpers'
@@ -76,6 +77,35 @@ const versions = (id: number) =>
   )
 
 describe('redactWaitingAgain', () => {
+  it('keeps a redacted draft within its limits', async () => {
+    const id = await stored('new')
+    // A quote of 300 characters that a short name makes longer once replaced.
+    const from = `${'x'.repeat(285)} contact Bo Li`
+    const draft = {
+      version: 1,
+      by: 'claude-code',
+      at: new Date().toISOString(),
+      from: 'the redacted title and text',
+      inputHash: '0'.repeat(64),
+      summary: 'A postdoc on glia.',
+      positionType: null,
+      careerStages: [],
+      subfields: [],
+      deadline: { kind: 'fixed', date: '2027-01-15', timeZone: null, from: from.slice(0, 300) },
+      place: null,
+    }
+    await rows(
+      payload,
+      sql`UPDATE candidates SET ai_suggestion = ${JSON.stringify(draft)}::jsonb WHERE id = ${id}`,
+    )
+    await redactWaitingAgain(payload)
+    const candidate = await payload.findByID({ collection: 'candidates', id, depth: 0 })
+    const stored_ = candidate.aiSuggestion as { deadline: { from: string } }
+    expect(stored_.deadline.from.length).toBeLessThanOrEqual(300)
+    expect(stored_.deadline.from).not.toMatch(/Bo Li/)
+    expect(storedDraft(candidate.aiSuggestion)).not.toBeNull()
+  })
+
   it('counts on a dry run and changes nothing', async () => {
     const id = await stored('new')
     const result = await redactWaitingAgain(payload, { dryRun: true })

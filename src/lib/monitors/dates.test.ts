@@ -220,6 +220,21 @@ describe('dates: third round', () => {
     ).toBe('2026-11-04')
   })
 
+  it('keeps the first day when a range ends too far off or never', () => {
+    expect(day('Deadline: 30.11.2026 - 31.10.2030 (contract)', 'DE')).toBe('2026-11-30')
+    expect(day('Closing date: 15 November 2026 – 1 March 2027 start of the position')).toBe(
+      '2026-11-15',
+    )
+    expect(day('Deadline 1 November 2026 - 1 November 2027 contract')).toBe('2026-11-01')
+    expect(day('deadlines and milestones of the project are 2027-01-01')).toBeNull()
+  })
+
+  it('skips a date for full consideration', () => {
+    const text = 'For full consideration, apply by November 3, 2026. Final date: December 15, 2026.'
+    expect(day(text, 'US')).toBe('2026-12-15')
+    expect([...reviewDates(text, 'US', now)]).toEqual(['2026-11-03'])
+  })
+
   it('skips the review date of UC Recruit', () => {
     const text = [
       'Next review date: Monday, Nov 3, 2026 at 11:59pm (Pacific Time)',

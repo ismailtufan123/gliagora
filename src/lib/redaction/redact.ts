@@ -50,6 +50,11 @@ const EMAIL_WORDS = new RegExp(
   'giu',
 )
 
+const EMAIL_DOT_WORDS = new RegExp(
+  String.raw`(?<![\p{L}\p{N}])[\p{L}\p{N}]+(?:\s+dot\s+[\p{L}\p{N}]+)+\s+at\s+[\p{L}\p{N}-]+(?:\s+dot\s+[\p{L}\p{N}-]+)+(?![\p{L}\p{N}])`,
+  'giu',
+)
+
 // --- Web addresses and file names --------------------------------------------------------------
 
 // A lab's site or a person's page often carries a name ("doelab.example.edu", "/people/jane-doe"),
@@ -83,7 +88,7 @@ const PHONE_AFTER_WORD = new RegExp(
 
 // An international number: + or 00 and a country code.
 const PHONE_INTERNATIONAL = new RegExp(
-  String.raw`(?<![\p{L}\p{N}+])(?:\+|00)[1-9][\d\s().\/–-]{6,}\d(?![\p{L}\p{N}])`,
+  String.raw`(?:(?<![\p{N}+])\+|(?<![\p{L}\p{N}+])00)[1-9][\d\s().\/–-]{6,}\d(?![\p{L}\p{N}])`,
   'gu',
 )
 
@@ -102,6 +107,13 @@ const PHONE_NANP = new RegExp(
   'gu',
 )
 
+// Mobiles without a leading 0: Spanish "612 345 678", Italian "333 123 4567"; and Danish or
+// Norwegian numbers in pairs, "35 32 00 00". Never after a currency or a digit (an amount).
+const PHONE_MOBILE = new RegExp(
+  String.raw`(?<![\p{L}\p{N}$€£.,\/:-])(?<![$€£][^\S\n]?)(?<!\d[^\S\n])(?:[67]\d{2}[ .-]\d{3}[ .-]\d{3}|3\d{2}[ .-]\d{3}[ .-]\d{3,4}|\d{2} \d{2} \d{2} \d{2})(?![\p{N}]|[.,-]\d|[^\S\n]?(?:€|eur|kr|sek|dkk|nok))`,
+  'gu',
+)
+
 const digits = (value: string) => value.replace(/\D/g, '').length
 
 // --- Names ----------------------------------------------------------------------------------
@@ -110,7 +122,7 @@ const digits = (value: string) => value.replace(/\D/g, '').length
  * A capitalised word with at least one lower-case letter (Smith, O'Brien, McDonald,
  * Müller-Lüdenscheidt); a possessive "'s" stays outside it.
  */
-const CAPITALISED = String.raw`(?:\p{Lu}['’])?\p{Lu}\p{L}*\p{Ll}\p{L}*`
+const CAPITALISED = String.raw`(?:\p{Lu}['’])?\p{Lu}(?=\p{L}{0,40}\p{Ll})\p{L}{1,40}(?!\p{L})`
 const WORD = String.raw`${CAPITALISED}(?:-${CAPITALISED})?`
 /** An initial: "J." */
 const INITIAL = String.raw`\p{Lu}\.`
@@ -127,7 +139,7 @@ const FULL_NAME = String.raw`${PART}(?:${GAP}(?:${PARTICLE}[^\S\n]+)*${PART}){1,
 // Specific forms first, so that "Prof." does not take the start of "Prof.ssa".
 const TITLE = String.raw`(?:Prof\.ssa|Dr\.ssa|Dott\.(?:ssa)?|Prof\.ª|Profª|Profa\.|Drª|Dra\.|Prof(?:essor)?\.?|Dr\.?|PD|Priv\.-Doz\.|Univ\.-Prof\.|Mr\.?|Mrs\.?|Ms\.?|Mx\.?|Mme\.?|Mlle\.?|Pr\.?|Frau|Herrn?|Sig\.(?:ra)?|Ing\.|Doç\.|Sir|Dame|prof\.|dr\.|drs\.|ir\.|dhr\.|mevr\.|Öğr\.\s?Üyesi|Arş\.\s?Gör\.|Öğr\.\s?Gör\.)`
 /** Degrees and titles that can follow the first title: "Prof. Dr. med.", "Dr. rer. nat.". */
-const MORE_TITLES = String.raw`(?:\s+(?:Dr\.?|Prof\.?|dr\.|med\.|rer\.\s?nat\.|phil\.|habil\.|h\.\s?c\.|PhD|MD|Öğr\.\s?Üyesi))*`
+const MORE_TITLES = String.raw`(?:\s+(?:Dr\.?|Prof\.?|dr\.|med\.|rer\.\s?nat\.|phil\.|habil\.|h\.\s?c\.|PhD|MD|Öğr\.\s?Üyesi)){0,4}`
 
 const AFTER_TITLE = new RegExp(
   String.raw`(?<![\p{L}\p{N}])(${TITLE}${MORE_TITLES}\s+)(${NAME})`,
@@ -223,6 +235,9 @@ const ROLES_AFTER = [
   String.raw`e-?mail`,
   'mobile',
   String.raw`\[(?:email|phone)\]`,
+  'pi',
+  String.raw`ph\.?[^\S\n]?d\.?`,
+  String.raw`m\.d\.`,
 ]
 
 // Words that say a name follows, in any case; the name itself must be capitalised, so it is
@@ -266,6 +281,16 @@ const LEAD_WORDS = [
   'ofr',
   'seko',
   String.raw`fackförbundet\s+st`,
+  // "PI Name: Jane Doe", "Name: Jane Doe".
+  String.raw`(?:full\s+)?name(?=\s*:)`,
+  String.raw`(?:your\s+)?(?:contact(?:\s+person)?|supervisor|PI)\s+(?:is|will\s+be)`,
+  String.raw`(?:please\s+)?e-?mail`,
+  String.raw`(?:head|director|chair|leader|manager|coordinator)\s+of\s+[^,.\n]{2,40},`,
+  'contactez',
+  'kontaktieren',
+  String.raw`kontaktieren\s+sie`,
+  'contatta',
+  'contactar',
   ...ROLES,
 ]
 // The longest words first, so that "contact opnemen met" is not taken for "contact". A name after
@@ -275,27 +300,53 @@ const LEAD_IN = new RegExp(
   String.raw`(?<![\p{L}\p{N}])(?:${[...LEAD_WORDS].sort((a, b) => b.length - a.length).join('|')})(?:[^\S\n]*[:–-]\s*|[^\S\n]+)`,
   'giu',
 )
-/** Words that make the name before them an institution's: "Stockholm University". */
+/**
+ * Words that make the name before them an institution's or a prize's: "Stockholm University",
+ * "Sir Henry Dale Fellowship", "Boston Children's Hospital".
+ */
 const INSTITUTION_WORD =
-  /^(?:university|universit[äaeé]t?|universiteit|universidad|università|universidade|universitet|institute|institut|institutet|instituto|istituto|hospital|college|school|centre|center|foundation|clinic|klinikum|academy|laboratory|laboratories|museum|society)$/iu
+  /^(?:university|universit[äaeé]t?|universiteit|universidad|università|universidade|universitet|institute|institut|institutet|instituto|istituto|hospital|college|school|centre|center|foundation|clinic|klinikum|academy|laboratory|laboratories|museum|society|fellowship|fellowships|award|awards|prize|prizes|lecture|medal|professorship|chair|scholarship|scholarships|building|hall|campus|trust|fund|programme|program)$/iu
 
-// A name followed by a role, after a comma, a bracket or a dash ("Jane Doe, HR partner", "Jane
-// Doe (recruiter)", "Jane Doe – union representative"): two to four parts, so that a lone word
-// before a comma ("Karolinska, …") is not taken.
+/** Whether the words after a name found at `end` of `text` make it an institution's or a prize's. */
+function eponymAhead(text: string, end: number): boolean {
+  const next = /^(?:['’]s)?[^\S\n]+([\p{L}]+)/u.exec(text.slice(end, end + 60))
+  return Boolean(next && INSTITUTION_WORD.test(next[1]!))
+}
+
+/** Roles a contact holds, which may follow a name after a dash ("Jane Doe – union representative"). */
+const CONTACT_ROLES = [
+  String.raw`recruit(?:er|ment\s+(?:adviser|advisor|consultant|officer|partner|specialist|coordinator|manager))`,
+  String.raw`(?:HR|human\s+resources)(?:\s+business)?\s+(?:adviser|advisor|partner|officer|specialist|consultant|contact|generalist|coordinator|manager|administrator|representative)`,
+  String.raw`(?:trade\s+)?union\s+(?:representatives?|contacts?)`,
+  String.raw`saco(?:-s)?`,
+  String.raw`ofr`,
+  String.raw`seko`,
+  String.raw`tel(?:ephone)?\.?`,
+  'phone',
+  String.raw`e-?mail`,
+  'mobile',
+  String.raw`\[(?:email|phone)\]`,
+]
+
+// A name followed by a role, after a comma, a bracket or a colon ("Jane Doe, HR partner", "Jane
+// Doe (recruiter)", "Jane Doe, Ph.D."), or after a dash when the role is a contact's ("Jane Doe –
+// union representative"): a title's "Los Angeles – Lab Manager" keeps its place. Two to four
+// parts, so that a lone word before a comma ("Karolinska, …") is not taken.
 const NAME_BEFORE_ROLE = new RegExp(
-  String.raw`(?<![\p{L}\p{N}\]])(${FULL_NAME})(?=[^\S\n]*(?:,|\(|–|—|-|\||:)[^\S\n]*(?:${ROLES_AFTER.map(anyCase).join('|')})(?![\p{L}\p{N}]))`,
+  String.raw`(?<![\p{L}\p{N}\]])(${FULL_NAME})(?=[^\S\n]*(?:(?:,|\(|:)[^\S\n]*(?:${ROLES_AFTER.map(anyCase).join('|')})|(?:–|—|-|\|)[^\S\n]*(?:${CONTACT_ROLES.map(anyCase).join('|')}))(?![\p{L}\p{N}]))`,
   'gu',
 )
 
 // Names joined to a name already replaced: "[name] and Jane Doe", "Doe and [name] Labs",
-// "[name], Jane Roe", "Svoboda/[name] Lab".
-const JOIN = String.raw`(?:\s*,\s*|\s+(?:and|or|und|et|y|e|och|og|en|ve|&)\s+|\s*[&\/]\s*)`
+// "[name], Jane Roe", "Roe/[name] Lab".
+const JOIN = String.raw`(?:[^\S\n]*\([^()\n]{1,40}\))?(?:\s*,\s*|\s+(?:and|or|und|et|y|e|och|og|en|ve|&)\s+|\s*[&\/]\s*)`
+const LABS = String.raw`(?:Lab|Labs|Laboratory|Laboratories|Group|Groups|Team|lab|labs|laboratory|laboratories|group|groups|team)`
 const JOINED_AFTER = new RegExp(
-  String.raw`(\[name\]${JOIN})(${TITLE}${MORE_TITLES}[^\S\n]+)?(${NAME})((?:'s|’s)?[^\S\n]+(?:Lab|Labs|Laboratory|Laboratories|Group|Groups|Team)(?![\p{L}\p{N}]))?`,
+  String.raw`(\[name\]${JOIN})(${TITLE}${MORE_TITLES}[^\S\n]+)?(${NAME})((?:'s|’s)?[^\S\n]+${LABS}(?![\p{L}\p{N}]))?`,
   'gu',
 )
 const JOINED_BEFORE = new RegExp(
-  String.raw`(?<![\p{L}\p{N}\]])(${NAME})(${JOIN}(?:${TITLE}${MORE_TITLES}[^\S\n]+)?\[name\])((?:'s|’s)?[^\S\n]+(?:Lab|Labs|Laboratory|Laboratories|Group|Groups|Team)(?![\p{L}\p{N}]))?`,
+  String.raw`(?<![\p{L}\p{N}\]])(${NAME})(${JOIN}(?:${TITLE}${MORE_TITLES}[^\S\n]+)?\[name\])((?:'s|’s)?[^\S\n]+${LABS}(?![\p{L}\p{N}]))?`,
   'gu',
 )
 
@@ -325,6 +376,14 @@ const NOT_INITIALS = new Set([
 // letters of the first name and three of the surname).
 const CNRS_REFERENCE =
   /(?<![\p{L}\p{N}])((?:UMR|UPR|UAR|UMS|IRL|FRE|USR|ERL|UR|EA)\d{2,5}-)[A-Z]{4,8}(-\d{2,4})(?![\p{L}\p{N}])/gu
+
+/** Words in capitals right after a name found: "[name] DUPONT" (French and Italian style). */
+const CAPS_AFTER_NAME = /\[name\](?:[^\S\n]+\p{Lu}{2,}(?:-\p{Lu}{2,})?)+(?![\p{L}\p{N}])/gu
+/** A name in capitals after a title: "Prof. JANE DOE". */
+const CAPS_AFTER_TITLE = new RegExp(
+  String.raw`(?<![\p{L}\p{N}])(${TITLE}${MORE_TITLES}[^\S\n]+)\p{Lu}{2,}(?:[^\S\n]+\p{Lu}{2,}){1,2}(?![\p{L}\p{N}])`,
+  'gu',
+)
 
 const TITLE_AT = new RegExp(String.raw`${TITLE}${MORE_TITLES}\s+`, 'uy')
 const NAME_AT = new RegExp(NAME, 'uy')
@@ -389,7 +448,8 @@ const NOT_NAMES = new Set(
   nous vous votre notre poste candidature laboratoire équipe unité
   nosotros su puesto plaza convocatoria laboratorio equipo unidad nostro posizione bando gruppo vaga
   edital laboratório equipe duyuru ilan başvuru merkez merkezi enstitü enstitüsü laboratuvar araştırma
-  bölüm bölümü birim kadro saco seko`
+  bölüm bölümü birim kadro saco seko young investigator investigators atlas syndrome name names children
+  childrens`
     .split(/\s+/)
     .filter(Boolean),
 )
@@ -491,6 +551,21 @@ const EPONYMS = new Set([
   'blavatnik',
   'sanford burnham prebys',
   'buck',
+  'johns hopkins',
+  'los angeles',
+  'san francisco',
+  'san diego',
+  'santa cruz',
+  'santa barbara',
+  'hong kong',
+  'tel aviv',
+  'buenos aires',
+  'rio de janeiro',
+  'são paulo',
+  'sao paulo',
+  'ann arbor',
+  'salt lake',
+  'henry dale',
 ])
 
 /** Whether `name` reads as a person's name rather than a topic, a unit or an eponym. */
@@ -515,6 +590,8 @@ function nameIn(found: string, from: 'start' | 'end'): string | null {
     const first = from === 'start' ? words[0]! : words[words.length - size]!
     const last = from === 'start' ? words[size - 1]! : words[words.length - 1]!
     const part = found.slice(first.index, last.index + last[0].length)
+    // A shorter run would be a part of an eponym ("Max Planck Group" is not "Max [name] Group").
+    if (EPONYMS.has(part.toLowerCase())) return null
     if (looksLikeName(part)) return part
   }
   return null
@@ -529,28 +606,28 @@ const CONTACT_HEADING = new RegExp(
 )
 /** How many lines after a heading count as its block, at most. */
 const BLOCK_LINES = 8
-/** A run of digits in a contact block that is a phone number: at least 8 digits. */
-const BLOCK_NUMBER = /(?<![\p{L}\p{N}])\+?\(?\d[\d\s().\/–-]{6,}\d(?![\p{L}\p{N}])/gu
 /**
- * A date or a reference, which a contact block keeps: "2026-11-03", "03.11.2026", "3/11/26",
- * "2026/12345".
+ * A phone number in a contact block written without a word before it: it starts with "+" or "0"
+ * ("08-524 800 00", "+46 8 524 800 00"), eight digits or more. A line about dates or money keeps
+ * its numbers: "Closing date: 30.11.2026 23:59", "Salary: SEK 34 000 – 38 000".
  */
-const DATE_LIKE =
-  /^(?:\d{4}[-./]\d{1,2}[-./]\d{1,2}|\d{1,2}[-./]\d{1,2}[-./](?:\d{4}|\d{2})|(?:19|20)\d{2}[-/.]\d+)$/
+const BLOCK_NUMBER = /(?<![\p{L}\p{N}(])(?:\+|\(?0)\d[\d\s().\/–-]{6,}\d(?![\p{L}\p{N}])/gu
+const DATES_OR_MONEY =
+  /\b(?:date|dates|deadline|closing|closes|period|from|until|to|salary|salaries|pay|grade|sek|eur|euro|euros|usd|gbp|chf|dkk|nok|kr|per|month|year|annum|contract|start|tarih|maaş)\b|[€$£%]|\d{1,2}[./]\d{1,2}[./]\d{2,4}|\d{4}-\d{2}-\d{2}/iu
 const LINE_START_NAME = new RegExp(
-  String.raw`^([^\S\n]*(?:${TITLE}${MORE_TITLES}[^\S\n]+)?)(${FULL_NAME})(?=[^\S\n]*(?:$|,|\(|–|—|-|\||:|\[))`,
+  String.raw`^([^\S\n]*(?:${TITLE}${MORE_TITLES}[^\S\n]+)?)(${FULL_NAME})(?=[^\S\n]*(?:$|,|\(|–|—|-|\||:|\[|\+|\d|(?:tel|phone|e-?mail|mob|tfn|telefon)\b))`,
   'u',
 )
 
 /**
  * The lines of contact blocks, with their names and numbers replaced: the lines after a contact
  * heading (up to a blank line after some content, or BLOCK_LINES), and every line whose name is
- * followed by an email address or a phone number on it or on the next two lines.
+ * followed by an email address or a phone number on it or on the next two lines. The numbers of
+ * every block are replaced first, so that a second run changes nothing.
  */
 function redactContactBlocks(text: string, counts: RedactionCounts): string {
   const lines = text.split('\n')
-  const near = (index: number) =>
-    lines.slice(index, index + 3).some((line) => /\[(?:email|phone)\]/.test(line))
+  const inBlock = new Array<boolean>(lines.length).fill(false)
   let block = 0
   let seen = false
   for (let i = 0; i < lines.length; i++) {
@@ -560,31 +637,35 @@ function redactContactBlocks(text: string, counts: RedactionCounts): string {
       seen = false
       continue
     }
-    if (block > 0) {
-      if (line.trim() === '') {
-        if (seen) block = 0
-        continue
-      }
-      // A long line is ordinary text again.
-      if (line.length > 200) {
-        block = 0
-      } else {
-        block--
-        seen = true
-        lines[i] = line.replace(BLOCK_NUMBER, (match) => {
-          if (digits(match) < 8 || DATE_LIKE.test(match.trim())) return match
-          counts.phone++
-          return PLACEHOLDER.phone
-        })
-      }
+    if (block === 0) continue
+    if (line.trim() === '') {
+      if (seen) block = 0
+      continue
     }
-    if (block > 0 || near(i)) {
-      const current = lines[i]!
-      const found = LINE_START_NAME.exec(current)
-      if (found && found[2]!.split(/\s+/).length >= 2 && looksLikeName(found[2]!)) {
-        counts.name++
-        lines[i] = found[1]! + PLACEHOLDER.name + current.slice(found[1]!.length + found[2]!.length)
-      }
+    // A long line is ordinary text again.
+    if (line.length > 200) {
+      block = 0
+      continue
+    }
+    block--
+    seen = true
+    inBlock[i] = true
+    if (DATES_OR_MONEY.test(line)) continue
+    lines[i] = line.replace(BLOCK_NUMBER, (match) => {
+      if (digits(match) < 8) return match
+      counts.phone++
+      return PLACEHOLDER.phone
+    })
+  }
+  const near = (index: number) =>
+    lines.slice(index, index + 3).some((line) => /\[(?:email|phone)\]/.test(line))
+  for (let i = 0; i < lines.length; i++) {
+    if (!inBlock[i] && !near(i)) continue
+    const current = lines[i]!
+    const found = LINE_START_NAME.exec(current)
+    if (found && found[2]!.split(/\s+/).length >= 2 && looksLikeName(found[2]!)) {
+      counts.name++
+      lines[i] = found[1]! + PLACEHOLDER.name + current.slice(found[1]!.length + found[2]!.length)
     }
   }
   return lines.join('\n')
@@ -600,7 +681,7 @@ export function redact(input: string): Redaction {
   const counts = emptyCounts()
   let text = input.normalize('NFC')
 
-  for (const pattern of [EMAIL, EMAIL_WORDS]) {
+  for (const pattern of [EMAIL, EMAIL_WORDS, EMAIL_DOT_WORDS]) {
     text = text.replace(pattern, () => {
       counts.email++
       return PLACEHOLDER.email
@@ -625,6 +706,7 @@ export function redact(input: string): Redaction {
     [PHONE_NATIONAL, 9, 15],
     [PHONE_PAIRS, 10, 10],
     [PHONE_NANP, 10, 11],
+    [PHONE_MOBILE, 8, 10],
   ] as const) {
     text = text.replace(pattern, (match) => {
       const count = digits(match)
@@ -638,12 +720,22 @@ export function redact(input: string): Redaction {
     counts.name++
     return `${before}${PLACEHOLDER.name}${after}`
   })
-  text = text.replace(AFTER_TITLE, (match, title: string, found: string) => {
-    const person = nameIn(found, 'start')
-    if (!person) return match
-    counts.name++
-    return `${title}${PLACEHOLDER.name}${found.slice(person.length)}`
-  })
+  text = text.replace(
+    AFTER_TITLE,
+    (match, title: string, found: string, at: number, all: string) => {
+      const person = nameIn(found, 'start')
+      const end = at + title.length
+      if (
+        !person ||
+        eponymAhead(all, end + person.length) ||
+        eponymAhead(all, end + found.length)
+      ) {
+        return match
+      }
+      counts.name++
+      return `${title}${PLACEHOLDER.name}${found.slice(person.length)}`
+    },
+  )
   text = text.replace(BEFORE_GROUP, (match, found: string, group: string) => {
     const person = nameIn(found, 'end')
     if (!person) return match
@@ -668,6 +760,11 @@ export function redact(input: string): Redaction {
     counts.name++
     return PLACEHOLDER.name
   })
+  text = text.replace(CAPS_AFTER_TITLE, (_match, title: string) => {
+    counts.name++
+    return `${title}${PLACEHOLDER.name}`
+  })
+  text = text.replace(CAPS_AFTER_NAME, () => PLACEHOLDER.name)
   text = replaceJoinedNames(text, counts)
 
   return { text, counts }
@@ -686,13 +783,14 @@ function replaceAfterLeadIns(text: string, counts: RedactionCounts): string {
     NAME_AT.lastIndex = at
     const found = NAME_AT.exec(text)
     const person = found ? nameIn(found[0], 'start') : null
-    if (!person) continue
     // "supervised by Stockholm University": a place's name before an institution's word.
-    const next = found![0]
-      .slice(person.length)
-      .trim()
-      .split(/[\s-]+/)[0]
-    if (next && INSTITUTION_WORD.test(next)) continue
+    if (
+      !person ||
+      eponymAhead(text, at + person.length) ||
+      eponymAhead(text, at + found![0].length)
+    ) {
+      continue
+    }
     result += text.slice(done, at) + PLACEHOLDER.name
     done = at + person.length
     counts.name++
