@@ -1,7 +1,7 @@
 # Next task
 
-Status: **done** (2026-10-22; pull requests #115, #116, #117, #118, #119 and #120)
-Written: 2026-10-22, by the operator's planning chat (Claude) on the operator's behalf.
+Status: **open**
+Written: 2026-10-22, by the operator's planning chat (Claude) on the operator's behalf. First written for #112 and #113, parked during the D59 task (#114–#120), and put back here with what changed since.
 
 ## How this file works
 
@@ -9,158 +9,139 @@ Written: 2026-10-22, by the operator's planning chat (Claude) on the operator's 
 - `docs/STATUS.md` is your one-page handoff: what is done, what is live, open decisions and the next step. Read it before this file, and update it at the end of every task.
 - When the task below is finished, set the status above to **done**, with the date and the pull request numbers, in your last pull request. The planning chat then replaces this file with the next task.
 
-## Task: Claude Code publishes the jobs on the operator's command, with the fixes this needs
+## Task: the lawyer packet, for the one-time legal review
 
-**Parked:** the lawyer packet, which is this file as of #113, waits. Do not start it; the planning chat puts it back after this task. Say so in `docs/STATUS.md`.
+**Why:** M2 waits for the one-time lawyer review (D32), and that waits for a lawyer. The operator needs one packet to send to lawyers, first for a quote and then for the review itself.
+- **Language:** Turkish.
+- **Complete:** the lawyer needs nothing else from us.
+- **Easy to answer:** written answers per question, and tracked changes in the texts.
+- **As it works now:** since D59 (2026-10-22), positions are published on the operator's command by written rules, without a person checking each one. B17 asks the lawyer what that needs, so the packet describes it as it works today.
 
-**Why:** the operator decided on 2026-10-22 that there is no editor at first: Claude Code publishes the listings when the operator asks. Nothing is published yet, and 331 candidates have AI drafts. The two weekly drafts runs of 2026-10-22 showed what must be fixed first:
-- **Redaction:** it misses names.
-- **Candidates:** many are not research positions, are closed, or carry the wrong institution or deadline.
+Start by reading `CLAUDE.md`, `docs/STATUS.md` and:
+- `docs/legal-open-questions.md`, all of it;
+- every draft in `content/`, the About page (`content/en/about.md`) and `docs/legal/veri-isleme-sozlesmesi-taslak.md`;
+- `docs/update-jobs.md`, the written rules of D59;
+- in `PLAN.md`: §15, §18, §20's "M7 notes, third round", and D28, D32, D33, D39, D41, D52 and D59.
 
-Start by reading `CLAUDE.md`, `docs/STATUS.md`, `docs/weekly-drafts.md` and the editor guide's sections on candidates and jobs. Then read, in `PLAN.md`:
-- all of §6, and §3.4;
-- D3, D34, D52 and D53;
-- the M7 notes in §20, all three rounds.
+### 1. The operator's open points (C6–C9, C11, C12, and the About page)
 
-Read also `content/en/about.md` and `content/en/about/sources.md`.
+The texts the lawyer reads should be as final as the operator can make them.
+- **Ask:** present the seven open points to the operator in the session, in Turkish. The operator may accept them all at once.
+  - C6–C9, C11 and C12: give each its default (the "until decided" of `docs/legal-open-questions.md`) and your recommendation.
+  - The About page's "How curation works", item 3, below.
+- **The About page, item 3.** It still says each entry has "a short summary we write ourselves", but since D59 an AI assistant drafts the summaries of positions. The About page is approved, so change it only with the operator's approval of the exact words. The planning chat recommends this wording, which keeps the drafts' own phrase, "a short summary in our own words":
 
-### 1. The operator's decision (first pull request, documentation only)
+  > 3. **Summarise in our own words.** Each entry gives the facts and a short summary in our own words; for positions, an AI assistant drafts it from the original posting. We do not copy descriptions, abstracts, images or logos.
 
-Record it with the next free decision number (D59 if it is free).
+  If another sentence of the About page no longer holds since D59, show it to the operator the same way, with a proposed wording. Change nothing there without the operator's approval.
+- **Record:** write the answers down as decisions, D60 onwards (D59 is the last one).
+- **Update:**
+  - change the two drafts the C points touch, the accessibility statement and the sources and editorial policy; both stay drafts (`draft: true`);
+  - change the About page's item 3 if the operator approves it.
 
-- **Claude Code publishes on the operator's command.** This changes D3 and D52. When the operator says "Update the jobs" (in Turkish, "İlanları güncelle"), Claude Code:
-  - drafts the waiting candidates;
-  - checks each one against written rules;
-  - publishes those that pass, rejects those that clearly fail, and leaves the uncertain ones for the operator with a question.
-- **Nothing is published without the operator's command:** no automatic publishing, and the Claude API way stays off.
-- **The operator holds editorial responsibility** and can change or remove any listing at any time, in the admin or by telling Claude Code.
-- **Update the texts that describe the old way:**
-  - PLAN §6.3 and §6.6;
-  - the sources and editorial policy draft;
-  - `docs/legal-open-questions.md`: in B17, or as a new question, ask whether listings chosen and summarised with AI, without a person checking each one, need a label (EU AI Act Art. 50), and what the texts must say.
-- **The About page's approved section:** if a sentence in "Reading employers' pages" is no longer true, propose the new wording to the operator in the session. It is approved text.
-- **The four suggestions still to discuss:** the operator wants to discuss four suggestions of 2026-10-22 (the UCSF and CEBSIT candidates, Hacettepe's and Üsküdar's schedule, UC Irvine, the three sources still off). Until they are settled, leave UCSF's and CEBSIT's candidates for the operator.
+  Changes under `content/` run CI. Put them, and any script of section 2, into one code pull request.
 
-### 2. Redaction, second round
+### 2. The packet (`docs/legal/avukat-paketi/`, in Turkish)
 
-- **Names it missed:**
-  - HR and union contact blocks with their phone numbers (Karolinska, Gothenburg);
-  - recruitment advisers (Amsterdam UMC);
-  - "Team Leader: …" and "Unit Leader: …" lines (RIKEN);
-  - names inside lab names and web addresses (HHMI, UCSF);
-  - the shortened personal names in CNRS offer references (UMRxxxx-ABCDEF-001);
-  - SISSA's titles and document names.
-- **Titles too:** redact the titles as well as the texts. In one posting the lab head's name was in the title.
-- **Phone numbers:** they were left in 7 of the first 100 texts. Removing institutional lines as well is acceptable.
-- **Email addresses:** one survived next to a full name. Check obfuscated forms such as [at] and (at).
-- **Over-removal:** "Cold Spring Harbor", and ordinary capitalised words at the Allen Institute, were removed. Ordinary words should stay.
-- **Tests:** add fake examples of every pattern, both those that must go and those that must stay.
-- **Stored texts:** run the new rules over the stored text and title of every waiting candidate on the server (go-ahead below), and report how many changed.
+- **`README.md`, for the operator.** How to use the packet:
+  - which files to send for a quote, and which for the review;
+  - what kind of lawyer: KVKK and IT law, in Türkiye;
+  - what to ask for in the quote: the scope, the deliverables, one follow-up round, the timeline and a fixed fee;
+  - how the answers come back: to the planning chat, which turns them into a task.
+- **The cover letter (`on-yazi.md`).** An email the operator can send as it is. Leave placeholders for the sender's name and contact details, and never fill them in. It says:
+  - who we are and what we ask;
+  - the scope and the deliverables: written answers per question, and tracked changes in the texts;
+  - the timeline we need: before M2;
+  - that we ask for a fixed-fee quote;
+  - that the texts are drafts, not yet live on the site.
+- **The summary of Gliagora (`gliagora-ozeti.md`, 2–3 pages).**
+  - what the site does, and for whom;
+  - who runs it: the controller, a natural person, and the technical administrator as processor (D33);
+  - how positions are found and published:
+    - the monitors read employers' own pages (D52), and redaction removes names and contact details before anything is stored;
+    - an AI assistant drafts each position;
+    - since D59, publishing rounds run on the operator's command, with written rules and a last look at the employer's page, and no person checks each listing (B17);
+  - where data is kept (Türkiye), and which outside services see what:
+    - Cloudflare's DNS;
+    - Google and ORCID sign-in;
+    - Anthropic, for redacted listing text: Claude Code on the operator's computer, in the weekly drafts and in each publishing round (the Claude API is built but off);
+    - the mail provider, still to be chosen;
+  - a table of the personal data flows: what is collected, why, on which assumed legal basis, for how long, and who sees it;
+  - what goes public at M2 and what at the launch;
+  - that the site is non-commercial.
+- **The questions (`sorular.md` and `sorular.docx`).** B1–B22 in Turkish. For each:
+  - its context in a few sentences;
+  - the exact question;
+  - the texts it touches;
+  - when its answer is needed: before M2, before the launch, or later.
 
-### 3. Better candidates
+  Name `docs/legal-open-questions.md` as the English original, the reference if the two differ.
 
-- **Not research, or not neuroscience:** drop these by their title:
-  - administrative jobs;
-  - nursing;
-  - clinical residencies and clinical-only posts;
-  - teaching pools;
-  - business roles (partnerships, project management).
+  First bring B17 and B22 up to date there, in English, since D59 changed what they say:
+  - B17 (2) says that the About page's section on reading employers' pages says a person checks every position first. The operator changed that section on 2026-10-22.
+  - B17 says the redaction rules were widened "before the next run". In fact the second weekly drafts run (231 candidates) also ran on the first rules; the second round of rules came after it (#116). Use the numbers below.
+  - B22 still says that a person checks and approves every item. Since D59 that no longer holds (B17).
+- **The texts (`metinler/`).**
+  - **Files:** each legal draft, the About page, the sources and editorial policy, and the processing agreement, as a Word file (.docx), so the lawyer can answer with tracked changes. Add one PDF that holds them all, for reading.
+  - **A list (`metinler.md`):** for each text:
+    - its purpose;
+    - its language;
+    - when it goes live (M2 or the launch);
+    - its state: a draft, or approved by the operator (the About page; it changes only with the operator's approval).
+- **Redaction, as it really works:** say it plainly in the summary and in B17 and B22, with the numbers in PLAN §20 (M7 notes, third round).
+  - **The first two weekly AI drafts runs** (2026-10-22, 331 candidates) ran on the first rules, and all 331 texts went to Anthropic. In the first 100 texts:
+    - names were left in about half: HR and union contacts, team leaders, names inside lab addresses and CNRS reference codes;
+    - phone numbers were left in 7;
+    - a name with an email address was left in 1.
+  - **The second round of rules** (#116, 2026-10-22) then ran again over the 374 waiting candidates and their saved versions. It removed:
+    - from texts: 195 names, 43 phone numbers and 403 web addresses;
+    - from titles: 46 names and one email address;
+    - from facts and drafts: 49 more names.
+  - **What is left:**
+    - names in about 40 of 306 texts, about one in seven: in reference lists, in attachments' names and in titles with a hyphen;
+    - a few institutional switchboard and press-office numbers.
 
-  Then look at the settings of the sources that brought most of them: Champalimaud, Radboud, VIB, Charité, the Allen Institute, WashU and the UC campuses.
-- **Not postings:**
-  - Instituto Santos Dumont's news items: one names a prize winner, and the source has no institution;
-  - Turkish announcements, probably from Gazi NÖROM: admissions, calls for study participants, a procedure, a congress;
-  - a form for unsolicited applications.
+    A third round of rules comes when the next drafts show them.
+  - **What is published:** no published listing names a person or gives an email address or a phone number. Before publishing, the server checks every title, summary, start date and city again (D59).
+- **What the packet must never hold:** secrets, or real personal data beyond what the drafts already say.
+- **Keeping it in step:** a way to make the Word and PDF files again after the texts change. A script is fine; put it into section 1's code pull request.
 
-  Fix each source, or make it manual.
-- **Closed while waiting:** a candidate whose deadline has passed closes by itself as "closed". About 20 waited past their deadline.
-- **SISSA:** 25 calls closed between October 2025 and August 2026, but their pages still say "Open". Read their deadlines, or make the source manual.
-- **Dates:**
-  - a range such as "21 October to 4 November" ends on its last day (Udelar);
-  - "rolling" was read from unrelated phrases (4 postings);
-  - a placeholder such as 31/12/2035 counts as rolling;
-  - UC Recruit's final date is the deadline, not its review date;
-  - DZNE's unlabeled header date is probably the deadline.
-- **Oxford's CoreHR postings:** only the page header was read.
-- **Institution:** take it from the posting where a source covers several sites:
-  - the Max Planck Society's shared board names the institute (Bonn, not Munich);
-  - VIB's Leuven centre was recorded as Ghent;
-  - HHMI's posts are at host universities;
-  - DZNE has sites such as Magdeburg.
+### 3. Checks
 
-  Choose from the institutions we have (ROR), and ask the operator when none fits.
+- **Read it as the lawyer would:**
+  - every question is clear without the repository;
+  - every text is listed;
+  - the summary describes publishing as D59 does it;
+  - the Turkish is plain and correct, with KVKK's own terms: veri sorumlusu, veri işleyen, açık rıza, aydınlatma metni, yurt dışına aktarım.
+- **An independent reviewer** reads the summary and the questions, for clarity and for accuracy against the English originals.
 
-### 4. The routine: "Update the jobs"
+### On the server
 
-One command that does all of this, in order:
-1. **Drafts** for the waiting candidates, as `docs/weekly-drafts.md` does today.
-2. **A decision for each drafted candidate,** with one line saying why:
-   - **publish**, only when every one of these holds:
-     - the post is in neuroscience;
-     - it is a research or research-support position at a research employer;
-     - its deadline is at least 3 days ahead, or it is rolling and was published in the last 60 days;
-     - it is on the employer's own posting page;
-     - its institution is the one where the work happens;
-     - its facts agree with the text;
-     - nothing published names a person, an email address or a phone number;
-   - **reject**, with the review queue's reasons;
-   - **ask the operator**, for anything uncertain.
-3. **A last look before publishing:** the server reads the posting's page once more, by the link check's rules. A page that is gone, or says the position is closed, is not published.
-4. **Publishing:**
-   - it makes the job from the draft, as accepting a candidate does today;
-   - "Last verified" is the day of that last look;
-   - the job is marked in the admin as published by the routine on the operator's command, never on the site.
-5. **Closing:** published jobs whose page the link check found gone or filled are closed.
-6. **A short report:**
-   - how many were published, rejected and closed;
-   - the questions for the operator, each with its admin link;
-   - the manual sources that are due, which need a person.
-
-- **The operator's corrections:** the operator can also say, in plain words, "remove this job" or "change its deadline". The routine applies such a change to the job, found by its address or ID, through the same rules.
-- **Write it down:**
-  - `docs/update-jobs.md`: the steps, the rules, and what never to do;
-  - a script, if one is needed;
-  - the command in `CLAUDE.md`'s session handoff.
-
-  "Do the weekly drafts" keeps working, as the first step alone.
-- **Never:**
-  - publish without the operator's command;
-  - read a source more than once a day;
-  - send the AI anything but redacted text;
-  - change an approved legal text;
-  - touch anything else on the server.
-- **Tests:** the decision rules with fake candidates, and the publishing path end to end with fake data.
-
-### 5. On the server: the operator's go-ahead
-
-- **For this task:**
-  - running the new redaction over the waiting candidates' stored texts and titles;
-  - running by hand the changed sources and the three still off (Gothenburg, MedUni Vienna, UNSW), and switching on those that run without a failure;
-  - the first "Update the jobs", with the operator in the session: it decides the 331 drafted candidates.
-- **A standing go-ahead,** like the weekly drafts' (D52): exactly the routine's export, import, last look, publishing and closing, through its operations routes and script.
-- **Nothing else:** make no other change on the server, and never print a secret.
+- **Nothing.** This task has no server steps.
 
 ### Not in this task
 
-- the lawyer packet (parked);
-- the Claude API;
-- publishing without the operator's command;
-- reading the manual sources, which need a person;
-- M8–M10.
+- choosing a lawyer, or sending anything;
+- changing the legal texts beyond the operator's decisions in section 1;
+- approving or publishing any text: they all stay drafts;
+- "Update the jobs": it runs only on the operator's own command;
+- the repository's visibility on GitHub: the operator's own decision;
+- M2's other steps.
 
 ### Report
 
 At the end, one short report in plain language:
-- **Redaction:** before and after, and how many names, phone numbers and email addresses the new rules caught in the stored texts;
-- **Candidates:** the quality fixes, and what they changed;
-- **The first run:** how many were published, rejected, asked and closed;
-- **Against the launch gate:** open jobs by country, subfield and institution, compared with 150 positions, 25 countries, 12 subfields and 50 institutions;
-- **The command:** in one line, as the operator will say it;
-- **CI minutes:** how many this task used. About 469 of October's 2,000 are left; if fewer than 150 remain before a code pull request, stop and tell the operator.
+- **Decisions:** the operator's decisions on C6–C12, and on the About page's item 3;
+- **Files:** the packet's files with their sizes, and which to send for a quote and which for the review;
+- **Gaps:** anything the lawyer will need that we cannot provide yet;
+- **CI minutes:** how many this task used.
+  - On 2026-10-22 GitHub reported the repository as public (`gh api repos/ismailtufan123/gliagora --jq .visibility`). The planning chat has asked the operator whether that is wanted.
+  - While it is public, GitHub's standard runners cost it no minutes. Say which it is when you start.
+  - If it is private again, about 360 of October's 2,000 are left by the last count. If fewer than 150 remain before a code pull request, stop and tell the operator.
 
 ### Working rules
 
 Follow `CLAUDE.md`:
 - one pull request per step, merged when its checks pass;
 - CI minutes are limited (D46), so run every check locally before pushing, and put documentation into the same push;
-- stop and ask only for rules (a) to (c), apart from the server steps approved above.
+- stop and ask only for rules (a) to (c), and for section 1's open points.
