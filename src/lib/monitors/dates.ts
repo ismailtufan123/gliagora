@@ -174,6 +174,10 @@ const ZONES: Array<[RegExp, string]> = [
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
+/** `day` (YYYY-MM-DD) moved by `days`. */
+const addOneDay = (day: string, days: number) =>
+  new Date(Date.parse(`${day}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10)
+
 function validDay(year: number, month: number, day: number): string | null {
   if (month < 1 || month > 12 || day < 1 || day > 31) return null
   const date = new Date(Date.UTC(year, month - 1, day))
@@ -397,9 +401,13 @@ export function deadlineFromValidThrough(
   now: Date,
 ): FoundDeadline | null {
   if (!value) return null
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value.trim())
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?)?/.exec(value.trim())
   if (!match) return null
-  const date = validDay(Number(match[1]), Number(match[2]), Number(match[3]))
+  const day = validDay(Number(match[1]), Number(match[2]), Number(match[3]))
+  // Midnight is the end of the day before: "2026-11-06T00:00:00+01:00" closes on 5 November (the
+  // first "Update the jobs": Amsterdam UMC's pages said 5 November in words, 6 in their data).
+  const midnight = match[4] === '00' && match[5] === '00' && (match[6] ?? '00') === '00'
+  const date = day && midnight ? addOneDay(day, -1) : day
   if (!date || !plausible(date, now)) return null
   return {
     date,

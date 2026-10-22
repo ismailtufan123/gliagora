@@ -229,6 +229,13 @@ describe('dates: third round', () => {
     expect(day('deadlines and milestones of the project are 2027-01-01')).toBeNull()
   })
 
+  it('reads a validThrough at midnight as the end of the day before', () => {
+    expect(deadlineFromValidThrough('2026-11-06T00:00:00+01:00', now)?.date).toBe('2026-11-05')
+    expect(deadlineFromValidThrough('2026-11-06T00:00', now)?.date).toBe('2026-11-05')
+    expect(deadlineFromValidThrough('2026-11-06', now)?.date).toBe('2026-11-06')
+    expect(deadlineFromValidThrough('2026-11-06T23:59:00Z', now)?.date).toBe('2026-11-06')
+  })
+
   it('skips a date for full consideration', () => {
     const text = 'For full consideration, apply by November 3, 2026. Final date: December 15, 2026.'
     expect(day(text, 'US')).toBe('2026-12-15')

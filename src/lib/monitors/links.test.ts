@@ -89,3 +89,19 @@ describe('checkLink', () => {
     expect(await check('https://www.example.org/private/1')).toMatchObject({ status: null })
   })
 })
+
+describe('closedWords: conditions are not facts (M7, third round)', () => {
+  it('reads "until the position is filled" as open', () => {
+    for (const text of [
+      'Applications are accepted until the position is filled.',
+      'The post stays open till the vacancy has been filled.',
+      'Bewerbungen bis die Stelle ist besetzt.',
+      'We review applications on a rolling basis unless the position has been filled earlier.',
+    ]) {
+      expect(closedWords(text), text).toBeNull()
+    }
+    expect(closedWords('Note: this position has been filled. Thank you.')).toBe(
+      'position has been filled',
+    )
+  })
+})

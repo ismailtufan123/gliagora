@@ -296,6 +296,20 @@ async function readPosting(
   }
 }
 
+const ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  '#39': "'",
+}
+
+/** `text` with the entities a second escaping left in it read once more. */
+export function decodeTwice(text: string): string {
+  return text.replace(/&(amp|lt|gt|quot|apos|#39);/g, (_, name: string) => ENTITIES[name]!)
+}
+
 /** What a source's run made of one new posting. */
 async function handlePosting(
   deps: MonitorDeps,
@@ -328,7 +342,8 @@ async function handlePosting(
     return
   }
   // Never the address as a title: the report on the monitors shows titles, never addresses.
-  const title = (read.title || posting.title || '').slice(0, 300)
+  // Some JobPosting data escapes its title twice ("Research &amp; Development", Workday).
+  const title = decodeTwice(read.title || posting.title || '').slice(0, 300)
   if (!source.allNeuroscience) {
     const check = neuroscienceCheck(
       { title, text: read.text },
