@@ -45,3 +45,6 @@ gliagora-deploy.pub
 /ai-drafts/
 # The files of "Update the jobs" on the operator's computer (tools/update-jobs/update.sh, D59)
 /update-jobs/
+# The hero's brain model as downloaded (tools/hero/README.md): the build reads it, the repository
+# keeps only what is made from it
+/tools/hero/source/

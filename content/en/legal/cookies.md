@@ -13,6 +13,7 @@ Every item in this table is set by gliagora.com itself (first-party cookies) and
 | `__Host-gliagora-newsletter` (newsletter cookie) | Anyone who sends the Glia Notes form | Lets "Check your inbox" show the address the confirmation link went to (partly hidden) and "Send it again" send a new link: it holds that address, the language of the page and when the link went, with the time you sent the form and the version of the consent text | 1 hour from when you sent the form, never extended |
 | payload-token (editor session cookie) | Editors of Gliagora | Keeps an editor signed in to the editing area | 2 hours after it was set or last renewed |
 | payload-theme | Editors of Gliagora | Remembers an editor's choice of a light or dark editing area | 1 year |
+| `gliagora-hero-played` (session storage, not a cookie) | Visitors of the home page whose device shows its moving brain | Remembers that the brain's short opening movement has played, so that it does not play again each time you come back to the home page in the same tab. It holds only the figure 1 | Until you close the tab |
 
 [TO DECIDE: whether the editors' second sign-in step adds a cookie]
 
@@ -27,7 +28,7 @@ Legal basis: for the member session cookie, our agreement with you under the [te
 - **Analytics cookies:** none. Our statistics tool, Umami, runs on our own server and counts page views and page speed without cookies. It stores nothing in your browser (see "Visitor statistics" in the [privacy policy](/en/legal/privacy/)).
 - **Third-party cookies:** none. Our public pages load nothing from other websites: fonts, map tiles and spam protection run on our own server.
 - **Spam protection:** your browser solves a small puzzle (ALTCHA) and sends the answer with the form. ALTCHA sets no cookie and stores nothing else in your browser.
-- **Local storage:** our public pages store nothing in your browser's local storage (localStorage). Dark mode follows your device's setting. If we ever add a light and dark switch, your choice will be kept there and listed here.
+- **Local storage:** our public pages store nothing in your browser's local storage (localStorage), which would keep it after the tab is closed. Dark mode follows your device's setting. If we ever add a light and dark switch, your choice will be kept there and listed here.
 
 The newsletter's confirmation and unsubscribe pages store nothing in your browser: they work from the link alone. [TO DECIDE: the translated-version notice – check that the installed Umami script and closing the translated-version notice store nothing in your browser]
 

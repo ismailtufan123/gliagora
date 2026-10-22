@@ -1,6 +1,14 @@
 @import 'tailwindcss';
 @import './tokens.css';
 
+/* The hole in the header's mark while the hero's 3D layer is on screen (F5, below): a registered
+   property, so the hole can close smoothly. */
+@property --hero-mark-hole {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
 /*
  * Tailwind utilities come only from the design tokens (PLAN §7, §11.3): the default colours,
  * type scale, radii, shadows and breakpoints are removed, so `bg-red-500` or `text-xl` do not exist.
@@ -1967,6 +1975,94 @@
     }
   }
 
+  /*
+   * The 3D layer (PLAN §10, L2; src/components/home/hero/, D60): its canvas lies over the poster in
+   * the same box, unseen while it is built and checked, then fades in as the poster fades out
+   * (300 ms). Where the page's check lets it load (`data-hero` other than `off`), the poster skips
+   * its own draw-in of the wave, since the 3D layer brings the wave, and shows it drawn should the
+   * 3D layer give up (`poster`). In print and in forced colours, the poster only.
+   */
+  .hero-canvas {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 1360 / 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-out;
+  }
+
+  .home-poster .poster-art {
+    transition: opacity 0.3s ease-out;
+  }
+
+  .home-poster[data-hero='live'] .hero-canvas {
+    opacity: 1;
+  }
+
+  .home-poster[data-hero='live'] .poster-art {
+    opacity: 0;
+  }
+
+  .home-poster[data-hero]:not([data-hero='off'])
+    .poster-art
+    :is(.poster-wave, .poster-cell, .poster-head) {
+    animation: none;
+    stroke-dasharray: none;
+  }
+
+  @media print, (forced-colors: active) {
+    .hero-canvas {
+      display: none;
+    }
+
+    .home-poster .poster-art {
+      opacity: 1;
+    }
+  }
+
+  /*
+   * F3 (PLAN §10.3): on a screen with a pointer, while the 3D layer is shown, a window's count
+   * appears when its label is hovered or focused, as the wave reaches it (the count stays in the
+   * link's name, and in view on touch screens and with the poster); the other labels turn muted.
+   */
+  @media (hover: hover) {
+    .home-poster[data-hero='live'] .home-poster-count {
+      opacity: 0;
+      transition: opacity 0.2s ease-out 0.15s;
+    }
+
+    .home-poster[data-hero='live'] a:is(:hover, :focus-visible) .home-poster-count {
+      opacity: 1;
+    }
+  }
+
+  .home-poster[data-hero='live']
+    .home-poster-links:has(a:is(:hover, :focus-visible))
+    a:not(:hover, :focus-visible) {
+    color: var(--text-muted);
+  }
+
+  /*
+   * F5 (PLAN §10.3): while the hero's 3D layer is on screen, the header's mark shows its arcs only
+   * (its astrocyte is the brain's cell below); as the hero leaves the screen, the astrocyte fills
+   * in again (200 ms), as if handed over. A mask over the mark as it is (D12: never redrawn).
+   */
+  .lockup-header img {
+    mask-image: radial-gradient(
+      circle closest-side,
+      transparent calc(var(--hero-mark-hole) - 2%),
+      var(--text) var(--hero-mark-hole)
+    );
+    transition: --hero-mark-hole 0.2s ease-out;
+  }
+
+  :root[data-hero-mark='outline'] .lockup-header img {
+    --hero-mark-hole: 25%;
+  }
+
   /* The windows' links: under the poster on small screens, around the brain from 64rem. */
   .home-poster-links {
     margin-block-start: var(--space-4);
@@ -1998,45 +2094,45 @@
    * stays clear of the outline.
    */
   .home-poster-links > [data-window='jobs'] {
-    --x: 26.9%;
-    --y: 17.2%;
+    --x: 27.5%;
+    --y: 19.8%;
     --shift-x: -100%;
     --shift-y: -100%;
     --align: end;
   }
 
   .home-poster-links > [data-window='events'] {
-    --x: 71.2%;
-    --y: 16.6%;
+    --x: 70.6%;
+    --y: 17.4%;
     --shift-x: 0%;
     --shift-y: -100%;
   }
 
   .home-poster-links > [data-window='funding'] {
-    --x: 81.9%;
-    --y: 39.8%;
+    --x: 81.5%;
+    --y: 41.2%;
     --shift-x: 0%;
     --shift-y: -50%;
   }
 
   .home-poster-links > [data-window='papers'] {
-    --x: 76.9%;
-    --y: 68.6%;
+    --x: 75%;
+    --y: 66.6%;
     --shift-x: 0%;
     --shift-y: 0%;
   }
 
   .home-poster-links > [data-window='news'] {
-    --x: 36.8%;
-    --y: 61.4%;
+    --x: 35%;
+    --y: 64.2%;
     --shift-x: -100%;
     --shift-y: 0%;
     --align: end;
   }
 
   .home-poster-links > [data-window='resources'] {
-    --x: 17.8%;
-    --y: 39.2%;
+    --x: 17.5%;
+    --y: 40%;
     --shift-x: -100%;
     --shift-y: -50%;
     --align: end;

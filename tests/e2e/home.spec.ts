@@ -220,8 +220,17 @@ test.describe('home page without JavaScript', () => {
 test.describe('the poster', () => {
   test.skip(({ isMobile }) => isMobile, 'the same drawing on every screen')
 
-  test('draws its wave in once, in at most 1.2 s (PLAN §10.2)', async ({ page }) => {
+  test('draws its wave in once, in at most 1.2 s, where the 3D layer stays off (PLAN §10.2)', async ({
+    page,
+  }) => {
+    // Save-Data keeps the 3D layer off (tests/e2e/hero.spec.ts), which brings its own wave.
+    await page.addInitScript(() =>
+      Object.defineProperty(navigator, 'connection', {
+        value: { saveData: true, effectiveType: '4g' },
+      }),
+    )
     await page.goto('/en/')
+    await expect(page.locator('.home-poster')).toHaveAttribute('data-hero', 'off')
     const timing = await page
       .locator('.poster-art .poster-wave')
       .first()
@@ -240,6 +249,19 @@ test.describe('the poster', () => {
     expect(timing.count).toBe('1')
     expect(timing.ms).toBeGreaterThan(0)
     expect(timing.ms).toBeLessThanOrEqual(1200)
+  })
+
+  test('does not draw its wave in where the 3D layer will be tried, and keeps it drawn', async ({
+    page,
+  }) => {
+    await page.goto('/en/')
+    await expect(page.locator('.home-poster')).toHaveAttribute(
+      'data-hero',
+      /^(pending|loading|live)$/,
+    )
+    const wave = page.locator('.poster-art .poster-wave').first()
+    expect(await wave.evaluate((path) => getComputedStyle(path).animationName)).toBe('none')
+    expect(await wave.evaluate((path) => getComputedStyle(path).strokeDasharray)).toBe('none')
   })
 
   test('is small, and nothing in it comes from elsewhere', async ({ page }) => {
