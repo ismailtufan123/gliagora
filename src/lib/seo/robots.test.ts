@@ -187,6 +187,7 @@ describe('robots.txt in the M2 state (D41, D50)', () => {
           .map((file) => `Allow: ${file}$`),
         'Allow: /_next/static/',
         'Allow: /brand/',
+        'Allow: /hero/',
         'Disallow: /',
         '',
         'Sitemap: https://gliagora.com/sitemap.xml',

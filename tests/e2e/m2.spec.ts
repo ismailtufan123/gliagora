@@ -27,6 +27,7 @@ import {
   publicPostPaths,
 } from '../../src/lib/public-pages'
 import { isDisallowed, robotsRules } from '../../src/lib/seo/robots'
+import { heroFiles } from '../../src/scripts/caddy-public-file'
 import { siteStageSetting } from '../../src/lib/site-stage'
 import { NOT_STAGES, TEST_AUTH, adaptedFiles, testCaddies } from '../caddy/serve'
 import { TEXT_200, TEXT_SPACING, sidewaysScroll } from './layout'
@@ -272,6 +273,21 @@ test.describe('the M2 state through Caddy, without the password', () => {
     }
     // No figures or lists of positions (the home page's), which stay private (D39).
     await expect(page.locator('main a[href^="/en/jobs/"]')).toHaveCount(0)
+  })
+
+  test('the coming-soon page has the hero, without the windows’ links, its files all public (D60)', async ({
+    page,
+  }) => {
+    const points: number[] = []
+    page.on('response', (response) => {
+      if (new URL(response.url()).pathname.startsWith('/hero/')) points.push(response.status())
+    })
+    await page.goto('/en/')
+    await expect(page.locator('svg.poster-art')).toBeVisible()
+    await expect(page.locator('.home-poster-links')).toHaveCount(0)
+    const box = page.locator('.home-poster')
+    await expect(box).toHaveAttribute('data-hero', /^(live|poster|off)$/, { timeout: 20_000 })
+    if ((await box.getAttribute('data-hero')) !== 'off') expect(points).toEqual([200])
   })
 
   test('on a phone, the menu holds About, Glia Notes while public, and nothing private', async ({
@@ -548,6 +564,8 @@ test.describe('only the exact spelling of a public address opens', () => {
     '/brand/x/',
     '/brand/',
     '/BRAND/favicon.svg',
+    '/hero/x.bin',
+    '/hero/',
     '/_NEXT/static/x',
     '/_NEXT/STATIC/x/',
     '/_next/static/%2e%2e/x',
@@ -565,6 +583,7 @@ test.describe('only the exact spelling of a public address opens', () => {
     // The exact spellings still open.
     expect((await raw(caddies!.m2.url, '/en/about/')).status).toBe(200)
     expect((await raw(caddies!.m2.url, '/brand/favicon.svg')).status).toBe(200)
+    expect((await raw(caddies!.m2.url, heroFiles()[0]!)).status).toBe(200)
   })
 
   test('a missing file of Next.js gets a plain 404, not the app’s page', async () => {

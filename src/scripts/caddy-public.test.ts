@@ -16,6 +16,7 @@ import {
   CADDY_PUBLIC_MOUNT,
   CADDY_PUBLIC_PATH,
   brandFiles,
+  heroFiles,
   m2PublicCaddy,
 } from './caddy-public-file'
 
@@ -102,6 +103,10 @@ const OTHER_SPELLINGS = [
   '/brand/FAVICON.SVG',
   '/brand/favicon.svg/',
   '/brand/%66avicon.svg',
+  '/hero/x.bin',
+  '/hero/',
+  '/hero',
+  '/HERO/x.bin',
   '/_NEXT/static/x',
   '/_next/STATIC/x',
   '/_next/static/',
@@ -163,9 +168,16 @@ describe(CADDY_PUBLIC_PATH, () => {
         expect(path, path).not.toContain('*')
         expect(path, path).not.toMatch(/^\/(?:api|admin|basemap|m2|health)(?:\/|$)/)
       }
-      // Next.js's own files by prefix, the logos each by name, as the folder holds them.
-      expect(matcherPaths(text, 'm2PublicFiles')).toEqual(['/_next/static/*', ...brandFiles()])
-      for (const path of brandFiles()) expect(isPublicAddress(path, draft), path).toBe(true)
+      // Next.js's own files by prefix, the logos and the hero's point file each by name, as their
+      // folders hold them.
+      expect(heroFiles()).toHaveLength(1)
+      expect(matcherPaths(text, 'm2PublicFiles')).toEqual([
+        '/_next/static/*',
+        ...brandFiles(),
+        ...heroFiles(),
+      ])
+      for (const path of [...brandFiles(), ...heroFiles()])
+        expect(isPublicAddress(path, draft), path).toBe(true)
       if (publicPostPaths(draft).length > 0) {
         expect(matcherPaths(text, 'm2PublicPost')).toEqual(publicPostPaths(draft))
       } else {
@@ -186,6 +198,7 @@ describe(CADDY_PUBLIC_PATH, () => {
       }
       for (const path of [
         ...brandFiles(),
+        ...heroFiles(),
         '/_next/static/chunks/3979yy9j2k--s.js',
         '/_next/static/chunks/a_b~c.js?dpl=x',
         '/_next/static/media/font.p.woff2',

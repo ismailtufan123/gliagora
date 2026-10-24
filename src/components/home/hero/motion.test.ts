@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { FOCUS_SECONDS, INTRO_SECONDS, REST, focusAt, follow, introAt } from './motion'
+import {
+  FOCUS_SECONDS,
+  INTRO_SECONDS,
+  JOURNEY_SHARE,
+  REST,
+  focusAt,
+  follow,
+  introAt,
+  journeyAt,
+} from './motion'
 
 describe('the hero’s timing (PLAN §10.3)', () => {
   it('the arrival (F2) gathers the points, turns the brain and runs one wave in 1.6 s', () => {
@@ -64,5 +73,55 @@ describe('the hero’s timing (PLAN §10.3)', () => {
     expect(once).toBeCloseTo(twice, 10)
     expect(follow(0.3, 0.3, 1)).toBe(0.3)
     expect(follow(0, 1, 0)).toBe(0)
+  })
+})
+
+describe('the journey into the cortex (F4, F6)', () => {
+  it('starts and ends at rest, and depends on the scroll alone', () => {
+    expect(journeyAt(0)).toEqual({
+      zoom: 0,
+      toCell: 0,
+      toMark: 0,
+      labels: 1,
+      still: 1,
+      handing: false,
+    })
+    expect(journeyAt(1)).toEqual({
+      zoom: 0,
+      toCell: 1,
+      toMark: 1,
+      labels: 0,
+      still: 0,
+      handing: true,
+    })
+    // Scrolling back retraces it exactly (F6).
+    expect(journeyAt(0.4)).toEqual(journeyAt(0.4))
+    expect(JOURNEY_SHARE).toBeLessThanOrEqual(0.6)
+  })
+
+  it('goes in, gathers the cell, comes out as the mark', () => {
+    // In towards the cell first, then back out while the cell's waves become the arcs.
+    expect(journeyAt(0.35).zoom).toBe(1)
+    expect(journeyAt(0.45).zoom).toBe(1)
+    expect(journeyAt(0.7).zoom).toBeGreaterThan(0)
+    expect(journeyAt(0.7).zoom).toBeLessThan(1)
+    // The astrocyte is gathered before its waves spread.
+    expect(journeyAt(0.55).toCell).toBe(1)
+    expect(journeyAt(0.55).toMark).toBe(0)
+    // The labels have handed over before the camera is in.
+    expect(journeyAt(0.3).labels).toBe(0)
+    expect(journeyAt(0.89).handing).toBe(false)
+    expect(journeyAt(0.9).handing).toBe(true)
+  })
+
+  it('never moves backwards on the way in', () => {
+    let before = journeyAt(0)
+    for (let p = 0.01; p <= 1; p += 0.01) {
+      const now = journeyAt(p)
+      expect(now.toCell).toBeGreaterThanOrEqual(before.toCell)
+      expect(now.toMark).toBeGreaterThanOrEqual(before.toMark)
+      expect(now.labels).toBeLessThanOrEqual(before.labels)
+      before = now
+    }
   })
 })

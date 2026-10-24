@@ -1,11 +1,18 @@
-// The hero's timing (PLAN §10.3), as plain functions of time: the arrival (F2) and the wave to a
-// window's label (F3). Our own few lines in place of an animation library (D60); the scene
-// (scene.ts) asks them for each frame's values, and the tests check them without a browser.
+// The hero's timing (PLAN §10.3), as plain functions: of time for the arrival (F2) and the wave to
+// a window's label (F3), of the page's scroll for the journey into the cortex (F4, and back, F6).
+// Our own few lines in place of an animation library (D60); the scene (scene.ts) asks them for
+// each frame's values, and the tests check them without a browser.
 
 export const clamp01 = (t: number) => Math.min(1, Math.max(0, t))
 export const easeOutCubic = (t: number) => 1 - (1 - t) ** 3
 export const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2)
 export const easeInOutSine = (t: number) => (1 - Math.cos(Math.PI * t)) / 2
+
+/** A smooth step from 0 at `from` to 1 at `to`. */
+export const smoothstep = (from: number, to: number, t: number) => {
+  const x = clamp01((t - from) / (to - from))
+  return x * x * (3 - 2 * x)
+}
 
 /** The part of a span that has passed at `t`: 0 before `start`, 1 after `start + duration`. */
 export const progress = (t: number, start: number, duration: number) =>
@@ -65,4 +72,42 @@ export function focusAt(t: number, leftAt: number | null) {
  */
 export function follow(current: number, target: number, seconds: number, rate = 8) {
   return target + (current - target) * Math.exp(-rate * seconds)
+}
+
+/**
+ * How far the page has to scroll for the whole journey (F4), as a share of the hero's height:
+ * 45%, less than §10.3's 60%, so that the mark it ends on is formed while still on screen below the
+ * header (D60).
+ */
+export const JOURNEY_SHARE = 0.45
+
+export type JourneyFrame = {
+  /** How close the camera has come to the cell, 0 (home) to 1 (just above the cortex) and back. */
+  zoom: number
+  /** 0: the points are the brain; 1: those that stay have gathered into one astrocyte. */
+  toCell: number
+  /** 0: the astrocyte; 1: its waves have become the mark's arcs (each ring a little after the last). */
+  toMark: number
+  /** How much the windows' labels show (they hand over to the figures below). */
+  labels: number
+  /** How much of the arrival's turn and the lean towards the pointer remains. */
+  still: number
+  /** The mark is formed: the header's mark gives its cell to the hero's until the hero is gone. */
+  handing: boolean
+}
+
+/**
+ * The journey into the cortex at scroll progress `p` (0 at the top of the page, 1 once the page has
+ * scrolled JOURNEY_SHARE of the hero's height). Scrubbed by the scroll, so it runs backwards as the
+ * page scrolls back up (F6), and never plays by itself.
+ */
+export function journeyAt(p: number): JourneyFrame {
+  return {
+    zoom: smoothstep(0, 0.35, p) * (1 - smoothstep(0.45, 0.85, p)),
+    toCell: smoothstep(0.18, 0.55, p),
+    toMark: smoothstep(0.55, 0.92, p),
+    labels: 1 - smoothstep(0, 0.3, p),
+    still: 1 - smoothstep(0, 0.25, p),
+    handing: p >= 0.9,
+  }
 }

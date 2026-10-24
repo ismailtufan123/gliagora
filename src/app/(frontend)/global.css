@@ -1,6 +1,14 @@
 @import 'tailwindcss';
 @import './tokens.css';
 
+/* The hole in the header's mark while the hero's mark is formed on screen (F5, below): a registered
+   property, so the hole can open and close smoothly. */
+@property --hero-mark-hole {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
 /*
  * Tailwind utilities come only from the design tokens (PLAN §7, §11.3): the default colours,
  * type scale, radii, shadows and breakpoints are removed, so `bg-red-500` or `text-xl` do not exist.
@@ -1768,7 +1776,7 @@
 
   .home-hero-grid {
     display: grid;
-    gap: var(--space-12);
+    gap: var(--space-6);
     align-items: center;
   }
 
@@ -2027,12 +2035,61 @@
     color: var(--text-muted);
   }
 
-  /* The windows' links: under the poster on small screens, around the brain from 64rem. */
+  /*
+   * F4: as the page scrolls into the journey, the labels hand over to the figures below
+   * (`--hero-labels`, from 1 to 0, set by the scene); a label in focus always shows, and faded
+   * labels take no clicks.
+   */
+  .home-poster[data-hero='live'] .home-poster-links {
+    opacity: var(--hero-labels, 1);
+  }
+
+  .home-poster[data-hero='live'] .home-poster-links:focus-within {
+    opacity: 1;
+  }
+
+  .home-poster[data-hero='live'][data-hero-labels='gone'] .home-poster-links:not(:focus-within) {
+    pointer-events: none;
+  }
+
+  /*
+   * F5 (PLAN §10.3): once the journey has formed the 6b mark in the hero, the header's mark gives
+   * its cell to it (a mask over the mark as it is, D12: never redrawn) until the hero has gone, then
+   * fills again (200 ms). Only while the hero's 3D layer runs (`data-hero-mark` on <html>).
+   */
+  :root[data-hero-mark] .lockup-header img {
+    mask-image: radial-gradient(
+      circle closest-side,
+      transparent calc(var(--hero-mark-hole) - 2%),
+      var(--text) var(--hero-mark-hole)
+    );
+    transition: --hero-mark-hole 0.2s ease-out;
+  }
+
+  :root[data-hero-mark='handing'] .lockup-header img {
+    --hero-mark-hole: 27%;
+  }
+
+  /* The windows' links: under the poster on small screens, centred under the brain (as many
+     columns as there are links, up to what fits), around the brain from 64rem. */
   .home-poster-links {
-    margin-block-start: var(--space-4);
+    margin-block-start: var(--space-2);
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
     gap: var(--space-2) var(--space-4);
+    text-align: center;
+  }
+
+  /* On small screens the poster's empty margins above the brain and below the brainstem are taken
+     back (in percent of its width, as its box's height is), so the hero holds together. */
+  @media (width < 64rem) {
+    .home-poster {
+      margin-block-start: -5%;
+    }
+
+    .home-poster .poster-art {
+      margin-block-end: -9%;
+    }
   }
 
   .home-poster-links a {
@@ -2107,6 +2164,7 @@
        keeps to one line at 64rem in the web font and in its fallback. */
     .home-hero-grid {
       grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+      gap: var(--space-12);
     }
 
     .home-poster-links {
@@ -2152,7 +2210,9 @@
     }
   }
 
+  /* An inline block, so a focused link's outline is one box around its number and words. */
   .home-figures a {
+    display: inline-block;
     font-weight: 700;
   }
 

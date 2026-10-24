@@ -3,9 +3,13 @@
 // side never shows through, and so does the cut end of the brainstem. One calcium wave runs from
 // its cell across the cortex (F2), its front uneven like a real one: magenta near the cell, turning
 // DAPI blue as it reaches the back of the brain, as the poster's wave does, with a fading wake.
-// Another runs from the brain's centre to a window's label and settles there as a small glow (F3).
+// Another runs from the brain's centre to a window's label and settles there as a small glow (F3);
+// at rest a fainter glow marks where each label meets the brain.
 // A lit point takes the wave's colour itself, so on paper the wave is the brand's magenta, never
-// darkened by the ink. Colours come from the design tokens at run time (scene.ts).
+// darkened by the ink. On the journey into the cortex (F4), the points the mark needs gather into
+// one astrocyte while the others fade, then its waves spread, ring after ring, into the mark's arcs
+// (ink) around its cell (magenta) and nucleus (DAPI blue). Colours come from the design tokens at
+// run time (scene.ts).
 
 export const VERTEX = /* glsl */ `
 precision highp float;
@@ -26,12 +30,28 @@ uniform vec3 uFocus;
 uniform float uFocusRun;
 uniform float uFocusStrength;
 uniform float uDark;
+uniform float uScroll;
+uniform float uToCell;
+uniform vec3 uAstroCentre;
+uniform float uAstroScale;
+uniform vec3 uMarkCentre;
+uniform float uMarkScale;
+uniform float uZoom;
+uniform vec3 uAnchors[6];
+uniform int uAnchorCount;
+uniform float uLabels;
 in vec3 position;
 in vec3 normal;
 in float shade;
+in vec4 mark;
+in vec3 astro;
 out float vBase;
 out float vLit;
 out float vHue;
+out float vLogo;
+out float vRing;
+out float vPart;
+out float vKeep;
 
 float hash(float n) { return fract(sin(n) * 43758.5453); }
 
@@ -62,12 +82,30 @@ void main() {
   float g = clamp((uGather - r1 * 0.4) / 0.6, 0.0, 1.0);
   g = 1.0 - (1.0 - g) * (1.0 - g) * (1.0 - g);
   vec3 p = position - normal * (0.015 + 0.05 * r2) * (1.0 - g);
+
+  // The journey (F4): the mark's points leave the brain for the astrocyte, then for the mark; each
+  // ring of the arcs a little after the one inside it, so the waves spread outwards.
+  float logo = mark.w;
+  // The cell's own points stay in the astrocyte, which becomes the mark's cell as it grows; only
+  // the arcs' points spread.
+  float spread = mark.z < 0.5 ? smoothstep(0.55 + astro.z * 0.0016, 0.8 + astro.z * 0.0016, uScroll) : 0.0;
+  vec3 cell = uAstroCentre + vec3(astro.xy * uAstroScale, 0.0);
+  vec3 target = uMarkCentre + vec3(mark.xy * uMarkScale, 0.0);
+  p = mix(p, mix(mix(p, cell, uToCell), target, spread), logo);
   vec4 mv = modelViewMatrix * vec4(p, 1.0);
   gl_Position = projectionMatrix * mv;
+  // Points fade softly towards the canvas's edges, so a close view is never cut by a straight line.
+  vec2 ndc = gl_Position.xy / gl_Position.w;
+  float edge = smoothstep(1.0, 0.82, max(abs(ndc.x), abs(ndc.y)));
 
   vec3 n = normalize(normalMatrix * normal);
   float facing = dot(n, normalize(-mv.xyz));
   float front = smoothstep(-0.1, 0.3, facing) * smoothstep(uFloor, uFloor + 0.07, position.y);
+  front = mix(front, 1.0, uToCell * logo);
+  vLogo = smoothstep(0.35, 1.0, uToCell) * logo;
+  vRing = spread * logo;
+  vPart = mark.z;
+  vKeep = (1.0 - uToCell * (1.0 - logo)) * edge;
   float light = 0.34 + 0.66 * max(dot(n, normalize(vec3(-0.45, 0.6, 0.66))), 0.0);
   vBase = front * light * mix(0.2, 1.0, shade * shade) * mix(0.15, 1.0, g) * mix(1.0, 0.82, uDark);
 
@@ -88,11 +126,17 @@ void main() {
   ring *= side * (1.0 - smoothstep(0.8, 1.0, uFocusRun));
   float glow = smoothstep(0.75, 1.0, uFocusRun) * exp(-pow(distance(position, uFocus) / (uWaveWidth * 1.1), 2.0));
   float focus = uFocusStrength * max(ring, glow * 0.9);
+  // A faint glow at rest where each window's label meets the brain, so the label belongs to it.
+  for (int k = 0; k < 6; k++) {
+    if (k >= uAnchorCount) break;
+    focus = max(focus, 0.42 * uLabels * exp(-pow(distance(position, uAnchors[k]) / (uWaveWidth * 0.75), 2.0)));
+  }
 
   vLit = front * max(max(wave, wake), focus);
   // Magenta near the cell, DAPI blue at the back (the poster's gradient); a label's wave is magenta.
   vHue = focus > max(wave, wake) ? 0.0 : smoothstep(0.35, 0.85, path);
-  gl_PointSize = uSize * (0.72 + 0.4 * shade + 0.9 * front * max(wave, focus)) * uDistance / -mv.z;
+  float size = uSize * (0.72 + 0.4 * shade + 0.9 * front * max(wave, focus)) * mix(1.0, 1.3, vRing);
+  gl_PointSize = size * mix(1.0, 0.42, uZoom) * uDistance / -mv.z;
 }
 `
 
@@ -106,6 +150,10 @@ uniform float uDark;
 in float vBase;
 in float vLit;
 in float vHue;
+in float vLogo;
+in float vRing;
+in float vPart;
+in float vKeep;
 out vec4 colour;
 
 void main() {
@@ -118,7 +166,11 @@ void main() {
   // how lit it is shows in how strongly it is drawn.
   float lit = smoothstep(0.08, 0.3, vLit);
   vec3 rgb = mix(uInk, mix(uAccent, uDapi, vHue), lit);
-  float a = clamp(max(vBase, vLit * mix(0.85, 1.0, uDark)), 0.0, 1.0) * soft * uOpacity;
+  float a = clamp(max(vBase, vLit * mix(0.85, 1.0, uDark)), 0.0, 1.0);
+  // On the journey: the astrocyte is magenta; then the arcs turn ink, the nucleus DAPI blue.
+  vec3 part = vPart < 0.5 ? mix(uAccent, uInk, vRing) : vPart < 1.5 ? uAccent : mix(uAccent, uDapi, vRing);
+  rgb = mix(rgb, part, vLogo);
+  a = mix(a, 0.95, vLogo) * vKeep * soft * uOpacity;
   colour = vec4(rgb * a, a);
 }
 `

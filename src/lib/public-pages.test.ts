@@ -182,7 +182,7 @@ describe('the M2 pages (src/lib/public-pages.ts)', () => {
       '/sitemap.xml',
       '/sitemaps/pages.xml',
     ])
-    expect(PUBLIC_ASSET_PREFIXES).toEqual(['/_next/static/', '/brand/'])
+    expect(PUBLIC_ASSET_PREFIXES).toEqual(['/_next/static/', '/brand/', '/hero/'])
   })
 
   it('never open the admin, the API, the basemap, the M2 versions or the private sections', () => {
