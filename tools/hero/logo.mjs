@@ -132,27 +132,42 @@ export function random(seed) {
 /**
  * The mark's target points in its own units (viewBox 0–200, y down), each with its part: `arc`
  * (the three arcs and the bar, ink), `cell` (the astrocyte's processes, end feet and body,
- * magenta) and `nucleus` (blue). `spacing` is the distance between neighbouring points.
+ * magenta) and `nucleus` (blue). `spacing` is the distance between neighbouring points in the
+ * cell, `arcSpacing` the least distance between two points of the arcs.
  */
-export function logoTargets({ spacing = 1.6, seed = 6 } = {}) {
+export function logoTargets({ spacing = 1.6, arcSpacing = 1.4, seed = 6 } = {}) {
   const svg = readFileSync(MARK, 'utf8')
   const rand = random(seed)
   const points = []
-  // The stroked arcs: points along the path, spread across the stroke's width.
+  // The stroked arcs: points scattered over each stroke at random, but never closer to each
+  // other than `arcSpacing` (a blue noise: no rows and no clumps).
+  const near = new Map()
+  const cellOf = (x, y) => `${Math.floor(x / arcSpacing)},${Math.floor(y / arcSpacing)}`
+  const free = (x, y) => {
+    const cx = Math.floor(x / arcSpacing)
+    const cy = Math.floor(y / arcSpacing)
+    for (let i = cx - 1; i <= cx + 1; i++)
+      for (let j = cy - 1; j <= cy + 1; j++)
+        for (const [qx, qy] of near.get(`${i},${j}`) ?? [])
+          if (Math.hypot(qx - x, qy - y) < arcSpacing) return false
+    return true
+  }
   for (const [, width, d] of svg.matchAll(/<path stroke-width="([\d.]+)" d="([^"]+)"\/>/g)) {
     const half = Number(width) / 2
-    const rows = Math.max(1, Math.round(Number(width) / spacing))
-    for (const line of polylines(d, 0.5))
-      for (const p of along(line, spacing))
-        for (let row = 0; row < rows; row++) {
-          const offset = -half + ((row + 0.5) / rows) * 2 * half + (rand() - 0.5) * 0.6
-          const shift = (rand() - 0.5) * spacing * 0.5
-          points.push({
-            part: 'arc',
-            x: p.x - p.ty * offset + p.tx * shift,
-            y: p.y + p.tx * offset + p.ty * shift,
-          })
-        }
+    for (const line of polylines(d, 0.5)) {
+      const steps = along(line, 0.25)
+      for (let k = 0; k < steps.length * Number(width) * 2; k++) {
+        const p = steps[Math.min(steps.length - 1, Math.floor(rand() * steps.length))]
+        const offset = (rand() * 2 - 1) * half * 0.92
+        const x = p.x - p.ty * offset
+        const y = p.y + p.tx * offset
+        if (!free(x, y)) continue
+        const key = cellOf(x, y)
+        if (!near.has(key)) near.set(key, [])
+        near.get(key).push([x, y])
+        points.push({ part: 'arc', x, y })
+      }
+    }
   }
   // The filled cell: its processes (one path of closed shapes) and circles, filled on a jittered grid.
   const cell = /<g fill="#B8286E"><path d="([^"]+)"\/>(.*?)<\/g>/s.exec(svg)

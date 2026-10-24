@@ -12,7 +12,8 @@ import { CONTACT_EMAIL } from '@/lib/site'
 // tagline, as on the home page (PLAN §9.1). Glia Notes, while its signup is public (with the açık
 // rıza metni, m2SignupLink), and the address to write to. Beside them, the home page's hero
 // picture (M13, D60): the poster, and the 3D brain where the device allows, without the windows'
-// links, which lead to private pages; its point file is among the M2 state's public files.
+// links, which lead to private pages, and without the journey on scroll; its point file is among
+// the M2 state's public files.
 // The tagline as the H1 stays the largest paint.
 export const metadata: Metadata = { alternates: { canonical: '/en/' } }
 
@@ -52,7 +53,7 @@ export default async function ComingSoonPage() {
               </p>
             </div>
           </div>
-          <HeroStage />
+          <HeroStage journey={false} />
         </div>
       </section>
     </main>

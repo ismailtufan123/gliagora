@@ -31,6 +31,10 @@ cd tools/poster && node gen.mjs && node to-tsx.mjs && cd ../..   # the poster (t
 pnpm format
 ```
 
+A new point file has a new hash in its name. The M2 state's public files (the coming-soon page
+shows the hero) take any name of that shape (`brain-` and 10 hex digits), so nothing on the server
+changes; a unit test checks that the folder holds exactly the file `hero-model.ts` names.
+
 After the poster changes, copy its anchors (`tools/poster/anchors.json`, which `gen.mjs` writes)
 to `global.css` (`.home-poster-links`, in percent of 1360 × 1000) and to `MODEL.anchors` in
 `model.mjs`, and its cell (`.poster-cell` in `HomePoster.tsx`) to `MODEL.cell`, then build the point
@@ -46,7 +50,8 @@ file again.
 - `sample.mjs`: the surface's normals, the depth of its folds (a smoothed copy of the surface, as
   in sulcal depth maps), the triangles the camera sees, and an even sample of points on them.
 - `logo.mjs`: the 6b mark (`public/brand/gliagora-mark.svg`, D12) sampled into target points for
-  the last frame of the scroll (F4): read from the file, never redrawn.
+  the journey's last frame (F4): read from the file, never redrawn; the first 3,248 points of the
+  cloud become them.
 - `encode.mjs`: the file format, which `src/components/home/hero/data.ts` reads (its comment
   describes the layout).
 

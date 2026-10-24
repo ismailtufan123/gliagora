@@ -8,11 +8,22 @@ import { HeroLoader } from './hero/HeroLoader'
 // before the poster is painted and marks the box (hero/check.ts; React leaves the box's marks
 // alone: suppressHydrationWarning), and HeroLoader, which loads the 3D layer (L2) where the check
 // lets it. On the home page the windows' links go inside, around the brain (`children`); on the M2
-// coming-soon page there are none (D60), since they lead to private pages.
+// coming-soon page there are none (D60), since they lead to private pages, and no journey on
+// scroll (F4), since too little lies below its hero to scroll it through (`journey={false}`).
 
-export function HeroStage({ children }: { children?: ReactNode }) {
+export function HeroStage({
+  children,
+  journey = true,
+}: {
+  children?: ReactNode
+  journey?: boolean
+}) {
   return (
-    <div className="home-poster" suppressHydrationWarning>
+    <div
+      className="home-poster"
+      data-hero-journey={journey ? undefined : 'off'}
+      suppressHydrationWarning
+    >
       <script dangerouslySetInnerHTML={{ __html: HERO_CHECK_SCRIPT }} />
       <HeroLoader />
       <HomePoster />

@@ -5,6 +5,7 @@ import { decodeHeroPoints } from './data'
 import { HERO_MODEL } from './hero-model'
 import {
   type IntroFrame,
+  JOURNEY_PAUSE,
   JOURNEY_SHARE,
   REST,
   clamp01,
@@ -40,14 +41,14 @@ import {
 // - F3: hovering or focusing a window's label sends a wave to that label's anchor (400 ms) and
 //   marks the box (`data-hero-focus`); the other labels turn muted (global.css);
 // - the brain leans a little towards the pointer, frame by frame;
-// - F4, scrubbed by the page's scroll (no scroll-jacking): the camera moves into the cortex at the
-//   cell, the points the 6b mark needs gather into one astrocyte while the others fade, then the
-//   camera pulls back as the astrocyte's waves spread into the mark's arcs; the labels hand over to
-//   the figures below, and once the mark is formed the header's mark gives up its cell until the
-//   hero has gone (`data-hero-mark` on <html>); F6, scrolling back runs it backwards;
+// - F4, scrubbed by the page's scroll (no scroll-jacking), on the home page only: the camera dives
+//   towards the glowing cell where the arrival's wave began, the points the 6b mark needs gather
+//   there into one astrocyte while the others fade, then the camera pulls back as the astrocyte
+//   grows into the mark's cell and its waves spread, ring after ring, into the mark's arcs; the
+//   labels hand over to the figures below; F6, scrolling back runs it backwards;
 // - F5: off screen or in a hidden tab, nothing is drawn, and after 10 s the GPU's memory is
 //   released (`data-hero="paused"`, the poster in its place), to be built again on return. (The
-//   header mark's hand-over comes with F4's scroll, where it can be seen.)
+//   header mark's change of §10.3 was tried and left out on two independent reviews, D60.)
 // Frames are drawn only while something moves. Should 30 frames in a row come clearly slower than
 // the screen's own pace (at least 20 ms), the quality steps down (fewer device pixels, then fewer
 // points); below 30 a second at the lowest step, the poster stays. Reduced motion, forced colours,
@@ -81,8 +82,13 @@ const LEAN = { yaw: 0.07, pitch: 0.045 }
 /** The journey's scales, in scene units per unit of the mark (its viewBox is 200 wide). */
 const ASTRO_SCALE = 0.0016
 const MARK_SCALE = 0.0031
-/** The mark's half height (its outer arc, 76 units) and how far it may follow the scroll down. */
-const MARK_SHIFT = 0.5 - 76 * MARK_SCALE - 0.02
+/**
+ * How far the mark may follow the scroll down: until its outer arc (76 units from its centre) is
+ * just above the canvas's feathered bottom edge (7% of its height, global.css).
+ */
+const MARK_SHIFT = 0.5 - 0.085 - 76 * MARK_SCALE
+/** Where the arcs' points wait round the astrocyte before their rings spread, in the mark's units. */
+const RING_START = 18
 /** How far from the cortex the camera comes at the cell. */
 const CELL_VIEW = 1.3
 
@@ -172,25 +178,20 @@ export async function mountHero(
   geometry.setAttribute('normal', new BufferAttribute(cloud.normals, 3))
   geometry.setAttribute('shade', new BufferAttribute(cloud.shades, 1))
   // The mark's points (the first ones; any first part of the points is an even sample of the
-  // brain): where each ends in the mark, and where it waits in the astrocyte before (a point of the
-  // cell's own shape; the arcs' points take one at random, with how far out their ring lies).
+  // brain): where each ends in the mark, and where it waits in the astrocyte before: the cell's own
+  // points in their places of the mark's cell; the arcs' points close round it, in the direction
+  // of their place in the arcs, with how far out their ring lies.
   const markAttr = new Float32Array(cloud.count * 4)
   const astroAttr = new Float32Array(cloud.count * 3)
   const logo = cloud.logo
-  const cellPoints: number[] = []
-  for (let i = 0; i < logo.count; i++) if (logo.parts[i] !== 0) cellPoints.push(i)
   for (let i = 0; i < Math.min(logo.count, cloud.count); i++) {
     const dx = logo.positions[i * 2]! - 100
     const dy = 100 - logo.positions[i * 2 + 1]!
-    markAttr.set([dx, dy, logo.parts[i]!, 1], i * 4)
-    const own = logo.parts[i] !== 0 || cellPoints.length === 0
-    const c = own ? i : cellPoints[(i * 7919) % cellPoints.length]!
+    const part = logo.parts[i]!
+    markAttr.set([dx, dy, part, 1], i * 4)
+    const radius = Math.hypot(dx, dy) || 1
     astroAttr.set(
-      [
-        logo.positions[c * 2]! - 100,
-        100 - logo.positions[c * 2 + 1]!,
-        own ? 0 : Math.hypot(dx, dy),
-      ],
+      part === 0 ? [(dx / radius) * RING_START, (dy / radius) * RING_START, radius] : [dx, dy, 0],
       i * 3,
     )
   }
@@ -224,20 +225,9 @@ export async function mountHero(
     uMarkCentre: { value: new Vector3() },
     uMarkScale: { value: MARK_SCALE },
     uZoom: { value: 0 },
-    uAnchors: { value: Array.from({ length: 6 }, () => new Vector3()) },
-    uAnchorCount: { value: 0 },
-    uLabels: { value: 1 },
+    uToMark: { value: 0 },
+    uDive: { value: 0 },
   }
-  // Where the labels shown meet the brain.
-  const anchored = links
-    .map(
-      (link) =>
-        HERO_MODEL.anchors[link.closest<HTMLElement>('[data-window]')?.dataset.window ?? ''],
-    )
-    .filter((anchor): anchor is [number, number, number] => Boolean(anchor))
-    .slice(0, 6)
-  anchored.forEach((anchor, k) => uniforms.uAnchors.value[k]!.set(...anchor))
-  uniforms.uAnchorCount.value = anchored.length
   const material = new RawShaderMaterial({
     glslVersion: GLSL3,
     vertexShader: VERTEX,
@@ -341,12 +331,17 @@ export async function mountHero(
 
   // How far the page has scrolled through the journey (F4): the target, and the frames' smoothed
   // value that follows it. It starts once the whole brain is in view (on a phone the poster lies
-  // below the text; on a wide screen it is in view from the top of the page).
+  // below the text; on a wide screen it is in view from the top of the page) and the page has
+  // moved on a little more (JOURNEY_PAUSE). Not on a page with too little below the hero to
+  // finish it (the coming-soon page: `data-hero-journey="off"`, HeroStage).
   const art = box.querySelector('svg') ?? box
+  const journeyOn = box.dataset.heroJourney !== 'off'
   const journeyTarget = () => {
-    const start = Math.max(0, art.getBoundingClientRect().bottom + scrollY - innerHeight)
+    if (!journeyOn) return 0
+    const viewport = document.documentElement.clientHeight
+    const start = Math.max(0, art.getBoundingClientRect().bottom + scrollY - viewport)
     const length = Math.max(1, JOURNEY_SHARE * hero.getBoundingClientRect().height)
-    return clamp01((scrollY - start) / length)
+    return clamp01((scrollY - start - JOURNEY_PAUSE) / length)
   }
   let journey = journeyTarget()
 
@@ -380,9 +375,10 @@ export async function mountHero(
     uniforms.uAstroCentre.value.lerpVectors(cellAt, uniforms.uMarkCentre.value, j.toMark)
     uniforms.uAstroScale.value = ASTRO_SCALE + (MARK_SCALE - ASTRO_SCALE) * j.toMark
     uniforms.uZoom.value = j.zoom
+    uniforms.uToMark.value = j.toMark
+    uniforms.uDive.value = j.dive
     camera.position.lerpVectors(home, atCell, j.zoom)
     camera.lookAt(look.lerpVectors(origin, cellAt, j.zoom))
-    uniforms.uLabels.value = j.labels
     box.style.setProperty('--hero-labels', j.labels.toFixed(3))
     box.dataset.heroLabels = j.labels < 0.01 ? 'gone' : 'shown'
 
@@ -416,7 +412,8 @@ export async function mountHero(
 
   function draw(time: number) {
     frame = 0
-    if (!renderer || !visible) return
+    // Not while the layer is being built again: its shaders may not be ready (compileAsync).
+    if (!renderer || !visible || restoring) return
     const interval = previous ? time - previous : 0
     const moving = update(time)
     renderer.render(scene, camera)
@@ -487,6 +484,7 @@ export async function mountHero(
     introStart = now()
     remember()
   }
+  journey = journeyTarget()
   last = 0
   wake()
 
@@ -535,21 +533,9 @@ export async function mountHero(
   hero.addEventListener('pointermove', onPointerMove, { passive: true })
   hero.addEventListener('pointerleave', onPointerLeave)
 
-  // The scroll drives the journey; the header's mark gives up its cell to the hero's mark while the
-  // formed mark is in view below the header, and takes it back as the hero leaves (F5).
-  const header = document.querySelector('header')
-  function handOver() {
-    const rect = box.getBoundingClientRect()
-    const below = header?.getBoundingClientRect().bottom ?? 0
-    const handing = journeyAt(journeyTarget()).handing && rect.bottom > below + 40
-    document.documentElement.dataset.heroMark = handing ? 'handing' : 'whole'
-  }
-  const onScroll = () => {
-    handOver()
-    wake()
-  }
+  // The scroll drives the journey.
+  const onScroll = () => wake()
   addEventListener('scroll', onScroll, { passive: true })
-  handOver()
 
   // On and off screen, and in a hidden tab (F5). Built again a little before it comes back.
   let onScreen = true
@@ -563,6 +549,8 @@ export async function mountHero(
     if (visible) {
       clearTimeout(releaseTimer)
       releaseTimer = 0
+      // Where the scroll is now, not where it was when the hero left.
+      journey = journeyTarget()
       if (!renderer) void restore()
       else wake()
     } else {
@@ -593,6 +581,8 @@ export async function mountHero(
       if (destroyed) return release()
       renderer?.render(scene, camera)
       if (failed()) throw new HeroGaveUp('failed again')
+      restoring = false
+      journey = journeyTarget()
       setState(box, 'live')
       wake()
     } catch {
@@ -624,7 +614,8 @@ export async function mountHero(
   }
   const onResize = () => {
     resize()
-    if (renderer) renderer.render(scene, camera)
+    if (renderer && !restoring) renderer.render(scene, camera)
+    wake()
   }
   const sizeObserver = new ResizeObserver(onResize)
   sizeObserver.observe(box)
@@ -638,7 +629,6 @@ export async function mountHero(
     sizeObserver.disconnect()
     document.removeEventListener('visibilitychange', seen)
     removeEventListener('scroll', onScroll)
-    delete document.documentElement.dataset.heroMark
     box.style.removeProperty('--hero-labels')
     delete box.dataset.heroLabels
     for (const link of links) {

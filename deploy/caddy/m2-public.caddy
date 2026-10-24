@@ -9,8 +9,8 @@
 #
 # Each matcher names its addresses twice. `path` lists them for people to read (each page with
 # and without its trailing slash, which Next.js redirects to; Next.js's own files by prefix; each
-# logo in public/brand/ and the hero's point file in public/hero/), but Caddy compares those after
-# decoding them and without regard to case,
+# logo in public/brand/; the hero's point file in public/hero/ by the shape of its name), but Caddy
+# compares those after decoding them and without regard to case,
 # while the app does neither. So the regexp on the raw address ({http.request.uri}, still encoded,
 # with its query) lets only their exact spelling through, with any query: /EN/, /en/%61bout/ or
 # /en/x/../about/ keep the password. A request to a page, a machine file or a form goes to the app
@@ -57,8 +57,8 @@ handle @m2Public {
 	path /brand/gliagora-mark-small-dark.svg
 	path /brand/gliagora-mark-small.svg
 	path /brand/gliagora-mark.svg
-	path /hero/brain-e98e7caf9d.bin
-	vars_regexp {http.request.uri} ^(?:/brand/favicon\.svg|/brand/gliagora-mark-dark\.svg|/brand/gliagora-mark-mono\.svg|/brand/gliagora-mark-small-dark\.svg|/brand/gliagora-mark-small\.svg|/brand/gliagora-mark\.svg|/hero/brain-e98e7caf9d\.bin|/_next/static(?:/[A-Za-z0-9_~-][A-Za-z0-9._~-]*)+)(?:\?.*)?$
+	path /hero/brain-*.bin
+	vars_regexp {http.request.uri} ^(?:/brand/favicon\.svg|/brand/gliagora-mark-dark\.svg|/brand/gliagora-mark-mono\.svg|/brand/gliagora-mark-small-dark\.svg|/brand/gliagora-mark-small\.svg|/brand/gliagora-mark\.svg|/hero/brain-[0-9a-f]{10}\.bin|/_next/static(?:/[A-Za-z0-9_~-][A-Za-z0-9._~-]*)+)(?:\?.*)?$
 }
 handle @m2PublicFiles {
 	reverse_proxy app:3000 {

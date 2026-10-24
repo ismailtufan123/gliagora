@@ -286,6 +286,8 @@ test.describe('the M2 state through Caddy, without the password', () => {
     await expect(page.locator('svg.poster-art')).toBeVisible()
     await expect(page.locator('.home-poster-links')).toHaveCount(0)
     const box = page.locator('.home-poster')
+    // No journey on scroll here: too little lies below the hero to scroll it through.
+    await expect(box).toHaveAttribute('data-hero-journey', 'off')
     await expect(box).toHaveAttribute('data-hero', /^(live|poster|off)$/, { timeout: 20_000 })
     if ((await box.getAttribute('data-hero')) !== 'off') expect(points).toEqual([200])
   })

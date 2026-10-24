@@ -1,14 +1,6 @@
 @import 'tailwindcss';
 @import './tokens.css';
 
-/* The hole in the header's mark while the hero's mark is formed on screen (F5, below): a registered
-   property, so the hole can open and close smoothly. */
-@property --hero-mark-hole {
-  syntax: '<percentage>';
-  inherits: false;
-  initial-value: 0%;
-}
-
 /*
  * Tailwind utilities come only from the design tokens (PLAN §7, §11.3): the default colours,
  * type scale, radii, shadows and breakpoints are removed, so `bg-red-500` or `text-xl` do not exist.
@@ -1785,6 +1777,12 @@
     line-height: 1.02;
   }
 
+  /* Above the poster's box, which reaches up into the gap on small screens (below). */
+  .home-hero-text {
+    position: relative;
+    z-index: 1;
+  }
+
   .home-subline {
     margin-block-start: var(--space-6);
     max-inline-size: var(--measure);
@@ -1992,6 +1990,12 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.6s ease-out;
+    /* Feathered edges: on the journey's close view the points fade out towards the canvas's edges
+       instead of being cut by a straight line (only the alpha of the mask's colour counts). */
+    mask-image:
+      linear-gradient(to right, transparent, var(--text) 7%, var(--text) 93%, transparent),
+      linear-gradient(to bottom, transparent, var(--text) 7%, var(--text) 93%, transparent);
+    mask-composite: intersect;
   }
 
   /* The poster's lines go a little after the points appear, so the two never show as one tangle. */
@@ -2036,38 +2040,23 @@
   }
 
   /*
-   * F4: as the page scrolls into the journey, the labels hand over to the figures below
-   * (`--hero-labels`, from 1 to 0, set by the scene); a label in focus always shows, and faded
-   * labels take no clicks.
+   * F4: as the page scrolls into the journey, the labels around the brain hand over to the figures
+   * below (`--hero-labels`, from 1 to 0, set by the scene); a label in focus always shows, and faded
+   * labels take no clicks. On screens only (in print the labels show), and only where they sit
+   * around the brain: on a small screen they are under it, and stay.
    */
-  .home-poster[data-hero='live'] .home-poster-links {
-    opacity: var(--hero-labels, 1);
-  }
+  @media screen and (min-width: 64rem) {
+    .home-poster[data-hero='live'] .home-poster-links {
+      opacity: var(--hero-labels, 1);
+    }
 
-  .home-poster[data-hero='live'] .home-poster-links:focus-within {
-    opacity: 1;
-  }
+    .home-poster[data-hero='live'] .home-poster-links:focus-within {
+      opacity: 1;
+    }
 
-  .home-poster[data-hero='live'][data-hero-labels='gone'] .home-poster-links:not(:focus-within) {
-    pointer-events: none;
-  }
-
-  /*
-   * F5 (PLAN §10.3): once the journey has formed the 6b mark in the hero, the header's mark gives
-   * its cell to it (a mask over the mark as it is, D12: never redrawn) until the hero has gone, then
-   * fills again (200 ms). Only while the hero's 3D layer runs (`data-hero-mark` on <html>).
-   */
-  :root[data-hero-mark] .lockup-header img {
-    mask-image: radial-gradient(
-      circle closest-side,
-      transparent calc(var(--hero-mark-hole) - 2%),
-      var(--text) var(--hero-mark-hole)
-    );
-    transition: --hero-mark-hole 0.2s ease-out;
-  }
-
-  :root[data-hero-mark='handing'] .lockup-header img {
-    --hero-mark-hole: 27%;
+    .home-poster[data-hero='live'][data-hero-labels='gone'] .home-poster-links:not(:focus-within) {
+      pointer-events: none;
+    }
   }
 
   /* The windows' links: under the poster on small screens, centred under the brain (as many
@@ -2083,12 +2072,28 @@
   /* On small screens the poster's empty margins above the brain and below the brainstem are taken
      back (in percent of its width, as its box's height is), so the hero holds together. */
   @media (width < 64rem) {
+    .home-hero {
+      padding-block: var(--space-8) var(--space-12);
+    }
+
+    .home-subline {
+      margin-block-start: var(--space-4);
+    }
+
+    .home-actions {
+      margin-block-start: var(--space-6);
+    }
+
+    /* A little narrower than the column, centred, so the brain and its label fit a phone's first
+       screen under the text. */
     .home-poster {
-      margin-block-start: -5%;
+      inline-size: min(100%, 86%);
+      justify-self: center;
+      margin-block-start: -8%;
     }
 
     .home-poster .poster-art {
-      margin-block-end: -9%;
+      margin-block-end: -11%;
     }
   }
 

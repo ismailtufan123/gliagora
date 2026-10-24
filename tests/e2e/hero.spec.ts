@@ -166,35 +166,31 @@ test.describe('the 3D hero', () => {
     await page.goto('/en/')
     expect(await settled(page)).toBe('live')
     const links = page.locator('.home-poster-links')
-    const html = page.locator('html')
+    const box = page.locator('.home-poster')
     await expect(links).toHaveCSS('opacity', '1')
-    await expect(html).toHaveAttribute('data-hero-mark', 'whole')
-    // The end of the journey: the mark formed in the hero, the labels handed over, the header's
-    // mark without its cell.
+    // A small scroll leaves the brain as it is (the whole brain is in view from the top here).
+    await page.evaluate(() => scrollTo(0, 30))
+    await page.waitForTimeout(400)
+    await expect(links).toHaveCSS('opacity', '1')
+    // The end of the journey: the labels have handed over and take no clicks.
     const end = await page.evaluate(() =>
-      Math.ceil(0.45 * document.querySelector('.home-hero')!.getBoundingClientRect().height),
+      Math.ceil(40 + 0.37 * document.querySelector('.home-hero')!.getBoundingClientRect().height),
     )
     await page.evaluate((y) => scrollTo(0, y), end)
-    await expect(html).toHaveAttribute('data-hero-mark', 'handing')
     await expect(links).toHaveCSS('opacity', '0')
-    await expect(page.locator('.home-poster')).toHaveAttribute('data-hero-labels', 'gone')
+    await expect(box).toHaveAttribute('data-hero-labels', 'gone')
+    await expect(links).toHaveCSS('pointer-events', 'none')
     // A label in focus shows even then.
-    await page
-      .locator('.home-poster-links a')
-      .first()
-      .evaluate((link: HTMLElement) => link.focus({ preventScroll: true }))
+    const jobs = page.locator('.home-poster-links a').first()
+    await jobs.evaluate((link: HTMLElement) => link.focus({ preventScroll: true }))
     await expect(links).toHaveCSS('opacity', '1')
-    await page
-      .locator('.home-poster-links a')
-      .first()
-      .evaluate((link: HTMLElement) => link.blur())
-    // Past the hero, the header's mark is whole again.
-    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight))
-    await expect(html).toHaveAttribute('data-hero-mark', 'whole')
-    // Back at the top, all as it was; the arrival does not play again.
+    await jobs.evaluate((link: HTMLElement) => link.blur())
+    // Back at the top, all as it was.
     await page.evaluate(() => scrollTo(0, 0))
     await expect(links).toHaveCSS('opacity', '1')
-    await expect(html).toHaveAttribute('data-hero-mark', 'whole')
+    await expect(box).toHaveAttribute('data-hero-labels', 'shown')
+    // The header's mark is never changed (D60).
+    await expect(page.locator('html')).not.toHaveAttribute('data-hero-mark')
   })
 
   test('shows the poster, not the canvas, when printed', async ({ page }) => {
@@ -316,5 +312,9 @@ test.describe('the 3D hero on a phone', () => {
     // It shows once at least half of it is on screen.
     await page.locator('.home-poster').scrollIntoViewIfNeeded()
     expect(['live', 'poster']).toContain(await settled(page))
+    // On a small screen the label sits under the brain and stays, whatever the scroll.
+    await page.evaluate(() => scrollTo(0, 400))
+    await page.waitForTimeout(400)
+    await expect(page.locator('.home-poster-links')).toHaveCSS('opacity', '1')
   })
 })

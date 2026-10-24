@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   FOCUS_SECONDS,
   INTRO_SECONDS,
+  JOURNEY_PAUSE,
   JOURNEY_SHARE,
   REST,
   focusAt,
@@ -77,41 +78,27 @@ describe('the hero’s timing (PLAN §10.3)', () => {
 })
 
 describe('the journey into the cortex (F4, F6)', () => {
-  it('starts and ends at rest, and depends on the scroll alone', () => {
-    expect(journeyAt(0)).toEqual({
-      zoom: 0,
-      toCell: 0,
-      toMark: 0,
-      labels: 1,
-      still: 1,
-      handing: false,
-    })
-    expect(journeyAt(1)).toEqual({
-      zoom: 0,
-      toCell: 1,
-      toMark: 1,
-      labels: 0,
-      still: 0,
-      handing: true,
-    })
-    // Scrolling back retraces it exactly (F6).
-    expect(journeyAt(0.4)).toEqual(journeyAt(0.4))
+  it('starts and ends at rest, and depends on the scroll alone (F6 retraces it)', () => {
+    expect(journeyAt(0)).toEqual({ zoom: 0, dive: 0, toCell: 0, toMark: 0, labels: 1, still: 1 })
+    expect(journeyAt(1)).toEqual({ zoom: 0, dive: 0, toCell: 1, toMark: 1, labels: 0, still: 0 })
     expect(JOURNEY_SHARE).toBeLessThanOrEqual(0.6)
+    expect(JOURNEY_PAUSE).toBeGreaterThan(0)
   })
 
-  it('goes in, gathers the cell, comes out as the mark', () => {
-    // In towards the cell first, then back out while the cell's waves become the arcs.
-    expect(journeyAt(0.35).zoom).toBe(1)
-    expect(journeyAt(0.45).zoom).toBe(1)
-    expect(journeyAt(0.7).zoom).toBeGreaterThan(0)
-    expect(journeyAt(0.7).zoom).toBeLessThan(1)
-    // The astrocyte is gathered before its waves spread.
-    expect(journeyAt(0.55).toCell).toBe(1)
-    expect(journeyAt(0.55).toMark).toBe(0)
+  it('dives towards the glowing cell, gathers it, comes out as the mark', () => {
+    // The cell glows as the camera dives, before the astrocyte gathers there.
+    expect(journeyAt(0.15).dive).toBeGreaterThan(0.5)
+    expect(journeyAt(0.15).toCell).toBe(0)
+    expect(journeyAt(0.3).zoom).toBe(1)
+    // Gathered while the camera is still close; then out again as the cell grows into the mark.
+    expect(journeyAt(0.45).toCell).toBe(1)
+    expect(journeyAt(0.42).toMark).toBe(0)
+    expect(journeyAt(0.55).zoom).toBeGreaterThan(0)
+    expect(journeyAt(0.55).zoom).toBeLessThan(1)
+    expect(journeyAt(0.7).zoom).toBe(0)
+    expect(journeyAt(0.7).toMark).toBe(1)
     // The labels have handed over before the camera is in.
-    expect(journeyAt(0.3).labels).toBe(0)
-    expect(journeyAt(0.89).handing).toBe(false)
-    expect(journeyAt(0.9).handing).toBe(true)
+    expect(journeyAt(0.25).labels).toBe(0)
   })
 
   it('never moves backwards on the way in', () => {

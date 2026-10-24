@@ -14,7 +14,7 @@ export const HERO_MODEL: {
   waveReach: number
   anchors: Record<string, [number, number, number]>
 } = {
-  file: '/hero/brain-e98e7caf9d.bin',
+  file: '/hero/brain-f2b1e478e3.bin',
   box: {
     min: [-0.42168, -0.30569, -0.26951],
     max: [0.41667, 0.38238, 0.32889],

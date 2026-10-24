@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
+import { HERO_MODEL } from '../components/home/hero/hero-model'
+
 import {
   type IsDraft,
   PUBLIC_MARK,
@@ -168,13 +170,12 @@ describe(CADDY_PUBLIC_PATH, () => {
         expect(path, path).not.toContain('*')
         expect(path, path).not.toMatch(/^\/(?:api|admin|basemap|m2|health)(?:\/|$)/)
       }
-      // Next.js's own files by prefix, the logos and the hero's point file each by name, as their
-      // folders hold them.
-      expect(heroFiles()).toHaveLength(1)
+      // Next.js's own files by prefix, the logos each by name, as the folder holds them, and the
+      // hero's point file by the shape of its name.
       expect(matcherPaths(text, 'm2PublicFiles')).toEqual([
         '/_next/static/*',
         ...brandFiles(),
-        ...heroFiles(),
+        '/hero/brain-*.bin',
       ])
       for (const path of [...brandFiles(), ...heroFiles()])
         expect(isPublicAddress(path, draft), path).toBe(true)
@@ -184,6 +185,15 @@ describe(CADDY_PUBLIC_PATH, () => {
         // A matcher without paths would match every path.
         expect(text).not.toContain('@m2PublicPost')
       }
+    })
+
+    it(`opens the hero's point file the page fetches, and only names of its shape (${name})`, () => {
+      const files = rawAddress(m2PublicCaddy(draft), 'm2PublicFiles')
+      expect(heroFiles()).toEqual([HERO_MODEL.file])
+      expect(files.test(HERO_MODEL.file)).toBe(true)
+      expect(files.test('/hero/brain-0123456789.bin?v=1')).toBe(true)
+      for (const other of ['/hero/brain-x.bin', '/hero/brain-0123456789.bin/', '/hero/other.bin'])
+        expect(files.test(other), other).toBe(false)
     })
 
     it(`lets only the exact spelling of each address through (${name})`, () => {
