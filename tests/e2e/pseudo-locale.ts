@@ -218,9 +218,25 @@ export async function expectLayoutHolds(
   const { width, height } = page.viewportSize()!
   // A dialog or menu that covers the screen is shown as the screen is; other states in full.
   await testInfo.attach(`${state} at ${width}×${height}`, {
-    body: await page.screenshot({ fullPage: !modal }),
+    body: await screenshot(page, !modal),
     contentType: 'image/png',
   })
   expect(await layoutProblems(page), state).toEqual([])
   expect(await hiddenWhenFocused(page), state).toEqual([])
+}
+
+/**
+ * The test browser draws WebGL in software, and when a page is closed while the home page's 3D
+ * hero is still being built there, the next screenshot in the same browser can fail once ("Unable
+ * to capture screenshot"); a second try a moment later works. So it tries up to three times.
+ */
+async function screenshot(page: Page, fullPage: boolean) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await page.screenshot({ fullPage })
+    } catch (error) {
+      if (attempt === 3 || !String(error).includes('Unable to capture screenshot')) throw error
+      await page.waitForTimeout(250)
+    }
+  }
 }
