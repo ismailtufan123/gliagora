@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
+import { HERO_MODEL } from '../components/home/hero/hero-model'
+
 import {
   type IsDraft,
   PUBLIC_MARK,
@@ -16,6 +18,7 @@ import {
   CADDY_PUBLIC_MOUNT,
   CADDY_PUBLIC_PATH,
   brandFiles,
+  heroFiles,
   m2PublicCaddy,
 } from './caddy-public-file'
 
@@ -102,6 +105,10 @@ const OTHER_SPELLINGS = [
   '/brand/FAVICON.SVG',
   '/brand/favicon.svg/',
   '/brand/%66avicon.svg',
+  '/hero/x.bin',
+  '/hero/',
+  '/hero',
+  '/HERO/x.bin',
   '/_NEXT/static/x',
   '/_next/STATIC/x',
   '/_next/static/',
@@ -163,15 +170,30 @@ describe(CADDY_PUBLIC_PATH, () => {
         expect(path, path).not.toContain('*')
         expect(path, path).not.toMatch(/^\/(?:api|admin|basemap|m2|health)(?:\/|$)/)
       }
-      // Next.js's own files by prefix, the logos each by name, as the folder holds them.
-      expect(matcherPaths(text, 'm2PublicFiles')).toEqual(['/_next/static/*', ...brandFiles()])
-      for (const path of brandFiles()) expect(isPublicAddress(path, draft), path).toBe(true)
+      // Next.js's own files by prefix, the logos each by name, as the folder holds them, and the
+      // hero's point file by the shape of its name.
+      expect(matcherPaths(text, 'm2PublicFiles')).toEqual([
+        '/_next/static/*',
+        ...brandFiles(),
+        '/hero/brain-*.bin',
+      ])
+      for (const path of [...brandFiles(), ...heroFiles()])
+        expect(isPublicAddress(path, draft), path).toBe(true)
       if (publicPostPaths(draft).length > 0) {
         expect(matcherPaths(text, 'm2PublicPost')).toEqual(publicPostPaths(draft))
       } else {
         // A matcher without paths would match every path.
         expect(text).not.toContain('@m2PublicPost')
       }
+    })
+
+    it(`opens the hero's point file the page fetches, and only names of its shape (${name})`, () => {
+      const files = rawAddress(m2PublicCaddy(draft), 'm2PublicFiles')
+      expect(heroFiles()).toEqual([HERO_MODEL.file])
+      expect(files.test(HERO_MODEL.file)).toBe(true)
+      expect(files.test('/hero/brain-0123456789.bin?v=1')).toBe(true)
+      for (const other of ['/hero/brain-x.bin', '/hero/brain-0123456789.bin/', '/hero/other.bin'])
+        expect(files.test(other), other).toBe(false)
     })
 
     it(`lets only the exact spelling of each address through (${name})`, () => {
@@ -186,6 +208,7 @@ describe(CADDY_PUBLIC_PATH, () => {
       }
       for (const path of [
         ...brandFiles(),
+        ...heroFiles(),
         '/_next/static/chunks/3979yy9j2k--s.js',
         '/_next/static/chunks/a_b~c.js?dpl=x',
         '/_next/static/media/font.p.woff2',

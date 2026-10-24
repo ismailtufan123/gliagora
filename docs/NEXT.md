@@ -1,6 +1,6 @@
 # Next task
 
-Status: **open**
+Status: **done** (2026-10-24; pull requests #123 and #124)
 Written: 2026-10-22, by the operator's planning chat (Claude) on the operator's behalf.
 
 ## How this file works

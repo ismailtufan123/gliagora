@@ -162,6 +162,37 @@ test.describe('the 3D hero', () => {
     await expect(page.locator('canvas.hero-canvas')).toHaveCSS('opacity', '1')
   })
 
+  test('scrolling runs the journey into the cortex, and back (F4, F6)', async ({ page }) => {
+    await page.goto('/en/')
+    expect(await settled(page)).toBe('live')
+    const links = page.locator('.home-poster-links')
+    const box = page.locator('.home-poster')
+    await expect(links).toHaveCSS('opacity', '1')
+    // A small scroll leaves the brain as it is (the whole brain is in view from the top here).
+    await page.evaluate(() => scrollTo(0, 30))
+    await page.waitForTimeout(400)
+    await expect(links).toHaveCSS('opacity', '1')
+    // The end of the journey: the labels have handed over and take no clicks.
+    const end = await page.evaluate(() =>
+      Math.ceil(40 + 0.37 * document.querySelector('.home-hero')!.getBoundingClientRect().height),
+    )
+    await page.evaluate((y) => scrollTo(0, y), end)
+    await expect(links).toHaveCSS('opacity', '0')
+    await expect(box).toHaveAttribute('data-hero-labels', 'gone')
+    await expect(links).toHaveCSS('pointer-events', 'none')
+    // A label in focus shows even then.
+    const jobs = page.locator('.home-poster-links a').first()
+    await jobs.evaluate((link: HTMLElement) => link.focus({ preventScroll: true }))
+    await expect(links).toHaveCSS('opacity', '1')
+    await jobs.evaluate((link: HTMLElement) => link.blur())
+    // Back at the top, all as it was.
+    await page.evaluate(() => scrollTo(0, 0))
+    await expect(links).toHaveCSS('opacity', '1')
+    await expect(box).toHaveAttribute('data-hero-labels', 'shown')
+    // The header's mark is never changed (D60).
+    await expect(page.locator('html')).not.toHaveAttribute('data-hero-mark')
+  })
+
   test('shows the poster, not the canvas, when printed', async ({ page }) => {
     await page.goto('/en/')
     expect(await settled(page)).toBe('live')
@@ -281,5 +312,9 @@ test.describe('the 3D hero on a phone', () => {
     // It shows once at least half of it is on screen.
     await page.locator('.home-poster').scrollIntoViewIfNeeded()
     expect(['live', 'poster']).toContain(await settled(page))
+    // On a small screen the label sits under the brain and stays, whatever the scroll.
+    await page.evaluate(() => scrollTo(0, 400))
+    await page.waitForTimeout(400)
+    await expect(page.locator('.home-poster-links')).toHaveCSS('opacity', '1')
   })
 })

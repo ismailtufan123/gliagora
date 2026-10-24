@@ -1768,13 +1768,19 @@
 
   .home-hero-grid {
     display: grid;
-    gap: var(--space-12);
+    gap: var(--space-6);
     align-items: center;
   }
 
   .home-hero h1 {
     max-inline-size: 9.3em;
     line-height: 1.02;
+  }
+
+  /* Above the poster's box, which reaches up into the gap on small screens (below). */
+  .home-hero-text {
+    position: relative;
+    z-index: 1;
   }
 
   .home-subline {
@@ -1984,6 +1990,12 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.6s ease-out;
+    /* Feathered edges: on the journey's close view the points fade out towards the canvas's edges
+       instead of being cut by a straight line (only the alpha of the mask's colour counts). */
+    mask-image:
+      linear-gradient(to right, transparent, var(--text) 7%, var(--text) 93%, transparent),
+      linear-gradient(to bottom, transparent, var(--text) 7%, var(--text) 93%, transparent);
+    mask-composite: intersect;
   }
 
   /* The poster's lines go a little after the points appear, so the two never show as one tangle. */
@@ -2027,12 +2039,62 @@
     color: var(--text-muted);
   }
 
-  /* The windows' links: under the poster on small screens, around the brain from 64rem. */
+  /*
+   * F4: as the page scrolls into the journey, the labels around the brain hand over to the figures
+   * below (`--hero-labels`, from 1 to 0, set by the scene); a label in focus always shows, and faded
+   * labels take no clicks. On screens only (in print the labels show), and only where they sit
+   * around the brain: on a small screen they are under it, and stay.
+   */
+  @media screen and (min-width: 64rem) {
+    .home-poster[data-hero='live'] .home-poster-links {
+      opacity: var(--hero-labels, 1);
+    }
+
+    .home-poster[data-hero='live'] .home-poster-links:focus-within {
+      opacity: 1;
+    }
+
+    .home-poster[data-hero='live'][data-hero-labels='gone'] .home-poster-links:not(:focus-within) {
+      pointer-events: none;
+    }
+  }
+
+  /* The windows' links: under the poster on small screens, centred under the brain (as many
+     columns as there are links, up to what fits), around the brain from 64rem. */
   .home-poster-links {
-    margin-block-start: var(--space-4);
+    margin-block-start: var(--space-2);
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
     gap: var(--space-2) var(--space-4);
+    text-align: center;
+  }
+
+  /* On small screens the poster's empty margins above the brain and below the brainstem are taken
+     back (in percent of its width, as its box's height is), so the hero holds together. */
+  @media (width < 64rem) {
+    .home-hero {
+      padding-block: var(--space-8) var(--space-12);
+    }
+
+    .home-subline {
+      margin-block-start: var(--space-4);
+    }
+
+    .home-actions {
+      margin-block-start: var(--space-6);
+    }
+
+    /* A little narrower than the column, centred, so the brain and its label fit a phone's first
+       screen under the text. */
+    .home-poster {
+      inline-size: min(100%, 86%);
+      justify-self: center;
+      margin-block-start: -8%;
+    }
+
+    .home-poster .poster-art {
+      margin-block-end: -11%;
+    }
   }
 
   .home-poster-links a {
@@ -2107,6 +2169,7 @@
        keeps to one line at 64rem in the web font and in its fallback. */
     .home-hero-grid {
       grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+      gap: var(--space-12);
     }
 
     .home-poster-links {
@@ -2152,7 +2215,9 @@
     }
   }
 
+  /* An inline block, so a focused link's outline is one box around its number and words. */
   .home-figures a {
+    display: inline-block;
     font-weight: 700;
   }
 

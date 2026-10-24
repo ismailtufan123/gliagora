@@ -157,8 +157,14 @@ export const NEXT_STATIC_PREFIX = '/_next/static/'
  */
 export const BRAND_PREFIX = '/brand/'
 
-/** What every public page loads: Next.js's own files and the logos (above). */
-export const PUBLIC_ASSET_PREFIXES = [NEXT_STATIC_PREFIX, BRAND_PREFIX] as const
+/**
+ * The point file of the 3D hero on the coming-soon page (M13, D60; public/hero/, made by
+ * tools/hero). Caddy opens it by its name, like the logos (`pnpm caddy:public` lists the folder).
+ */
+export const HERO_PREFIX = '/hero/'
+
+/** What every public page loads: Next.js's own files, the logos and the hero's points (above). */
+export const PUBLIC_ASSET_PREFIXES = [NEXT_STATIC_PREFIX, BRAND_PREFIX, HERO_PREFIX] as const
 
 /** A page's address in both spellings Caddy must open: without the slash, Next.js redirects. */
 const spellings = (path: string) => (path === '/' ? [path] : [path.slice(0, -1), path])
